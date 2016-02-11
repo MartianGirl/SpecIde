@@ -1,0 +1,30 @@
+# Ignore intermediate CMake files and Makefiles.
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Also on windows
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sdf
+*.sln
+*.suo
+*.ipch
+
+# Install
+install_manifest.txt
+
+# Ignore swap files from Vim.
+*.swp
+
+# Ignore config.h
+config.h
+
+# Ignore executables.
+source/bin/
+Debug/
+Release/
+Win32/
+SpecIde
