@@ -30,4 +30,4 @@ endif()
 add_subdirectory(src)
 
 # Look in the tst subdirectory
-# add_subdirectory(tst)
+add_subdirectory(tst)

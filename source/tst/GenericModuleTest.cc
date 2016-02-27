@@ -1,0 +1,13 @@
+#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MODULE GenericModule test
+#include <boost/test/unit_test.hpp>
+//#include <boost/test/included/unit_test.hpp>
+
+// #include "GenericModule.h"
+
+// BOOST_AUTO_TEST_CASE(constructors_test)
+// {
+//     GenericModule gm0();
+// }
+
+// vim: et:sw=4:ts=4
