@@ -1,15 +1,32 @@
 cmake_minimum_required(VERSION 3.0)
 
-find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+if(UNIX)
+    find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+    find_package(PkgConfig REQUIRED)
+    pkg_search_module(SFML REQUIRED sfml-all)
 
-# Add the test executable
-include_directories(${PROJECT_SOURCE_DIR}/src ${Boost_INCLUDE_DIR})
-add_executable(GenericModuleTest
-    GenericModuleTest.cc)
-# ${PROJECT_SOURCE_DIR}/src/GenericModule.cc)
+    # Add the test executable
+    add_executable(GraphicWindowTest
+        GraphicWindowTest.cc
+        ${PROJECT_SOURCE_DIR}/src/GraphicWindow.cc)
+    target_link_libraries(GraphicWindowTest
+        ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+        ${SFML_LIBRARIES})
 
-target_link_libraries(GenericModuleTest ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+    add_executable(ScreenTest
+        ScreenTest.cc
+        ${PROJECT_SOURCE_DIR}/src/GraphicWindow.cc
+        ${PROJECT_SOURCE_DIR}/src/Screen.cc)
+    target_link_libraries(ScreenTest
+        ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+        ${SFML_LIBRARIES})
+endif()
 
-install(TARGETS GenericModuleTest
+# This is for all platforms
+include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${Boost_INCLUDE_DIR})
+include_directories(${SFML_INCLUDE_DIRS})
+
+install(TARGETS GraphicWindowTest ScreenTest
     RUNTIME
     DESTINATION ${PROJECT_INSTALL_DIR}/tst)

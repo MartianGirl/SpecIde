@@ -10,4 +10,5 @@
 //     GenericModule gm0();
 // }
 
+// EOF
 // vim: et:sw=4:ts=4

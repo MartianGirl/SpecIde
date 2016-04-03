@@ -2,32 +2,35 @@
 
 #include <SFML/Graphics.hpp>
 
+#include "Screen.h"
+
 #include "config.h"
 
 int main(int argc, char* argv[])
 {
-    std::cout << "Version " << SPECIDE_VERSION_MAJOR;
+    std::cout << "SpecIde Version " << SPECIDE_VERSION_MAJOR;
     std::cout << "." << SPECIDE_VERSION_MINOR << std::endl;
 
-    sf::RenderWindow window(sf::VideoMode(200, 200), "SFML works!");
-    sf::CircleShape shape(100.0f);
-    shape.setFillColor(sf::Color::Green);
+    Screen screen(2);
+    screen.open();
 
-    while (window.isOpen())
+    bool run = true;
+    while (run)
     {
         sf::Event event;
-        while (window.pollEvent(event))
+        while (screen.window.pollEvent(event))
         {
             if (event.type == sf::Event::Closed)
             {
-                window.close();
+                run = false;
+                break;
             }
         }
 
-        window.clear();
-        window.draw(shape);
-        window.display();
+        screen.update();
     }
 
     return 0;
 }
+
+// vim: et:sw=4:ts=4
