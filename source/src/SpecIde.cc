@@ -1,6 +1,9 @@
 #include <iostream>
+#include <memory>
 
 #include <SFML/Graphics.hpp>
+
+#include "Computer.h"
 
 #include "Screen.h"
 
@@ -13,6 +16,7 @@ int main(int argc, char* argv[])
 
     Screen screen(2);
     screen.open();
+    
 
     bool run = true;
     while (run)

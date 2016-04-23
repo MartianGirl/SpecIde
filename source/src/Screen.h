@@ -10,8 +10,8 @@
 class Screen : public GraphicWindow
 {
     public:
-    Screen(size_t scale = 1);
-    virtual ~Screen();
+        Screen(size_t scale = 1);
+        virtual ~Screen();
 };
 
 // vim: et:sw=4:ts=4

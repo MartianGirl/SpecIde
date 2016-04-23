@@ -20,6 +20,21 @@ if(UNIX)
     target_link_libraries(ScreenTest
         ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
         ${SFML_LIBRARIES})
+
+    add_executable(ComputerTest
+        ComputerTest.cc
+        ${PROJECT_SOURCE_DIR}/src/Computer.cc)
+    target_link_libraries(ComputerTest
+        ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+        ${SFML_LIBRARIES})
+
+    add_executable(SpectrumTest
+        SpectrumTest.cc
+        ${PROJECT_SOURCE_DIR}/src/Computer.cc
+        ${PROJECT_SOURCE_DIR}/src/Spectrum.cc)
+    target_link_libraries(SpectrumTest
+        ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+        ${SFML_LIBRARIES})
 endif()
 
 # This is for all platforms
@@ -28,5 +43,6 @@ include_directories(${Boost_INCLUDE_DIR})
 include_directories(${SFML_INCLUDE_DIRS})
 
 install(TARGETS GraphicWindowTest ScreenTest
+    ComputerTest SpectrumTest
     RUNTIME
     DESTINATION ${PROJECT_INSTALL_DIR}/tst)

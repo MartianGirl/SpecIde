@@ -8,7 +8,8 @@ if(UNIX)
     # pkg_search_module(GL REQUIRED gl)
     # pkg_search_module(AL REQUIRED openal)
     add_executable(SpecIde SpecIde.cc
-        GraphicWindow.cc Screen.cc)
+        GraphicWindow.cc Screen.cc
+        Computer.cc Spectrum.cc)
     target_link_libraries(SpecIde 
         ${SFML_LIBRARIES})
         #         ${GLFW_LIBRARIES}

@@ -19,6 +19,9 @@ install_manifest.txt
 # Ignore swap files from Vim.
 *.swp
 
+# Ignore tag files.
+tags
+
 # Ignore config.h
 config.h
 
@@ -28,4 +31,4 @@ Debug/
 Release/
 Win32/
 SpecIde
-GenericModuleTest
+*Test
