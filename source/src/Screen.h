@@ -1,6 +1,6 @@
 #pragma once
 
-/** Screen.cpp
+/** Screen
  *
  * Default Screen implementation.
  */

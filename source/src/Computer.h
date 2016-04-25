@@ -1,6 +1,6 @@
 #pragma once
 
-/** Computer.cpp
+/** Computer.cc
  *
  * Base class for all computers.
  */

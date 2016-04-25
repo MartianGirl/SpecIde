@@ -1,6 +1,6 @@
 #pragma once
 
-/** GraphicWindow.h
+/** GraphicWindow
  *
  * Base class for all the graphic windows in SpecIde.
  *

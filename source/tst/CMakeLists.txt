@@ -30,11 +30,37 @@ if(UNIX)
 
     add_executable(SpectrumTest
         SpectrumTest.cc
+        ${PROJECT_SOURCE_DIR}/src/CPU.cc
+        ${PROJECT_SOURCE_DIR}/src/Z80.cc
+        ${PROJECT_SOURCE_DIR}/src/Memory.cc
         ${PROJECT_SOURCE_DIR}/src/Computer.cc
         ${PROJECT_SOURCE_DIR}/src/Spectrum.cc)
     target_link_libraries(SpectrumTest
         ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
         ${SFML_LIBRARIES})
+
+    add_executable(CPUTest
+        CPUTest.cc
+        ${PROJECT_SOURCE_DIR}/src/CPU.cc)
+    target_link_libraries(CPUTest
+        ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+        ${SFML_LIBRARIES})
+
+    add_executable(Z80Test
+        Z80Test.cc
+        ${PROJECT_SOURCE_DIR}/src/CPU.cc
+        ${PROJECT_SOURCE_DIR}/src/Z80.cc)
+    target_link_libraries(Z80Test
+        ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+        ${SFML_LIBRARIES})
+
+    add_executable(MemoryTest
+        MemoryTest.cc
+        ${PROJECT_SOURCE_DIR}/src/Memory.cc)
+    target_link_libraries(MemoryTest
+        ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+        ${SFML_LIBRARIES})
+
 endif()
 
 # This is for all platforms
@@ -44,5 +70,7 @@ include_directories(${SFML_INCLUDE_DIRS})
 
 install(TARGETS GraphicWindowTest ScreenTest
     ComputerTest SpectrumTest
+    CPUTest Z80Test
+    MemoryTest
     RUNTIME
     DESTINATION ${PROJECT_INSTALL_DIR}/tst)
