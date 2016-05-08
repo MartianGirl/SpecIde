@@ -1,9 +1,13 @@
 #pragma once
 
+#include <cstdint>
+
 /** CPU
  *
  * Base class for all CPUs.
  */
+
+using namespace std;
 
 class CPU
 {

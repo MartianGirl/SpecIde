@@ -11,6 +11,7 @@
 using namespace std;
 
 #include "CPU.h"
+#include "Z80Defs.h"
 #include "Z80Register.h"
 
 class Z80 :
@@ -22,6 +23,8 @@ class Z80 :
 
         void reset();
         void clock();
+
+        void start();
 
         // Registers
         Z80Register af[2];
@@ -40,32 +43,17 @@ class Z80 :
         // Signals
         uint_fast16_t a;
         uint_fast8_t d;
-        bool wr_;
-        bool rd_;
-        bool mreq_;
-        bool ioreq_;
-        bool m1_;
-        bool rfsh_;
-
-        bool halt_;
-        bool wait_;
-        bool int_;
-        bool nmi_;
-
-        bool busreq_;
-        bool busak_;
-        bool reset_;
+        uint_fast16_t c;
 
         // States
         enum Z80State
         {
             ST_RESET,
 
-            ST_M1_T0_ADDROUT,
-            ST_M1_T1_DATAIN,
+            ST_M1_T0_ADDRWR,
+            ST_M1_T1_DATARD,
             ST_M1_T2_RFSH1,
             ST_M1_T3_RFSH2,
-            ST_M1_TW_BUSWAIT,
 
             ST_M2_T0,
             ST_M2_T1,
