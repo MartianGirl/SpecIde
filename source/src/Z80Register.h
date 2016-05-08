@@ -19,9 +19,15 @@ class Z80Register
         void setw(uint_fast16_t value);
         uint_fast16_t getw(void);
 
-        uint_fast8_t h;
-        uint_fast8_t l;
+        uint_fast16_t reg;
 
+        uint_fast16_t *pw;
+        uint8_t *ph;
+        uint8_t *pl;
+
+        uint_fast16_t &w;
+        uint8_t &h;
+        uint8_t &l;
 };
 
 // vim: et:sw=4:ts=4
