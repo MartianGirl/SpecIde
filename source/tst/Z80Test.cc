@@ -5,6 +5,10 @@
 
 #include "Z80.h"
 
+#include <cstdint>
+
+using namespace std;
+
 BOOST_AUTO_TEST_CASE(constructors_test)
 {
     Z80 z0();

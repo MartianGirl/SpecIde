@@ -11,7 +11,7 @@ if(UNIX)
         GraphicWindow.cc Screen.cc
         Computer.cc Spectrum.cc
         CPU.cc Z80.cc
-        Memory.cc)
+        Memory.cc Z80Register.cc)
     target_link_libraries(SpecIde 
         ${SFML_LIBRARIES})
         #         ${GLFW_LIBRARIES}
