@@ -45,6 +45,17 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     reg0.l++;
     BOOST_CHECK_EQUAL(reg0.h, 0x3F);
     BOOST_CHECK_EQUAL(reg0.l, 0x00);
+
+    // Incrementing the register
+    reg0.w = 0xFFFF;
+    BOOST_CHECK_EQUAL(reg0.h, 0xFF);
+    BOOST_CHECK_EQUAL(reg0.l, 0xFF);
+    reg0.w++;
+    BOOST_CHECK_EQUAL(reg0.h, 0x00);
+    BOOST_CHECK_EQUAL(reg0.l, 0x00);
+    reg0.w >>= 1;
+    BOOST_CHECK_EQUAL(reg0.h, 0x00);
+    BOOST_CHECK_EQUAL(reg0.l, 0x00);
 }
 
 // EOF

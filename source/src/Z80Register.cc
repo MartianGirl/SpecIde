@@ -1,9 +1,10 @@
 #include "Z80Register.h"
 
+// This works because the member variables were declared in this same order
+// in the header file.
 Z80Register::Z80Register() :
-    reg(0),
-    pw(&reg),
-
+    reg(0x0000),
+    pw(reinterpret_cast<uint16_t*>(&reg)),
 #if SPECIDE_BYTE_ORDER == 1
     ph(reinterpret_cast<uint8_t*>(pw) + sizeof(uint_fast16_t) - 2),
     pl(reinterpret_cast<uint8_t*>(pw) + sizeof(uint_fast16_t) - 1),
@@ -24,13 +25,10 @@ Z80Register::~Z80Register()
 void Z80Register::setw(uint_fast16_t value)
 {
     reg = value;
-    // *h = (value & 0x0000FF00) >> 8;
-    // *l = (value & 0x000000FF);
 }
 
 uint_fast16_t Z80Register::getw()
 {
-    // return ((*h << 8) + *l);
     return reg;
 }
 

@@ -27,13 +27,13 @@ class Z80 :
         void start();
 
         // Registers
+        size_t registerSet;
+
         Z80Register af[2];
         Z80Register bc[2];
         Z80Register de[2];
         Z80Register hl[2];
         Z80Register ri;
-
-        size_t registerSet;
 
         Z80Register pc;
         Z80Register sp;
@@ -46,7 +46,7 @@ class Z80 :
         uint_fast16_t c;
 
         // States
-        enum Z80State
+        enum class Z80State
         {
             ST_RESET,
 

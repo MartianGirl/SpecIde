@@ -1,7 +1,8 @@
 #include "Z80.h"
 
 Z80::Z80() :
-    CPU()
+    CPU(),
+    state(Z80State::ST_RESET)
 {
 }
 
@@ -11,47 +12,45 @@ Z80::~Z80()
 
 void Z80::reset()
 {
-    c &= ~RESET_;
+    c &= ~SIGNAL_RESET_;
 }
 
 void Z80::clock()
 {
-    if (!(c & RESET_))
-        state = ST_RESET;
+    if (!(c & SIGNAL_RESET_))
+        state = Z80State::ST_RESET;
 
     switch (state)
     {
-        case ST_RESET:
+        case Z80State::ST_RESET:
             start();
 
-            state = ST_M1_T0_ADDRWR;
+            state = Z80State::ST_M1_T0_ADDRWR;
             break;
 
-        case ST_M1_T0_ADDRWR:
+        case Z80State::ST_M1_T0_ADDRWR:
             a = pc.w;
-            c = 0xFFFF & ~(MREQ_ | RD_ | M1_);
+            c = 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
-            if (!wait_)
-                state = ST_M1_T1_DATARD;
+            if (!(c & SIGNAL_WAIT_))
+                state = Z80State::ST_M1_T1_DATARD;
             break;
 
-        case ST_M1_T1_DATARD:
+        case Z80State::ST_M1_T1_DATARD:
             a = pc.w;
-            c = 0xFFFF & ~(MREQ_ | RD_ | M1_);
+            c = 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
-            state = ST_M1_T2_RFSH1;
+            state = Z80State::ST_M1_T2_RFSH1;
             break;
 
-            case ST_M1_T2_RFSH1;
+        case Z80State::ST_M1_T2_RFSH1:
+            c = 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
 
-        case ST_M1_T2_RFSH1:
-            c = 0xFFFF & ~(MREQ_ | RFSH_);
-
-            state = ST_M1_T3_RFSH2;
+            state = Z80State::ST_M1_T3_RFSH2;
             break;
 
-        case ST_M1_T3_RFSH2:
-            c = 0xFFFF & ~(RFSH_);
+        case Z80State::ST_M1_T3_RFSH2:
+            c = 0xFFFF & ~(SIGNAL_RFSH_);
 
         default:
             break;
@@ -59,6 +58,7 @@ void Z80::clock()
 }
 
 void Z80::start()
+{
     // Clear all registers
     pc.w = 0x0000;
 
