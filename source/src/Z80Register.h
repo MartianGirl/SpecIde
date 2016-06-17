@@ -24,6 +24,7 @@ class Z80Register
         // For the sake of clarity, the constructor relies on this.
         uint_fast16_t reg;
 
+        // Using non-fast pointers for correct bitwise operations.
         uint16_t *pw;
         uint8_t *ph;
         uint8_t *pl;
