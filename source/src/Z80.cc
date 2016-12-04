@@ -22,35 +22,57 @@ void Z80::clock()
 
     switch (state)
     {
+        // M1. Machine cycle
         case Z80State::ST_RESET:
             start();
 
-            state = Z80State::ST_M1_T0_ADDRWR;
+            state = Z80State::ST_M1_T1_ADDRWR;
             break;
 
-        case Z80State::ST_M1_T0_ADDRWR:
+        case Z80State::ST_M1_T1_ADDRWR:
             a = pc.w;
             c = 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
             if (!(c & SIGNAL_WAIT_))
-                state = Z80State::ST_M1_T1_DATARD;
+                state = Z80State::ST_M1_T2_DATARD;
             break;
 
-        case Z80State::ST_M1_T1_DATARD:
+        case Z80State::ST_M1_T2_DATARD:
             a = pc.w;
             c = 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
-            state = Z80State::ST_M1_T2_RFSH1;
+            state = Z80State::ST_M1_T3_RFSH1;
             break;
 
-        case Z80State::ST_M1_T2_RFSH1:
+        case Z80State::ST_M1_T3_RFSH1:
             c = 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
 
-            state = Z80State::ST_M1_T3_RFSH2;
+            state = Z80State::ST_M1_T4_RFSH2;
             break;
 
-        case Z80State::ST_M1_T3_RFSH2:
+        case Z80State::ST_M1_T4_RFSH2:
             c = 0xFFFF & ~(SIGNAL_RFSH_);
+            break;
+
+        case Z80State::ST_M2_T1:
+            break;
+
+        case Z80State::ST_M2_T2:
+            break;
+
+        case Z80State::ST_M2_T3:
+            break;
+
+        case Z80State::ST_M3_T1:
+            break;
+
+        case Z80State::ST_M3_T2:
+            break;
+
+        case Z80State::ST_M3_T3:
+            break;
+
+
 
         default:
             break;
