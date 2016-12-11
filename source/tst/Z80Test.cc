@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(constructors_test)
 
     // Clock it once. We've run ST_M1_T1_ADDRWR.
     z80.clock();
-    BOOST_CHECK_EQUAL(z80.pc.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.pc.w, 0x0001);
     BOOST_CHECK(z80.state == Z80State::ST_M1_T2_DATARD);
     BOOST_CHECK_EQUAL(z80.af[0].w, 0x0000);
     BOOST_CHECK_EQUAL(z80.bc[0].w, 0x0000);
@@ -60,13 +60,13 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     BOOST_CHECK_EQUAL(z80.iy.w, 0x0000);
     BOOST_CHECK_EQUAL(z80.sp.w, 0x0000);
     BOOST_CHECK_EQUAL(z80.registerSet, 0x00);
-    BOOST_CHECK_EQUAL(z80.a, z80.pc.w);
+    BOOST_CHECK_EQUAL(z80.a, 0x0000);
     BOOST_CHECK_EQUAL(z80.d, 0xFF);
     BOOST_CHECK_EQUAL(z80.c, 0xFFFF & ~(SIGNAL_M1_ | SIGNAL_MREQ_ | SIGNAL_RD_));
 
     // Clock it once. We've run ST_M1_T2_DATARD.
     z80.clock();
-    BOOST_CHECK_EQUAL(z80.pc.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.pc.w, 0x0001);
     BOOST_CHECK(z80.state == Z80State::ST_M1_T3_RFSH1);
     BOOST_CHECK_EQUAL(z80.af[0].w, 0x0000);
     BOOST_CHECK_EQUAL(z80.bc[0].w, 0x0000);
@@ -80,14 +80,14 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     BOOST_CHECK_EQUAL(z80.iy.w, 0x0000);
     BOOST_CHECK_EQUAL(z80.sp.w, 0x0000);
     BOOST_CHECK_EQUAL(z80.registerSet, 0x00);
-    BOOST_CHECK_EQUAL(z80.a, z80.pc.w);
+    BOOST_CHECK_EQUAL(z80.a, 0x0000);
     BOOST_CHECK_EQUAL(z80.d, 0xFF);
-    BOOST_CHECK_EQUAL(z80.c, 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RFSH_));
+    BOOST_CHECK_EQUAL(z80.c, 0xFFFF & ~(SIGNAL_M1_ | SIGNAL_MREQ_ | SIGNAL_RD_));
 
     // Clock it once. We've run ST_M1_T3_RFSH1
     z80.clock();
-    BOOST_CHECK_EQUAL(z80.pc.w, 0x0000);
-    BOOST_CHECK(z80.state == Z80State::ST_M1_T3_RFSH2);
+    BOOST_CHECK_EQUAL(z80.pc.w, 0x0001);
+    BOOST_CHECK(z80.state == Z80State::ST_M1_T4_RFSH2);
     BOOST_CHECK_EQUAL(z80.af[0].w, 0x0000);
     BOOST_CHECK_EQUAL(z80.bc[0].w, 0x0000);
     BOOST_CHECK_EQUAL(z80.de[0].w, 0x0000);
@@ -100,10 +100,29 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     BOOST_CHECK_EQUAL(z80.iy.w, 0x0000);
     BOOST_CHECK_EQUAL(z80.sp.w, 0x0000);
     BOOST_CHECK_EQUAL(z80.registerSet, 0x00);
-    BOOST_CHECK_EQUAL(z80.a, z80.pc.w);
+    BOOST_CHECK_EQUAL(z80.a, 0x0000);
     BOOST_CHECK_EQUAL(z80.d, 0xFF);
-    BOOST_CHECK_EQUAL(z80.c, 0xFFFF & ~SIGNAL_RFSH);
+    BOOST_CHECK_EQUAL(z80.c, 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RFSH_));
     
+    // Clock it once. We've run ST_M1_T4_RFSH2
+    z80.clock();
+    BOOST_CHECK_EQUAL(z80.pc.w, 0x0001);
+    // BOOST_CHECK(z80.state == Z80State::ST_M1_T4_RFSH2);
+    BOOST_CHECK_EQUAL(z80.af[0].w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.bc[0].w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.de[0].w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.hl[0].w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.af[1].w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.bc[1].w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.de[1].w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.hl[1].w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.ix.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.iy.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.sp.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.registerSet, 0x00);
+    BOOST_CHECK_EQUAL(z80.a, 0x0000);
+    BOOST_CHECK_EQUAL(z80.d, 0xFF);
+    BOOST_CHECK_EQUAL(z80.c, 0xFFFF & ~SIGNAL_RFSH_);
 }
 
 // EOF

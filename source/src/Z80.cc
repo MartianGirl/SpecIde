@@ -31,6 +31,7 @@ void Z80::clock()
 
         case Z80State::ST_M1_T1_ADDRWR:
             a = pc.w;
+            pc.w++;
             c = 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
             if (c & SIGNAL_WAIT_)
@@ -38,15 +39,15 @@ void Z80::clock()
             break;
 
         case Z80State::ST_M1_T2_DATARD:
-            a = pc.w;
             c = 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
             state = Z80State::ST_M1_T3_RFSH1;
             break;
 
         case Z80State::ST_M1_T3_RFSH1:
-            // a = pc.ir.h << 8 & pc.ir.l & 0x7F;
+            a = ir.w & 0xFF7F;
             c = 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
+            // Opcode is sampled HERE
 
             state = Z80State::ST_M1_T4_RFSH2;
             break;
@@ -90,7 +91,7 @@ void Z80::start()
     de[0].w = 0x0000; de[1].w = 0x0000;
     hl[0].w = 0x0000; hl[1].w = 0x0000;
 
-    ri.w = 0x0000;
+    ir.w = 0x0000;
     sp.w = 0x0000;
     ix.w = 0x0000;
     iy.w = 0x0000;

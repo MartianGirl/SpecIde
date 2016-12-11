@@ -33,7 +33,7 @@ class Z80 :
         Z80Register bc[2];
         Z80Register de[2];
         Z80Register hl[2];
-        Z80Register ri;
+        Z80Register ir;
 
         Z80Register pc;
         Z80Register sp;
