@@ -16,7 +16,6 @@ int main(int argc, char* argv[])
 
     Screen screen(2);
     screen.open();
-    
 
     bool run = true;
     while (run)
