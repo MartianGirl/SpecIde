@@ -46,23 +46,6 @@ class Z80 :
         uint_fast16_t c;
 
         // States
-        enum class Z80State
-        {
-            ST_RESET,
-
-            ST_M1_T1_ADDRWR,
-            ST_M1_T2_DATARD,
-            ST_M1_T3_RFSH1,
-            ST_M1_T4_RFSH2,
-
-            ST_M2_T1,
-            ST_M2_T2,
-            ST_M2_T3,
-
-            ST_M3_T1,
-            ST_M3_T2,
-            ST_M3_T3
-        };
         Z80State state;
 };
 

@@ -30,11 +30,29 @@ constexpr uint_fast8_t FLAG_5 = 0x20;
 constexpr uint_fast8_t FLAG_Z = 0x40;
 constexpr uint_fast8_t FLAG_S = 0x80;
 
-enum TTLSignal
+//enum TTLSignal
+//{
+    //TTL_LOGIC_0,
+    //TTL_LOGIC_1,
+    //TTL_HIZ = -1
+//};
+
+enum class Z80State
 {
-    TTL_LOGIC_0,
-    TTL_LOGIC_1,
-    TTL_HIZ = -1
+    ST_RESET,
+
+    ST_M1_T1_ADDRWR,
+    ST_M1_T2_DATARD,
+    ST_M1_T3_RFSH1,
+    ST_M1_T4_RFSH2,
+
+    ST_M2_T1,
+    ST_M2_T2,
+    ST_M2_T3,
+
+    ST_M3_T1,
+    ST_M3_T2,
+    ST_M3_T3
 };
 
 // vim: et:sw=4:ts=4
