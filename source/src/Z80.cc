@@ -33,7 +33,7 @@ void Z80::clock()
             a = pc.w;
             c = 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
-            if (!(c & SIGNAL_WAIT_))
+            if (c & SIGNAL_WAIT_)
                 state = Z80State::ST_M1_T2_DATARD;
             break;
 
@@ -45,6 +45,7 @@ void Z80::clock()
             break;
 
         case Z80State::ST_M1_T3_RFSH1:
+            // a = pc.ir.h << 8 & pc.ir.l & 0x7F;
             c = 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
 
             state = Z80State::ST_M1_T4_RFSH2;
@@ -97,6 +98,8 @@ void Z80::start()
     a = 0xFFFF;
     c = 0xFFFF;
     d = 0xFF;
+
+    registerSet = 0x00; // We've got to choose one, I guess?
 }
 
 // vim: et:sw=4:ts=4

@@ -50,6 +50,7 @@ if(UNIX)
     add_executable(Z80Test
         Z80Test.cc
         ${PROJECT_SOURCE_DIR}/src/CPU.cc
+        ${PROJECT_SOURCE_DIR}/src/Memory.cc
         ${PROJECT_SOURCE_DIR}/src/Z80.cc
         ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
     target_link_libraries(Z80Test
