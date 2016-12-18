@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     memory[0].memory[0x000C] = 0x2E; memory[0].memory[0x000D] = 0xB5;
 
     z80.reset(); z80.clock();
-    for (size_t i = 0; i != 0x000E; ++i)
+    for (size_t i = 0; i != 0x0008; ++i)
     {
         z80.clock(); memory[0].addr = z80.a; memory[0].clock();
         z80.clock(); z80.d = memory[0].data; memory[0].clock();
@@ -198,7 +198,6 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     BOOST_CHECK_EQUAL(z80.hl[z80.registerSet].l, 0xB5);
 
     // LD r, r' tests
-    // LD A, B
 }
 
 // EOF
