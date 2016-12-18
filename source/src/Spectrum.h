@@ -11,10 +11,7 @@
 #include "Z80.h"
 #include "Z80Defs.h"
 
-/** Spectrum.cc
- *
- * The Computer class for a Spectrum 48K
- */
+using namespace std;
 
 class Spectrum :
     public Computer

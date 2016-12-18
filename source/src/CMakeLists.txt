@@ -17,7 +17,7 @@ add_executable(SpecIde SpecIde.cc
         GraphicWindow.cc Screen.cc
         Computer.cc Spectrum.cc
         CPU.cc Z80.cc
-        Memory.cc Z80Register.cc)
+        Memory.cc Z80Register.cc Z80Decoder.cc)
 target_link_libraries(SpecIde ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
 
 # Set version information in a config.h file.

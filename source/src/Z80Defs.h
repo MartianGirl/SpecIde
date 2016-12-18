@@ -1,8 +1,8 @@
 #pragma once
 
-/** TTLSignal
+/** Z80Defs
  *
- * Definitions for TTL logic.
+ * Definitions for Z80 signals, states, etc.
  *
  */
 
@@ -30,13 +30,6 @@ constexpr uint_fast8_t FLAG_5 = 0x20;
 constexpr uint_fast8_t FLAG_Z = 0x40;
 constexpr uint_fast8_t FLAG_S = 0x80;
 
-//enum TTLSignal
-//{
-    //TTL_LOGIC_0,
-    //TTL_LOGIC_1,
-    //TTL_HIZ = -1
-//};
-
 enum class Z80State
 {
     ST_RESET,
@@ -53,6 +46,24 @@ enum class Z80State
     ST_M3_T1_ADDRWR,
     ST_M3_T2_WAITST,
     ST_M3_T3_DATAWR
+};
+
+enum class Z80AddressingMode
+{
+    AM_DIRECT_IMPLICIT,
+    AM_DIRECT_IMMEDIATE,
+    AM_DIRECT_EXTENDED,
+    AM_DIRECT_ZEROPAGE,
+    AM_DIRECT_BIT,
+    AM_INDIRECT_IMPLICIT,
+    AM_INDIRECT_IMMEDIATE,
+    AM_INDIRECT_EXTENDED,
+    AM_INDIRECT_BIT,
+    AM_INDEXED_IMPLICIT,
+    AM_INDEXED_IMMEDIATE,
+    AM_INDEXED_EXTENDED,
+    AM_INDEXED_BIT,
+    AM_RELATIVE
 };
 
 // vim: et:sw=4:ts=4

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <cstdint>
-#include <vector>
-
 /** Memory
  *
  * Memory bank.
@@ -21,6 +18,9 @@
  * latched by the CAS#/RAS# signals.
  *
  */
+
+#include <cstdint>
+#include <vector>
 
 using namespace std;
 

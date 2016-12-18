@@ -1,11 +1,11 @@
 #pragma once
 
-#include <cstdint>
-
 /** CPU
  *
  * Base class for all CPUs.
  */
+
+#include <cstdint>
 
 using namespace std;
 

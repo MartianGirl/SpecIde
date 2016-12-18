@@ -1,12 +1,12 @@
 #pragma once
 
-#include <cstdint>
-
 /** Z80Register
  *
  * Each of the 16-bit groups of two 8-bit registers in the Z80.
  *
  */
+
+#include <cstdint>
 
 using namespace std;
 

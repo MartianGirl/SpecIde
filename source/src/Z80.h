@@ -1,18 +1,19 @@
 #pragma once
 
-#include <cstdint>
-
 /** Z80
  *
  * Zilog Z80 CPU emulation.
  *
  */
 
-using namespace std;
+#include <cstdint>
 
 #include "CPU.h"
 #include "Z80Defs.h"
+#include "Z80Decoder.h"
 #include "Z80Register.h"
+
+using namespace std;
 
 class Z80 :
     public CPU
@@ -25,20 +26,11 @@ class Z80 :
         void clock();
 
         void start();
+        Z80State finishMemoryCycle();
 
-        // Registers
-        size_t registerSet;
-
-        Z80Register af[2];
-        Z80Register bc[2];
-        Z80Register de[2];
-        Z80Register hl[2];
         Z80Register ir;
 
         Z80Register pc;
-        Z80Register sp;
-        Z80Register ix;
-        Z80Register iy;
 
         // Signals
         uint_fast16_t a;
@@ -49,13 +41,7 @@ class Z80 :
         Z80State state;
 
         // Internals
-        uint_fast8_t opcode;
-        uint_fast8_t reg_1;
-        uint_fast8_t reg_2;
-        uint_fast16_t indirect_addr;
-        uint_fast8_t operand1;
-        uint_fast8_t operand2;
-        uint_fast16_t address;
+        Z80Decoder decoder;
 };
 
 // vim: et:sw=4:ts=4

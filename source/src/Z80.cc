@@ -47,8 +47,7 @@ void Z80::clock()
             a = ir.w & 0xFF7F;
             c |= (SIGNAL_RD_ | SIGNAL_M1_);
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
-            // Opcode is sampled HERE
-            opcode = d;
+            decoder.decode(d);
 
             state = Z80State::ST_M1_T4_RFSH2;
             break;
@@ -57,19 +56,26 @@ void Z80::clock()
             c |= (SIGNAL_MREQ_);
             c &= ~(SIGNAL_RFSH_);
 
-            // LD r,n
-            if ((opcode & 0xC7) == 0x06)
-            {
-                operand1 = (opcode & 0x38) >> 3;
-                operand2 = 0x08;
-                address = pc.w;
-                pc.w++;
-                state = Z80State::ST_M2_T1_ADDRWR;
-            }
+            state = finishMemoryCycle();
             break;
 
+        // M2. Memory read cycle
         case Z80State::ST_M2_T1_ADDRWR:
-            a = address;
+
+            switch(decoder.z80AddrMode)
+            {
+                case Z80AddressingMode::AM_DIRECT_IMMEDIATE:
+                case Z80AddressingMode::AM_INDIRECT_IMMEDIATE:
+                case Z80AddressingMode::AM_INDEXED_IMMEDIATE:
+                    a = pc.w;
+                    pc.w++;
+                    break;
+                    
+                default:
+                    // Should not happen
+                    break;
+            }
+
             c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_);
             state = Z80State::ST_M2_T2_WAITST;
@@ -84,46 +90,11 @@ void Z80::clock()
         case Z80State::ST_M2_T3_DATARD:
             c |= SIGNAL_MREQ_ | SIGNAL_RD_;
 
-            if ((opcode & 0xC7) == 0x06)
-            {
-                switch (operand1)
-                {
-                    case 0x00: 
-                        bc[registerSet].h = d;
-                        state = Z80State::ST_M1_T1_ADDRWR;
-                        break; // LD B, n
-                    case 0x01:
-                        bc[registerSet].l = d;
-                        state = Z80State::ST_M1_T1_ADDRWR;
-                        break; // LD C, n
-                    case 0x02:
-                        de[registerSet].h = d;
-                        state = Z80State::ST_M1_T1_ADDRWR;
-                        break; // LD D, n
-                    case 0x03:
-                        de[registerSet].l = d;
-                        state = Z80State::ST_M1_T1_ADDRWR;
-                        break; // LD E, n
-                    case 0x04:
-                        hl[registerSet].h = d;
-                        state = Z80State::ST_M1_T1_ADDRWR;
-                        break; // LD H, n
-                    case 0x05:
-                        hl[registerSet].l = d;
-                        state = Z80State::ST_M1_T1_ADDRWR;
-                        break; // LD L, n
-                    case 0x06:
-                        indirect_addr = d;   // LD A, (nn)
-                        break;
-                    case 0x07:
-                        af[registerSet].h = d;
-                        state = Z80State::ST_M1_T1_ADDRWR;
-                        break; // LD A, n
-                    default: break;
-                }
-            }
+            decoder.readByte(d);
+            state = finishMemoryCycle();
             break;
 
+        // M3. Memory write cycle
         case Z80State::ST_M3_T1_ADDRWR:
             break;
 
@@ -140,26 +111,31 @@ void Z80::clock()
     }
 }
 
+Z80State Z80::finishMemoryCycle()
+{
+    if (decoder.memRdCycles)
+        return Z80State::ST_M2_T1_ADDRWR;
+    else if (decoder.memWrCycles)
+        return Z80State::ST_M3_T1_ADDRWR;
+    else
+    {
+        decoder.execute();
+        return Z80State::ST_M1_T1_ADDRWR;
+    }
+}
+
 void Z80::start()
 {
-    // Clear all registers
+    // Clear control registers
     pc.w = 0x0000;
-
-    af[0].w = 0x0000; af[1].w = 0x0000;
-    bc[0].w = 0x0000; bc[1].w = 0x0000;
-    de[0].w = 0x0000; de[1].w = 0x0000;
-    hl[0].w = 0x0000; hl[1].w = 0x0000;
-
     ir.w = 0x0000;
-    sp.w = 0x0000;
-    ix.w = 0x0000;
-    iy.w = 0x0000;
 
+    // Clear buses
     a = 0xFFFF;
     c = 0xFFFF;
     d = 0xFF;
 
-    registerSet = 0x00; // We've got to choose one, I guess?
+    decoder.reset();
 }
 
 // vim: et:sw=4:ts=4
