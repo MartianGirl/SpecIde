@@ -32,46 +32,105 @@ void Z80::clock()
         case Z80State::ST_M1_T1_ADDRWR:
             a = pc.w;
             pc.w++;
-            c = 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
-
-            if (c & SIGNAL_WAIT_)
-                state = Z80State::ST_M1_T2_DATARD;
+            c |= SIGNAL_RFSH_;
+            c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
+            state = Z80State::ST_M1_T2_DATARD;
             break;
 
         case Z80State::ST_M1_T2_DATARD:
-            c = 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
-
-            state = Z80State::ST_M1_T3_RFSH1;
+            c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
+            if (c & SIGNAL_WAIT_)
+                state = Z80State::ST_M1_T3_RFSH1;
             break;
 
         case Z80State::ST_M1_T3_RFSH1:
             a = ir.w & 0xFF7F;
-            c = 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
+            c |= (SIGNAL_RD_ | SIGNAL_M1_);
+            c &= ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
             // Opcode is sampled HERE
+            opcode = d;
 
             state = Z80State::ST_M1_T4_RFSH2;
             break;
 
         case Z80State::ST_M1_T4_RFSH2:
-            c = 0xFFFF & ~(SIGNAL_RFSH_);
+            c |= (SIGNAL_MREQ_);
+            c &= ~(SIGNAL_RFSH_);
+
+            // LD r,n
+            if ((opcode & 0xC7) == 0x06)
+            {
+                operand1 = (opcode & 0x38) >> 3;
+                operand2 = 0x08;
+                address = pc.w;
+                pc.w++;
+                state = Z80State::ST_M2_T1_ADDRWR;
+            }
             break;
 
-        case Z80State::ST_M2_T1:
+        case Z80State::ST_M2_T1_ADDRWR:
+            a = address;
+            c |= SIGNAL_RFSH_;
+            c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_);
+            state = Z80State::ST_M2_T2_WAITST;
             break;
 
-        case Z80State::ST_M2_T2:
+        case Z80State::ST_M2_T2_WAITST:
+            c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_);
+            if (c & SIGNAL_WAIT_)
+                state = Z80State::ST_M2_T3_DATARD;
             break;
 
-        case Z80State::ST_M2_T3:
+        case Z80State::ST_M2_T3_DATARD:
+            c |= SIGNAL_MREQ_ | SIGNAL_RD_;
+
+            if ((opcode & 0xC7) == 0x06)
+            {
+                switch (operand1)
+                {
+                    case 0x00: 
+                        bc[registerSet].h = d;
+                        state = Z80State::ST_M1_T1_ADDRWR;
+                        break; // LD B, n
+                    case 0x01:
+                        bc[registerSet].l = d;
+                        state = Z80State::ST_M1_T1_ADDRWR;
+                        break; // LD C, n
+                    case 0x02:
+                        de[registerSet].h = d;
+                        state = Z80State::ST_M1_T1_ADDRWR;
+                        break; // LD D, n
+                    case 0x03:
+                        de[registerSet].l = d;
+                        state = Z80State::ST_M1_T1_ADDRWR;
+                        break; // LD E, n
+                    case 0x04:
+                        hl[registerSet].h = d;
+                        state = Z80State::ST_M1_T1_ADDRWR;
+                        break; // LD H, n
+                    case 0x05:
+                        hl[registerSet].l = d;
+                        state = Z80State::ST_M1_T1_ADDRWR;
+                        break; // LD L, n
+                    case 0x06:
+                        indirect_addr = d;   // LD A, (nn)
+                        break;
+                    case 0x07:
+                        af[registerSet].h = d;
+                        state = Z80State::ST_M1_T1_ADDRWR;
+                        break; // LD A, n
+                    default: break;
+                }
+            }
             break;
 
-        case Z80State::ST_M3_T1:
+        case Z80State::ST_M3_T1_ADDRWR:
             break;
 
-        case Z80State::ST_M3_T2:
+        case Z80State::ST_M3_T2_WAITST:
             break;
 
-        case Z80State::ST_M3_T3:
+        case Z80State::ST_M3_T3_DATAWR:
             break;
 
 

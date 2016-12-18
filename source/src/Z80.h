@@ -47,6 +47,15 @@ class Z80 :
 
         // States
         Z80State state;
+
+        // Internals
+        uint_fast8_t opcode;
+        uint_fast8_t reg_1;
+        uint_fast8_t reg_2;
+        uint_fast16_t indirect_addr;
+        uint_fast8_t operand1;
+        uint_fast8_t operand2;
+        uint_fast16_t address;
 };
 
 // vim: et:sw=4:ts=4
