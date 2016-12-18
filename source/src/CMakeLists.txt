@@ -6,18 +6,8 @@ include(TestBigEndian)
 if(UNIX)
     find_package(PkgConfig REQUIRED)
     pkg_search_module(SFML REQUIRED sfml-all)
-    add_executable(SpecIde SpecIde.cc
-            GraphicWindow.cc Screen.cc
-            Computer.cc Spectrum.cc
-            CPU.cc Z80.cc
-            Memory.cc Z80Register.cc)
-    target_link_libraries(SpecIde 
-            ${SFML_LIBRARIES})
 elseif(WIN32)
-#    set(SFML_ROOT C:/libs/MinGW/SFML-2.4.1)
-#    set(SFML_STATIC_LIBRARIES TRUE)
     find_package(SFML COMPONENTS audio graphics window system)
-    
 endif()
 
 include_directories(${SFML_INCLUDE_DIRS})
