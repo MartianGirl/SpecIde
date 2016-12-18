@@ -6,7 +6,6 @@ include(TestBigEndian)
 if(UNIX)
     find_package(PkgConfig REQUIRED)
     pkg_search_module(SFML REQUIRED sfml-all)
-    include_directories(${SFML_INCLUDE_DIRS})
     add_executable(SpecIde SpecIde.cc
             GraphicWindow.cc Screen.cc
             Computer.cc Spectrum.cc
@@ -15,20 +14,21 @@ if(UNIX)
     target_link_libraries(SpecIde 
             ${SFML_LIBRARIES})
 elseif(WIN32)
-    set(SFML_ROOT C:/libs/MinGW/SFML-2.4.1)
-    set(SFML_STATIC_LIBRARIES TRUE)
+#    set(SFML_ROOT C:/libs/MinGW/SFML-2.4.1)
+#    set(SFML_STATIC_LIBRARIES TRUE)
     find_package(SFML COMPONENTS audio graphics window system)
-    include_directories(${SFML_INCLUDE_DIR})
-    add_executable(SpecIde SpecIde.cc
-            GraphicWindow.cc Screen.cc
-            Computer.cc Spectrum.cc
-            CPU.cc Z80.cc
-            Memory.cc Z80Register.cc)
-    target_link_libraries(SpecIde 
-            ${SFML_LIBRARIES}
-            ${SFML_DEPENDENCIES})
+    
 endif()
 
+include_directories(${SFML_INCLUDE_DIRS})
+include_directories(${SFML_INCLUDE_DIR})
+
+add_executable(SpecIde SpecIde.cc
+        GraphicWindow.cc Screen.cc
+        Computer.cc Spectrum.cc
+        CPU.cc Z80.cc
+        Memory.cc Z80Register.cc)
+target_link_libraries(SpecIde ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
 
 # Set version information in a config.h file.
 set(SpecIde_VERSION_MAJOR 0)
@@ -42,7 +42,6 @@ configure_file(
     "${PROJECT_SOURCE_DIR}/config.h.in"
     "${PROJECT_SOURCE_DIR}/config.h"
 )
-
 
 install(TARGETS SpecIde
     RUNTIME

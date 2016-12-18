@@ -5,10 +5,16 @@ if(UNIX)
     pkg_search_module(SFML REQUIRED sfml-all)
 elseif(WIN32)
     find_package(SFML COMPONENTS audio graphics system window)
-    set(Boost_NO_BOOST_CMAKE TRUE)
+    # set(Boost_NO_BOOST_CMAKE TRUE)
 endif()
 
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+
+# This is for all platforms
+include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${Boost_INCLUDE_DIR})
+include_directories(${SFML_INCLUDE_DIRS})
+include_directories(${SFML_INCLUDE_DIR})
 
 # Add the test executable
 add_executable(GraphicWindowTest
@@ -83,15 +89,6 @@ target_link_libraries(Z80RegisterTest
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
-
-# This is for all platforms
-include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${Boost_INCLUDE_DIR})
-if(UNIX)
-    include_directories(${SFML_INCLUDE_DIRS})
-elseif(WIN32)
-    include_directories(${SFML_INCLUDE_DIR})
-endif()
 
 install(TARGETS GraphicWindowTest ScreenTest
     ComputerTest SpectrumTest
