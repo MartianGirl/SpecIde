@@ -46,13 +46,13 @@ enum class Z80State
     ST_M1_T3_RFSH1,
     ST_M1_T4_RFSH2,
 
-    ST_M2_T1,
-    ST_M2_T2,
-    ST_M2_T3,
+    ST_M2_T1_ADDRWR,
+    ST_M2_T2_WAITST,
+    ST_M2_T3_DATARD,
 
-    ST_M3_T1,
-    ST_M3_T2,
-    ST_M3_T3
+    ST_M3_T1_ADDRWR,
+    ST_M3_T2_WAITST,
+    ST_M3_T3_DATAWR
 };
 
 // vim: et:sw=4:ts=4
