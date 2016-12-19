@@ -71,6 +71,8 @@ void Z80Decoder::execute()
                 hl->l = operand.l;
                 break;
             case 0x06: // LD (HL), n
+                memWrCycles--;
+                wrAddress = hl->w;
                 break;
             case 0x07: // LD A, n
                 af->h = operand.l;

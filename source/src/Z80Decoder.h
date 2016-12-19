@@ -28,6 +28,7 @@ class Z80Decoder
         uint_fast8_t opcode;
         uint_fast8_t dstRegister;
         uint_fast8_t srcRegister;
+        uint_fast16_t wrAddress;
 
         size_t memRdCycles;
         size_t memWrCycles;

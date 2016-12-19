@@ -96,15 +96,35 @@ void Z80::clock()
 
         // M3. Memory write cycle
         case Z80State::ST_M3_T1_ADDRWR:
+
+            switch(decoder.z80AddrMode)
+            {
+                case Z80AddressingMode::AM_INDIRECT_IMMEDIATE:
+                    a = decoder.wrAddress;
+                    d = decoder.operand.l;
+                    break;
+
+                default:
+                    // Should not happen
+                    break;
+            }
+
+            c |= SIGNAL_RFSH_;
+            c &= ~(SIGNAL_MREQ_);
+            state = Z80State::ST_M3_T2_WAITST;
             break;
 
         case Z80State::ST_M3_T2_WAITST:
+            c &= ~(SIGNAL_WR_);
+            if (c & SIGNAL_WAIT_)
+                state = Z80State::ST_M3_T3_DATAWR;
             break;
 
         case Z80State::ST_M3_T3_DATAWR:
+            c |= SIGNAL_MREQ_ | SIGNAL_WR_;
+
+            state = finishMemoryCycle();
             break;
-
-
 
         default:
             break;
@@ -116,7 +136,10 @@ Z80State Z80::finishMemoryCycle()
     if (decoder.memRdCycles)
         return Z80State::ST_M2_T1_ADDRWR;
     else if (decoder.memWrCycles)
+    {
+        decoder.execute();
         return Z80State::ST_M3_T1_ADDRWR;
+    }
     else
     {
         decoder.execute();
