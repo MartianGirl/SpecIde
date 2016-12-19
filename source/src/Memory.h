@@ -28,21 +28,23 @@ class Memory
 {
     public:
         Memory(size_t addrWidth, bool readOnly);
-        virtual ~Memory();
 
         /** Issue a clock tick.
          */
         void clock();
 
+        uint_fast16_t size;
+        uint_fast16_t addr;
+
         vector<uint_fast8_t> memory;
 
-        bool readOnly;
-        bool write;
+        bool rom;
+        bool wr_;
+        bool rd_;
+        bool as_;   // Address strobe
 
-        uint_fast16_t addr;
-        uint_fast8_t data;
-
-        uint_fast16_t size;
+        uint_fast16_t a;
+        uint_fast8_t d;
 };
 
 // vim: et:sw=4:ts=4
