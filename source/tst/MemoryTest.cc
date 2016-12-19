@@ -17,21 +17,25 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     BOOST_CHECK_EQUAL(mem0.size, static_cast<uint_fast16_t>(0x4000));
 
     // Memory should not be modified until clock happens.
-    mem0.addr = 0x1234;
-    mem0.write = true;
-    mem0.data = 0xAA;
+    mem0.a = 0x1234;
+    mem0.d = 0xAA;
+    mem0.wr_ = true;
+    mem0.as_ = true;
     BOOST_CHECK_EQUAL(mem0.memory[0x1234], 0x00);
 
     // Clock edges make memory work.
-    mem0.clock();
+    mem0.as_ = false; mem0.wr_ = true; mem0.clock();
+    mem0.as_ = false; mem0.wr_ = false; mem0.clock();
     BOOST_CHECK_EQUAL(mem0.memory[0x1234], 0xAA);
 
     // Read test.
-    mem0.write = false;
-    mem0.data = 0x12;
-    mem0.clock();
+    mem0.d = 0x12;
+    mem0.a = 0x1234;
+    mem0.addr = 0x0000;
+    mem0.as_ = false; mem0.rd_ = true; mem0.clock();
+    mem0.as_ = false; mem0.rd_ = false; mem0.clock();
     BOOST_CHECK_EQUAL(mem0.memory[0x1234], 0xAA);
-    BOOST_CHECK_EQUAL(mem0.data, 0xAA);
+    BOOST_CHECK_EQUAL(mem0.d, 0xAA);
 }
 
 // EOF
