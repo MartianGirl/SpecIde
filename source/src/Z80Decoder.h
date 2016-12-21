@@ -34,6 +34,7 @@ class Z80Decoder
         Z80AddressingMode z80AddrMode;
 
         // Registers
+        Z80Register ir;
         Z80Register sp;
         Z80Register ix;
         Z80Register iy;
@@ -47,6 +48,7 @@ class Z80Decoder
         Z80Register *bc;
         Z80Register *de;
         Z80Register *hl;
+        uint_fast8_t* reg8[2][8];
         
         uint_fast8_t x, y, z, p, q;
         uint_fast8_t prefix;

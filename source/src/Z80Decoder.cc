@@ -5,7 +5,11 @@ Z80Decoder::Z80Decoder() :
     af(&af_pair[registerSet]),
     bc(&bc_pair[registerSet]),
     de(&de_pair[registerSet]),
-    hl(&hl_pair[registerSet])
+    hl(&hl_pair[registerSet]),
+    reg8{{&bc_pair[0].h, &bc_pair[0].l, &de_pair[0].h, &de_pair[0].l,
+        &hl_pair[0].h, &hl_pair[0].l, nullptr, &af_pair[0].h},
+    {&bc_pair[1].h, &bc_pair[1].l, &de_pair[1].h, &de_pair[1].l,
+        &hl_pair[1].h, &hl_pair[1].l, nullptr, &af_pair[1].h}}
 {
 }
 
@@ -111,35 +115,14 @@ void Z80Decoder::execute()
             {
                 case 0x06:
                     {
-                        switch (y)
+                        if (y == 0x06)
                         {
-                            case 0x00: // LD B, n
-                                bc->h = operand.l;
-                                break;
-                            case 0x01: // LD C, n
-                                bc->l = operand.l;
-                                break;
-                            case 0x02: // LD D, n
-                                de->h = operand.l;
-                                break;
-                            case 0x03: // LD E, n
-                                de->l = operand.l;
-                                break;
-                            case 0x04: // LD H, n
-                                hl->h = operand.l;
-                                break;
-                            case 0x05: // LD L, n
-                                hl->l = operand.l;
-                                break;
-                            case 0x06: // LD (HL), n
-                                memWrCycles--;
-                                wrAddress = hl->w;
-                                break;
-                            case 0x07: // LD A, n
-                                af->h = operand.l;
-                                break;
-                            default:
-                                break;
+                            memWrCycles--;
+                            wrAddress = hl->w;
+                        }
+                        else
+                        {
+                            *reg8[registerSet][y] = operand.l;
                         }
                     }
                     break;
@@ -150,13 +133,24 @@ void Z80Decoder::execute()
             break;
 
         case 0x01:
-            if (y == 0x06 && z == 0x06)
+            if (y == 0x06)
             {
-                // HALT
+                if (z == 0x06)
+                {
+                    // HALT
+                }
+                else
+                {
+                    // LD (HL), r'
+                }
+            }
+            else if (z == 0x06)
+            {
+                // LD r', (HL)
             }
             else
             {
-                // LD r, r'
+                *reg8[registerSet][y] = *reg8[registerSet][z];
             }
             break;
 
@@ -175,14 +169,15 @@ void Z80Decoder::execute()
 void Z80Decoder::reset()
 {
     // Clear all registers
-    af_pair[0].w = 0x0000; af_pair[1].w = 0x0000;
-    bc_pair[0].w = 0x0000; bc_pair[1].w = 0x0000;
-    de_pair[0].w = 0x0000; de_pair[1].w = 0x0000;
-    hl_pair[0].w = 0x0000; hl_pair[1].w = 0x0000;
+    af_pair[0].w = 0xFFFF; af_pair[1].w = 0xFFFF;
+    bc_pair[0].w = 0xFFFF; bc_pair[1].w = 0xFFFF;
+    de_pair[0].w = 0xFFFF; de_pair[1].w = 0xFFFF;
+    hl_pair[0].w = 0xFFFF; hl_pair[1].w = 0xFFFF;
 
-    sp.w = 0x0000;
-    ix.w = 0x0000;
-    iy.w = 0x0000;
+    ir.w = 0xFFFF;
+    sp.w = 0xFFFF;
+    ix.w = 0xFFFF;
+    iy.w = 0xFFFF;
 
     selectRegisterSet(0x00); // We've got to choose one, I guess?
 }
