@@ -30,6 +30,11 @@ constexpr uint_fast8_t FLAG_5 = 0x20;
 constexpr uint_fast8_t FLAG_Z = 0x40;
 constexpr uint_fast8_t FLAG_S = 0x80;
 
+constexpr uint_fast8_t PREFIX_CB = 0x01;
+constexpr uint_fast8_t PREFIX_DD = 0x02;
+constexpr uint_fast8_t PREFIX_ED = 0x04;
+constexpr uint_fast8_t PREFIX_FD = 0x08;
+
 enum class Z80State
 {
     ST_RESET,

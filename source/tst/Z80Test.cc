@@ -133,11 +133,8 @@ BOOST_AUTO_TEST_CASE(instruction_ld_r_n_test)
     z80.clock();    // ST_M1_T2_DATARD -> ST_M1_T3_RFSH1
     z80.d = 0x3E;   // LD A, n
     z80.clock();    // ST_M1_T3_RFSH1  -> ST_M1_T4_RFSH2
-    BOOST_CHECK_EQUAL(z80.decoder.opcode, 0x3E);
     z80.clock();    // ST_M1_T4_RFSH2  -> ST_M2_T1_ADDRWR
     BOOST_CHECK(z80.state == Z80State::ST_M2_T1_ADDRWR);
-    BOOST_CHECK_EQUAL(z80.decoder.opcode, 0x3E);
-    BOOST_CHECK_EQUAL(z80.decoder.dstRegister, 0x07);
     z80.clock();    // ST_M2_T1_ADDRWR -> ST_M2_T2_WAITST
     BOOST_CHECK_EQUAL(z80.pc.w, 0x0002);
     z80.clock();    // ST_M2_T2_WAITST -> ST_M2_T3_DATARD
@@ -155,11 +152,8 @@ BOOST_AUTO_TEST_CASE(instruction_ld_r_n_test)
     z80.clock();    // ST_M1_T2_DATARD -> ST_M1_T3_RFSH1
     z80.d = 0x06;   // LD B, n
     z80.clock();    // ST_M1_T3_RFSH1  -> ST_M1_T4_RFSH2
-    BOOST_CHECK_EQUAL(z80.decoder.opcode, 0x06);
     z80.clock();    // ST_M1_T4_RFSH2  -> ST_M2_T1_ADDRWR
     BOOST_CHECK(z80.state == Z80State::ST_M2_T1_ADDRWR);
-    BOOST_CHECK_EQUAL(z80.decoder.opcode, 0x06);
-    BOOST_CHECK_EQUAL(z80.decoder.dstRegister, 0x00);
     z80.clock();    // ST_M2_T1_ADDRWR -> ST_M2_T2_WAITST
     BOOST_CHECK_EQUAL(z80.pc.w, 0x0002);
     z80.clock();    // ST_M2_T2_WAITST -> ST_M2_T3_DATARD

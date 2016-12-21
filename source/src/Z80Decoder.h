@@ -25,8 +25,6 @@ class Z80Decoder
         void reset();
 
         Z80Register operand;
-        uint_fast8_t opcode;
-        uint_fast8_t dstRegister;
         uint_fast8_t srcRegister;
         uint_fast16_t wrAddress;
 
@@ -49,6 +47,9 @@ class Z80Decoder
         Z80Register *bc;
         Z80Register *de;
         Z80Register *hl;
+        
+        uint_fast8_t x, y, z, p, q;
+        uint_fast8_t prefix;
 };
 
 // vim: et:sw=4:ts=4
