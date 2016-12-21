@@ -44,7 +44,9 @@ void Z80::clock()
             break;
 
         case Z80State::ST_M1_T3_RFSH1:
-            a = ir.w & 0xFF7F;
+            a = decoder.ir.w & 0xFF7F;
+            decoder.ir.l = (decoder.ir.l & 0x80) 
+                | ((decoder.ir.l + 1) & 0x7F);
             c |= (SIGNAL_RD_ | SIGNAL_M1_);
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
             decoder.decode(d);
@@ -151,7 +153,6 @@ void Z80::start()
 {
     // Clear control registers
     pc.w = 0x0000;
-    ir.w = 0x0000;
 
     // Clear buses
     a = 0xFFFF;

@@ -28,8 +28,6 @@ class Z80 :
         void start();
         Z80State finishMemoryCycle();
 
-        Z80Register ir;
-
         Z80Register pc;
 
         // Signals
