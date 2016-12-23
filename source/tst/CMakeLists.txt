@@ -49,6 +49,7 @@ add_executable(SpectrumTest
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc
+    ${PROJECT_SOURCE_DIR}/src/Z80RegisterSet.cc
     ${PROJECT_SOURCE_DIR}/src/Computer.cc
     ${PROJECT_SOURCE_DIR}/src/Spectrum.cc)
 target_link_libraries(SpectrumTest
@@ -70,6 +71,7 @@ add_executable(Z80Test
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc
+    ${PROJECT_SOURCE_DIR}/src/Z80RegisterSet.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
 target_link_libraries(Z80Test
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}

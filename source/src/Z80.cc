@@ -44,9 +44,9 @@ void Z80::clock()
             break;
 
         case Z80State::ST_M1_T3_RFSH1:
-            a = decoder.ir.w & 0xFF7F;
-            decoder.ir.l = (decoder.ir.l & 0x80) 
-                | ((decoder.ir.l + 1) & 0x7F);
+            a = decoder.regs.ir.w & 0xFF7F;
+            decoder.regs.ir.l = (decoder.regs.ir.l & 0x80) 
+                | ((decoder.regs.ir.l + 1) & 0x7F);
             c |= (SIGNAL_RD_ | SIGNAL_M1_);
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
             decoder.decode(d);

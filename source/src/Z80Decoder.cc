@@ -1,15 +1,13 @@
 #include "Z80Decoder.h"
 
 Z80Decoder::Z80Decoder() :
-    registerSet(0),
-    af(&af_pair[registerSet]),
-    bc(&bc_pair[registerSet]),
-    de(&de_pair[registerSet]),
-    hl(&hl_pair[registerSet]),
-    reg8{{&bc_pair[0].h, &bc_pair[0].l, &de_pair[0].h, &de_pair[0].l,
-        &hl_pair[0].h, &hl_pair[0].l, nullptr, &af_pair[0].h},
-    {&bc_pair[1].h, &bc_pair[1].l, &de_pair[1].h, &de_pair[1].l,
-        &hl_pair[1].h, &hl_pair[1].l, nullptr, &af_pair[1].h}}
+    memRdCycles(0),
+    memWrCycles(0),
+    x(0),
+    y(0),
+    z(0),
+    p(0),
+    q(0)
 {
 }
 
@@ -118,11 +116,11 @@ void Z80Decoder::execute()
                         if (y == 0x06)
                         {
                             memWrCycles--;
-                            wrAddress = hl->w;
+                            wrAddress = regs.hl->w;
                         }
                         else
                         {
-                            *reg8[registerSet][y] = operand.l;
+                            *(regs.reg8[y]) = operand.l;
                         }
                     }
                     break;
@@ -150,7 +148,7 @@ void Z80Decoder::execute()
             }
             else
             {
-                *reg8[registerSet][y] = *reg8[registerSet][z];
+                *(regs.reg8[y]) = *(regs.reg8[z]);
             }
             break;
 
@@ -168,27 +166,7 @@ void Z80Decoder::execute()
 
 void Z80Decoder::reset()
 {
-    // Clear all registers
-    af_pair[0].w = 0xFFFF; af_pair[1].w = 0xFFFF;
-    bc_pair[0].w = 0xFFFF; bc_pair[1].w = 0xFFFF;
-    de_pair[0].w = 0xFFFF; de_pair[1].w = 0xFFFF;
-    hl_pair[0].w = 0xFFFF; hl_pair[1].w = 0xFFFF;
-
-    ir.w = 0xFFFF;
-    sp.w = 0xFFFF;
-    ix.w = 0xFFFF;
-    iy.w = 0xFFFF;
-
-    selectRegisterSet(0x00); // We've got to choose one, I guess?
-}
-
-void Z80Decoder::selectRegisterSet(size_t set)
-{
-    registerSet = set;
-    af = &af_pair[registerSet];
-    bc = &bc_pair[registerSet];
-    de = &de_pair[registerSet];
-    hl = &hl_pair[registerSet];
+    regs.reset();
 }
 
 // vim: et:sw=4:ts=4

@@ -1,0 +1,52 @@
+#include "Z80RegisterSet.h"
+
+Z80RegisterSet::Z80RegisterSet() :
+    registerSet(0),
+    af(&af_pair[registerSet]),
+    bc(&bc_pair[registerSet]),
+    de(&de_pair[registerSet]),
+    hl(&hl_pair[registerSet]),
+    r8{{&bc_pair[0].h, &bc_pair[0].l, &de_pair[0].h, &de_pair[0].l,
+        &hl_pair[0].h, &hl_pair[0].l, nullptr, &af_pair[0].h},
+    {&bc_pair[1].h, &bc_pair[1].l, &de_pair[1].h, &de_pair[1].l,
+        &hl_pair[1].h, &hl_pair[1].l, nullptr, &af_pair[1].h}},
+    rp{{&bc_pair[0].w, &de_pair[0].w, &hl_pair[0].w, &sp.w},
+        {&bc_pair[1].w, &de_pair[1].w, &hl_pair[1].w, &sp.w}},
+    rp2{{&bc_pair[0].w, &de_pair[0].w, &hl_pair[0].w, &af_pair[0].w},
+        {&bc_pair[1].w, &de_pair[1].w, &hl_pair[1].w, &af_pair[1].w}},
+    reg8(&r8[0][0]),
+    regp(&rp[0][0]),
+    regp2(&rp2[0][0])
+{
+}
+
+void Z80RegisterSet::reset()
+{
+    // Clear all registers
+    af_pair[0].w = 0xFFFF; af_pair[1].w = 0xFFFF;
+    bc_pair[0].w = 0xFFFF; bc_pair[1].w = 0xFFFF;
+    de_pair[0].w = 0xFFFF; de_pair[1].w = 0xFFFF;
+    hl_pair[0].w = 0xFFFF; hl_pair[1].w = 0xFFFF;
+
+    ir.w = 0xFFFF;
+    sp.w = 0xFFFF;
+    ix.w = 0xFFFF;
+    iy.w = 0xFFFF;
+
+    selectRegisterSet(0x00); // We've got to choose one, I guess?
+}
+
+void Z80RegisterSet::selectRegisterSet(size_t set)
+{
+    registerSet = set;
+    af = &af_pair[registerSet];
+    bc = &bc_pair[registerSet];
+    de = &de_pair[registerSet];
+    hl = &hl_pair[registerSet];
+
+    reg8 = &r8[registerSet][0];
+    regp = &rp[registerSet][0];
+    regp2 = &rp2[registerSet][0];
+}
+
+// vim: et:sw=4:ts=4
