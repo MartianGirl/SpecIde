@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     // Reset the Z80, clock it. PC should be 0x0000.
     z80.reset();
     z80.clock();
-    BOOST_CHECK_EQUAL(z80.pc.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0000);
     BOOST_CHECK(z80.state == Z80State::ST_M1_T1_ADDRWR);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af_pair[0].w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc_pair[0].w, 0xFFFF);
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
 
     // Clock it once. We've run ST_M1_T1_ADDRWR.
     z80.clock();
-    BOOST_CHECK_EQUAL(z80.pc.w, 0x0001);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0001);
     BOOST_CHECK(z80.state == Z80State::ST_M1_T2_DATARD);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af_pair[0].w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc_pair[0].w, 0xFFFF);
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
 
     // Clock it once. We've run ST_M1_T2_DATARD.
     z80.clock();
-    BOOST_CHECK_EQUAL(z80.pc.w, 0x0001);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0001);
     BOOST_CHECK(z80.state == Z80State::ST_M1_T3_RFSH1);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af_pair[0].w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc_pair[0].w, 0xFFFF);
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
 
     // Clock it once. We've run ST_M1_T3_RFSH1
     z80.clock();
-    BOOST_CHECK_EQUAL(z80.pc.w, 0x0001);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0001);
     BOOST_CHECK(z80.state == Z80State::ST_M1_T4_RFSH2);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af_pair[0].w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc_pair[0].w, 0xFFFF);
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
 
     // Clock it once. We've run ST_M1_T4_RFSH2
     z80.clock();
-    BOOST_CHECK_EQUAL(z80.pc.w, 0x0001);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0001);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af_pair[0].w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc_pair[0].w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de_pair[0].w, 0xFFFF);
@@ -126,16 +126,16 @@ BOOST_AUTO_TEST_CASE(instruction_ld_r_n_test)
     // LD A, n
     z80.reset();
     z80.clock();    // ST_RESET        -> ST_M1_T1_ADDRWR
-    BOOST_CHECK_EQUAL(z80.pc.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0000);
     z80.clock();    // ST_M1_T1_ADDRWR -> ST_M1_T2_DATARD 
-    BOOST_CHECK_EQUAL(z80.pc.w, 0x0001);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0001);
     z80.clock();    // ST_M1_T2_DATARD -> ST_M1_T3_RFSH1
     z80.d = 0x3E;   // LD A, n
     z80.clock();    // ST_M1_T3_RFSH1  -> ST_M1_T4_RFSH2
     z80.clock();    // ST_M1_T4_RFSH2  -> ST_M2_T1_ADDRWR
     BOOST_CHECK(z80.state == Z80State::ST_M2_T1_ADDRWR);
     z80.clock();    // ST_M2_T1_ADDRWR -> ST_M2_T2_WAITST
-    BOOST_CHECK_EQUAL(z80.pc.w, 0x0002);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0002);
     z80.clock();    // ST_M2_T2_WAITST -> ST_M2_T3_DATARD
     BOOST_CHECK(z80.state == Z80State::ST_M2_T3_DATARD);
     z80.d = 0xA5;
@@ -145,16 +145,16 @@ BOOST_AUTO_TEST_CASE(instruction_ld_r_n_test)
     // LD B, n
     z80.reset();
     z80.clock();    // ST_RESET        -> ST_M1_T1_ADDRWR
-    BOOST_CHECK_EQUAL(z80.pc.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0000);
     z80.clock();    // ST_M1_T1_ADDRWR -> ST_M1_T2_DATARD 
-    BOOST_CHECK_EQUAL(z80.pc.w, 0x0001);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0001);
     z80.clock();    // ST_M1_T2_DATARD -> ST_M1_T3_RFSH1
     z80.d = 0x06;   // LD B, n
     z80.clock();    // ST_M1_T3_RFSH1  -> ST_M1_T4_RFSH2
     z80.clock();    // ST_M1_T4_RFSH2  -> ST_M2_T1_ADDRWR
     BOOST_CHECK(z80.state == Z80State::ST_M2_T1_ADDRWR);
     z80.clock();    // ST_M2_T1_ADDRWR -> ST_M2_T2_WAITST
-    BOOST_CHECK_EQUAL(z80.pc.w, 0x0002);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0002);
     z80.clock();    // ST_M2_T2_WAITST -> ST_M2_T3_DATARD
     BOOST_CHECK(z80.state == Z80State::ST_M2_T3_DATARD);
     z80.d = 0x34;

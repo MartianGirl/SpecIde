@@ -28,8 +28,6 @@ class Z80 :
         void start();
         Z80State finishMemoryCycle();
 
-        Z80Register pc;
-
         // Signals
         uint_fast16_t a;
         uint_fast8_t d;

@@ -30,8 +30,8 @@ void Z80::clock()
             break;
 
         case Z80State::ST_M1_T1_ADDRWR:
-            a = pc.w;
-            pc.w++;
+            a = decoder.regs.pc.w;
+            decoder.regs.pc.w++;
             c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
             state = Z80State::ST_M1_T2_DATARD;
@@ -64,19 +64,22 @@ void Z80::clock()
         // M2. Memory read cycle
         case Z80State::ST_M2_T1_ADDRWR:
 
-            switch(decoder.z80AddrMode)
-            {
-                case Z80AddressingMode::AM_DIRECT_IMMEDIATE:
-                case Z80AddressingMode::AM_INDIRECT_IMMEDIATE:
-                case Z80AddressingMode::AM_INDEXED_IMMEDIATE:
-                    a = pc.w;
-                    pc.w++;
-                    break;
-                    
-                default:
+            // switch(decoder.z80AddrMode)
+            // {
+                // case Z80AddressingMode::AM_DIRECT_IMMEDIATE:
+                // case Z80AddressingMode::AM_INDIRECT_IMMEDIATE:
+                // case Z80AddressingMode::AM_INDEXED_IMMEDIATE:
+                    // a = pc.w;
+                    // pc.w++;
+                    // break;
+                    // 
+                // default:
                     // Should not happen
-                    break;
-            }
+                    // break;
+            // }
+
+            a = decoder.regs.address.w;
+//            pc.w++;
 
             c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_);
@@ -99,17 +102,20 @@ void Z80::clock()
         // M3. Memory write cycle
         case Z80State::ST_M3_T1_ADDRWR:
 
-            switch(decoder.z80AddrMode)
-            {
-                case Z80AddressingMode::AM_INDIRECT_IMMEDIATE:
-                    a = decoder.wrAddress;
-                    d = decoder.operand.l;
-                    break;
+            // switch(decoder.z80AddrMode)
+            // {
+                // case Z80AddressingMode::AM_INDIRECT_IMMEDIATE:
+                    // a = decoder.wrAddress;
+                    // d = decoder.operand.l;
+                    // break;
 
-                default:
+                // default:
                     // Should not happen
-                    break;
-            }
+                    // break;
+            // }
+
+            a = decoder.regs.address.w;
+            d = decoder.regs.operand.h;
 
             c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_);
@@ -135,9 +141,9 @@ void Z80::clock()
 
 Z80State Z80::finishMemoryCycle()
 {
-    if (decoder.memRdCycles)
+    if (decoder.regs.memRdCycles)
         return Z80State::ST_M2_T1_ADDRWR;
-    else if (decoder.memWrCycles)
+    else if (decoder.regs.memWrCycles)
     {
         decoder.execute();
         return Z80State::ST_M3_T1_ADDRWR;
@@ -151,9 +157,6 @@ Z80State Z80::finishMemoryCycle()
 
 void Z80::start()
 {
-    // Clear control registers
-    pc.w = 0x0000;
-
     // Clear buses
     a = 0xFFFF;
     c = 0xFFFF;

@@ -23,6 +23,7 @@ class Z80RegisterSet
         size_t registerSet;
 
         // Registers
+        Z80Register pc;
         Z80Register ir;
         Z80Register sp;
         Z80Register ix;
@@ -44,6 +45,13 @@ class Z80RegisterSet
         uint8_t** reg8;
         uint16_t** regp;
         uint16_t** regp2;
+
+        Z80Register operand;
+        Z80Register address;
+        Z80Register offset;
+
+        uint_fast8_t x, y, z, p, q;
+        size_t memRdCycles, memWrCycles;
 };
 
 // vim: et:sw=4:ts=4
