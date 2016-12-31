@@ -18,6 +18,7 @@ class Z80LdPtrHlByte : public Z80Instruction
         {
             r->memRdCycles = 1;
             r->memWrCycles = 1;
+            r->cpuWtCycles = 0;
             r->address.w = r->pc.w;
             r->pc.w++;
         }
@@ -26,6 +27,7 @@ class Z80LdPtrHlByte : public Z80Instruction
         {
             r->address.w = r->hl->w;
             r->memWrCycles--;
+            r->prefix = 0;
         }
 };
 

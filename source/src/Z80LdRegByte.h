@@ -18,6 +18,7 @@ class Z80LdRegByte : public Z80Instruction
         {
             r->memRdCycles = 1;
             r->memWrCycles = 0;
+            r->cpuWtCycles = 0;
             r->address.w = r->pc.w;
             r->pc.w++;
         }
@@ -25,6 +26,7 @@ class Z80LdRegByte : public Z80Instruction
         void operator()(Z80RegisterSet* r)
         {
             *(r->reg8[r->y]) = r->operand.h;
+            r->prefix = 0;
         }
 };
 

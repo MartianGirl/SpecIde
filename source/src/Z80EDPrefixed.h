@@ -1,434 +1,389 @@
 #pragma once
 
-/** Z80Unprefixed.h
+/** Z80EDPrefixed.h
  *
- * Z80 instruction table for unprefixed opcodes.
+ * Z80 instruction table for ED-prefixed opcodes.
  *
  */
 
 #include "Z80Instruction.h"
-#include "Z80Inst0000Nop.h"
+#include "Z80LdIA.h"
+#include "Z80LdRA.h"
 
-class Z80Unprefixed
+class Z80EDPrefixed
 {
     public:
         // Instructions
-        Z80Inst0000Nop iNop;
+        Z80Nop iNop; 
+        Z80LdRA iLdRA;
+        Z80LdIA iLdIA;
 
-        Z80Instruction* table[4][4][2][8];
+        Z80Instruction* table[4][8][8];
 
-        Z80Unprefixed() :
+        Z80EDPrefixed() :
             table {
                 // x = 0
                 {
-                    // p = 0
+                    // y = 0
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
                     },
-                    // p = 1
+                    // y = 1
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
                     },
-                    // p = 2
+                    // y = 2
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
                     },
-                    // p = 3
+                    // y = 3
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
+                    },
+                    // y = 4
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
+                    },
+                    // y = 5
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
+                    },
+                    // y = 6
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
+                    },
+                    // y = 7
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
                     }
                 },
                 // x = 1
                 {
-                    // p = 0
+                    // y = 0
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iLdIA  // 01000111: LD I, A
                     },
-                    // p = 1
+                    // y = 1
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iLdRA // 00001111: LD R, A
                     },
-                    // p = 2
+                    // y = 2
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop  // 00010111: LD A, I
                     },
-                    // p = 3
+                    // y = 3
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop  // 01011111: LD A, R
+                    },
+                    // y = 4
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
+                    },
+                    // y = 5
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
+                    },
+                    // y = 6
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
+                    },
+                    // y = 7
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
                     }
                 },
                 // x = 2
                 {
-                    // p = 0
+                    // y = 0
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
                     },
-                    // p = 1
+                    // y = 1
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
                     },
-                    // p = 2
+                    // y = 2
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
                     },
-                    // p = 3
+                    // y = 3
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
+                    },
+                    // y = 4
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
+                    },
+                    // y = 5
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
+                    },
+                    // y = 6
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
+                    },
+                    // y = 7
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
                     }
                 },
                 // x = 3
                 {
-                    // p = 0
+                    // y = 0
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
                     },
-                    // p = 1
+                    // y = 1
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
                     },
-                    // p = 2
+                    // y = 2
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
                     },
-                    // p = 3
+                    // y = 3
                     {
-                        // q = 0
-                        {
-                            &iNop, // 00000000: NOP
-                            &iNop, // 00000001: LD rp[p], nn
-                            &iNop, // 00000010: LD (BC), A
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        },
-                        // q = 1
-                        {
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop,
-                            &iNop
-                        }
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
+                    },
+                    // y = 4
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
+                    },
+                    // y = 5
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
+                    },
+                    // y = 6
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
+                    },
+                    // y = 7
+                    {
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop,
+                        &iNop
                     }
                 }
             }

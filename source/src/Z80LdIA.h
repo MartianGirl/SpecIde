@@ -1,31 +1,32 @@
 #pragma once
 
-/** Z80LdRegReg.h
+/** Z80LdIA.h
  *
- * Instruction: LD r, r'
+ * Instruction: LD I, A
  *
  */
 
 #include "Z80Instruction.h"
 #include "Z80RegisterSet.h"
 
-class Z80LdRegReg : public Z80Instruction
+class Z80LdIA : public Z80Instruction
 {
     public:
-        Z80LdRegReg() {}
+        Z80LdIA() {}
 
         void decode(Z80RegisterSet* r)
         {
             r->memRdCycles = 0;
             r->memWrCycles = 0;
-            r->cpuWtCycles = 0;
+            r->cpuWtCycles = 1;
         }
 
         void operator()(Z80RegisterSet* r)
         {
-            *(r->reg8[r->y]) = *(r->reg8[r->z]);
+            r->ir.h = r->af->h;
             r->prefix = 0;
         }
 };
 
 // vim: et:sw=4:ts=4
+

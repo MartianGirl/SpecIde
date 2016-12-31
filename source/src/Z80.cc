@@ -134,6 +134,11 @@ void Z80::clock()
             state = finishMemoryCycle();
             break;
 
+        case Z80State::ST_M0_T0_WAITST:
+            c |= SIGNAL_RFSH_;
+            state = finishMemoryCycle();
+            break;
+
         default:
             break;
     }
@@ -147,6 +152,11 @@ Z80State Z80::finishMemoryCycle()
     {
         decoder.execute();
         return Z80State::ST_M3_T1_ADDRWR;
+    }
+    else if (decoder.regs.cpuWtCycles)
+    {
+        decoder.waitState();
+        return Z80State::ST_M0_T0_WAITST;
     }
     else
     {

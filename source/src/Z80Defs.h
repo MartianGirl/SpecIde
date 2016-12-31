@@ -50,7 +50,9 @@ enum class Z80State
 
     ST_M3_T1_ADDRWR,
     ST_M3_T2_WAITST,
-    ST_M3_T3_DATAWR
+    ST_M3_T3_DATAWR,
+
+    ST_M0_T0_WAITST
 };
 
 enum class Z80AddressingMode

@@ -51,7 +51,8 @@ class Z80RegisterSet
         Z80Register offset;
 
         uint_fast8_t x, y, z, p, q;
-        size_t memRdCycles, memWrCycles;
+        uint_fast8_t prefix;
+        size_t memRdCycles, memWrCycles, cpuWtCycles;
 };
 
 // vim: et:sw=4:ts=4

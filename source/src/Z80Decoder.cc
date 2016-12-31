@@ -12,29 +12,21 @@ void Z80Decoder::decode(uint_fast8_t opcode)
     regs.p = regs.y >> 1;          // ..pp....
     regs.q = regs.y & 0x01;        // ....q...
 
-    switch (opcode)
+    switch (regs.prefix)
     {
-        case 0xCB:
-            prefix |= PREFIX_CB;
+        case PREFIX_ED:
+            EDPrefixed.table[regs.x][regs.y][regs.z]->decode(&regs); break;
+        case PREFIX_CB:
             break;
-
-        case 0xDD:
-            prefix |= PREFIX_DD;
+        case PREFIX_DD:
+        case PREFIX_DD | PREFIX_CB:
             break;
-
-        case 0xED:
-            prefix |= PREFIX_ED;
+        case PREFIX_FD:
+        case PREFIX_FD | PREFIX_CB:
             break;
-
-        case 0xFD:
-            prefix |= PREFIX_FD;
-            break;
-
         default:
-            break;
+            unprefixed.table[regs.x][regs.y][regs.z]->decode(&regs); break;
     }
-
-    unprefixed.table[regs.x][regs.y][regs.z]->decode(&regs);
 }
 
 void Z80Decoder::readByte(uint_fast8_t byte)
@@ -52,7 +44,28 @@ void Z80Decoder::writeByte(uint_fast16_t addr)
 
 void Z80Decoder::execute()
 {
-    (*unprefixed.table[regs.x][regs.y][regs.z])(&regs);
+    switch (regs.prefix)
+    {
+        case PREFIX_ED:
+            (*EDPrefixed.table[regs.x][regs.y][regs.z])(&regs);
+            break;
+        case PREFIX_CB:
+            break;
+        case PREFIX_DD:
+        case PREFIX_DD | PREFIX_CB:
+            break;
+        case PREFIX_FD:
+        case PREFIX_FD | PREFIX_CB:
+            break;
+        default:
+            (*unprefixed.table[regs.x][regs.y][regs.z])(&regs);
+            break;
+    }
+}
+
+void Z80Decoder::waitState()
+{
+    regs.cpuWtCycles--;
 }
 
 void Z80Decoder::reset()
