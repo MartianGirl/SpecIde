@@ -8,6 +8,7 @@
 
 #include "Z80Instruction.h"
 #include "Z80Nop.h"
+#include "Z80LdRegYByte.h"
 #include "Z80LdRegYRegY.h"
 
 class Z80FDPrefixed
@@ -15,6 +16,7 @@ class Z80FDPrefixed
     public:
         // Instructions
         Z80Nop iNop; 
+        Z80LdRegYByte iLdRegYByte;
         Z80LdRegYRegY iLdRegYRegY;
 
         Z80Instruction* table[4][8][8];
@@ -31,7 +33,7 @@ class Z80FDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdRegYByte,   // 00000110: LD B, n
                         &iNop
                     },
                     // y = 1
@@ -42,7 +44,7 @@ class Z80FDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdRegYByte,   // 00001110: LD C, n
                         &iNop
                     },
                     // y = 2
@@ -53,7 +55,7 @@ class Z80FDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdRegYByte,   // 00010110: LD D, n
                         &iNop
                     },
                     // y = 3
@@ -64,7 +66,7 @@ class Z80FDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdRegYByte,   // 00011110: LD E, n
                         &iNop
                     },
                     // y = 4
@@ -75,7 +77,7 @@ class Z80FDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdRegYByte,   // 00100110: LD IYh, n
                         &iNop
                     },
                     // y = 5
@@ -86,7 +88,7 @@ class Z80FDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdRegYByte,   // 00101110: LD IYl, n
                         &iNop
                     },
                     // y = 6
@@ -108,7 +110,7 @@ class Z80FDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdRegYByte,   // 00111110: LD A, n
                         &iNop
                     }
                 },
