@@ -7,6 +7,7 @@
  */
 
 #include "Z80Instruction.h"
+#include "Z80Nop.h"
 #include "Z80LdIA.h"
 #include "Z80LdRA.h"
 
