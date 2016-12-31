@@ -8,6 +8,8 @@
 
 #include "Z80Instruction.h"
 #include "Z80Nop.h"
+#include "Z80LdAI.h"
+#include "Z80LdAR.h"
 #include "Z80LdIA.h"
 #include "Z80LdRA.h"
 
@@ -16,8 +18,10 @@ class Z80EDPrefixed
     public:
         // Instructions
         Z80Nop iNop; 
-        Z80LdRA iLdRA;
+        Z80LdAI iLdAI;
+        Z80LdAR iLdAR;
         Z80LdIA iLdIA;
+        Z80LdRA iLdRA;
 
         Z80Instruction* table[4][8][8];
 
@@ -136,7 +140,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iLdRA // 00001111: LD R, A
+                        &iLdRA // 01001111: LD R, A
                     },
                     // y = 2
                     {
@@ -147,7 +151,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop  // 00010111: LD A, I
+                        &iLdAI  // 01010111: LD A, I
                     },
                     // y = 3
                     {
@@ -158,7 +162,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop  // 01011111: LD A, R
+                        &iLdAR  // 01011111: LD A, R
                     },
                     // y = 4
                     {
@@ -389,7 +393,6 @@ class Z80EDPrefixed
                 }
             }
         {}
-
 };
 
 // vim: et:sw=4:ts=4
