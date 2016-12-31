@@ -23,6 +23,7 @@ void Z80Decoder::decode(uint_fast8_t opcode)
         case PREFIX_DD | PREFIX_CB:
             break;
         case PREFIX_FD:
+            FDPrefixed.table[regs.x][regs.y][regs.z]->decode(&regs); break;
         case PREFIX_FD | PREFIX_CB:
             break;
         default:
@@ -56,6 +57,7 @@ void Z80Decoder::execute()
         case PREFIX_DD | PREFIX_CB:
             break;
         case PREFIX_FD:
+            (*FDPrefixed.table[regs.x][regs.y][regs.z])(&regs); break;
         case PREFIX_FD | PREFIX_CB:
             break;
         default:

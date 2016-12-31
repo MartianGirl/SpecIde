@@ -14,6 +14,7 @@
 #include "Z80Unprefixed.h"
 #include "Z80DDPrefixed.h"
 #include "Z80EDPrefixed.h"
+#include "Z80FDPrefixed.h"
 
 using namespace std;
 
@@ -38,6 +39,7 @@ class Z80Decoder
         Z80Unprefixed unprefixed;
         Z80DDPrefixed DDPrefixed;
         Z80EDPrefixed EDPrefixed;
+        Z80FDPrefixed FDPrefixed;
 };
 
 // vim: et:sw=4:ts=4
