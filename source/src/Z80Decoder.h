@@ -25,14 +25,11 @@ class Z80Decoder
 
         void decode(uint_fast8_t byte);
         void readByte(uint_fast8_t byte);
-        void writeByte(uint_fast16_t addr);
+        uint_fast16_t getAddress();
+        void writeByte();
         void waitState();
         void execute();
         void reset();
-
-        Z80Register operand;
-        Z80Register address;
-        Z80Register offset;
 
         Z80RegisterSet regs;
 

@@ -19,15 +19,12 @@ class Z80LdPtrHlByte : public Z80Instruction
             r->memRdCycles = 1;
             r->memWrCycles = 1;
             r->cpuWtCycles = 0;
-            r->address.w = r->pc.w;
-            r->pc.w++;
+            r->memAddrMode = 0x00000021;
         }
 
         void operator()(Z80RegisterSet* r)
         {
-            r->address.w = r->hl->w;
-            r->memWrCycles--;
-            r->prefix = 0;
+            r->prefix = PREFIX_NO;
         }
 };
 

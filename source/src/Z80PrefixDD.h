@@ -8,7 +8,6 @@
 
 #include "Z80Instruction.h"
 #include "Z80RegisterSet.h"
-#include "Z80Defs.h"
 
 class Z80PrefixDD : public Z80Instruction
 {
@@ -20,6 +19,7 @@ class Z80PrefixDD : public Z80Instruction
             r->memRdCycles = 0;
             r->memWrCycles = 0;
             r->cpuWtCycles = 0;
+            r->memAddrMode = 0x00000000;
         }
 
         void operator()(Z80RegisterSet* r)

@@ -6,6 +6,7 @@
  *
  */
 
+#include "Z80Defs.h"
 #include "Z80RegisterSet.h"
 
 class Z80Instruction

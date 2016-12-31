@@ -31,6 +31,28 @@ void Z80Decoder::decode(uint_fast8_t opcode)
     }
 }
 
+uint_fast16_t Z80Decoder::getAddress()
+{
+    switch (regs.memAddrMode & 0x0F)
+    {
+        case 0x00:  // Direct Implicit:     LD A, B
+            break;
+        case 0x01:  // Direct Immediate:    LD A, n
+            regs.address.w = regs.pc.w;
+            regs.pc.w++;
+            break;
+        case 0x02:  // Indirect HL:         LD A, (HL)
+            regs.address.w = regs.hl->w;
+            break;
+        default:
+            break;
+    }
+
+    regs.memAddrMode >>= 4;
+    
+    return regs.address.w;
+}
+
 void Z80Decoder::readByte(uint_fast8_t byte)
 {
     regs.memRdCycles--;
@@ -38,10 +60,9 @@ void Z80Decoder::readByte(uint_fast8_t byte)
     regs.operand.h = byte;
 }
 
-void Z80Decoder::writeByte(uint_fast16_t addr)
+void Z80Decoder::writeByte()
 {
     regs.memWrCycles--;
-    regs.address.w = addr;
 }
 
 void Z80Decoder::execute()

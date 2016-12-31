@@ -19,12 +19,13 @@ class Z80LdRegYRegY : public Z80Instruction
             r->memRdCycles = 0;
             r->memWrCycles = 0;
             r->cpuWtCycles = 0;
+            r->memAddrMode = 0x00000000;
         }
 
         void operator()(Z80RegisterSet* r)
         {
             *(r->regy8[r->y]) = *(r->regy8[r->z]);
-            r->prefix = 0;
+            r->prefix = PREFIX_NO;
         }
 };
 

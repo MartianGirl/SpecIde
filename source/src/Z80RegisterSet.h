@@ -53,12 +53,14 @@ class Z80RegisterSet
         Z80Register operand;
         Z80Register address;
         Z80Register offset;
+
         uint_fast8_t iff;
         uint_fast8_t im;
 
         uint_fast8_t x, y, z, p, q;
         uint_fast8_t prefix;
         size_t memRdCycles, memWrCycles, cpuWtCycles;
+        uint_fast32_t memAddrMode;
 };
 
 // vim: et:sw=4:ts=4
