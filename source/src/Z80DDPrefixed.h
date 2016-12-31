@@ -8,12 +8,14 @@
 
 #include "Z80Instruction.h"
 #include "Z80Nop.h"
+#include "Z80LdRegXRegX.h"
 
 class Z80DDPrefixed
 {
     public:
         // Instructions
         Z80Nop iNop; 
+        Z80LdRegXRegX iLdRegXRegX;
 
         Z80Instruction* table[4][8][8];
 
@@ -114,91 +116,91 @@ class Z80DDPrefixed
                 {
                     // y = 0
                     {
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iLdRegXRegX,   // 01000000: LD B, B
+                        &iLdRegXRegX,   // 01000001: LD B, C
+                        &iLdRegXRegX,   // 01000010: LD B, D
+                        &iLdRegXRegX,   // 01000011: LD B, E
+                        &iLdRegXRegX,   // 01000100: LD B, IXh
+                        &iLdRegXRegX,   // 01000101: LD B, IXl
+                        &iNop,          // 01000110: LD B, (HL)
+                        &iLdRegXRegX    // 01000111: LD B, A
                     },
                     // y = 1
                     {
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iLdRegXRegX,   // 01001000: LD C, B
+                        &iLdRegXRegX,   // 01001001: LD C, C
+                        &iLdRegXRegX,   // 01001010: LD C, D
+                        &iLdRegXRegX,   // 01001011: LD C, E
+                        &iLdRegXRegX,   // 01001100: LD C, IXh
+                        &iLdRegXRegX,   // 01001101: LD C, IXl
+                        &iNop,          // 01001110: LD C, (HL)
+                        &iLdRegXRegX    // 01001111: LD C, A
                     },
                     // y = 2
                     {
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iLdRegXRegX,   // 01010000: LD D, B
+                        &iLdRegXRegX,   // 01010001: LD D, C
+                        &iLdRegXRegX,   // 01010010: LD D, D
+                        &iLdRegXRegX,   // 01010011: LD D, E
+                        &iLdRegXRegX,   // 01010100: LD D, IXh
+                        &iLdRegXRegX,   // 01010101: LD D, IXl
+                        &iNop,          // 01010110: LD D, (HL)
+                        &iLdRegXRegX    // 01010111: LD D, A
                     },
                     // y = 3
                     {
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iLdRegXRegX,   // 01011000: LD E, B
+                        &iLdRegXRegX,   // 01011001: LD E, C
+                        &iLdRegXRegX,   // 01011010: LD E, D
+                        &iLdRegXRegX,   // 01011011: LD E, E
+                        &iLdRegXRegX,   // 01011100: LD E, IXh
+                        &iLdRegXRegX,   // 01011101: LD E, IXl
+                        &iNop,          // 01011110: LD E, (HL)
+                        &iLdRegXRegX    // 01011111: LD E, A
                     },
                     // y = 4
                     {
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iLdRegXRegX,   // 01100000: LD H, B
+                        &iLdRegXRegX,   // 01100001: LD H, C
+                        &iLdRegXRegX,   // 01100010: LD H, D
+                        &iLdRegXRegX,   // 01100011: LD H, E
+                        &iLdRegXRegX,   // 01100100: LD H, IXh
+                        &iLdRegXRegX,   // 01100101: LD H, IXl
+                        &iNop,          // 01100110: LD H, (HL)
+                        &iLdRegXRegX    // 01100111: LD H, A
                     },
                     // y = 5
                     {
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iLdRegXRegX,   // 01101000: LD L, B
+                        &iLdRegXRegX,   // 01101001: LD L, C
+                        &iLdRegXRegX,   // 01101010: LD L, D
+                        &iLdRegXRegX,   // 01101011: LD L, E
+                        &iLdRegXRegX,   // 01101100: LD L, IXh
+                        &iLdRegXRegX,   // 01101101: LD L, IXl
+                        &iNop,          // 01101110: LD L, (HL)
+                        &iLdRegXRegX    // 01101111: LD L, A
                     },
                     // y = 6
                     {
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iNop,          // 01110000: LD (HL), B
+                        &iNop,          // 01110001: LD (HL), C
+                        &iNop,          // 01110010: LD (HL), D
+                        &iNop,          // 01110011: LD (HL), E
+                        &iNop,          // 01110100: LD (HL), H
+                        &iNop,          // 01110101: LD (HL), L
+                        &iNop,          // 01110110: HALT
+                        &iNop           // 01110111: LD (HL), A
                     },
                     // y = 7
                     {
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iLdRegXRegX,   // 01111000: LD A, B
+                        &iLdRegXRegX,   // 01111001: LD A, C
+                        &iLdRegXRegX,   // 01111010: LD A, D
+                        &iLdRegXRegX,   // 01111011: LD A, E
+                        &iLdRegXRegX,   // 01111100: LD A, IXh
+                        &iLdRegXRegX,   // 01111101: LD A, IXl
+                        &iNop,          // 01111110: LD A, (HL)
+                        &iLdRegXRegX    // 01111111: LD A, A
                     }
                 },
                 // x = 2

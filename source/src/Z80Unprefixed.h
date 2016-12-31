@@ -12,6 +12,7 @@
 #include "Z80LdRegReg.h"
 #include "Z80LdPtrHlByte.h"
 
+#include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
 
 class Z80Unprefixed
@@ -22,6 +23,7 @@ class Z80Unprefixed
         Z80LdRegByte iLdRegByte;
         Z80LdRegReg iLdRegReg;
         Z80LdPtrHlByte iLdPtrHlByte;
+        Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
 
         Z80Instruction* table[4][8][8];
@@ -343,7 +345,7 @@ class Z80Unprefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iPrefixDD, // 11011101: DD Prefix
                         &iNop,
                         &iNop
                     },

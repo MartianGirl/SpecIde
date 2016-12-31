@@ -19,6 +19,7 @@ void Z80Decoder::decode(uint_fast8_t opcode)
         case PREFIX_CB:
             break;
         case PREFIX_DD:
+            DDPrefixed.table[regs.x][regs.y][regs.z]->decode(&regs); break;
         case PREFIX_DD | PREFIX_CB:
             break;
         case PREFIX_FD:
@@ -47,19 +48,18 @@ void Z80Decoder::execute()
     switch (regs.prefix)
     {
         case PREFIX_ED:
-            (*EDPrefixed.table[regs.x][regs.y][regs.z])(&regs);
-            break;
+            (*EDPrefixed.table[regs.x][regs.y][regs.z])(&regs); break;
         case PREFIX_CB:
             break;
         case PREFIX_DD:
+            (*DDPrefixed.table[regs.x][regs.y][regs.z])(&regs); break;
         case PREFIX_DD | PREFIX_CB:
             break;
         case PREFIX_FD:
         case PREFIX_FD | PREFIX_CB:
             break;
         default:
-            (*unprefixed.table[regs.x][regs.y][regs.z])(&regs);
-            break;
+            (*unprefixed.table[regs.x][regs.y][regs.z])(&regs); break;
     }
 }
 

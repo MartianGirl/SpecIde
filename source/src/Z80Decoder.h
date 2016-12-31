@@ -12,6 +12,7 @@
 #include "Z80Register.h"
 #include "Z80RegisterSet.h"
 #include "Z80Unprefixed.h"
+#include "Z80DDPrefixed.h"
 #include "Z80EDPrefixed.h"
 
 using namespace std;
@@ -35,6 +36,7 @@ class Z80Decoder
         Z80RegisterSet regs;
 
         Z80Unprefixed unprefixed;
+        Z80DDPrefixed DDPrefixed;
         Z80EDPrefixed EDPrefixed;
 };
 

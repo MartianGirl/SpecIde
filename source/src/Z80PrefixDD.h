@@ -1,8 +1,8 @@
 #pragma once
 
-/** Z80PrefixED
+/** Z80PrefixDD
  *
- * Prefix ED.
+ * Prefix DD.
  *
  */
 
@@ -10,10 +10,10 @@
 #include "Z80RegisterSet.h"
 #include "Z80Defs.h"
 
-class Z80PrefixED : public Z80Instruction
+class Z80PrefixDD : public Z80Instruction
 {
     public:
-        Z80PrefixED() {}
+        Z80PrefixDD() {}
 
         void decode(Z80RegisterSet* r)
         {
@@ -24,7 +24,7 @@ class Z80PrefixED : public Z80Instruction
 
         void operator()(Z80RegisterSet* r)
         {
-            r->prefix = PREFIX_ED;
+            r->prefix = PREFIX_DD;
         }
 };
 
