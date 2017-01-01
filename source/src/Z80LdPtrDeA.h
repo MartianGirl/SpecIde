@@ -1,18 +1,18 @@
 #pragma once
 
-/** Z80LdPtrBcA.h
+/** Z80LdPtrDeA.h
  *
- * Instruction: LD (BC), A
+ * Instruction: LD (DE), A
  *
  */
 
 #include "Z80Instruction.h"
 #include "Z80RegisterSet.h"
 
-class Z80LdPtrBcA : public Z80Instruction
+class Z80LdPtrDeA : public Z80Instruction
 {
     public:
-        Z80LdPtrBcA() {}
+        Z80LdPtrDeA() {}
 
         bool operator()(Z80RegisterSet* r)
         {
@@ -21,7 +21,7 @@ class Z80LdPtrBcA : public Z80Instruction
                 case 0:
                     r->memRdCycles = 0;
                     r->memWrCycles = 1;
-                    r->memAddrMode = 0x00000003;
+                    r->memAddrMode = 0x00000004;
 
                     r->outWord.l = r->af->h;
                     return true;
