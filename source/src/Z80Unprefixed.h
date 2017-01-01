@@ -8,9 +8,13 @@
 
 #include "Z80Instruction.h"
 #include "Z80Nop.h"
+
 #include "Z80LdAPtrBc.h"
 #include "Z80LdAPtrDe.h"
 #include "Z80LdAPtrWord.h"
+
+#include "Z80LdPtrBcA.h"
+
 #include "Z80LdRegByte.h"
 #include "Z80LdRegPtrHl.h"
 #include "Z80LdRegReg.h"
@@ -30,6 +34,7 @@ class Z80Unprefixed
         Z80LdAPtrBc iLdAPtrBc;
         Z80LdAPtrDe iLdAPtrDe;
         Z80LdAPtrWord iLdAPtrWord;
+        Z80LdPtrBcA iLdPtrBcA;
         Z80LdRegByte iLdRegByte;
         Z80LdRegPtrHl iLdRegPtrHl;
         Z80LdRegReg iLdRegReg;
@@ -50,7 +55,7 @@ class Z80Unprefixed
                     {
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdPtrBcA,     // 00000010: LD (BC), A
                         &iNop,
                         &iNop,
                         &iNop,
