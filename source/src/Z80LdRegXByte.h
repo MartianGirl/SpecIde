@@ -14,18 +14,24 @@ class Z80LdRegXByte : public Z80Instruction
     public:
         Z80LdRegXByte() {}
 
-        void decode(Z80RegisterSet* r)
+        bool operator()(Z80RegisterSet* r)
         {
-            r->memRdCycles = 1;
-            r->memWrCycles = 0;
-            r->cpuWtCycles = 0;
-            r->memAddrMode = 0x00000001;
-        }
+            switch (r->executionStep)
+            {
+                case 0:
+                    r->memRdCycles = 1;
+                    r->memWrCycles = 0;
+                    r->memAddrMode = 0x00000001;
+                    return true;
 
-        void operator()(Z80RegisterSet* r)
-        {
-            *(r->regx8[r->y]) = r->operand.h;
-            r->prefix = PREFIX_NO;
+                case 1:
+                    *(r->regx8[r->y]) = r->operand.h;
+                    r->prefix = PREFIX_NO;
+                    return true;
+
+                default:    // Should not happen
+                    return true;
+            }
         }
 };
 

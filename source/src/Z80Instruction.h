@@ -13,8 +13,7 @@ class Z80Instruction
 {
     public:
         Z80Instruction() {}
-        virtual void decode(Z80RegisterSet* r) = 0;
-        virtual void operator()(Z80RegisterSet* r) = 0;
+        virtual bool operator()(Z80RegisterSet* r) = 0;
 };
 
 // vim: et:sw=4:ts=4

@@ -14,17 +14,26 @@ class Z80LdPtrHlByte : public Z80Instruction
     public:
         Z80LdPtrHlByte() {}
 
-        void decode(Z80RegisterSet* r)
+        bool operator()(Z80RegisterSet* r)
         {
-            r->memRdCycles = 1;
-            r->memWrCycles = 1;
-            r->cpuWtCycles = 0;
-            r->memAddrMode = 0x00000021;
-        }
+            switch (r->executionStep)
+            {
+                case 0:
+                    r->memRdCycles = 1;
+                    r->memWrCycles = 1;
+                    r->memAddrMode = 0x00000021;
+                    return true;
 
-        void operator()(Z80RegisterSet* r)
-        {
-            r->prefix = PREFIX_NO;
+                case 1:
+                    return true;
+
+                case 2:
+                    return true;
+                    r->prefix = PREFIX_NO;
+
+                default:    // Should not happen
+                    return true;
+            }
         }
 };
 

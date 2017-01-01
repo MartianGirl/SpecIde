@@ -39,7 +39,8 @@ Z80RegisterSet::Z80RegisterSet() :
     regp2(&rp2[0][0]),
     x(0), y(0), z(0), p(0), q(0),
     prefix(0),
-    memRdCycles(0), memWrCycles(0), cpuWtCycles(0)
+    executionStep(0),
+    memRdCycles(0), memWrCycles(0)
 {
 }
 
