@@ -13,6 +13,7 @@
 #include "Z80LdRegReg.h"
 
 #include "Z80LdPtrHlByte.h"
+#include "Z80LdPtrHlReg.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -27,6 +28,7 @@ class Z80Unprefixed
         Z80LdRegPtrHl iLdRegPtrHl;
         Z80LdRegReg iLdRegReg;
         Z80LdPtrHlByte iLdPtrHlByte;
+        Z80LdPtrHlReg iLdPtrHlReg;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -197,14 +199,14 @@ class Z80Unprefixed
                     },
                     // y = 6
                     {
-                        &iNop,          // 01110000: LD (HL), B
-                        &iNop,          // 01110001: LD (HL), C
-                        &iNop,          // 01110010: LD (HL), D
-                        &iNop,          // 01110011: LD (HL), E
-                        &iNop,          // 01110100: LD (HL), H
-                        &iNop,          // 01110101: LD (HL), L
+                        &iLdPtrHlReg,   // 01110000: LD (HL), B
+                        &iLdPtrHlReg,   // 01110001: LD (HL), C
+                        &iLdPtrHlReg,   // 01110010: LD (HL), D
+                        &iLdPtrHlReg,   // 01110011: LD (HL), E
+                        &iLdPtrHlReg,   // 01110100: LD (HL), H
+                        &iLdPtrHlReg,   // 01110101: LD (HL), L
                         &iNop,          // 01110110: HALT
-                        &iNop           // 01110111: LD (HL), A
+                        &iLdPtrHlReg    // 01110111: LD (HL), A
                     },
                     // y = 7
                     {
