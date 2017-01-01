@@ -860,5 +860,56 @@ BOOST_AUTO_TEST_CASE(execute_ld_r_memhl_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl->h, 0x44);
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl->l, 0x15);
 }
+
+BOOST_AUTO_TEST_CASE(execute_ld_r_memix_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // LD IXh, 01h
+    // LD IXl, 04h
+    // LD A, (IX + 3)
+    // LD B, (IX - 4)
+    // LD C, (IX - 3)
+    // LD D, (IX - 2)
+    // LD E, (IX - 1)
+    // LD H, (IX + 0)
+    // LD L, (IX + 1)
+    m.memory[0x0000] = 0xDD; m.memory[0x0001] = 0x26; m.memory[0x0002] = 0x01;   // LD IXh, 01h
+    m.memory[0x0003] = 0xDD; m.memory[0x0004] = 0x2E; m.memory[0x0005] = 0x04;   // LD IXl, 04h
+    m.memory[0x0006] = 0xDD; m.memory[0x0007] = 0x7E; m.memory[0x0008] = 0x03;   // LD A, (IX + 3)
+    m.memory[0x0009] = 0xDD; m.memory[0x000A] = 0x46; m.memory[0x000B] = 0xFC;   // LD B, (IX - 4)
+    m.memory[0x000C] = 0xDD; m.memory[0x000D] = 0x4E; m.memory[0x000E] = 0xFD;   // LD C, (IX - 3)
+    m.memory[0x000F] = 0xDD; m.memory[0x0010] = 0x56; m.memory[0x0011] = 0xFE;   // LD D, (IX - 2)
+    m.memory[0x0012] = 0xDD; m.memory[0x0013] = 0x5E; m.memory[0x0014] = 0xFF;   // LD E, (IX - 1)
+    m.memory[0x0015] = 0xDD; m.memory[0x0016] = 0x66; m.memory[0x0017] = 0x00;   // LD H, (IX + 0)
+    m.memory[0x0018] = 0xDD; m.memory[0x0019] = 0x6E; m.memory[0x001A] = 0x01;   // LD L, (IX + 1)
+
+    m.memory[0x0100] = 0xB0;
+    m.memory[0x0101] = 0xC1;
+    m.memory[0x0102] = 0xD2;
+    m.memory[0x0103] = 0xE3;
+    m.memory[0x0104] = 0x44;
+    m.memory[0x0105] = 0x15;
+    m.memory[0x0107] = 0xA7;
+
+    z80.reset(); z80.clock();
+    for (size_t i = 0; i != 149; ++i)
+    {
+        z80.clock();
+        m.a = z80.a; m.d = z80.d;
+        m.as_ = z80.c & SIGNAL_MREQ_;
+        m.rd_ = z80.c & SIGNAL_RD_;
+        m.wr_ = z80.c & SIGNAL_WR_;
+        m.clock();
+        z80.d = m.d;
+    }
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0x0104);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af->h, 0xA7);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc->w, 0xB0C1);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de->w, 0xD2E3);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl->w, 0x4415);
+}
 // EOF
 // vim: et:sw=4:ts=4
