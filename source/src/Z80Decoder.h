@@ -6,6 +6,7 @@
  *
  */
 
+#include <cassert>
 #include <cstdint>
 
 #include "Z80Defs.h"

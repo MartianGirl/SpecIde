@@ -28,6 +28,7 @@ class Z80LdRegYRegY : public Z80Instruction
                     return true;
 
                 default:    // Should not happen
+                    assert(false);
                     return true;
             }
         }

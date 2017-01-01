@@ -116,6 +116,7 @@ void Z80::clock()
             break;
 
         default:
+            assert(false);
             break;
     }
 }

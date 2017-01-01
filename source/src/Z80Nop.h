@@ -26,6 +26,7 @@ class Z80Nop : public Z80Instruction
                     return true;
 
                 default:    // Should not happen
+                    assert(false);
                     return true;
             }
         }

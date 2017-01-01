@@ -32,6 +32,7 @@ class Z80LdPtrHlByte : public Z80Instruction
                     r->prefix = PREFIX_NO;
 
                 default:    // Should not happen
+                    assert(false);
                     return true;
             }
         }

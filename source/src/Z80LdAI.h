@@ -34,6 +34,7 @@ class Z80LdAI : public Z80Instruction
                     return true;
 
                 default:    // Should not happen
+                    assert(false);
                     return true;
             }
         }

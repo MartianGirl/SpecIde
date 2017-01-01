@@ -13,24 +13,6 @@ void Z80Decoder::decode(uint_fast8_t opcode)
     regs.q = regs.y & 0x01;        // ....q...
 
     regs.executionStep = 0;
-
-/*    switch (regs.prefix)
-    {
-        case PREFIX_ED:
-            EDPrefixed.table[regs.x][regs.y][regs.z]->decode(&regs); break;
-        case PREFIX_CB:
-            break;
-        case PREFIX_DD:
-            DDPrefixed.table[regs.x][regs.y][regs.z]->decode(&regs); break;
-        case PREFIX_DD | PREFIX_CB:
-            break;
-        case PREFIX_FD:
-            FDPrefixed.table[regs.x][regs.y][regs.z]->decode(&regs); break;
-        case PREFIX_FD | PREFIX_CB:
-            break;
-        default:
-            unprefixed.table[regs.x][regs.y][regs.z]->decode(&regs); break;
-    } */
 }
 
 uint_fast16_t Z80Decoder::getAddress()
@@ -90,8 +72,11 @@ bool Z80Decoder::execute()
         case PREFIX_FD | PREFIX_CB:
             finished = true;
             break;
-        default:
+        case PREFIX_NO:
             finished = (*unprefixed.table[regs.x][regs.y][regs.z])(&regs);
+            break;
+        default:
+            assert(false);
             break;
     }
 

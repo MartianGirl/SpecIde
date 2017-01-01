@@ -30,6 +30,7 @@ class Z80LdIA : public Z80Instruction
                     return true;
 
                 default:    // Should not happen
+                    assert(false);
                     return true;
 
             }
