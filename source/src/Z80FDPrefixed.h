@@ -8,6 +8,7 @@
 
 #include "Z80Instruction.h"
 #include "Z80Nop.h"
+#include "Z80LdPtrIyReg.h"
 #include "Z80LdRegPtrIy.h"
 #include "Z80LdRegYByte.h"
 #include "Z80LdRegYRegY.h"
@@ -17,6 +18,7 @@ class Z80FDPrefixed
     public:
         // Instructions
         Z80Nop iNop; 
+        Z80LdPtrIyReg iLdPtrIyReg;
         Z80LdRegPtrIy iLdRegPtrIy;
         Z80LdRegYByte iLdRegYByte;
         Z80LdRegYRegY iLdRegYRegY;
@@ -186,14 +188,14 @@ class Z80FDPrefixed
                     },
                     // y = 6
                     {
-                        &iNop,          // 01110000: LD (HL), B
-                        &iNop,          // 01110001: LD (HL), C
-                        &iNop,          // 01110010: LD (HL), D
-                        &iNop,          // 01110011: LD (HL), E
-                        &iNop,          // 01110100: LD (HL), H
-                        &iNop,          // 01110101: LD (HL), L
+                        &iLdPtrIyReg,   // 01110000: LD (IY + d), B
+                        &iLdPtrIyReg,   // 01110001: LD (IY + d), C
+                        &iLdPtrIyReg,   // 01110010: LD (IY + d), D
+                        &iLdPtrIyReg,   // 01110011: LD (IY + d), E
+                        &iLdPtrIyReg,   // 01110100: LD (IY + d), H
+                        &iLdPtrIyReg,   // 01110101: LD (IY + d), L
                         &iNop,          // 01110110: HALT
-                        &iNop           // 01110111: LD (HL), A
+                        &iLdPtrIyReg    // 01110111: LD (IY + d), A
                     },
                     // y = 7
                     {
