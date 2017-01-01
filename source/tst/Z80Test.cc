@@ -1111,5 +1111,52 @@ BOOST_AUTO_TEST_CASE(execute_ld_memix_n_test)
     BOOST_CHECK_EQUAL(m.memory[0x0106], 0xF6);
     BOOST_CHECK_EQUAL(m.memory[0x0107], 0xF7);
 }
+
+BOOST_AUTO_TEST_CASE(execute_ld_memiy_n_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    m.memory[0x0000] = 0xFD; m.memory[0x0001] = 0x26; m.memory[0x0002] = 0x01;  // LD IYh, 01h
+    m.memory[0x0003] = 0xFD; m.memory[0x0004] = 0x2E; m.memory[0x0005] = 0x04;  // LD IYl, 04h
+    m.memory[0x0006] = 0xFD; m.memory[0x0007] = 0x36;
+    m.memory[0x0008] = 0xFC; m.memory[0x0009] = 0xF0;                           // LD (IY - 4), F0h
+    m.memory[0x000A] = 0xFD; m.memory[0x000B] = 0x36;
+    m.memory[0x000C] = 0xFD; m.memory[0x000D] = 0xF1;                           // LD (IY - 3), F1h
+    m.memory[0x000E] = 0xFD; m.memory[0x000F] = 0x36;
+    m.memory[0x0010] = 0xFE; m.memory[0x0011] = 0xF2;                           // LD (IY - 2), F2h
+    m.memory[0x0012] = 0xFD; m.memory[0x0013] = 0x36;
+    m.memory[0x0014] = 0xFF; m.memory[0x0015] = 0xF3;                           // LD (IY - 1), F3h
+    m.memory[0x0016] = 0xFD; m.memory[0x0017] = 0x36;
+    m.memory[0x0018] = 0x00; m.memory[0x0019] = 0xF4;                           // LD (IY + 0), F4h
+    m.memory[0x001A] = 0xFD; m.memory[0x001B] = 0x36;
+    m.memory[0x001C] = 0x01; m.memory[0x001D] = 0xF5;                           // LD (IY + 1), F5h
+    m.memory[0x001E] = 0xFD; m.memory[0x001F] = 0x36;
+    m.memory[0x0020] = 0x02; m.memory[0x0021] = 0xF6;                           // LD (IY + 2), F6h
+    m.memory[0x0022] = 0xFD; m.memory[0x0023] = 0x36;
+    m.memory[0x0024] = 0x03; m.memory[0x0025] = 0xF7;                           // LD (IY + 3), F7h
+
+    z80.reset(); z80.clock();
+    for (size_t i = 0; i != 174; ++i)
+    {
+        z80.clock();
+        m.a = z80.a; m.d = z80.d;
+        m.as_ = z80.c & SIGNAL_MREQ_;
+        m.rd_ = z80.c & SIGNAL_RD_;
+        m.wr_ = z80.c & SIGNAL_WR_;
+        m.clock();
+        z80.d = m.d;
+    }
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0x0104);
+    BOOST_CHECK_EQUAL(m.memory[0x0100], 0xF0);
+    BOOST_CHECK_EQUAL(m.memory[0x0101], 0xF1);
+    BOOST_CHECK_EQUAL(m.memory[0x0102], 0xF2);
+    BOOST_CHECK_EQUAL(m.memory[0x0103], 0xF3);
+    BOOST_CHECK_EQUAL(m.memory[0x0104], 0xF4);
+    BOOST_CHECK_EQUAL(m.memory[0x0105], 0xF5);
+    BOOST_CHECK_EQUAL(m.memory[0x0106], 0xF6);
+    BOOST_CHECK_EQUAL(m.memory[0x0107], 0xF7);
+}
 // EOF
 // vim: et:sw=4:ts=4
