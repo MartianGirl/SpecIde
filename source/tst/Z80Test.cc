@@ -1291,5 +1291,30 @@ BOOST_AUTO_TEST_CASE(execute_ld_memde_a_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af->h, 0x48);
     BOOST_CHECK_EQUAL(m.memory[0x1020], 0x48);
 }  
+
+BOOST_AUTO_TEST_CASE(execute_ld_memnn_a_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0x69;                           // LD A, 69h
+    m.memory[0x0002] = 0x32; m.memory[0x0003] = 0x20; m.memory[0x0004] = 0x10;  // LD (1020h), A
+    m.memory[0x1020] = 0x78;
+
+    z80.reset(); z80.clock();
+    for (size_t i = 0; i != 20; ++i)
+    {
+        z80.clock();
+        m.a = z80.a; m.d = z80.d;
+        m.as_ = z80.c & SIGNAL_MREQ_;
+        m.rd_ = z80.c & SIGNAL_RD_;
+        m.wr_ = z80.c & SIGNAL_WR_;
+        m.clock();
+        z80.d = m.d;
+    }
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af->h, 0x69);
+    BOOST_CHECK_EQUAL(m.memory[0x1020], 0x69);
+}
 // EOF
 // vim: et:sw=4:ts=4

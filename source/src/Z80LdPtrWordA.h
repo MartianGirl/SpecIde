@@ -1,25 +1,25 @@
 #pragma once
 
-/** Z80LdAPtrWord.h
+/** Z80LdPtrWordA.h
  *
- * Instruction: LD A, (nn)
+ * Instruction: LD (nn), A
  *
  */
 
 #include "Z80Instruction.h"
 #include "Z80RegisterSet.h"
 
-class Z80LdAPtrWord : public Z80Instruction
+class Z80LdPtrWordA : public Z80Instruction
 {
     public:
-        Z80LdAPtrWord() {}
+        Z80LdPtrWordA() {}
 
         bool operator()(Z80RegisterSet* r)
         {
             switch (r->executionStep)
             {
                 case 0:
-                    r->memRdCycles = 3;
+                    r->memRdCycles = 2;
                     r->memWrCycles = 0;
                     r->memAddrMode = 0x00000811;
                     return true;
@@ -28,10 +28,11 @@ class Z80LdAPtrWord : public Z80Instruction
                     return true;
 
                 case 2:
+                    r->memWrCycles = 1;
+                    r->outWord.l = r->af->h;
                     return true;
 
                 case 3:
-                    r->af->h = r->operand.h;
                     r->prefix = PREFIX_NO;
                     return true;
 
