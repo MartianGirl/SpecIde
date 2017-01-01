@@ -8,6 +8,7 @@
 
 #include "Z80Instruction.h"
 #include "Z80Nop.h"
+#include "Z80LdAPtrBc.h"
 #include "Z80LdRegByte.h"
 #include "Z80LdRegPtrHl.h"
 #include "Z80LdRegReg.h"
@@ -24,6 +25,7 @@ class Z80Unprefixed
     public:
         // Instructions
         Z80Nop iNop;
+        Z80LdAPtrBc iLdAPtrBc;
         Z80LdRegByte iLdRegByte;
         Z80LdRegPtrHl iLdRegPtrHl;
         Z80LdRegReg iLdRegReg;
@@ -42,9 +44,9 @@ class Z80Unprefixed
                 {
                     // y = 0
                     {
-                        &iNop, // 00000000: NOP
-                        &iNop, // 00000001: LD rp[p], nn
-                        &iNop, // 00000010: LD (BC), A
+                        &iNop,
+                        &iNop,
+                        &iNop,
                         &iNop,
                         &iNop,
                         &iNop,
@@ -55,7 +57,7 @@ class Z80Unprefixed
                     {
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdAPtrBc,     // 00001010: LD A, (BC)
                         &iNop,
                         &iNop,
                         &iNop,
@@ -64,9 +66,9 @@ class Z80Unprefixed
                     },
                     // y = 2
                     {
-                        &iNop, // 00000000: NOP
-                        &iNop, // 00000001: LD rp[p], nn
-                        &iNop, // 00000010: LD (BC), A
+                        &iNop,
+                        &iNop,
+                        &iNop,
                         &iNop,
                         &iNop,
                         &iNop,
@@ -86,9 +88,9 @@ class Z80Unprefixed
                     },
                     // y = 4
                     {
-                        &iNop, // 00000000: NOP
-                        &iNop, // 00000001: LD rp[p], nn
-                        &iNop, // 00000010: LD (BC), A
+                        &iNop,
+                        &iNop,
+                        &iNop,
                         &iNop,
                         &iNop,
                         &iNop,
@@ -108,9 +110,9 @@ class Z80Unprefixed
                     },
                     // y = 6
                     {
-                        &iNop, // 00000000: NOP
-                        &iNop, // 00000001: LD rp[p], nn
-                        &iNop, // 00000010: LD (BC), A
+                        &iNop,
+                        &iNop,
+                        &iNop,
                         &iNop,
                         &iNop,
                         &iNop,

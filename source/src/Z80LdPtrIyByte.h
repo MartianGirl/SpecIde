@@ -33,7 +33,6 @@ class Z80LdPtrIyByte : public Z80Instruction
                     return false;
 
                 case 3:
-                    r->offset.w += r->iy.w;
                     return false;
 
                 case 4:

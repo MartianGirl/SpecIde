@@ -33,7 +33,6 @@ class Z80LdRegPtrIx : public Z80Instruction
                     return false;
 
                 case 3:
-                    r->offset.w += r->ix.w;
                     return false;
 
                 case 4:
