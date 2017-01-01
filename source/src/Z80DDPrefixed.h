@@ -8,6 +8,7 @@
 
 #include "Z80Instruction.h"
 #include "Z80Nop.h"
+#include "Z80LdPtrIxByte.h"
 #include "Z80LdPtrIxReg.h"
 #include "Z80LdRegPtrIx.h"
 #include "Z80LdRegXByte.h"
@@ -18,6 +19,7 @@ class Z80DDPrefixed
     public:
         // Instructions
         Z80Nop iNop; 
+        Z80LdPtrIxByte iLdPtrIxByte;
         Z80LdPtrIxReg iLdPtrIxReg;
         Z80LdRegPtrIx iLdRegPtrIx;
         Z80LdRegXByte iLdRegXByte;
@@ -103,7 +105,7 @@ class Z80DDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdPtrIxByte,  // 00110110: LD (IX + d), n
                         &iNop
                     },
                     // y = 7

@@ -25,15 +25,15 @@ class Z80LdRegPtrIx : public Z80Instruction
                     return true;
 
                 case 1:
-                    r->operand.w >>= 8;
+                    r->offset.w = r->operand.w >> 8;
                     return false;
 
                 case 2:
-                    r->operand.h = ((r->operand.l & 0x80) == 0x80) ? 0xFF : 0x00;
+                    r->offset.h = ((r->offset.l & 0x80) == 0x80) ? 0xFF : 0x00;
                     return false;
 
                 case 3:
-                    r->operand.w += r->ix.w;
+                    r->offset.w += r->ix.w;
                     return false;
 
                 case 4:

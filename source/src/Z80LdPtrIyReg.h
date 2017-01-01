@@ -21,19 +21,19 @@ class Z80LdPtrIyReg : public Z80Instruction
                 case 0:
                     r->memRdCycles = 1;
                     r->memWrCycles = 0;
-                    r->memAddrMode = 0x00000061;
+                    r->memAddrMode = 0x00000071;
                     return true;
 
                 case 1:
-                    r->operand.w >>= 8;
+                    r->offset.w = r->operand.w >> 8;
                     return false;
 
                 case 2:
-                    r->operand.h = ((r->operand.l & 0x80) == 0x80) ? 0xFF : 0x00;
+                    r->offset.h = ((r->offset.l & 0x80) == 0x80) ? 0xFF : 0x00;
                     return false;
 
                 case 3:
-                    r->operand.w += r->iy.w;
+                    r->offset.w += r->iy.w;
                     return false;
 
                 case 4:
