@@ -59,6 +59,7 @@ void Z80Decoder::readByte(uint_fast8_t byte)
 void Z80Decoder::writeByte()
 {
     regs.memWrCycles--;
+    regs.outWord.l = regs.outWord.h;
 }
 
 bool Z80Decoder::execute()

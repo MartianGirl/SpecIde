@@ -52,7 +52,7 @@ class Z80RegisterSet
 
         Z80Register operand;
         Z80Register address;
-        Z80Register offset;
+        Z80Register outWord;
 
         uint_fast8_t iff;
         uint_fast8_t im;

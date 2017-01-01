@@ -89,7 +89,7 @@ void Z80::clock()
         // M3. Memory write cycle
         case Z80State::ST_M3_T1_ADDRWR:
             a = decoder.getAddress();
-            d = decoder.regs.operand.h;
+            d = decoder.regs.outWord.l;
             decoder.writeByte();
 
             c |= SIGNAL_RFSH_;
