@@ -7,21 +7,28 @@
  */
 
 #include "Z80Instruction.h"
+
 #include "Z80Nop.h"
+
 #include "Z80LdAI.h"
 #include "Z80LdAR.h"
 #include "Z80LdIA.h"
 #include "Z80LdRA.h"
+
+#include "Z80LdRegPtrWord.h"
 
 class Z80EDPrefixed
 {
     public:
         // Instructions
         Z80Nop iNop; 
+
         Z80LdAI iLdAI;
         Z80LdAR iLdAR;
         Z80LdIA iLdIA;
         Z80LdRA iLdRA;
+
+        Z80LdRegPtrWord iLdRegPtrWord;
 
         Z80Instruction* table[4][8][8];
 
@@ -129,18 +136,18 @@ class Z80EDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iLdIA  // 01000111: LD I, A
+                        &iLdIA          // 01000111: LD I, A
                     },
                     // y = 1
                     {
                         &iNop,
                         &iNop,
                         &iNop,
+                        &iLdRegPtrWord, // 01001011: LD BC, (nn)
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
-                        &iLdRA // 01001111: LD R, A
+                        &iLdRA          // 01001111: LD R, A
                     },
                     // y = 2
                     {
@@ -151,18 +158,18 @@ class Z80EDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iLdAI  // 01010111: LD A, I
+                        &iLdAI          // 01010111: LD A, I
                     },
                     // y = 3
                     {
                         &iNop,
                         &iNop,
                         &iNop,
+                        &iLdRegPtrWord, // 01011011: LD DE, (nn)
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
-                        &iLdAR  // 01011111: LD A, R
+                        &iLdAR          // 01011111: LD A, R
                     },
                     // y = 4
                     {
@@ -180,7 +187,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdRegPtrWord, // 01101011: LD HL, (nn)
                         &iNop,
                         &iNop,
                         &iNop,
@@ -202,7 +209,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdRegPtrWord, // 01111011: LD SP, (nn)
                         &iNop,
                         &iNop,
                         &iNop,
