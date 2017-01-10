@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.registerSet, 0x00);
+    BOOST_CHECK(z80.decoder.regs.registerSet == 0);
     BOOST_CHECK_EQUAL(z80.a, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.d, 0xFF);
     BOOST_CHECK_EQUAL(z80.c, 0xFFFF);
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.registerSet, 0x00);
+    BOOST_CHECK(z80.decoder.regs.registerSet == 0);
     BOOST_CHECK_EQUAL(z80.a, 0x0000);
     BOOST_CHECK_EQUAL(z80.d, 0xFF);
     BOOST_CHECK_EQUAL(z80.c, 0xFFFF & ~(SIGNAL_M1_ | SIGNAL_MREQ_ | SIGNAL_RD_));
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.registerSet, 0x00);
+    BOOST_CHECK(z80.decoder.regs.registerSet == 0);
     BOOST_CHECK_EQUAL(z80.a, 0x0000);
     BOOST_CHECK_EQUAL(z80.d, 0xFF);
     BOOST_CHECK_EQUAL(z80.c, 0xFFFF & ~(SIGNAL_M1_ | SIGNAL_MREQ_ | SIGNAL_RD_));
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.registerSet, 0x00);
+    BOOST_CHECK(z80.decoder.regs.registerSet == 0);
     BOOST_CHECK_EQUAL(z80.a, 0xFF7F);
     BOOST_CHECK_EQUAL(z80.d, 0xFF);
     BOOST_CHECK_EQUAL(z80.c, 0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RFSH_));
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.registerSet, 0x00);
+    BOOST_CHECK(z80.decoder.regs.registerSet == 0);
     BOOST_CHECK_EQUAL(z80.a, 0xFF7F);
     BOOST_CHECK_EQUAL(z80.d, 0xFF);
     BOOST_CHECK_EQUAL(z80.c, 0xFFFF & ~SIGNAL_RFSH_);
@@ -165,23 +165,16 @@ BOOST_AUTO_TEST_CASE(instruction_ld_r_n_test)
 BOOST_AUTO_TEST_CASE(execute_ld_r_n_test)
 {
     Z80 z80;
-    Memory m(16, true);
+    Memory m(16, false);
 
     // My first program
-    // LD A, B7h
-    // LD B, B0h
-    // LD C, B1h
-    // LD D, B2h
-    // LD E, B3h
-    // LD H, B4h
-    // LD L, B5h
-    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0xB7;
-    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0xB0;
-    m.memory[0x0004] = 0x0E; m.memory[0x0005] = 0xB1;
-    m.memory[0x0006] = 0x16; m.memory[0x0007] = 0xB2;
-    m.memory[0x0008] = 0x1E; m.memory[0x0009] = 0xB3;
-    m.memory[0x000A] = 0x26; m.memory[0x000B] = 0xB4;
-    m.memory[0x000C] = 0x2E; m.memory[0x000D] = 0xB5;
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0xB7;   // LD A, B7h
+    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0xB0;   // LD B, B0h
+    m.memory[0x0004] = 0x0E; m.memory[0x0005] = 0xB1;   // LD C, B1h
+    m.memory[0x0006] = 0x16; m.memory[0x0007] = 0xB2;   // LD D, B2h
+    m.memory[0x0008] = 0x1E; m.memory[0x0009] = 0xB3;   // LD E, B3h
+    m.memory[0x000A] = 0x26; m.memory[0x000B] = 0xB4;   // LD H, B4h
+    m.memory[0x000C] = 0x2E; m.memory[0x000D] = 0xB5;   // LD L, B5h
 
     z80.reset(); z80.clock();
     for (size_t i = 0; i != 56; ++i)
@@ -1316,5 +1309,34 @@ BOOST_AUTO_TEST_CASE(execute_ld_memnn_a_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af->h, 0x69);
     BOOST_CHECK_EQUAL(m.memory[0x1020], 0x69);
 }
+
+BOOST_AUTO_TEST_CASE(execute_ld_rp_nn_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    m.memory[0x0000] = 0x01; m.memory[0x0001] = 0x11; m.memory[0x0002] = 0x00;  // LD BC, 0011h
+    m.memory[0x0003] = 0x11; m.memory[0x0004] = 0x33; m.memory[0x0005] = 0x22;  // LD DE, 2233h
+    m.memory[0x0006] = 0x21; m.memory[0x0007] = 0x55; m.memory[0x0008] = 0x44;  // LD HL, 4455h
+    m.memory[0x0009] = 0x31; m.memory[0x000A] = 0x77; m.memory[0x000B] = 0x66;  // LD SP, 6677h
+
+    z80.reset(); z80.clock();
+    for (size_t i = 0; i != 40; ++i)
+    {
+        z80.clock();
+        m.a = z80.a; m.d = z80.d;
+        m.as_ = z80.c & SIGNAL_MREQ_;
+        m.rd_ = z80.c & SIGNAL_RD_;
+        m.wr_ = z80.c & SIGNAL_WR_;
+        m.clock();
+        z80.d = m.d;
+    }
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc->w, 0x0011);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de->w, 0x2233);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl->w, 0x4455);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x6677);
+}
+
 // EOF
 // vim: et:sw=4:ts=4
