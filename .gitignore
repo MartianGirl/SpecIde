@@ -32,3 +32,4 @@ Release/
 Win32/
 SpecIde
 *Test
+*.exe
