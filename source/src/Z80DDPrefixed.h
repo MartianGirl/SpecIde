@@ -8,22 +8,51 @@
 
 #include "Z80Instruction.h"
 #include "Z80Nop.h"
+
+#include "Z80LdAPtrBc.h"
+#include "Z80LdAPtrDe.h"
+#include "Z80LdAPtrWord.h"
+
+#include "Z80LdPtrBcA.h"
+#include "Z80LdPtrDeA.h"
+#include "Z80LdPtrWordA.h"
+
+#include "Z80LdRegXByte.h"
+#include "Z80LdRegPtrIx.h"
+#include "Z80LdRegXRegX.h"
+
 #include "Z80LdPtrIxByte.h"
 #include "Z80LdPtrIxReg.h"
-#include "Z80LdRegPtrIx.h"
-#include "Z80LdRegXByte.h"
-#include "Z80LdRegXRegX.h"
+
+#include "Z80LdRegWord.h"
+
+#include "Z80PrefixDD.h"
+#include "Z80PrefixED.h"
+#include "Z80PrefixFD.h"
 
 class Z80DDPrefixed
 {
     public:
         // Instructions
         Z80Nop iNop; 
+
+        Z80LdAPtrBc iLdAPtrBc;
+        Z80LdAPtrDe iLdAPtrDe;
+        Z80LdAPtrWord iLdAPtrWord;
+        Z80LdPtrBcA iLdPtrBcA;
+        Z80LdPtrDeA iLdPtrDeA;
+        Z80LdPtrWordA iLdPtrWordA;
+        Z80LdRegXByte iLdRegXByte;
+        Z80LdRegPtrIx iLdRegPtrIx;
+        Z80LdRegXRegX iLdRegXRegX;
         Z80LdPtrIxByte iLdPtrIxByte;
         Z80LdPtrIxReg iLdPtrIxReg;
-        Z80LdRegPtrIx iLdRegPtrIx;
-        Z80LdRegXByte iLdRegXByte;
-        Z80LdRegXRegX iLdRegXRegX;
+
+        Z80LdRegWord iLdRegWord;
+
+        Z80PrefixDD iPrefixDD;
+        Z80PrefixED iPrefixED;
+        Z80PrefixFD iPrefixFD;
 
         Z80Instruction* table[4][8][8];
 
@@ -34,8 +63,8 @@ class Z80DDPrefixed
                     // y = 0
                     {
                         &iNop,
-                        &iNop,
-                        &iNop,
+                        &iLdRegWord,    // 00000001: LD BC, nn
+                        &iLdPtrBcA,     // 00000010: LD (BC), A
                         &iNop,
                         &iNop,
                         &iNop,
@@ -46,7 +75,7 @@ class Z80DDPrefixed
                     {
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdAPtrBc,     // 00001010: LD A, (BC)
                         &iNop,
                         &iNop,
                         &iNop,
@@ -56,8 +85,8 @@ class Z80DDPrefixed
                     // y = 2
                     {
                         &iNop,
-                        &iNop,
-                        &iNop,
+                        &iLdRegWord,    // 00010001: LD DE, nn
+                        &iLdPtrDeA,     // 00010010: LD (DE), A
                         &iNop,
                         &iNop,
                         &iNop,
@@ -68,7 +97,7 @@ class Z80DDPrefixed
                     {
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdAPtrDe,     // 00011010: LD A, (DE)
                         &iNop,
                         &iNop,
                         &iNop,
@@ -100,8 +129,8 @@ class Z80DDPrefixed
                     // y = 6
                     {
                         &iNop,
-                        &iNop,
-                        &iNop,
+                        &iLdRegWord,    // 00110001: LD SP, nn
+                        &iLdPtrWordA,   // 00110010: LD (nn), A
                         &iNop,
                         &iNop,
                         &iNop,
@@ -112,7 +141,7 @@ class Z80DDPrefixed
                     {
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdAPtrWord,   // 00111010: LD A, (nn)
                         &iNop,
                         &iNop,
                         &iNop,
@@ -344,7 +373,7 @@ class Z80DDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iPrefixDD, // 11011101: DD Prefix
                         &iNop,
                         &iNop
                     },
@@ -366,7 +395,7 @@ class Z80DDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iPrefixED, // 11101101: ED Prefix
                         &iNop,
                         &iNop
                     },
@@ -388,7 +417,7 @@ class Z80DDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iPrefixFD, // 11111101: FD Prefix
                         &iNop,
                         &iNop
                     }

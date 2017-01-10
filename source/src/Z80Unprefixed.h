@@ -24,6 +24,8 @@
 #include "Z80LdPtrHlByte.h"
 #include "Z80LdPtrHlReg.h"
 
+#include "Z80LdRegWord.h"
+
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
 #include "Z80PrefixFD.h"
@@ -33,6 +35,7 @@ class Z80Unprefixed
     public:
         // Instructions
         Z80Nop iNop;
+
         Z80LdAPtrBc iLdAPtrBc;
         Z80LdAPtrDe iLdAPtrDe;
         Z80LdAPtrWord iLdAPtrWord;
@@ -44,6 +47,8 @@ class Z80Unprefixed
         Z80LdRegReg iLdRegReg;
         Z80LdPtrHlByte iLdPtrHlByte;
         Z80LdPtrHlReg iLdPtrHlReg;
+
+        Z80LdRegWord iLdRegWord;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -58,7 +63,7 @@ class Z80Unprefixed
                     // y = 0
                     {
                         &iNop,
-                        &iNop,
+                        &iLdRegWord,    // 00000001: LD BC, nn
                         &iLdPtrBcA,     // 00000010: LD (BC), A
                         &iNop,
                         &iNop,
@@ -80,7 +85,7 @@ class Z80Unprefixed
                     // y = 2
                     {
                         &iNop,
-                        &iNop,
+                        &iLdRegWord,    // 00010001: LD DE, nn
                         &iLdPtrDeA,     // 00010010: LD (DE), A
                         &iNop,
                         &iNop,
@@ -102,7 +107,7 @@ class Z80Unprefixed
                     // y = 4
                     {
                         &iNop,
-                        &iNop,
+                        &iLdRegWord,    // 00100001: LD HL, nn
                         &iNop,
                         &iNop,
                         &iNop,
@@ -124,7 +129,7 @@ class Z80Unprefixed
                     // y = 6
                     {
                         &iNop,
-                        &iNop,
+                        &iLdRegWord,    // 00110001: LD SP, nn
                         &iLdPtrWordA,   // 00110010: LD (nn), A
                         &iNop,
                         &iNop,
@@ -239,9 +244,9 @@ class Z80Unprefixed
                 {
                     // y = 0
                     {
-                        &iNop, // 00000000: NOP
-                        &iNop, // 00000001: LD rp[p], nn
-                        &iNop, // 00000010: LD (BC), A
+                        &iNop,
+                        &iNop,
+                        &iNop,
                         &iNop,
                         &iNop,
                         &iNop,
@@ -261,9 +266,9 @@ class Z80Unprefixed
                     },
                     // y = 2
                     {
-                        &iNop, // 00000000: NOP
-                        &iNop, // 00000001: LD rp[p], nn
-                        &iNop, // 00000010: LD (BC), A
+                        &iNop,
+                        &iNop,
+                        &iNop,
                         &iNop,
                         &iNop,
                         &iNop,
@@ -283,9 +288,9 @@ class Z80Unprefixed
                     },
                     // y = 4
                     {
-                        &iNop, // 00000000: NOP
-                        &iNop, // 00000001: LD rp[p], nn
-                        &iNop, // 00000010: LD (BC), A
+                        &iNop,
+                        &iNop,
+                        &iNop,
                         &iNop,
                         &iNop,
                         &iNop,
@@ -305,9 +310,9 @@ class Z80Unprefixed
                     },
                     // y = 6
                     {
-                        &iNop, // 00000000: NOP
-                        &iNop, // 00000001: LD rp[p], nn
-                        &iNop, // 00000010: LD (BC), A
+                        &iNop,
+                        &iNop,
+                        &iNop,
                         &iNop,
                         &iNop,
                         &iNop,
@@ -330,9 +335,9 @@ class Z80Unprefixed
                 {
                     // y = 0
                     {
-                        &iNop, // 00000000: NOP
-                        &iNop, // 00000001: LD rp[p], nn
-                        &iNop, // 00000010: LD (BC), A
+                        &iNop,
+                        &iNop,
+                        &iNop,
                         &iNop,
                         &iNop,
                         &iNop,
@@ -352,9 +357,9 @@ class Z80Unprefixed
                     },
                     // y = 2
                     {
-                        &iNop, // 00000000: NOP
-                        &iNop, // 00000001: LD rp[p], nn
-                        &iNop, // 00000010: LD (BC), A
+                        &iNop,
+                        &iNop,
+                        &iNop,
                         &iNop,
                         &iNop,
                         &iNop,
@@ -374,9 +379,9 @@ class Z80Unprefixed
                     },
                     // y = 4
                     {
-                        &iNop, // 00000000: NOP
-                        &iNop, // 00000001: LD rp[p], nn
-                        &iNop, // 00000010: LD (BC), A
+                        &iNop,
+                        &iNop,
+                        &iNop,
                         &iNop,
                         &iNop,
                         &iNop,
@@ -396,9 +401,9 @@ class Z80Unprefixed
                     },
                     // y = 6
                     {
-                        &iNop, // 00000000: NOP
-                        &iNop, // 00000001: LD rp[p], nn
-                        &iNop, // 00000010: LD (BC), A
+                        &iNop,
+                        &iNop,
+                        &iNop,
                         &iNop,
                         &iNop,
                         &iNop,
