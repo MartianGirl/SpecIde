@@ -25,6 +25,7 @@
 #include "Z80LdPtrIyReg.h"
 
 #include "Z80LdRegWord.h"
+#include "Z80LdIyWord.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -49,6 +50,7 @@ class Z80FDPrefixed
         Z80LdPtrIyReg iLdPtrIyReg;
 
         Z80LdRegWord iLdRegWord;
+        Z80LdIyWord iLdIyWord;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -107,7 +109,7 @@ class Z80FDPrefixed
                     // y = 4
                     {
                         &iNop,
-                        &iNop,
+                        &iLdIyWord,     // 00100001: LD IY, nn
                         &iNop,
                         &iNop,
                         &iNop,
