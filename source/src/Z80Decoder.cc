@@ -45,6 +45,9 @@ uint_fast16_t Z80Decoder::getAddress()
         case 0x08:  // Indirect nn:         LD A, (nn)
             regs.address.w = regs.operand.w;
             break;
+        case 0x09:  // Indirect extended    LD HL, (nn) - high byte read
+            regs.address.w++;
+            break;
         default:
             break;
     }

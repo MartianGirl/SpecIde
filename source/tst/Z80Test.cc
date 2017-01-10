@@ -1402,5 +1402,29 @@ BOOST_AUTO_TEST_CASE(execute_ld_rpy_nn_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x6677);
 }
 
+BOOST_AUTO_TEST_CASE(execute_ld_hl_memword_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    m.memory[0x0000] = 0x2A; m.memory[0x0001] = 0x34; m.memory[0x0002] = 0x12;  // LD HL, (1234h)
+    
+    m.memory[0x1234] = 0x11; m.memory[0x1235] = 0x44;
+
+    z80.reset(); z80.clock();
+    for (size_t i = 0; i != 16; ++i)
+    {
+        z80.clock();
+        m.a = z80.a; m.d = z80.d;
+        m.as_ = z80.c & SIGNAL_MREQ_;
+        m.rd_ = z80.c & SIGNAL_RD_;
+        m.wr_ = z80.c & SIGNAL_WR_;
+        m.clock();
+        z80.d = m.d;
+    }
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl->w, 0x4411);
+}
+
 // EOF
 // vim: et:sw=4:ts=4
