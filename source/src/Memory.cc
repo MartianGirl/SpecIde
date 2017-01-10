@@ -11,7 +11,6 @@ Memory::Memory(size_t width, bool rom) :
     a(0),
     d(0)
 {
-    memory.assign(size, 0x00);
 }
 
 void Memory::clock()
