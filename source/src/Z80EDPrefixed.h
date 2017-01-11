@@ -16,6 +16,7 @@
 #include "Z80LdRA.h"
 
 #include "Z80LdRegPtrWord.h"
+#include "Z80LdPtrWordReg.h"
 
 class Z80EDPrefixed
 {
@@ -29,6 +30,7 @@ class Z80EDPrefixed
         Z80LdRA iLdRA;
 
         Z80LdRegPtrWord iLdRegPtrWord;
+        Z80LdPtrWordReg iLdPtrWordReg;
 
         Z80Instruction* table[4][8][8];
 
@@ -132,7 +134,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdPtrWordReg, // 01000011: LD (nn), BC
                         &iNop,
                         &iNop,
                         &iNop,
@@ -154,7 +156,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdPtrWordReg, // 01010011: LD (nn), DE
                         &iNop,
                         &iNop,
                         &iNop,
@@ -176,7 +178,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdPtrWordReg, // 01100011: LD (nn), HL
                         &iNop,
                         &iNop,
                         &iNop,
@@ -198,7 +200,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iLdPtrWordReg, // 01110011: LD (nn), SP
                         &iNop,
                         &iNop,
                         &iNop,

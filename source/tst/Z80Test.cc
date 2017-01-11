@@ -1538,5 +1538,48 @@ BOOST_AUTO_TEST_CASE(execute_ld_memword_hl_test)
     BOOST_CHECK_EQUAL(m.memory[0x1235], 0x12);
 }
 
+BOOST_AUTO_TEST_CASE(execute_ld_memword_reg_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    m.memory[0x0000] = 0x01; m.memory[0x0001] = 0xCC; m.memory[0x0002] = 0xBB;  // LD BC, BBCCh
+    m.memory[0x0003] = 0x11; m.memory[0x0004] = 0xEE; m.memory[0x0005] = 0xDD;  // LD DE, DDEEh
+    m.memory[0x0006] = 0x21; m.memory[0x0007] = 0x11; m.memory[0x0008] = 0x44;  // LD HL, 4411h
+    m.memory[0x0009] = 0x31; m.memory[0x000A] = 0x99; m.memory[0x000B] = 0x55;  // LD SP, 5599h
+    m.memory[0x000C] = 0xED; m.memory[0x000D] = 0x43;
+    m.memory[0x000E] = 0x00; m.memory[0x000F] = 0x02;   // LD (0200h), BC
+    m.memory[0x0010] = 0xED; m.memory[0x0011] = 0x53;
+    m.memory[0x0012] = 0x02; m.memory[0x0013] = 0x02;   // LD (0202h), DE
+    m.memory[0x0014] = 0xED; m.memory[0x0015] = 0x63;
+    m.memory[0x0016] = 0x04; m.memory[0x0017] = 0x02;   // LD (0204h), HL
+    m.memory[0x0018] = 0xED; m.memory[0x0019] = 0x73;
+    m.memory[0x001A] = 0x06; m.memory[0x001B] = 0x02;   // LD (0206h), SP
+    
+    z80.reset(); z80.clock();
+    for (size_t i = 0; i != 120; ++i)
+    {
+        z80.clock();
+        m.a = z80.a; m.d = z80.d;
+        m.as_ = z80.c & SIGNAL_MREQ_;
+        m.rd_ = z80.c & SIGNAL_RD_;
+        m.wr_ = z80.c & SIGNAL_WR_;
+        m.clock();
+        z80.d = m.d;
+    }
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc->w, 0xBBCC);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de->w, 0xDDEE);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl->w, 0x4411);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x5599);
+    BOOST_CHECK_EQUAL(m.memory[0x0200], 0xCC);
+    BOOST_CHECK_EQUAL(m.memory[0x0201], 0xBB);
+    BOOST_CHECK_EQUAL(m.memory[0x0202], 0xEE);
+    BOOST_CHECK_EQUAL(m.memory[0x0203], 0xDD);
+    BOOST_CHECK_EQUAL(m.memory[0x0204], 0x11);
+    BOOST_CHECK_EQUAL(m.memory[0x0205], 0x44);
+    BOOST_CHECK_EQUAL(m.memory[0x0206], 0x99);
+    BOOST_CHECK_EQUAL(m.memory[0x0207], 0x55);
+}
 // EOF
 // vim: et:sw=4:ts=4
