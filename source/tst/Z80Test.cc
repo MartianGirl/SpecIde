@@ -1195,5 +1195,20 @@ BOOST_AUTO_TEST_CASE(execute_ld_memword_iy_test)
     BOOST_CHECK_EQUAL(m.memory[0x1235], 0x12);
 }
 
+BOOST_AUTO_TEST_CASE(execute_ld_sp_hl_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    m.memory[0x0000] = 0x21; m.memory[0x0001] = 0x56; m.memory[0x0002] = 0x34;  // LD HL, 3456h
+    m.memory[0x0003] = 0xF9;                                                    // LD SP, HL
+
+    startZ80(z80);
+    runCycles(z80, m, 16);
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl->w, 0x3456);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x3456);
+}
+
 // EOF
 // vim: et:sw=4:ts=4
