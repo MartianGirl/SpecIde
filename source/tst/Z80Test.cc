@@ -1338,5 +1338,41 @@ BOOST_AUTO_TEST_CASE(execute_push_iy_test)
     BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.decoder.regs.iy.l);
     BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.decoder.regs.iy.h);
 }
+
+BOOST_AUTO_TEST_CASE(execute_pop_ix_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    m.memory[0x0000] = 0x31; m.memory[0x0001] = 0x7E; m.memory[0x0002] = 0xC0;  // LD SP, C07Eh
+    m.memory[0x0003] = 0xDD; m.memory[0x0004] = 0xE1;                           // POP IX
+
+    m.memory[0xC07E] = 0x98; m.memory[0xC07F] = 0x77;
+
+    startZ80(z80);
+    runCycles(z80, m, 24);
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xC080);
+    BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.decoder.regs.ix.l);
+    BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.decoder.regs.ix.h);
+}
+
+BOOST_AUTO_TEST_CASE(execute_pop_iy_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    m.memory[0x0000] = 0x31; m.memory[0x0001] = 0x7E; m.memory[0x0002] = 0xC0;  // LD SP, C07Eh
+    m.memory[0x0003] = 0xFD; m.memory[0x0004] = 0xE1;                           // POP IY
+
+    m.memory[0xC07E] = 0x98; m.memory[0xC07F] = 0x77;
+
+    startZ80(z80);
+    runCycles(z80, m, 24);
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xC080);
+    BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.decoder.regs.iy.l);
+    BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.decoder.regs.iy.h);
+}
 // EOF
 // vim: et:sw=4:ts=4

@@ -32,6 +32,7 @@
 #include "Z80PushReg.h"
 #include "Z80PopReg.h"
 #include "Z80PushIx.h"
+#include "Z80PopIx.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -63,6 +64,7 @@ class Z80DDPrefixed
         Z80PushReg iPushReg;
         Z80PopReg iPopReg;
         Z80PushIx iPushIx;
+        Z80PopIx iPopIx;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -394,7 +396,7 @@ class Z80DDPrefixed
                     // y = 4
                     {
                         &iNop,
-                        &iNop,
+                        &iPopIx,    // 11100001: POP IX
                         &iNop,
                         &iNop,
                         &iNop,
