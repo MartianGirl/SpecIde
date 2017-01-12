@@ -29,6 +29,8 @@
 #include "Z80LdIyPtrWord.h"
 #include "Z80LdPtrWordIy.h"
 #include "Z80LdSpIy.h"
+#include "Z80PushReg.h"
+#include "Z80PopReg.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -57,6 +59,8 @@ class Z80FDPrefixed
         Z80LdIyPtrWord iLdIyPtrWord;
         Z80LdPtrWordIy iLdPtrWordIy;
         Z80LdSpIy iLdSpIy;
+        Z80PushReg iPushReg;
+        Z80PopReg iPopReg;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -344,11 +348,11 @@ class Z80FDPrefixed
                     // y = 0
                     {
                         &iNop,
+                        &iPopReg,   // 11000001: POP BC
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
-                        &iNop,
+                        &iPushReg,  // 11000101: PUSH BC
                         &iNop,
                         &iNop
                     },
@@ -366,11 +370,11 @@ class Z80FDPrefixed
                     // y = 2
                     {
                         &iNop,
+                        &iPopReg,   // 11010001: POP DE
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
-                        &iNop,
+                        &iPushReg,  // 11010101: PUSH DE
                         &iNop,
                         &iNop
                     },
@@ -410,11 +414,11 @@ class Z80FDPrefixed
                     // y = 6
                     {
                         &iNop,
+                        &iPopReg,   // 11110001: POP AF
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
-                        &iNop,
+                        &iPushReg,  // 11110101: PUSH AF
                         &iNop,
                         &iNop
                     },
