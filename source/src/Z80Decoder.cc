@@ -48,6 +48,14 @@ uint_fast16_t Z80Decoder::getAddress()
         case 0x09:  // Indirect extended    LD HL, (nn) - high byte read
             regs.address.w++;
             break;
+        case 0x0A:  // Push                 PUSH AF
+            regs.sp.w--;
+            regs.address.w = regs.sp.w;
+            break;
+        case 0x0B:  // Pop                  POP AF
+            regs.address.w = regs.sp.w;
+            regs.sp.w++;
+            break;
         default:
             break;
     }

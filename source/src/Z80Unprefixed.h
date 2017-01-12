@@ -28,6 +28,7 @@
 #include "Z80LdHlPtrWord.h"
 #include "Z80LdPtrWordHl.h"
 #include "Z80LdSpHl.h"
+#include "Z80PushReg.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -55,6 +56,7 @@ class Z80Unprefixed
         Z80LdHlPtrWord iLdHlPtrWord;
         Z80LdPtrWordHl iLdPtrWordHl;
         Z80LdSpHl iLdSpHl;
+        Z80PushReg iPushReg;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -346,7 +348,7 @@ class Z80Unprefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iPushReg,  // 11000101: PUSH BC
                         &iNop,
                         &iNop
                     },
@@ -368,7 +370,7 @@ class Z80Unprefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iPushReg,  // 11010101: PUSH DE
                         &iNop,
                         &iNop
                     },
@@ -390,7 +392,7 @@ class Z80Unprefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iPushReg,  // 11100101: PUSH HL
                         &iNop,
                         &iNop
                     },
@@ -412,7 +414,7 @@ class Z80Unprefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iPushReg,  // 11110101: PUSH AF
                         &iNop,
                         &iNop
                     },

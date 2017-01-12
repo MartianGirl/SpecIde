@@ -1241,5 +1241,35 @@ BOOST_AUTO_TEST_CASE(execute_ld_sp_iy_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0x3456);
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x3456);
 }
+
+BOOST_AUTO_TEST_CASE(execute_push_rr_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0x77;                           // LD A, 77h
+    m.memory[0x0002] = 0x01; m.memory[0x0003] = 0x11; m.memory[0x0004] = 0xBB;  // LD BC, BB11h
+    m.memory[0x0005] = 0x11; m.memory[0x0006] = 0x33; m.memory[0x0007] = 0x22;  // LD DE, 2233h
+    m.memory[0x0008] = 0x21; m.memory[0x0009] = 0x55; m.memory[0x000A] = 0x44;  // LD HL, 4455h
+    m.memory[0x000B] = 0x31; m.memory[0x000C] = 0x80; m.memory[0x000D] = 0xC0;  // LD SP, C080h
+    m.memory[0x000E] = 0xC5;                                                    // PUSH BC
+    m.memory[0x000F] = 0xD5;                                                    // PUSH DE
+    m.memory[0x0010] = 0xE5;                                                    // PUSH HL
+    m.memory[0x0011] = 0xF5;                                                    // PUSH AF
+
+    startZ80(z80);
+    runCycles(z80, m, 91);
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xC078);
+    BOOST_CHECK_EQUAL(m.memory[0xC078], z80.decoder.regs.af->l);
+    BOOST_CHECK_EQUAL(m.memory[0xC079], z80.decoder.regs.af->h);
+    BOOST_CHECK_EQUAL(m.memory[0xC07A], z80.decoder.regs.hl->l);
+    BOOST_CHECK_EQUAL(m.memory[0xC07B], z80.decoder.regs.hl->h);
+    BOOST_CHECK_EQUAL(m.memory[0xC07C], z80.decoder.regs.de->l);
+    BOOST_CHECK_EQUAL(m.memory[0xC07D], z80.decoder.regs.de->h);
+    BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.decoder.regs.bc->l);
+    BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.decoder.regs.bc->h);
+}
+
 // EOF
 // vim: et:sw=4:ts=4
