@@ -32,6 +32,7 @@
 #include "Z80PopReg.h"
 
 #include "Z80ExDeHl.h"
+#include "Z80ExAfAf.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -63,6 +64,7 @@ class Z80Unprefixed
         Z80PopReg iPopReg;
 
         Z80ExDeHl iExDeHl;
+        Z80ExAfAf iExAfAf;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -87,7 +89,7 @@ class Z80Unprefixed
                     },
                     // y = 1
                     {
-                        &iNop,
+                        &iExAfAf,       // 00001000: EX AF, AF'
                         &iNop,
                         &iLdAPtrBc,     // 00001010: LD A, (BC)
                         &iNop,

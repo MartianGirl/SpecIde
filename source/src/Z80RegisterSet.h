@@ -26,14 +26,10 @@ class Z80RegisterSet
         Z80Register ix;
         Z80Register iy;
 
-        Z80Register af;
-        Z80Register bc;
-        Z80Register de;
-        Z80Register hl;
-        Z80Register a_f_;
-        Z80Register b_c_;
-        Z80Register d_e_;
-        Z80Register h_l_;
+        Z80Register af, af_;
+        Z80Register bc, bc_;
+        Z80Register de, de_;
+        Z80Register hl, hl_;
 
         uint8_t* reg8[8];
         uint8_t* regx8[8];

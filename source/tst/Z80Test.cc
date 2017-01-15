@@ -46,10 +46,10 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.a_f_.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.b_c_.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.d_e_.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.h_l_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl_.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFF);
@@ -65,10 +65,10 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.a_f_.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.b_c_.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.d_e_.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.h_l_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl_.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFF);
@@ -84,10 +84,10 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.a_f_.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.b_c_.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.d_e_.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.h_l_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl_.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFF);
@@ -103,10 +103,10 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.a_f_.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.b_c_.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.d_e_.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.h_l_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl_.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFF);
@@ -121,10 +121,10 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.a_f_.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.b_c_.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.d_e_.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.h_l_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de_.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl_.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFF);
@@ -1384,6 +1384,20 @@ BOOST_AUTO_TEST_CASE(execute_ex_de_hl_test)
 
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x5678);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x1234);
+}
+
+BOOST_AUTO_TEST_CASE(execute_ex_af_af_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    m.memory[0x0000] = 0x08;    // EX AF, AF'
+
+    startZ80(z80);
+    z80.decoder.regs.af_.w = 0x5678;
+    runCycles(z80, m, 4);
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x5678);
 }
 
 // EOF

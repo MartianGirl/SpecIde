@@ -19,10 +19,10 @@ void Z80RegisterSet::reset()
     pc.w = 0x0000;
 
     // Clear all registers
-    af.w = 0xFFFF; a_f_.w = 0xFFFF;
-    bc.w = 0xFFFF; b_c_.w = 0xFFFF;
-    de.w = 0xFFFF; d_e_.w = 0xFFFF;
-    hl.w = 0xFFFF; h_l_.w = 0xFFFF;
+    af.w = 0xFFFF; af_.w = 0xFFFF;
+    bc.w = 0xFFFF; bc_.w = 0xFFFF;
+    de.w = 0xFFFF; de_.w = 0xFFFF;
+    hl.w = 0xFFFF; hl_.w = 0xFFFF;
 
     ir.w = 0xFFFF;
     sp.w = 0xFFFF;
