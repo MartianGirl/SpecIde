@@ -20,6 +20,8 @@
 
 #include "Z80Ldi.h"
 #include "Z80Ldir.h"
+#include "Z80Ldd.h"
+#include "Z80Lddr.h"
 
 class Z80EDPrefixed
 {
@@ -37,6 +39,8 @@ class Z80EDPrefixed
 
         Z80Ldi iLdi;
         Z80Ldir iLdir;
+        Z80Ldd iLdd;
+        Z80Lddr iLddr;
 
         Z80Instruction* table[4][8][8];
 
@@ -283,7 +287,7 @@ class Z80EDPrefixed
                     },
                     // y = 5
                     {
-                        &iNop,
+                        &iLdd,      // 10101000: LDD
                         &iNop,
                         &iNop,
                         &iNop,
@@ -305,7 +309,7 @@ class Z80EDPrefixed
                     },
                     // y = 7
                     {
-                        &iNop,
+                        &iLddr,     // 10111000: LDDR
                         &iNop,
                         &iNop,
                         &iNop,
