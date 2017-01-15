@@ -25,7 +25,7 @@ class Z80LdSpHl : public Z80Instruction
                     return false;
 
                 case 1:
-                    r->sp.w = r->hl->w;
+                    r->sp.w = r->hl.w;
                     return false;
 
                 case 2:

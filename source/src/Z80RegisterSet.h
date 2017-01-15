@@ -17,10 +17,7 @@ class Z80RegisterSet
     public:
         Z80RegisterSet();
 
-        void selectRegisterSet(size_t set);
         void reset();
-
-        size_t registerSet;
 
         // Registers
         Z80Register pc;
@@ -29,26 +26,20 @@ class Z80RegisterSet
         Z80Register ix;
         Z80Register iy;
 
-        Z80Register af_pair[2];
-        Z80Register bc_pair[2];
-        Z80Register de_pair[2];
-        Z80Register hl_pair[2];
-        Z80Register *af;
-        Z80Register *bc;
-        Z80Register *de;
-        Z80Register *hl;
+        Z80Register af;
+        Z80Register bc;
+        Z80Register de;
+        Z80Register hl;
+        Z80Register a_f_;
+        Z80Register b_c_;
+        Z80Register d_e_;
+        Z80Register h_l_;
 
-        uint8_t* r8[2][8];
-        uint8_t* rx8[2][8];
-        uint8_t* ry8[2][8];
-        uint16_t* rp[2][4];
-        uint16_t* rp2[2][4];
-
-        uint8_t** reg8;
-        uint8_t** regx8;
-        uint8_t** regy8;
-        uint16_t** regp;
-        uint16_t** regp2;
+        uint8_t* reg8[8];
+        uint8_t* regx8[8];
+        uint8_t* regy8[8];
+        uint16_t* regp[4];
+        uint16_t* regp2[4];
 
         Z80Register operand;
         Z80Register address;

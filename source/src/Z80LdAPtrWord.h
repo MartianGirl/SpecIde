@@ -31,7 +31,7 @@ class Z80LdAPtrWord : public Z80Instruction
                     return true;
 
                 case 3:
-                    r->af->h = r->operand.h;
+                    r->af.h = r->operand.h;
                     r->prefix = PREFIX_NO;
                     return true;
 

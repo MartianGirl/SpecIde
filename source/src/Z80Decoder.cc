@@ -26,13 +26,13 @@ uint_fast16_t Z80Decoder::getAddress()
             regs.pc.w++;
             break;
         case 0x02:  // Indirect HL:         LD A, (HL)
-            regs.address.w = regs.hl->w;
+            regs.address.w = regs.hl.w;
             break;
         case 0x03:  // Indirect BC:         LD A, (BC)
-            regs.address.w = regs.bc->w;
+            regs.address.w = regs.bc.w;
             break;
         case 0x04:  // Indirect DE:         LD A, (DE)
-            regs.address.w = regs.de->w;
+            regs.address.w = regs.de.w;
             break;
         case 0x05:  // Indirect SP:
             break;

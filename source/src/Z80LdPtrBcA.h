@@ -23,7 +23,7 @@ class Z80LdPtrBcA : public Z80Instruction
                     r->memWrCycles = 1;
                     r->memAddrMode = 0x00000003;
 
-                    r->outWord.l = r->af->h;
+                    r->outWord.l = r->af.h;
                     return true;
 
                 case 1:

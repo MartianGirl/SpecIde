@@ -22,7 +22,7 @@ class Z80LdIA : public Z80Instruction
                     r->memRdCycles = 0;
                     r->memWrCycles = 0;
                     r->memAddrMode = 0x00000000;
-                    r->ir.h = r->af->h;
+                    r->ir.h = r->af.h;
                     return false;
 
                 case 1:
