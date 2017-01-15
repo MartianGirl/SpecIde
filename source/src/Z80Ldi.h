@@ -37,7 +37,8 @@ class Z80Ldi : public Z80Instruction
                 case 3:
                     r->operand.h += r->af.h;
                     r->af.l &= FLAG_S | FLAG_Z | FLAG_C;            // SZ00000C
-                    r->af.l |= (r->operand.h & (FLAG_5 | FLAG_3));  // SZ50300C
+                    r->af.l |= (r->operand.h & FLAG_3);             // SZ00300C
+                    r->af.l |= (r->operand.h & FLAG_N) << 4;        // SZ50300C
                     r->af.l |= (r->bc.w) ? FLAG_PV : 0x00;          // SZ503P0C
                     return false;
 
