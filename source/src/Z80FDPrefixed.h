@@ -34,6 +34,8 @@
 #include "Z80PushIy.h"
 #include "Z80PopIy.h"
 
+#include "Z80ExDeHl.h"
+
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
 #include "Z80PrefixFD.h"
@@ -65,6 +67,8 @@ class Z80FDPrefixed
         Z80PopReg iPopReg;
         Z80PushIy iPushIy;
         Z80PopIy iPopIy;
+
+        Z80ExDeHl iExDeHl;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -409,7 +413,7 @@ class Z80FDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iExDeHl,   // 11101011: EX DE, HL
                         &iNop,
                         &iPrefixED, // 11101101: ED Prefix
                         &iNop,

@@ -1374,5 +1374,22 @@ BOOST_AUTO_TEST_CASE(execute_pop_iy_test)
     BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.decoder.regs.iy.l);
     BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.decoder.regs.iy.h);
 }
+
+BOOST_AUTO_TEST_CASE(execute_ex_de_hl_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    m.memory[0x0000] = 0x11; m.memory[0x0001] = 0x78; m.memory[0x0002] = 0x56;  // LD DE, 5678h
+    m.memory[0x0003] = 0x21; m.memory[0x0004] = 0x34; m.memory[0x0005] = 0x12;  // LD HL, 1234h
+    m.memory[0x0006] = 0xEB;                                                    // EX DE, HL
+
+    startZ80(z80);
+    runCycles(z80, m, 24);
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl->w, 0x5678);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de->w, 0x1234);
+}
+
 // EOF
 // vim: et:sw=4:ts=4
