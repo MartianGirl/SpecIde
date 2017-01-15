@@ -18,6 +18,9 @@
 #include "Z80LdRegPtrWord.h"
 #include "Z80LdPtrWordReg.h"
 
+#include "Z80Ldi.h"
+#include "Z80Ldir.h"
+
 class Z80EDPrefixed
 {
     public:
@@ -31,6 +34,9 @@ class Z80EDPrefixed
 
         Z80LdRegPtrWord iLdRegPtrWord;
         Z80LdPtrWordReg iLdPtrWordReg;
+
+        Z80Ldi iLdi;
+        Z80Ldir iLdir;
 
         Z80Instruction* table[4][8][8];
 
@@ -266,7 +272,7 @@ class Z80EDPrefixed
                     },
                     // y = 4
                     {
-                        &iNop,
+                        &iLdi,      // 10100000: LDI
                         &iNop,
                         &iNop,
                         &iNop,
@@ -288,7 +294,7 @@ class Z80EDPrefixed
                     },
                     // y = 6
                     {
-                        &iNop,
+                        &iLdir,     // 10110000: LDIR
                         &iNop,
                         &iNop,
                         &iNop,
