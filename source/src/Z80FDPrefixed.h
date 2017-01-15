@@ -36,6 +36,7 @@
 
 #include "Z80ExDeHl.h"
 #include "Z80ExAfAf.h"
+#include "Z80Exx.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -71,6 +72,7 @@ class Z80FDPrefixed
 
         Z80ExDeHl iExDeHl;
         Z80ExAfAf iExAfAf;
+        Z80Exx iExx;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -391,7 +393,7 @@ class Z80FDPrefixed
                     // y = 3
                     {
                         &iNop,
-                        &iNop,
+                        &iExx,      // 11011001: EXX
                         &iNop,
                         &iNop,
                         &iNop,

@@ -1394,10 +1394,58 @@ BOOST_AUTO_TEST_CASE(execute_ex_af_af_test)
     m.memory[0x0000] = 0x08;    // EX AF, AF'
 
     startZ80(z80);
+    z80.decoder.regs.af.w = 0x1234;
     z80.decoder.regs.af_.w = 0x5678;
     runCycles(z80, m, 4);
 
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x5678);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af_.w, 0x1234);
+}
+
+BOOST_AUTO_TEST_CASE(execute_exx_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    m.memory[0x0000] = 0xD9;    // EXX
+
+    startZ80(z80);
+    z80.decoder.regs.bc_.w = 0x1234;
+    z80.decoder.regs.de_.w = 0x5678;
+    z80.decoder.regs.hl_.w = 0x9ABC;
+    z80.decoder.regs.bc.w = 0x1122;
+    z80.decoder.regs.de.w = 0x3344;
+    z80.decoder.regs.hl.w = 0x5566;
+    runCycles(z80, m, 4);
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x1234);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x5678);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x9ABC);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc_.w, 0x1122);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de_.w, 0x3344);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl_.w, 0x5566);
+}
+
+BOOST_AUTO_TEST_CASE(execute_ex_memsp_hl_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    m.memory[0x0000] = 0x31; m.memory[0x0001] = 0x00; m.memory[0x0002] = 0xC0;  // LD SP, C000h
+    m.memory[0x0003] = 0x01; m.memory[0x0004] = 0x34; m.memory[0x0005] = 0x12;  // LD BC, 1234h
+    m.memory[0x0006] = 0xC5;                                                    // PUSH BC
+    m.memory[0x0007] = 0x21; m.memory[0x0008] = 0x78; m.memory[0x0009] = 0x56;  // LD HL, 5678h
+    m.memory[0x000A] = 0xE3;                                                    // EX (SP), HL
+    m.memory[0x000B] = 0xC1;                                                    // POP BC
+
+    startZ80(z80);
+    runCycles(z80, m, 70);
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xC000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x5678);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x1234);
+    BOOST_CHECK_EQUAL(m.memory[0xBFFE], 0x78);
+    BOOST_CHECK_EQUAL(m.memory[0xBFFF], 0x56);
 }
 
 // EOF
