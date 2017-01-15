@@ -1448,5 +1448,50 @@ BOOST_AUTO_TEST_CASE(execute_ex_memsp_hl_test)
     BOOST_CHECK_EQUAL(m.memory[0xBFFF], 0x56);
 }
 
+BOOST_AUTO_TEST_CASE(execute_ex_memsp_ix_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    m.memory[0x0000] = 0x31; m.memory[0x0001] = 0x00; m.memory[0x0002] = 0xC0;  // LD SP, C000h
+    m.memory[0x0003] = 0x01; m.memory[0x0004] = 0x34; m.memory[0x0005] = 0x12;  // LD BC, 1234h
+    m.memory[0x0006] = 0xC5;                                                    // PUSH BC
+    m.memory[0x0007] = 0xDD; m.memory[0x0008] = 0x21;
+    m.memory[0x0009] = 0x78; m.memory[0x000A] = 0x56;                           // LD IX, 5678h
+    m.memory[0x000B] = 0xDD; m.memory[0x000C] = 0xE3;                           // EX (SP), IX
+    m.memory[0x000D] = 0xC1;                                                    // POP BC
+
+    startZ80(z80);
+    runCycles(z80, m, 78);
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xC000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x5678);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0x1234);
+    BOOST_CHECK_EQUAL(m.memory[0xBFFE], 0x78);
+    BOOST_CHECK_EQUAL(m.memory[0xBFFF], 0x56);
+}
+
+BOOST_AUTO_TEST_CASE(execute_ex_memsp_iy_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    m.memory[0x0000] = 0x31; m.memory[0x0001] = 0x00; m.memory[0x0002] = 0xC0;  // LD SP, C000h
+    m.memory[0x0003] = 0x01; m.memory[0x0004] = 0x34; m.memory[0x0005] = 0x12;  // LD BC, 1234h
+    m.memory[0x0006] = 0xC5;                                                    // PUSH BC
+    m.memory[0x0007] = 0xFD; m.memory[0x0008] = 0x21;
+    m.memory[0x0009] = 0x78; m.memory[0x000A] = 0x56;                           // LD IY, 5678h
+    m.memory[0x000B] = 0xFD; m.memory[0x000C] = 0xE3;                           // EX (SP), IY
+    m.memory[0x000D] = 0xC1;                                                    // POP BC
+
+    startZ80(z80);
+    runCycles(z80, m, 78);
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xC000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x5678);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0x1234);
+    BOOST_CHECK_EQUAL(m.memory[0xBFFE], 0x78);
+    BOOST_CHECK_EQUAL(m.memory[0xBFFF], 0x56);
+}
 // EOF
 // vim: et:sw=4:ts=4

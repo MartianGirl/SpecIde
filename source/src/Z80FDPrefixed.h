@@ -37,6 +37,7 @@
 #include "Z80ExDeHl.h"
 #include "Z80ExAfAf.h"
 #include "Z80Exx.h"
+#include "Z80ExPtrSpIy.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -73,6 +74,7 @@ class Z80FDPrefixed
         Z80ExDeHl iExDeHl;
         Z80ExAfAf iExAfAf;
         Z80Exx iExx;
+        Z80ExPtrSpIy iExPtrSpIy;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -360,11 +362,11 @@ class Z80FDPrefixed
                     // y = 0
                     {
                         &iNop,
-                        &iPopReg,   // 11000001: POP BC
+                        &iPopReg,       // 11000001: POP BC
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iPushReg,  // 11000101: PUSH BC
+                        &iPushReg,      // 11000101: PUSH BC
                         &iNop,
                         &iNop
                     },
@@ -382,33 +384,33 @@ class Z80FDPrefixed
                     // y = 2
                     {
                         &iNop,
-                        &iPopReg,   // 11010001: POP DE
+                        &iPopReg,       // 11010001: POP DE
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iPushReg,  // 11010101: PUSH DE
+                        &iPushReg,      // 11010101: PUSH DE
                         &iNop,
                         &iNop
                     },
                     // y = 3
                     {
                         &iNop,
-                        &iExx,      // 11011001: EXX
+                        &iExx,          // 11011001: EXX
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iPrefixDD, // 11011101: DD Prefix
+                        &iPrefixDD,     // 11011101: DD Prefix
                         &iNop,
                         &iNop
                     },
                     // y = 4
                     {
                         &iNop,
-                        &iPopIy,    // 11100001: POP IY
+                        &iPopIy,        // 11100001: POP IY
                         &iNop,
+                        &iExPtrSpIy,    // 11100011: EX (SP), IY
                         &iNop,
-                        &iNop,
-                        &iPushIy,   // 11100101: PUSH IY
+                        &iPushIy,       // 11100101: PUSH IY
                         &iNop,
                         &iNop
                     },
@@ -417,31 +419,31 @@ class Z80FDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iExDeHl,   // 11101011: EX DE, HL
+                        &iExDeHl,       // 11101011: EX DE, HL
                         &iNop,
-                        &iPrefixED, // 11101101: ED Prefix
+                        &iPrefixED,     // 11101101: ED Prefix
                         &iNop,
                         &iNop
                     },
                     // y = 6
                     {
                         &iNop,
-                        &iPopReg,   // 11110001: POP AF
+                        &iPopReg,       // 11110001: POP AF
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iPushReg,  // 11110101: PUSH AF
+                        &iPushReg,      // 11110101: PUSH AF
                         &iNop,
                         &iNop
                     },
                     // y = 7
                     {
                         &iNop,
-                        &iLdSpIy,   // 11111001: LD SP, IY
+                        &iLdSpIy,       // 11111001: LD SP, IY
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iPrefixFD, // 11111101: FD Prefix
+                        &iPrefixFD,     // 11111101: FD Prefix
                         &iNop,
                         &iNop
                     }
