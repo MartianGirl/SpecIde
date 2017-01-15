@@ -24,6 +24,8 @@
 #include "Z80Lddr.h"
 #include "Z80Cpi.h"
 #include "Z80Cpir.h"
+#include "Z80Cpd.h"
+#include "Z80Cpdr.h"
 
 class Z80EDPrefixed
 {
@@ -45,6 +47,8 @@ class Z80EDPrefixed
         Z80Lddr iLddr;
         Z80Cpi iCpi;
         Z80Cpir iCpir;
+        Z80Cpd iCpd;
+        Z80Cpdr iCpdr;
 
         Z80Instruction* table[4][8][8];
 
@@ -292,7 +296,7 @@ class Z80EDPrefixed
                     // y = 5
                     {
                         &iLdd,      // 10101000: LDD
-                        &iNop,
+                        &iCpd,      // 10101001: CPD
                         &iNop,
                         &iNop,
                         &iNop,
@@ -314,7 +318,7 @@ class Z80EDPrefixed
                     // y = 7
                     {
                         &iLddr,     // 10111000: LDDR
-                        &iNop,
+                        &iCpdr,     // 10111001: CPDR
                         &iNop,
                         &iNop,
                         &iNop,
