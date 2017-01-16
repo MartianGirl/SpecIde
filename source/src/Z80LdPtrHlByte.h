@@ -29,8 +29,8 @@ class Z80LdPtrHlByte : public Z80Instruction
                     return true;
 
                 case 2:
-                    return true;
-                    r->prefix = PREFIX_NO;
+					r->prefix = PREFIX_NO;
+					return true;
 
                 default:    // Should not happen
                     assert(false);
