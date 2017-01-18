@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.c, 0xFFFF & ~SIGNAL_RFSH_);
 }
 
-BOOST_AUTO_TEST_CASE(instruction_ld_r_n_test)
+BOOST_AUTO_TEST_CASE(states_ld_r_n_test)
 {
     Z80 z80;
     // LD r, n tests
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(instruction_ld_r_n_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x34);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_r_n_test)
+BOOST_AUTO_TEST_CASE(ld_r_n_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_r_n_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.l, 0xB5);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_memhl_n_test)
+BOOST_AUTO_TEST_CASE(ld_memhl_n_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_memhl_n_test)
     BOOST_CHECK_EQUAL(m.memory[0x2223], 0x78);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_r_r_test)
+BOOST_AUTO_TEST_CASE(ld_r_r_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_r_r_test)
     }
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_r_a_test)
+BOOST_AUTO_TEST_CASE(ld_r_a_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_r_a_test)
     BOOST_CHECK(z80.state == Z80State::ST_M1_T1_ADDRWR);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_i_a_test)
+BOOST_AUTO_TEST_CASE(ld_i_a_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_i_a_test)
     BOOST_CHECK(z80.state == Z80State::ST_M1_T1_ADDRWR);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_a_r_test)
+BOOST_AUTO_TEST_CASE(ld_a_r_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_a_r_test)
     BOOST_CHECK(z80.state == Z80State::ST_M1_T1_ADDRWR);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_a_i_test)
+BOOST_AUTO_TEST_CASE(ld_a_i_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_a_i_test)
     BOOST_CHECK(z80.state == Z80State::ST_M1_T1_ADDRWR);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_rx_rx_test)
+BOOST_AUTO_TEST_CASE(ld_rx_rx_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_rx_rx_test)
     }
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_ry_ry_test)
+BOOST_AUTO_TEST_CASE(ld_ry_ry_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_ry_ry_test)
     }
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_rx_n_test)
+BOOST_AUTO_TEST_CASE(ld_rx_n_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -523,7 +523,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_rx_n_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.ix.l, 0xD5);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_ry_n_test)
+BOOST_AUTO_TEST_CASE(ld_ry_n_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -556,7 +556,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_ry_n_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.iy.l, 0xF5);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_r_memhl_test)
+BOOST_AUTO_TEST_CASE(ld_r_memhl_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -597,7 +597,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_r_memhl_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.l, 0x15);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_r_memix_test)
+BOOST_AUTO_TEST_CASE(ld_r_memix_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -630,7 +630,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_r_memix_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x4415);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_r_memiy_test)
+BOOST_AUTO_TEST_CASE(ld_r_memiy_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -663,7 +663,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_r_memiy_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x4415);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_memhl_r_test)
+BOOST_AUTO_TEST_CASE(ld_memhl_r_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -705,7 +705,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_memhl_r_test)
     BOOST_CHECK_EQUAL(m.memory[0x0105], 0x05);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_memix_r_test)
+BOOST_AUTO_TEST_CASE(ld_memix_r_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -744,7 +744,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_memix_r_test)
     BOOST_CHECK_EQUAL(m.memory[0x0105], 0x15);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_memiy_r_test)
+BOOST_AUTO_TEST_CASE(ld_memiy_r_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -783,7 +783,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_memiy_r_test)
     BOOST_CHECK_EQUAL(m.memory[0x0105], 0x15);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_memix_n_test)
+BOOST_AUTO_TEST_CASE(ld_memix_n_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -821,7 +821,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_memix_n_test)
     BOOST_CHECK_EQUAL(m.memory[0x0107], 0xF7);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_memiy_n_test)
+BOOST_AUTO_TEST_CASE(ld_memiy_n_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -859,7 +859,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_memiy_n_test)
     BOOST_CHECK_EQUAL(m.memory[0x0107], 0xF7);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_a_membc_test)
+BOOST_AUTO_TEST_CASE(ld_a_membc_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -877,7 +877,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_a_membc_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.h, m.memory[0x1020]);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_a_memde_test)
+BOOST_AUTO_TEST_CASE(ld_a_memde_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -895,7 +895,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_a_memde_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.h, m.memory[0x1020]);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_a_memnn_test)
+BOOST_AUTO_TEST_CASE(ld_a_memnn_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -909,7 +909,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_a_memnn_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.h, m.memory[0x1020]);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_membc_a_test)
+BOOST_AUTO_TEST_CASE(ld_membc_a_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -928,7 +928,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_membc_a_test)
     BOOST_CHECK_EQUAL(m.memory[0x1020], 0x23);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_memde_a_test)
+BOOST_AUTO_TEST_CASE(ld_memde_a_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -947,7 +947,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_memde_a_test)
     BOOST_CHECK_EQUAL(m.memory[0x1020], 0x48);
 }  
 
-BOOST_AUTO_TEST_CASE(execute_ld_memnn_a_test)
+BOOST_AUTO_TEST_CASE(ld_memnn_a_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -963,7 +963,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_memnn_a_test)
     BOOST_CHECK_EQUAL(m.memory[0x1020], 0x69);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_rp_nn_test)
+BOOST_AUTO_TEST_CASE(ld_rp_nn_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -982,7 +982,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_rp_nn_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x6677);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_rpx_nn_test)
+BOOST_AUTO_TEST_CASE(ld_rpx_nn_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1005,7 +1005,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_rpx_nn_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x6677);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_rpy_nn_test)
+BOOST_AUTO_TEST_CASE(ld_rpy_nn_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1028,7 +1028,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_rpy_nn_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x6677);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_hl_memword_test)
+BOOST_AUTO_TEST_CASE(ld_hl_memword_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1043,7 +1043,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_hl_memword_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x4411);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_reg_memword_test)
+BOOST_AUTO_TEST_CASE(ld_reg_memword_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1071,7 +1071,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_reg_memword_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFE05);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_ix_memword_test)
+BOOST_AUTO_TEST_CASE(ld_ix_memword_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1087,7 +1087,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_ix_memword_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0x5678);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_iy_memword_test)
+BOOST_AUTO_TEST_CASE(ld_iy_memword_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1103,7 +1103,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_iy_memword_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0x5678);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_memword_hl_test)
+BOOST_AUTO_TEST_CASE(ld_memword_hl_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1119,7 +1119,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_memword_hl_test)
     BOOST_CHECK_EQUAL(m.memory[0x1235], 0x12);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_memword_reg_test)
+BOOST_AUTO_TEST_CASE(ld_memword_reg_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1154,7 +1154,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_memword_reg_test)
     BOOST_CHECK_EQUAL(m.memory[0x0207], 0x55);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_memword_ix_test)
+BOOST_AUTO_TEST_CASE(ld_memword_ix_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1172,7 +1172,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_memword_ix_test)
     BOOST_CHECK_EQUAL(m.memory[0x1235], 0x12);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_memword_iy_test)
+BOOST_AUTO_TEST_CASE(ld_memword_iy_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1190,7 +1190,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_memword_iy_test)
     BOOST_CHECK_EQUAL(m.memory[0x1235], 0x12);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_sp_hl_test)
+BOOST_AUTO_TEST_CASE(ld_sp_hl_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1205,7 +1205,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_sp_hl_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x3456);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_sp_ix_test)
+BOOST_AUTO_TEST_CASE(ld_sp_ix_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1221,7 +1221,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_sp_ix_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x3456);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ld_sp_iy_test)
+BOOST_AUTO_TEST_CASE(ld_sp_iy_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1237,7 +1237,7 @@ BOOST_AUTO_TEST_CASE(execute_ld_sp_iy_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x3456);
 }
 
-BOOST_AUTO_TEST_CASE(execute_push_rr_test)
+BOOST_AUTO_TEST_CASE(push_rr_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1266,7 +1266,7 @@ BOOST_AUTO_TEST_CASE(execute_push_rr_test)
     BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.decoder.regs.bc.h);
 }
 
-BOOST_AUTO_TEST_CASE(execute_pop_rr_test)
+BOOST_AUTO_TEST_CASE(pop_rr_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1296,7 +1296,7 @@ BOOST_AUTO_TEST_CASE(execute_pop_rr_test)
     BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.decoder.regs.af.h);
 }
 
-BOOST_AUTO_TEST_CASE(execute_push_ix_test)
+BOOST_AUTO_TEST_CASE(push_ix_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1315,7 +1315,7 @@ BOOST_AUTO_TEST_CASE(execute_push_ix_test)
     BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.decoder.regs.ix.h);
 }
 
-BOOST_AUTO_TEST_CASE(execute_push_iy_test)
+BOOST_AUTO_TEST_CASE(push_iy_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1334,7 +1334,7 @@ BOOST_AUTO_TEST_CASE(execute_push_iy_test)
     BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.decoder.regs.iy.h);
 }
 
-BOOST_AUTO_TEST_CASE(execute_pop_ix_test)
+BOOST_AUTO_TEST_CASE(pop_ix_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1352,7 +1352,7 @@ BOOST_AUTO_TEST_CASE(execute_pop_ix_test)
     BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.decoder.regs.ix.h);
 }
 
-BOOST_AUTO_TEST_CASE(execute_pop_iy_test)
+BOOST_AUTO_TEST_CASE(pop_iy_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1370,7 +1370,7 @@ BOOST_AUTO_TEST_CASE(execute_pop_iy_test)
     BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.decoder.regs.iy.h);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ex_de_hl_test)
+BOOST_AUTO_TEST_CASE(ex_de_hl_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1386,7 +1386,7 @@ BOOST_AUTO_TEST_CASE(execute_ex_de_hl_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x1234);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ex_af_af_test)
+BOOST_AUTO_TEST_CASE(ex_af_af_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1402,7 +1402,7 @@ BOOST_AUTO_TEST_CASE(execute_ex_af_af_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af_.w, 0x1234);
 }
 
-BOOST_AUTO_TEST_CASE(execute_exx_test)
+BOOST_AUTO_TEST_CASE(exx_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1426,7 +1426,7 @@ BOOST_AUTO_TEST_CASE(execute_exx_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl_.w, 0x5566);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ex_memsp_hl_test)
+BOOST_AUTO_TEST_CASE(ex_memsp_hl_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1448,7 +1448,7 @@ BOOST_AUTO_TEST_CASE(execute_ex_memsp_hl_test)
     BOOST_CHECK_EQUAL(m.memory[0xBFFF], 0x56);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ex_memsp_ix_test)
+BOOST_AUTO_TEST_CASE(ex_memsp_ix_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1471,7 +1471,7 @@ BOOST_AUTO_TEST_CASE(execute_ex_memsp_ix_test)
     BOOST_CHECK_EQUAL(m.memory[0xBFFF], 0x56);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ex_memsp_iy_test)
+BOOST_AUTO_TEST_CASE(ex_memsp_iy_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1494,7 +1494,7 @@ BOOST_AUTO_TEST_CASE(execute_ex_memsp_iy_test)
     BOOST_CHECK_EQUAL(m.memory[0xBFFF], 0x56);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ldi_test)
+BOOST_AUTO_TEST_CASE(ldi_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1535,7 +1535,7 @@ BOOST_AUTO_TEST_CASE(execute_ldi_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x08);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ldir_test)
+BOOST_AUTO_TEST_CASE(ldir_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1576,7 +1576,7 @@ BOOST_AUTO_TEST_CASE(execute_ldir_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x28);
 }
 
-BOOST_AUTO_TEST_CASE(execute_ldd_test)
+BOOST_AUTO_TEST_CASE(ldd_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1617,7 +1617,7 @@ BOOST_AUTO_TEST_CASE(execute_ldd_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x08);
 }
 
-BOOST_AUTO_TEST_CASE(execute_lddr_test)
+BOOST_AUTO_TEST_CASE(lddr_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1658,7 +1658,7 @@ BOOST_AUTO_TEST_CASE(execute_lddr_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
 }
 
-BOOST_AUTO_TEST_CASE(execute_cpi_test)
+BOOST_AUTO_TEST_CASE(cpi_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1692,7 +1692,7 @@ BOOST_AUTO_TEST_CASE(execute_cpi_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xAA);
 }
 
-BOOST_AUTO_TEST_CASE(execute_cpir_test)
+BOOST_AUTO_TEST_CASE(cpir_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1728,7 +1728,7 @@ BOOST_AUTO_TEST_CASE(execute_cpir_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x46);
 }
 
-BOOST_AUTO_TEST_CASE(execute_cpd_test)
+BOOST_AUTO_TEST_CASE(cpd_test)
 {
     Z80 z80;
     Memory m(16, false);
@@ -1762,7 +1762,7 @@ BOOST_AUTO_TEST_CASE(execute_cpd_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x12);
 }
 
-BOOST_AUTO_TEST_CASE(execute_cpdr_test)
+BOOST_AUTO_TEST_CASE(cpdr_test)
 {
     Z80 z80;
     Memory m(16, false);

@@ -36,6 +36,8 @@
 #include "Z80Exx.h"
 #include "Z80ExPtrSpHl.h"
 
+#include "Z80AluReg.h"
+
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
 #include "Z80PrefixFD.h"
@@ -69,6 +71,8 @@ class Z80Unprefixed
         Z80ExAfAf iExAfAf;
         Z80Exx iExx;
         Z80ExPtrSpHl iExPtrSpHl;
+
+        Z80AluReg iAluReg;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -264,14 +268,14 @@ class Z80Unprefixed
                 {
                     // y = 0
                     {
+                        &iAluReg,       // 10000000: ADD B
+                        &iAluReg,       // 10000001: ADD C
+                        &iAluReg,       // 10000010: ADD D
+                        &iAluReg,       // 10000011: ADD E
+                        &iAluReg,       // 10000100: ADD H
+                        &iAluReg,       // 10000101: ADD L
                         &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iAluReg        // 10000111: ADD A
                     },
                     // y = 1
                     {
