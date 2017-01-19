@@ -279,14 +279,14 @@ class Z80Unprefixed
                     },
                     // y = 1
                     {
+                        &iAluReg,       // 10001000: ADC A
+                        &iAluReg,       // 10001001: ADC B
+                        &iAluReg,       // 10001010: ADC C
+                        &iAluReg,       // 10001011: ADC D
+                        &iAluReg,       // 10001100: ADC H
+                        &iAluReg,       // 10001101: ADC L
                         &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iAluReg        // 10001111: ADC A
                     },
                     // y = 2
                     {
