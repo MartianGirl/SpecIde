@@ -36,7 +36,10 @@
 #include "Z80Exx.h"
 #include "Z80ExPtrSpHl.h"
 
-#include "Z80AluReg.h"
+#include "Z80AddReg.h"
+#include "Z80AdcReg.h"
+#include "Z80SubReg.h"
+#include "Z80SbcReg.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -72,7 +75,10 @@ class Z80Unprefixed
         Z80Exx iExx;
         Z80ExPtrSpHl iExPtrSpHl;
 
-        Z80AluReg iAluReg;
+        Z80AddReg iAddReg;
+        Z80AdcReg iAdcReg;
+        Z80SubReg iSubReg;
+        Z80SbcReg iSbcReg;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -268,47 +274,47 @@ class Z80Unprefixed
                 {
                     // y = 0
                     {
-                        &iAluReg,       // 10000000: ADD B
-                        &iAluReg,       // 10000001: ADD C
-                        &iAluReg,       // 10000010: ADD D
-                        &iAluReg,       // 10000011: ADD E
-                        &iAluReg,       // 10000100: ADD H
-                        &iAluReg,       // 10000101: ADD L
+                        &iAddReg,       // 10000000: ADD B
+                        &iAddReg,       // 10000001: ADD C
+                        &iAddReg,       // 10000010: ADD D
+                        &iAddReg,       // 10000011: ADD E
+                        &iAddReg,       // 10000100: ADD H
+                        &iAddReg,       // 10000101: ADD L
                         &iNop,
-                        &iAluReg        // 10000111: ADD A
+                        &iAddReg        // 10000111: ADD A
                     },
                     // y = 1
                     {
-                        &iAluReg,       // 10001000: ADC A
-                        &iAluReg,       // 10001001: ADC B
-                        &iAluReg,       // 10001010: ADC C
-                        &iAluReg,       // 10001011: ADC D
-                        &iAluReg,       // 10001100: ADC H
-                        &iAluReg,       // 10001101: ADC L
+                        &iAdcReg,       // 10001000: ADC A
+                        &iAdcReg,       // 10001001: ADC B
+                        &iAdcReg,       // 10001010: ADC C
+                        &iAdcReg,       // 10001011: ADC D
+                        &iAdcReg,       // 10001100: ADC H
+                        &iAdcReg,       // 10001101: ADC L
                         &iNop,
-                        &iAluReg        // 10001111: ADC A
+                        &iAdcReg        // 10001111: ADC A
                     },
                     // y = 2
                     {
+                        &iSubReg,       // 10010000: SUB A
+                        &iSubReg,       // 10010001: SUB B
+                        &iSubReg,       // 10010010: SUB C
+                        &iSubReg,       // 10010011: SUB D
+                        &iSubReg,       // 10010100: SUB H
+                        &iSubReg,       // 10010101: SUB L
                         &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iSubReg        // 10010111: SUB A
                     },
                     // y = 3
                     {
+                        &iSbcReg,       // 10011000: SBC A
+                        &iSbcReg,       // 10011001: SBC B
+                        &iSbcReg,       // 10011010: SBC C
+                        &iSbcReg,       // 10011011: SBC D
+                        &iSbcReg,       // 10011100: SBC H
+                        &iSbcReg,       // 10011101: SBC L
                         &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iSbcReg        // 10011111: SBC A
                     },
                     // y = 4
                     {
