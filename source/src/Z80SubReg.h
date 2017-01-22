@@ -24,17 +24,18 @@ class Z80SubReg : public Z80Instruction
                     r->memAddrMode = 0x00000000;
 
                     // Calculate half-carry
-                    r->operand.w = (r->af.h & 0x0F) + (-*(r->reg8[r->z]) & 0x0F);
-                    r->af.l = r->operand.l 
-                        & (FLAG_H | FLAG_3 | FLAG_N);               // ...H3.0.
-
-                    r->operand.w = r->af.h - *(r->reg8[r->z]);
+                    r->operand.w = (r->af.h & 0x0F) 
+                        + static_cast<uint8_t>(-*r->reg8[r->z] & 0x0F);
+                    r->af.l = (r->operand.l & (FLAG_H | FLAG_3)) | FLAG_N; 
+                                                                    // ...H3.1.
+                    r->operand.w = r->af.h 
+                        + static_cast<uint8_t>(-*r->reg8[r->z]);
 
                     r->af.l |= r->operand.l & (FLAG_S | FLAG_5);    // S.5H3.0.
                     r->af.l |= r->operand.h & FLAG_C;               // S.5H3.0C
-                    r->af.l |= (((r->af.h ^ r->operand.l)
-                                & (-*(r->reg8[r->z]) ^ r->operand.l)) >> 5) 
-                        & FLAG_PV;                                  // S.5H3P0C
+                    r->af.l |=                                      // S.5H3P0C
+                        (((r->af.h ^ r->operand.l)
+                          & (-*r->reg8[r->z] ^ r->operand.l)) >> 5) & FLAG_PV;
                     r->af.l |= (r->operand.l) ? 0x00 : FLAG_Z;      // SZ5H3V0C
                     r->af.h = r->operand.l;
                     r->prefix = PREFIX_NO;
