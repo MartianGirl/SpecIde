@@ -24,12 +24,10 @@ class Z80SubReg : public Z80Instruction
                     r->memAddrMode = 0x00000000;
 
                     // Calculate half-carry
-                    r->operand.w = (r->af.h & 0x0F) 
-                        + static_cast<uint8_t>(-*r->reg8[r->z] & 0x0F);
-                    r->af.l = (r->operand.l & (FLAG_H | FLAG_3)) | FLAG_N; 
-                                                                    // ...H3.1.
-                    r->operand.w = r->af.h 
-                        + static_cast<uint8_t>(-*r->reg8[r->z]);
+                    r->operand.w = (r->af.h & 0x0F) - (*r->reg8[r->z] & 0x0F);
+                    r->af.l = 
+                        (r->operand.l & (FLAG_H | FLAG_3)) | FLAG_N;// ...H3.1.
+                    r->operand.w = r->af.h - *r->reg8[r->z];
 
                     r->af.l |= r->operand.l & (FLAG_S | FLAG_5);    // S.5H3.0.
                     r->af.l |= r->operand.h & FLAG_C;               // S.5H3.0C
