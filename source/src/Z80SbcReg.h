@@ -2,7 +2,7 @@
 
 /** Z80SbcReg.h
  *
- * Instruction: SBC r
+ * Instruction: SBC A, r
  *
  */
 

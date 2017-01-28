@@ -2,7 +2,7 @@
 
 /** Z80AdcReg.h
  *
- * Instruction: ADC r
+ * Instruction: ADC A, r
  *
  */
 

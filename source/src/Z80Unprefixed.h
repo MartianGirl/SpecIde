@@ -40,6 +40,8 @@
 #include "Z80AdcReg.h"
 #include "Z80SubReg.h"
 #include "Z80SbcReg.h"
+#include "Z80AndReg.h"
+#include "Z80OrReg.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -79,6 +81,8 @@ class Z80Unprefixed
         Z80AdcReg iAdcReg;
         Z80SubReg iSubReg;
         Z80SbcReg iSbcReg;
+        Z80AndReg iAndReg;
+        Z80OrReg iOrReg;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -274,32 +278,32 @@ class Z80Unprefixed
                 {
                     // y = 0
                     {
-                        &iAddReg,       // 10000000: ADD B
-                        &iAddReg,       // 10000001: ADD C
-                        &iAddReg,       // 10000010: ADD D
-                        &iAddReg,       // 10000011: ADD E
-                        &iAddReg,       // 10000100: ADD H
-                        &iAddReg,       // 10000101: ADD L
+                        &iAddReg,       // 10000000: ADD A, B
+                        &iAddReg,       // 10000001: ADD A, C
+                        &iAddReg,       // 10000010: ADD A, D
+                        &iAddReg,       // 10000011: ADD A, E
+                        &iAddReg,       // 10000100: ADD A, H
+                        &iAddReg,       // 10000101: ADD A, L
                         &iNop,
-                        &iAddReg        // 10000111: ADD A
+                        &iAddReg        // 10000111: ADD A, A
                     },
                     // y = 1
                     {
-                        &iAdcReg,       // 10001000: ADC A
-                        &iAdcReg,       // 10001001: ADC B
-                        &iAdcReg,       // 10001010: ADC C
-                        &iAdcReg,       // 10001011: ADC D
-                        &iAdcReg,       // 10001100: ADC H
-                        &iAdcReg,       // 10001101: ADC L
+                        &iAdcReg,       // 10001000: ADC A, B
+                        &iAdcReg,       // 10001001: ADC A, C
+                        &iAdcReg,       // 10001010: ADC A, D
+                        &iAdcReg,       // 10001011: ADC A, E
+                        &iAdcReg,       // 10001100: ADC A, H
+                        &iAdcReg,       // 10001101: ADC A, L
                         &iNop,
-                        &iAdcReg        // 10001111: ADC A
+                        &iAdcReg        // 10001111: ADC A, A
                     },
                     // y = 2
                     {
-                        &iSubReg,       // 10010000: SUB A
-                        &iSubReg,       // 10010001: SUB B
-                        &iSubReg,       // 10010010: SUB C
-                        &iSubReg,       // 10010011: SUB D
+                        &iSubReg,       // 10010000: SUB B
+                        &iSubReg,       // 10010001: SUB C
+                        &iSubReg,       // 10010010: SUB D
+                        &iSubReg,       // 10010011: SUB E
                         &iSubReg,       // 10010100: SUB H
                         &iSubReg,       // 10010101: SUB L
                         &iNop,
@@ -307,36 +311,36 @@ class Z80Unprefixed
                     },
                     // y = 3
                     {
-                        &iSbcReg,       // 10011000: SBC A
-                        &iSbcReg,       // 10011001: SBC B
-                        &iSbcReg,       // 10011010: SBC C
-                        &iSbcReg,       // 10011011: SBC D
-                        &iSbcReg,       // 10011100: SBC H
-                        &iSbcReg,       // 10011101: SBC L
+                        &iSbcReg,       // 10011000: SBC A, B
+                        &iSbcReg,       // 10011001: SBC A, C
+                        &iSbcReg,       // 10011010: SBC A, D
+                        &iSbcReg,       // 10011011: SBC A, E
+                        &iSbcReg,       // 10011100: SBC A, H
+                        &iSbcReg,       // 10011101: SBC A, L
                         &iNop,
-                        &iSbcReg        // 10011111: SBC A
+                        &iSbcReg        // 10011111: SBC A, A
                     },
                     // y = 4
                     {
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iAndReg,       // 10100000: AND B
+                        &iAndReg,       // 10100001: AND C
+                        &iAndReg,       // 10100010: AND D
+                        &iAndReg,       // 10100011: AND E
+                        &iAndReg,       // 10100100: AND H
+                        &iAndReg,       // 10100101: AND L
+                        &iAndReg,
+                        &iAndReg        // 10100111: AND A
                     },
                     // y = 5
                     {
+                        &iOrReg,        // 10101000: OR B
+                        &iOrReg,        // 10101001: OR C
+                        &iOrReg,        // 10101010: OR D
+                        &iOrReg,        // 10101011: OR E
+                        &iOrReg,        // 10101100: OR H
+                        &iOrReg,        // 10101101: OR L
                         &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iOrReg         // 10101111: OR A
                     },
                     // y = 6
                     {

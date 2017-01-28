@@ -224,5 +224,71 @@ BOOST_AUTO_TEST_CASE(sbc_r_test)
     runCycles(z80, m, 18);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x7F3B);
 }
+
+BOOST_AUTO_TEST_CASE(and_r_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // Test sign
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0xF3;   // LD A, F3h
+    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0xA5;   // LD B, A5h
+    m.memory[0x0004] = 0xA0;                            // AND B (A1h, 10110000)
+    // Test zero
+    m.memory[0x0005] = 0x3E; m.memory[0x0006] = 0x76;   // LD A, 76h
+    m.memory[0x0007] = 0x0E; m.memory[0x0008] = 0x88;   // LD C, 88h
+    m.memory[0x0009] = 0xA1;                            // AND C (00h, 01010100)
+    // Test odd parity
+    m.memory[0x000A] = 0x3E; m.memory[0x000B] = 0x2B;   // LD A, 2Bh
+    m.memory[0x000C] = 0x16; m.memory[0x000D] = 0x7E;   // LD D, 7Eh
+    m.memory[0x000E] = 0xA2;                            // AND D (2Ah, 00111000)
+    // Test even parity
+    m.memory[0x000F] = 0x3E; m.memory[0x0010] = 0x2B;   // LD A, 2Bh
+    m.memory[0x0011] = 0x1E; m.memory[0x0012] = 0x7C;   // LD E, 7Ch
+    m.memory[0x0013] = 0xA3;                            // AND E (28h, 00111100)
+
+    startZ80(z80);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xA1B0);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0054);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2A38);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x283C);
+}
+
+BOOST_AUTO_TEST_CASE(or_r_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // Test sign
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0xF3;   // LD A, F3h
+    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0xA5;   // LD B, A5h
+    m.memory[0x0004] = 0xA8;                            // OR B (F7h, 10100000)
+    // Test zero
+    m.memory[0x0005] = 0x3E; m.memory[0x0006] = 0x00;   // LD A, 00h
+    m.memory[0x0007] = 0x0E; m.memory[0x0008] = 0x00;   // LD C, 00h
+    m.memory[0x0009] = 0xA9;                            // OR C (00h, 01000100)
+    // Test odd parity
+    m.memory[0x000A] = 0x3E; m.memory[0x000B] = 0x38;   // LD A, 38h
+    m.memory[0x000C] = 0x16; m.memory[0x000D] = 0x04;   // LD D, 04h
+    m.memory[0x000E] = 0xAA;                            // OR D (3Ch, 00101100)
+    // Test even parity
+    m.memory[0x000F] = 0x3E; m.memory[0x0010] = 0x38;   // LD A, 38h
+    m.memory[0x0011] = 0x1E; m.memory[0x0012] = 0x10;   // LD E, 18h
+    m.memory[0x0013] = 0xAB;                            // OR E (38h, 00101000)
+
+    startZ80(z80);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xF7A0);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0044);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x3C2C);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x3828);
+}
 // EOF
 // vim: et:sw=4:ts=4

@@ -2,7 +2,7 @@
 
 /** Z80AddReg.h
  *
- * Instruction: ADD r
+ * Instruction: ADD A, r
  *
  */
 
