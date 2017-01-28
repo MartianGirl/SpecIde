@@ -41,6 +41,7 @@ class Z80RegisterSet
         Z80Register address;
         Z80Register outWord;
         Z80Register offset;
+        Z80Register acc;
 
         uint_fast8_t iff;
         uint_fast8_t im;
