@@ -42,6 +42,7 @@
 #include "Z80SbcReg.h"
 #include "Z80AndReg.h"
 #include "Z80OrReg.h"
+#include "Z80XorReg.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -83,6 +84,7 @@ class Z80Unprefixed
         Z80SbcReg iSbcReg;
         Z80AndReg iAndReg;
         Z80OrReg iOrReg;
+        Z80XorReg iXorReg;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -344,14 +346,14 @@ class Z80Unprefixed
                     },
                     // y = 6
                     {
+                        &iXorReg,       // 10110000: XOR B
+                        &iXorReg,       // 10110001: XOR C
+                        &iXorReg,       // 10110010: XOR D
+                        &iXorReg,       // 10110011: XOR E
+                        &iXorReg,       // 10110100: XOR H
+                        &iXorReg,       // 10110101: XOR L
                         &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iXorReg        // 10110111: XOR A
                     },
                     // y = 7
                     {
