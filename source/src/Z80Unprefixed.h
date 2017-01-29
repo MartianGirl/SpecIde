@@ -43,6 +43,7 @@
 #include "Z80AndReg.h"
 #include "Z80OrReg.h"
 #include "Z80XorReg.h"
+#include "Z80CpReg.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -85,6 +86,7 @@ class Z80Unprefixed
         Z80AndReg iAndReg;
         Z80OrReg iOrReg;
         Z80XorReg iXorReg;
+        Z80CpReg iCpReg;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -357,14 +359,14 @@ class Z80Unprefixed
                     },
                     // y = 7
                     {
+                        &iCpReg,        // 10111000: CP B
+                        &iCpReg,        // 10111001: CP C
+                        &iCpReg,        // 10111010: CP D
+                        &iCpReg,        // 10111011: CP E
+                        &iCpReg,        // 10111100: CP H
+                        &iCpReg,        // 10111101: CP L
                         &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iCpReg         // 10111111: CP A
                     }
                 },
                 // x = 3

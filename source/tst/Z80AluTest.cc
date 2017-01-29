@@ -323,5 +323,33 @@ BOOST_AUTO_TEST_CASE(xor_r_test)
     runCycles(z80, m, 18);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2E2C);
 }
+
+BOOST_AUTO_TEST_CASE(cp_r_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // Test sign
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0x73;   // LD A, 73h
+    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0xA5;   // LD B, A5h
+    m.memory[0x0004] = 0xB8;                            // CP B (10110111)
+    // Test zero
+    m.memory[0x0005] = 0x3E; m.memory[0x0006] = 0x43;   // LD A, 43h
+    m.memory[0x0007] = 0x0E; m.memory[0x0008] = 0x43;   // LD C, 43h
+    m.memory[0x0009] = 0xB9;                            // CP C (01000010)
+    // Test odd parity
+    m.memory[0x000A] = 0x3E; m.memory[0x000B] = 0x76;   // LD A, 76h
+    m.memory[0x000C] = 0x16; m.memory[0x000D] = 0x5C;   // LD D, 5Ch
+    m.memory[0x000E] = 0xBA;                            // CP D (00011010)
+
+    startZ80(z80);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x73B7);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x4342);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x761A);
+}
+
 // EOF
 // vim: et:sw=4:ts=4
