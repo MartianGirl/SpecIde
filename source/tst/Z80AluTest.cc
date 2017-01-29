@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(add_r_test)
     // Test 0x80
     m.memory[0x0019] = 0x3E; m.memory[0x001A] = 0x00;   // LD A, 00h
     m.memory[0x001B] = 0x2E; m.memory[0x001C] = 0x80;   // LD L, 80h
-    m.memory[0x001D] = 0x85;                            // ADD A, L
+    m.memory[0x001D] = 0x85;                            // ADD A, L (80h, 10000000)
 
     startZ80(z80);
     z80.decoder.regs.af.l = 0x00;
