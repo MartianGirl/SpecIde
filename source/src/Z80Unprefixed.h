@@ -44,6 +44,7 @@
 #include "Z80OrReg.h"
 #include "Z80XorReg.h"
 #include "Z80CpReg.h"
+#include "Z80IncReg.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -87,6 +88,7 @@ class Z80Unprefixed
         Z80OrReg iOrReg;
         Z80XorReg iXorReg;
         Z80CpReg iCpReg;
+        Z80IncReg iIncReg;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -104,7 +106,7 @@ class Z80Unprefixed
                         &iLdRegWord,    // 00000001: LD BC, nn
                         &iLdPtrBcA,     // 00000010: LD (BC), A
                         &iNop,
-                        &iNop,
+                        &iIncReg,       // 00000100: INC B
                         &iNop,
                         &iLdRegByte,    // 00000110: LD B, n
                         &iNop
@@ -115,7 +117,7 @@ class Z80Unprefixed
                         &iNop,
                         &iLdAPtrBc,     // 00001010: LD A, (BC)
                         &iNop,
-                        &iNop,
+                        &iIncReg,       // 00001100: INC C
                         &iNop,
                         &iLdRegByte,    // 00001110: LD C, n
                         &iNop
@@ -126,7 +128,7 @@ class Z80Unprefixed
                         &iLdRegWord,    // 00010001: LD DE, nn
                         &iLdPtrDeA,     // 00010010: LD (DE), A
                         &iNop,
-                        &iNop,
+                        &iIncReg,       // 00010100: INC D
                         &iNop,
                         &iLdRegByte,    // 00010110: LD D, n
                         &iNop
@@ -137,7 +139,7 @@ class Z80Unprefixed
                         &iNop,
                         &iLdAPtrDe,     // 00011010: LD A, (DE)
                         &iNop,
-                        &iNop,
+                        &iIncReg,       // 00011100: INC E
                         &iNop,
                         &iLdRegByte,    // 00011110: LD E, n
                         &iNop
@@ -148,7 +150,7 @@ class Z80Unprefixed
                         &iLdRegWord,    // 00100001: LD HL, nn
                         &iLdPtrWordHl,  // 00100010: LD (nn), HL
                         &iNop,
-                        &iNop,
+                        &iIncReg,       // 00100100: INC H
                         &iNop,
                         &iLdRegByte,    // 00100110: LD H, n
                         &iNop
@@ -159,7 +161,7 @@ class Z80Unprefixed
                         &iNop,
                         &iLdHlPtrWord,  // 00101010: LD HL, (nn)
                         &iNop,
-                        &iNop,
+                        &iIncReg,       // 00101100: INC L
                         &iNop,
                         &iLdRegByte,    // 00101110: LD L, n
                         &iNop
@@ -181,7 +183,7 @@ class Z80Unprefixed
                         &iNop,
                         &iLdAPtrWord,   // 00111010: LD A, (nn)
                         &iNop,
-                        &iNop,
+                        &iIncReg,       // 00111100: INC A
                         &iNop,
                         &iLdRegByte,    // 00111110: LD A, n
                         &iNop

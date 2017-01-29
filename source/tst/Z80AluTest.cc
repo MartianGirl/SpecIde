@@ -351,5 +351,36 @@ BOOST_AUTO_TEST_CASE(cp_r_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x761A);
 }
 
+BOOST_AUTO_TEST_CASE(inc_r_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // Test sign
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0xFE;   // LD A, FEh
+    m.memory[0x0002] = 0x47;                            // LD B, A
+    m.memory[0x0003] = 0x04;                            // INC B (0xFF, 10101000)
+    m.memory[0x0004] = 0x48;                            // LD C, B
+    m.memory[0x0005] = 0x0C;                            // INC C (0x00, 01010001)
+    m.memory[0x0006] = 0x51;                            // LD D, C
+    m.memory[0x0007] = 0x14;                            // INC D (0x01, 00000000)
+    m.memory[0x0008] = 0x1E; m.memory[0x0009] = 0x7F;   // LD E, 7Fh
+    m.memory[0x000A] = 0x1C;                            // INC E (0x80, 10010100)
+
+    startZ80(z80);
+    z80.decoder.regs.af.l = 0x00;
+    runCycles(z80, m, 15);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEA8);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFF00);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFE51);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x01FF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFE00);
+    runCycles(z80, m, 11);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x0180);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFE94);
+}
 // EOF
 // vim: et:sw=4:ts=4
