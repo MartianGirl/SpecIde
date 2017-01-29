@@ -40,6 +40,7 @@
 #include "Z80ExPtrSpIx.h"
 
 #include "Z80AddRegX.h"
+#include "Z80AdcRegX.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -79,6 +80,7 @@ class Z80DDPrefixed
         Z80ExPtrSpIx iExPtrSpIx;
 
         Z80AddRegX iAddRegX;
+        Z80AdcRegX iAdcRegX;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -285,14 +287,14 @@ class Z80DDPrefixed
                     },
                     // y = 1
                     {
+                        &iAdcRegX,      // 10001000: ADC A, B
+                        &iAdcRegX,      // 10001001: ADC A, C
+                        &iAdcRegX,      // 10001010: ADC A, D
+                        &iAdcRegX,      // 10001011: ADC A, E
+                        &iAdcRegX,      // 10001100: ADC A, IXh
+                        &iAdcRegX,      // 10001101: ADC A, IXl
                         &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iAdcRegX       // 10001111: ADC A, A
                     },
                     // y = 2
                     {
