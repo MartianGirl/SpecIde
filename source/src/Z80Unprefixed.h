@@ -45,6 +45,7 @@
 #include "Z80XorReg.h"
 #include "Z80CpReg.h"
 #include "Z80IncReg.h"
+#include "Z80DecReg.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -89,6 +90,7 @@ class Z80Unprefixed
         Z80XorReg iXorReg;
         Z80CpReg iCpReg;
         Z80IncReg iIncReg;
+        Z80DecReg iDecReg;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -107,7 +109,7 @@ class Z80Unprefixed
                         &iLdPtrBcA,     // 00000010: LD (BC), A
                         &iNop,
                         &iIncReg,       // 00000100: INC B
-                        &iNop,
+                        &iDecReg,       // 00000101: DEC B
                         &iLdRegByte,    // 00000110: LD B, n
                         &iNop
                     },
@@ -118,7 +120,7 @@ class Z80Unprefixed
                         &iLdAPtrBc,     // 00001010: LD A, (BC)
                         &iNop,
                         &iIncReg,       // 00001100: INC C
-                        &iNop,
+                        &iDecReg,       // 00001101: DEC C
                         &iLdRegByte,    // 00001110: LD C, n
                         &iNop
                     },
@@ -129,7 +131,7 @@ class Z80Unprefixed
                         &iLdPtrDeA,     // 00010010: LD (DE), A
                         &iNop,
                         &iIncReg,       // 00010100: INC D
-                        &iNop,
+                        &iDecReg,       // 00010101: DEC D
                         &iLdRegByte,    // 00010110: LD D, n
                         &iNop
                     },
@@ -140,7 +142,7 @@ class Z80Unprefixed
                         &iLdAPtrDe,     // 00011010: LD A, (DE)
                         &iNop,
                         &iIncReg,       // 00011100: INC E
-                        &iNop,
+                        &iDecReg,       // 00011101: DEC E
                         &iLdRegByte,    // 00011110: LD E, n
                         &iNop
                     },
@@ -151,7 +153,7 @@ class Z80Unprefixed
                         &iLdPtrWordHl,  // 00100010: LD (nn), HL
                         &iNop,
                         &iIncReg,       // 00100100: INC H
-                        &iNop,
+                        &iDecReg,       // 00100101: DEC H
                         &iLdRegByte,    // 00100110: LD H, n
                         &iNop
                     },
@@ -162,7 +164,7 @@ class Z80Unprefixed
                         &iLdHlPtrWord,  // 00101010: LD HL, (nn)
                         &iNop,
                         &iIncReg,       // 00101100: INC L
-                        &iNop,
+                        &iDecReg,       // 00101101: DEC L
                         &iLdRegByte,    // 00101110: LD L, n
                         &iNop
                     },
@@ -184,7 +186,7 @@ class Z80Unprefixed
                         &iLdAPtrWord,   // 00111010: LD A, (nn)
                         &iNop,
                         &iIncReg,       // 00111100: INC A
-                        &iNop,
+                        &iDecReg,       // 00111101: DEC A
                         &iLdRegByte,    // 00111110: LD A, n
                         &iNop
                     }
@@ -339,25 +341,25 @@ class Z80Unprefixed
                     },
                     // y = 5
                     {
-                        &iOrReg,        // 10101000: OR B
-                        &iOrReg,        // 10101001: OR C
-                        &iOrReg,        // 10101010: OR D
-                        &iOrReg,        // 10101011: OR E
-                        &iOrReg,        // 10101100: OR H
-                        &iOrReg,        // 10101101: OR L
+                        &iXorReg,       // 10101000: XOR B
+                        &iXorReg,       // 10101001: XOR C
+                        &iXorReg,       // 10101010: XOR D
+                        &iXorReg,       // 10101011: XOR E
+                        &iXorReg,       // 10101100: XOR H
+                        &iXorReg,       // 10101101: XOR L
                         &iNop,
-                        &iOrReg         // 10101111: OR A
+                        &iXorReg        // 10101111: XOR A
                     },
                     // y = 6
                     {
-                        &iXorReg,       // 10110000: XOR B
-                        &iXorReg,       // 10110001: XOR C
-                        &iXorReg,       // 10110010: XOR D
-                        &iXorReg,       // 10110011: XOR E
-                        &iXorReg,       // 10110100: XOR H
-                        &iXorReg,       // 10110101: XOR L
+                        &iOrReg,        // 10110000: OR B
+                        &iOrReg,        // 10110001: OR C
+                        &iOrReg,        // 10110010: OR D
+                        &iOrReg,        // 10110011: OR E
+                        &iOrReg,        // 10110100: OR H
+                        &iOrReg,        // 10110101: OR L
                         &iNop,
-                        &iXorReg        // 10110111: XOR A
+                        &iOrReg         // 10110111: OR A
                     },
                     // y = 7
                     {
