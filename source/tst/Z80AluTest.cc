@@ -378,7 +378,7 @@ BOOST_AUTO_TEST_CASE(inc_r_test)
     runCycles(z80, m, 8);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x01FF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFE00);
-    runCycles(z80, m, 8);
+    runCycles(z80, m, 11);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x0180);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFE94);
 }
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(dec_r_test)
     runCycles(z80, m, 8);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFEFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x01AA);
-    runCycles(z80, m, 8);
+    runCycles(z80, m, 11);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFE7F);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x013E);
 }
