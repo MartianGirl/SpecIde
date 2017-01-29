@@ -414,5 +414,473 @@ BOOST_AUTO_TEST_CASE(dec_r_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFE7F);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x013E);
 }
+
+BOOST_AUTO_TEST_CASE(add_rx_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // Test sign
+    m.memory[0x0000] = 0xDD;
+    m.memory[0x0001] = 0x3E; m.memory[0x0002] = 0x0C;   // LD A, 0Ch
+    m.memory[0x0003] = 0xDD;
+    m.memory[0x0004] = 0x06; m.memory[0x0005] = 0xF3;   // LD B, F3h
+    m.memory[0x0006] = 0xDD;
+    m.memory[0x0007] = 0x80;                            // ADD A, B (FFh, 10101000)
+    // Test zero
+    m.memory[0x0008] = 0xDD;
+    m.memory[0x0009] = 0x3E; m.memory[0x000A] = 0x0C;   // LD A, 0Ch
+    m.memory[0x000B] = 0xDD;
+    m.memory[0x000C] = 0x0E; m.memory[0x000D] = 0xF4;   // LD C, F4h
+    m.memory[0x000E] = 0xDD;
+    m.memory[0x000F] = 0x81;                            // ADD A, C (00h, 01010001)
+    // Test half carry
+    m.memory[0x0010] = 0xDD;
+    m.memory[0x0011] = 0x3E; m.memory[0x0012] = 0x08;   // LD A, 08h
+    m.memory[0x0013] = 0xDD;
+    m.memory[0x0014] = 0x16; m.memory[0x0015] = 0x28;   // LD D, 28h
+    m.memory[0x0016] = 0xDD;
+    m.memory[0x0017] = 0x82;                            // ADD A, D (30h, 00110000)
+    // Test overflow
+    m.memory[0x0018] = 0xDD;
+    m.memory[0x0019] = 0x3E; m.memory[0x001A] = 0x7F;   // LD A, 7Fh
+    m.memory[0x001B] = 0xDD;
+    m.memory[0x001C] = 0x1E; m.memory[0x001D] = 0x10;   // LD E, 10h
+    m.memory[0x001E] = 0xDD;
+    m.memory[0x001F] = 0x83;                            // ADD A, E (8Fh, 10001100)
+    // Test carry
+    m.memory[0x0020] = 0xDD;
+    m.memory[0x0021] = 0x3E; m.memory[0x0022] = 0x80;   // LD A, 80h
+    m.memory[0x0023] = 0xDD;
+    m.memory[0x0024] = 0x26; m.memory[0x0025] = 0x88;   // LD IXh, 88h
+    m.memory[0x0026] = 0xDD;
+    m.memory[0x0027] = 0x84;                            // ADD A, IXh (08h, 00001101)
+    // Test 0x80
+    m.memory[0x0028] = 0xDD;
+    m.memory[0x0029] = 0x3E; m.memory[0x002A] = 0x00;   // LD A, 00h
+    m.memory[0x002B] = 0xDD;
+    m.memory[0x002C] = 0x2E; m.memory[0x002D] = 0x80;   // LD IXl, 80h
+    m.memory[0x002E] = 0xDD;
+    m.memory[0x002F] = 0x85;                            // ADD A, IXl (80h, 10000000)
+
+    startZ80(z80);
+    z80.decoder.regs.af.l = 0x00;
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFFA8);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0051);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x3030);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8F8C);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x080D);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8080);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
+}
+
+BOOST_AUTO_TEST_CASE(add_ry_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // Test sign
+    m.memory[0x0000] = 0xFD;
+    m.memory[0x0001] = 0x3E; m.memory[0x0002] = 0x0C;   // LD A, 0Ch
+    m.memory[0x0003] = 0xFD;
+    m.memory[0x0004] = 0x06; m.memory[0x0005] = 0xF3;   // LD B, F3h
+    m.memory[0x0006] = 0xFD;
+    m.memory[0x0007] = 0x80;                            // ADD A, B (FFh, 10101000)
+    // Test zero
+    m.memory[0x0008] = 0xFD;
+    m.memory[0x0009] = 0x3E; m.memory[0x000A] = 0x0C;   // LD A, 0Ch
+    m.memory[0x000B] = 0xFD;
+    m.memory[0x000C] = 0x0E; m.memory[0x000D] = 0xF4;   // LD C, F4h
+    m.memory[0x000E] = 0xFD;
+    m.memory[0x000F] = 0x81;                            // ADD A, C (00h, 01010001)
+    // Test half carry
+    m.memory[0x0010] = 0xFD;
+    m.memory[0x0011] = 0x3E; m.memory[0x0012] = 0x08;   // LD A, 08h
+    m.memory[0x0013] = 0xFD;
+    m.memory[0x0014] = 0x16; m.memory[0x0015] = 0x28;   // LD D, 28h
+    m.memory[0x0016] = 0xFD;
+    m.memory[0x0017] = 0x82;                            // ADD A, D (30h, 00110000)
+    // Test overflow
+    m.memory[0x0018] = 0xFD;
+    m.memory[0x0019] = 0x3E; m.memory[0x001A] = 0x7F;   // LD A, 7Fh
+    m.memory[0x001B] = 0xFD;
+    m.memory[0x001C] = 0x1E; m.memory[0x001D] = 0x10;   // LD E, 10h
+    m.memory[0x001E] = 0xFD;
+    m.memory[0x001F] = 0x83;                            // ADD A, E (8Fh, 10001100)
+    // Test carry
+    m.memory[0x0020] = 0xFD;
+    m.memory[0x0021] = 0x3E; m.memory[0x0022] = 0x80;   // LD A, 80h
+    m.memory[0x0023] = 0xFD;
+    m.memory[0x0024] = 0x26; m.memory[0x0025] = 0x88;   // LD IXh, 88h
+    m.memory[0x0026] = 0xFD;
+    m.memory[0x0027] = 0x84;                            // ADD A, IYh (08h, 00001101)
+    // Test 0x80
+    m.memory[0x0028] = 0xFD;
+    m.memory[0x0029] = 0x3E; m.memory[0x002A] = 0x00;   // LD A, 00h
+    m.memory[0x002B] = 0xFD;
+    m.memory[0x002C] = 0x2E; m.memory[0x002D] = 0x80;   // LD IXl, 80h
+    m.memory[0x002E] = 0xFD;
+    m.memory[0x002F] = 0x85;                            // ADD A, IYl (80h, 10000000)
+
+    startZ80(z80);
+    z80.decoder.regs.af.l = 0x00;
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFFA8);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0051);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x3030);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8F8C);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x080D);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8080);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
+}
+/*
+BOOST_AUTO_TEST_CASE(adc_r_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // Test sign
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0x0C;   // LD A, 0Ch
+    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0xF2;   // LD B, F2h
+    m.memory[0x0004] = 0x88;                            // ADC B    (FFh, 10101000)
+    // Test zero
+    m.memory[0x0005] = 0x3E; m.memory[0x0006] = 0x0C;   // LD A, 0Ch
+    m.memory[0x0007] = 0x0E; m.memory[0x0008] = 0xF3;   // LD C, F3h
+    m.memory[0x0009] = 0x89;                            // ADC C    (00h, 01010001)
+    // Test half carry
+    m.memory[0x000A] = 0x3E; m.memory[0x000B] = 0x07;   // LD A, 07h
+    m.memory[0x000C] = 0x16; m.memory[0x000D] = 0x28;   // LD D, 28h
+    m.memory[0x000E] = 0x8A;                            // ADC A, D (30h, 00110000)
+    // Test overflow
+    m.memory[0x000F] = 0x3E; m.memory[0x0010] = 0x7F;   // LD A, 7Fh
+    m.memory[0x0011] = 0x1E; m.memory[0x0012] = 0x10;   // LD E, 10h
+    m.memory[0x0013] = 0x8B;                            // ADC A, E (90h, 10010100)
+    // Test carry
+    m.memory[0x0014] = 0x3E; m.memory[0x0015] = 0x80;   // LD A, 80h
+    m.memory[0x0016] = 0x26; m.memory[0x0017] = 0x88;   // LD H, 88h
+    m.memory[0x0018] = 0x8C;                            // ADC A, H (09h, 00001101)
+    // Test 0x80
+    m.memory[0x0019] = 0x3E; m.memory[0x001A] = 0x00;   // LD A, 00h
+    m.memory[0x001B] = 0x2E; m.memory[0x001C] = 0x7F;   // LD L, 7Fh
+    m.memory[0x001D] = 0x8D;                            // ADC A, L (80h, 10000000)
+
+    startZ80(z80);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFFA8);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0051);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x3030);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x9094);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x090D);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8094);
+}
+
+BOOST_AUTO_TEST_CASE(sub_r_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // Test sign
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0x0C;   // LD A, 0Ch
+    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0x0E;   // LD B, 0Eh
+    m.memory[0x0004] = 0x90;                            // SUB B (FEh, 10111011)
+    // Test zero
+    m.memory[0x0005] = 0x3E; m.memory[0x0006] = 0x0C;   // LD A, 0Ch
+    m.memory[0x0007] = 0x0E; m.memory[0x0008] = 0x0C;   // LD C, 0Ch
+    m.memory[0x0009] = 0x91;                            // SUB C (00h, 01000010)
+    // Test half carry
+    m.memory[0x000A] = 0x3E; m.memory[0x000B] = 0x50;   // LD A, 50h
+    m.memory[0x000C] = 0x16; m.memory[0x000D] = 0x08;   // LD D, 08h
+    m.memory[0x000E] = 0x92;                            // SUB D (48h, 00011010)
+    // Test overflow
+    m.memory[0x000F] = 0x3E; m.memory[0x0010] = 0x7F;   // LD A, 7Fh
+    m.memory[0x0011] = 0x1E; m.memory[0x0012] = 0x81;   // LD E, 81h
+    m.memory[0x0013] = 0x93;                            // SUB E (FEh, 10101111)
+    // Test carry
+    m.memory[0x0014] = 0x3E; m.memory[0x0015] = 0x81;   // LD A, 81h
+    m.memory[0x0016] = 0x26; m.memory[0x0017] = 0x02;   // LD H, 02h
+    m.memory[0x0018] = 0x94;                            // SUB H (7Fh, 00111110)
+    // Test 0x80
+    m.memory[0x0019] = 0x3E; m.memory[0x001A] = 0x00;   // LD A, 00h
+    m.memory[0x001B] = 0x2E; m.memory[0x001C] = 0x80;   // LD L, 80h
+    m.memory[0x001D] = 0x95;                            // SUB L (80h, 10000111)
+
+    startZ80(z80);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEBB);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0042);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x481A);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEAF);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x7F3E);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8087);
+}
+
+BOOST_AUTO_TEST_CASE(sbc_r_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // Test sign
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0x0C;   // LD A, 0Ch
+    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0x0D;   // LD B, 0Dh
+    m.memory[0x0004] = 0x98;                            // SBC B (FEh, 10111011)
+    // Test zero
+    m.memory[0x0005] = 0x3E; m.memory[0x0006] = 0x0C;   // LD A, 0Ch
+    m.memory[0x0007] = 0x0E; m.memory[0x0008] = 0x0B;   // LD C, 0Bh
+    m.memory[0x0009] = 0x99;                            // SBC C (00h, 01000010)
+    // Test half carry
+    m.memory[0x000A] = 0x3E; m.memory[0x000B] = 0x50;   // LD A, 50h
+    m.memory[0x000C] = 0x16; m.memory[0x000D] = 0x07;   // LD D, 07h
+    m.memory[0x000E] = 0x9A;                            // SBC D (48h, 00011010)
+    // Test overflow
+    m.memory[0x000F] = 0x3E; m.memory[0x0010] = 0x7F;   // LD A, 7Fh
+    m.memory[0x0011] = 0x1E; m.memory[0x0012] = 0x80;   // LD E, 80h
+    m.memory[0x0013] = 0x9B;                            // SBC E (FEh, 10101111)
+    // Test carry
+    m.memory[0x0014] = 0x3E; m.memory[0x0015] = 0x81;   // LD A, 81h
+    m.memory[0x0016] = 0x26; m.memory[0x0017] = 0x03;   // LD H, 03h
+    m.memory[0x0018] = 0x9C;                            // SBC H (7Dh, 00111110)
+    // Test 0x80
+    m.memory[0x0019] = 0x3E; m.memory[0x001A] = 0x00;   // LD A, 00h
+    m.memory[0x001B] = 0x2E; m.memory[0x001C] = 0x80;   // LD L, 80h
+    m.memory[0x001D] = 0x9D;                            // SBC L (7Fh, 00111011)
+
+    startZ80(z80);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEBB);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0042);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x481A);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEAF);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x7D3E);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x7F3B);
+}
+
+BOOST_AUTO_TEST_CASE(and_r_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // Test sign
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0xF3;   // LD A, F3h
+    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0xA5;   // LD B, A5h
+    m.memory[0x0004] = 0xA0;                            // AND B (A1h, 10110000)
+    // Test zero
+    m.memory[0x0005] = 0x3E; m.memory[0x0006] = 0x76;   // LD A, 76h
+    m.memory[0x0007] = 0x0E; m.memory[0x0008] = 0x88;   // LD C, 88h
+    m.memory[0x0009] = 0xA1;                            // AND C (00h, 01010100)
+    // Test odd parity
+    m.memory[0x000A] = 0x3E; m.memory[0x000B] = 0x2B;   // LD A, 2Bh
+    m.memory[0x000C] = 0x16; m.memory[0x000D] = 0x7E;   // LD D, 7Eh
+    m.memory[0x000E] = 0xA2;                            // AND D (2Ah, 00111000)
+    // Test even parity
+    m.memory[0x000F] = 0x3E; m.memory[0x0010] = 0x2B;   // LD A, 2Bh
+    m.memory[0x0011] = 0x1E; m.memory[0x0012] = 0x7C;   // LD E, 7Ch
+    m.memory[0x0013] = 0xA3;                            // AND E (28h, 00111100)
+
+    startZ80(z80);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xA1B0);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0054);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2A38);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x283C);
+}
+
+BOOST_AUTO_TEST_CASE(or_r_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // Test sign
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0xF3;   // LD A, F3h
+    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0xA5;   // LD B, A5h
+    m.memory[0x0004] = 0xB0;                            // OR B (F7h, 10100000)
+    // Test zero
+    m.memory[0x0005] = 0x3E; m.memory[0x0006] = 0x00;   // LD A, 00h
+    m.memory[0x0007] = 0x0E; m.memory[0x0008] = 0x00;   // LD C, 00h
+    m.memory[0x0009] = 0xB1;                            // OR C (00h, 01000100)
+    // Test odd parity
+    m.memory[0x000A] = 0x3E; m.memory[0x000B] = 0x38;   // LD A, 38h
+    m.memory[0x000C] = 0x16; m.memory[0x000D] = 0x04;   // LD D, 04h
+    m.memory[0x000E] = 0xB2;                            // OR D (3Ch, 00101100)
+    // Test even parity
+    m.memory[0x000F] = 0x3E; m.memory[0x0010] = 0x38;   // LD A, 38h
+    m.memory[0x0011] = 0x1E; m.memory[0x0012] = 0x10;   // LD E, 18h
+    m.memory[0x0013] = 0xB3;                            // OR E (38h, 00101000)
+
+    startZ80(z80);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xF7A0);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0044);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x3C2C);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x3828);
+}
+
+BOOST_AUTO_TEST_CASE(xor_r_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // Test sign
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0xF3;   // LD A, F3h
+    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0x35;   // LD B, A5h
+    m.memory[0x0004] = 0xA8;                            // XOR B (C6h, 10000100)
+    // Test zero
+    m.memory[0x0005] = 0x3E; m.memory[0x0006] = 0x43;   // LD A, 43h
+    m.memory[0x0007] = 0x0E; m.memory[0x0008] = 0x43;   // LD C, 43h
+    m.memory[0x0009] = 0xA9;                            // XOR C (00h, 01000100)
+    // Test odd parity
+    m.memory[0x000A] = 0x3E; m.memory[0x000B] = 0x76;   // LD A, 76h
+    m.memory[0x000C] = 0x16; m.memory[0x000D] = 0x5C;   // LD D, 5Ch
+    m.memory[0x000E] = 0xAA;                            // XOR D (2Ah, 00101000)
+    // Test even parity
+    m.memory[0x000F] = 0x3E; m.memory[0x0010] = 0x76;   // LD A, 76h
+    m.memory[0x0011] = 0x1E; m.memory[0x0012] = 0x58;   // LD E, 58h
+    m.memory[0x0013] = 0xAB;                            // XOR E (2Eh, 00101100)
+
+    startZ80(z80);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xC684);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0044);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2A28);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2E2C);
+}
+
+BOOST_AUTO_TEST_CASE(cp_r_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // Test sign
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0x73;   // LD A, 73h
+    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0xA5;   // LD B, A5h
+    m.memory[0x0004] = 0xB8;                            // CP B (10110111)
+    // Test zero
+    m.memory[0x0005] = 0x3E; m.memory[0x0006] = 0x43;   // LD A, 43h
+    m.memory[0x0007] = 0x0E; m.memory[0x0008] = 0x43;   // LD C, 43h
+    m.memory[0x0009] = 0xB9;                            // CP C (01000010)
+    // Test odd parity
+    m.memory[0x000A] = 0x3E; m.memory[0x000B] = 0x76;   // LD A, 76h
+    m.memory[0x000C] = 0x16; m.memory[0x000D] = 0x5C;   // LD D, 5Ch
+    m.memory[0x000E] = 0xBA;                            // CP D (00011010)
+
+    startZ80(z80);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x73B7);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x4342);
+    runCycles(z80, m, 18);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x761A);
+}
+
+BOOST_AUTO_TEST_CASE(inc_r_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // Test sign
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0xFE;   // LD A, FEh
+    m.memory[0x0002] = 0x47;                            // LD B, A
+    m.memory[0x0003] = 0x04;                            // INC B (0xFF, 10101000)
+    m.memory[0x0004] = 0x48;                            // LD C, B
+    m.memory[0x0005] = 0x0C;                            // INC C (0x00, 01010000)
+    m.memory[0x0006] = 0x51;                            // LD D, C
+    m.memory[0x0007] = 0x14;                            // INC D (0x01, 00000000)
+    m.memory[0x0008] = 0x1E; m.memory[0x0009] = 0x7F;   // LD E, 7Fh
+    m.memory[0x000A] = 0x1C;                            // INC E (0x80, 10010100)
+
+    startZ80(z80);
+    z80.decoder.regs.af.l = 0x00;
+    runCycles(z80, m, 15);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEA8);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFF00);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFE50);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x01FF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFE00);
+    runCycles(z80, m, 11);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x0180);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFE94);
+}
+
+BOOST_AUTO_TEST_CASE(dec_r_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    // Test sign
+    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0x01;   // LD A, 01h
+    m.memory[0x0002] = 0x47;                            // LD B, A
+    m.memory[0x0003] = 0x05;                            // DEC B (0x00, 01000010)
+    m.memory[0x0004] = 0x48;                            // LD C, B
+    m.memory[0x0005] = 0x0D;                            // DEC C (0xFF, 10111010)
+    m.memory[0x0006] = 0x51;                            // LD D, C
+    m.memory[0x0007] = 0x15;                            // DEC D (0xFE, 10101010)
+    m.memory[0x0008] = 0x1E; m.memory[0x0009] = 0x80;   // LD E, 80h
+    m.memory[0x000A] = 0x1D;                            // DEC E (0x7F, 00111110)
+
+    startZ80(z80);
+    z80.decoder.regs.af.l = 0x00;
+    runCycles(z80, m, 15);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x00FF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0142);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x00FF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x01BA);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFEFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x01AA);
+    runCycles(z80, m, 11);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFE7F);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x013E);
+}
+*/
 // EOF
 // vim: et:sw=4:ts=4
