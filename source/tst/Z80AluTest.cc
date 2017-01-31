@@ -24,9 +24,9 @@ void runCycles(Z80& z80, Memory& m, size_t cycles)
     {
         z80.clock();
         m.a = z80.a; m.d = z80.d;
-        m.as_ = z80.c & SIGNAL_MREQ_;
-        m.rd_ = z80.c & SIGNAL_RD_;
-        m.wr_ = z80.c & SIGNAL_WR_;
+        m.as_ = (z80.c & SIGNAL_MREQ_) == SIGNAL_MREQ_;
+        m.rd_ = (z80.c & SIGNAL_RD_) == SIGNAL_RD_;
+        m.wr_ = (z80.c & SIGNAL_WR_) == SIGNAL_WR_;
         m.clock();
         z80.d = m.d;
     }
