@@ -1,6 +1,6 @@
 #include "Screen.h"
 
-Screen::Screen(size_t scale) :
+Screen::Screen(uint_fast32_t scale) :
     GraphicWindow(320 * scale, 200 * scale, "SpecIde")
 {
 }

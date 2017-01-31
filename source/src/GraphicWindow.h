@@ -13,7 +13,7 @@
 class GraphicWindow
 {
     public:
-        GraphicWindow(size_t x = 320, size_t y = 240,
+        GraphicWindow(uint_fast32_t x = 320, uint_fast32_t y = 240,
                 std::string const& title = "SpecIde");
         virtual ~GraphicWindow();
 

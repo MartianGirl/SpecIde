@@ -7,7 +7,7 @@
 
 BOOST_AUTO_TEST_CASE(constructors_test)
 {
-    CPU cpu0();
+    CPU cpu0;
 }
 
 // EOF

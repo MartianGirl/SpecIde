@@ -9,7 +9,7 @@
 
 #include "config.h"
 
-int main(int argc, char* argv[])
+int main()
 {
     std::cout << "SpecIde Version " << SPECIDE_VERSION_MAJOR;
     std::cout << "." << SPECIDE_VERSION_MINOR << std::endl;

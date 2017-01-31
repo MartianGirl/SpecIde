@@ -10,7 +10,7 @@
 class Screen : public GraphicWindow
 {
     public:
-        Screen(size_t scale = 1);
+        Screen(uint_fast32_t scale = 1);
         virtual ~Screen();
 };
 

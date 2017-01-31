@@ -33,7 +33,7 @@ class Memory
          */
         void clock();
 
-        size_t size;
+        uint_fast32_t size;
         uint_fast16_t addr;
 
         vector<uint_fast8_t> memory;

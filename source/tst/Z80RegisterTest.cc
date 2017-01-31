@@ -16,17 +16,17 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     // Set the word value from its bytes.
     reg0.h = 0x67;
     reg0.l = 0x42;
-    BOOST_CHECK_EQUAL(reg0.reg, 0x6742);
+    BOOST_CHECK(reg0.reg == 0x6742);
     
     // Set the word value, then check its bytes.
     reg0.w = 0x9876;
-    BOOST_CHECK_EQUAL(reg0.reg, 0x9876);
+    BOOST_CHECK(reg0.reg == 0x9876);
     BOOST_CHECK_EQUAL(reg0.h, 0x98);
     BOOST_CHECK_EQUAL(reg0.l, 0x76);
 
     // Setter and getter.
     reg0.setw(0x1234);
-    BOOST_CHECK_EQUAL(reg0.getw(), 0x1234);
+    BOOST_CHECK(reg0.getw() == 0x1234);
     BOOST_CHECK_EQUAL(reg0.h, 0x12);
     BOOST_CHECK_EQUAL(reg0.l, 0x34);
 

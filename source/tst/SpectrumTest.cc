@@ -7,7 +7,7 @@
 
 BOOST_AUTO_TEST_CASE(constructors_test)
 {
-    Spectrum sp0();
+    Spectrum sp0;
 }
 
 // EOF
