@@ -39,3 +39,4 @@ SpecIde
 *.exe
 *.ilk
 *.pdb
+*.manifest
