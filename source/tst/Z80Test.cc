@@ -32,6 +32,20 @@ void runCycles(Z80& z80, Memory& m, size_t cycles)
     }
 }
 
+void loadBinary(string const& code, Memory& m, size_t addrbase)
+{
+    stringstream ss;
+    uint16_t byte;
+
+    for (size_t i = 0; i != code.size(); i += 2)
+    {
+        ss << code.substr(i, 2) << endl;
+        ss >> hex >> byte;
+
+        m.memory[addrbase + (i / 2)] = byte;
+    }
+}
+
 BOOST_AUTO_TEST_CASE(state_machine_test)
 {
     // Create a Z80 and some memory.
