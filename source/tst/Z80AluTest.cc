@@ -43,7 +43,7 @@ void loadBinary(string const& code, Memory& m, size_t addrbase)
         ss << code.substr(i, 2) << endl;
         ss >> hex >> byte;
 
-        m.memory[addrbase + (i / 2)] = byte;
+        m.memory[addrbase + (i / 2)] = static_cast<uint8_t>(byte);
     }
 }
 
