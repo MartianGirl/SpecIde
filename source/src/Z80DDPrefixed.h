@@ -44,6 +44,7 @@
 #include "Z80SubRegX.h"
 #include "Z80SbcRegX.h"
 #include "Z80AndRegX.h"
+#include "Z80XorRegX.h"
 #include "Z80OrRegX.h"
 
 #include "Z80PrefixDD.h"
@@ -88,6 +89,7 @@ class Z80DDPrefixed
         Z80SubRegX iSubRegX;
         Z80SbcRegX iSbcRegX;
         Z80AndRegX iAndRegX;
+        Z80XorRegX iXorRegX;
         Z80OrRegX iOrRegX;
 
         Z80PrefixDD iPrefixDD;
@@ -339,14 +341,14 @@ class Z80DDPrefixed
                     },
                     // y = 5
                     {
+                        &iXorRegX,      // 10101000: XOR B
+                        &iXorRegX,      // 10101001: XOR C
+                        &iXorRegX,      // 10101010: XOR D
+                        &iXorRegX,      // 10101011: XOR E
+                        &iXorRegX,      // 10101100: XOR IXh
+                        &iXorRegX,      // 10101101: XOR IXl
                         &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iXorRegX       // 10101111: XOR A
                     },
                     // y = 6
                     {

@@ -44,6 +44,7 @@
 #include "Z80SubRegY.h"
 #include "Z80SbcRegY.h"
 #include "Z80AndRegY.h"
+#include "Z80XorRegY.h"
 #include "Z80OrRegY.h"
 
 #include "Z80PrefixDD.h"
@@ -88,6 +89,7 @@ class Z80FDPrefixed
         Z80SubRegY iSubRegY;
         Z80SbcRegY iSbcRegY;
         Z80AndRegY iAndRegY;
+        Z80XorRegY iXorRegY;
         Z80OrRegY iOrRegY;
 
         Z80PrefixDD iPrefixDD;
@@ -339,25 +341,25 @@ class Z80FDPrefixed
                     },
                     // y = 5
                     {
+                        &iXorRegY,      // 10101000: XOR B
+                        &iXorRegY,      // 10101001: XOR C
+                        &iXorRegY,      // 10101010: XOR D
+                        &iXorRegY,      // 10101011: XOR E
+                        &iXorRegY,      // 10101100: XOR IYh
+                        &iXorRegY,      // 10101101: XOR IYl
                         &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iXorRegY       // 10101111: XOR A
                     },
                     // y = 6
                     {
-                        &iOrRegY,      // 10110000: OR B
-                        &iOrRegY,      // 10110001: OR C
-                        &iOrRegY,      // 10110010: OR D
-                        &iOrRegY,      // 10110011: OR E
-                        &iOrRegY,      // 10110100: OR IYh
-                        &iOrRegY,      // 10110101: OR IYl
+                        &iOrRegY,       // 10110000: OR B
+                        &iOrRegY,       // 10110001: OR C
+                        &iOrRegY,       // 10110010: OR D
+                        &iOrRegY,       // 10110011: OR E
+                        &iOrRegY,       // 10110100: OR IYh
+                        &iOrRegY,       // 10110101: OR IYl
                         &iNop,
-                        &iOrRegY       // 10110111: OR A
+                        &iOrRegY        // 10110111: OR A
                     },
                     // y = 7
                     {
