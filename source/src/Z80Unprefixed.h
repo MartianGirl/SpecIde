@@ -41,8 +41,8 @@
 #include "Z80SubReg.h"
 #include "Z80SbcReg.h"
 #include "Z80AndReg.h"
-#include "Z80OrReg.h"
 #include "Z80XorReg.h"
+#include "Z80OrReg.h"
 #include "Z80CpReg.h"
 #include "Z80IncReg.h"
 #include "Z80DecReg.h"
@@ -86,8 +86,8 @@ class Z80Unprefixed
         Z80SubReg iSubReg;
         Z80SbcReg iSbcReg;
         Z80AndReg iAndReg;
-        Z80OrReg iOrReg;
         Z80XorReg iXorReg;
+        Z80OrReg iOrReg;
         Z80CpReg iCpReg;
         Z80IncReg iIncReg;
         Z80DecReg iDecReg;
