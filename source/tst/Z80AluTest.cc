@@ -1253,5 +1253,48 @@ BOOST_AUTO_TEST_CASE(dec_ry_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFE7F);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x013E);
 }
+
+BOOST_AUTO_TEST_CASE(add_n_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test sign
+        "3E0C"          // LD A, 0Ch
+        "C6F3"          // ADD A, F3h     (FFh, 10101000)
+        // Test zero
+        "3E0C"          // LD A, 0Ch
+        "C6F4"          // ADD A, F4h     (00h, 01010001)
+        // Test half carry
+        "3E08"          // LD A, 08h
+        "C628"          // ADD A, 28h     (30h, 00110000)
+        // Test overflow
+        "3E7F"          // LD A, 7Fh
+        "C610"          // ADD A, 10h     (8Fh, 10001100)
+        // Test carry
+        "3E80"          // LD A, 80h
+        "C688"          // ADD A, 88h     (08h, 00001101)
+        // Test 80h
+        "3E00"          // LD A, 00h
+        "C680";         // ADD A, 80h     (80h, 10000000)
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    z80.decoder.regs.af.l = 0x00;
+    runCycles(z80, m, 14);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFFA8);
+    runCycles(z80, m, 14);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0051);
+    runCycles(z80, m, 14);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x3030);
+    runCycles(z80, m, 14);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8F8C);
+    runCycles(z80, m, 14);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x080D);
+    runCycles(z80, m, 14);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8080);
+}
+
 // EOF
 // vim: et:sw=4:ts=4

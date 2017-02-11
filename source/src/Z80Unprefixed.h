@@ -47,6 +47,8 @@
 #include "Z80IncReg.h"
 #include "Z80DecReg.h"
 
+#include "Z80AddByte.h"
+
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
 #include "Z80PrefixFD.h"
@@ -91,6 +93,8 @@ class Z80Unprefixed
         Z80CpReg iCpReg;
         Z80IncReg iIncReg;
         Z80DecReg iDecReg;
+
+        Z80AddByte iAddByte;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -383,7 +387,7 @@ class Z80Unprefixed
                         &iNop,
                         &iNop,
                         &iPushReg,      // 11000101: PUSH BC
-                        &iNop,
+                        &iAddByte,      // 11000110: ADD A, n
                         &iNop
                     },
                     // y = 1
