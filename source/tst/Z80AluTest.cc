@@ -854,40 +854,77 @@ BOOST_AUTO_TEST_CASE(sbc_ry_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x7F3B);
 }
 
-/*
-BOOST_AUTO_TEST_CASE(and_r_test)
+BOOST_AUTO_TEST_CASE(and_rx_test)
 {
     Z80 z80;
     Memory m(16, false);
 
-    // Test sign
-    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0xF3;   // LD A, F3h
-    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0xA5;   // LD B, A5h
-    m.memory[0x0004] = 0xA0;                            // AND B (A1h, 10110000)
-    // Test zero
-    m.memory[0x0005] = 0x3E; m.memory[0x0006] = 0x76;   // LD A, 76h
-    m.memory[0x0007] = 0x0E; m.memory[0x0008] = 0x88;   // LD C, 88h
-    m.memory[0x0009] = 0xA1;                            // AND C (00h, 01010100)
-    // Test odd parity
-    m.memory[0x000A] = 0x3E; m.memory[0x000B] = 0x2B;   // LD A, 2Bh
-    m.memory[0x000C] = 0x16; m.memory[0x000D] = 0x7E;   // LD D, 7Eh
-    m.memory[0x000E] = 0xA2;                            // AND D (2Ah, 00111000)
-    // Test even parity
-    m.memory[0x000F] = 0x3E; m.memory[0x0010] = 0x2B;   // LD A, 2Bh
-    m.memory[0x0011] = 0x1E; m.memory[0x0012] = 0x7C;   // LD E, 7Ch
-    m.memory[0x0013] = 0xA3;                            // AND E (28h, 00111100)
+    string code =
+        // Test sign
+        "DD3EF3"        // LD A, F3h
+        "DD06A5"        // LD B, A5h
+        "DDA0"          // AND B (A1h, 10110000)
+        // Test zero
+        "DD3E76"        // LD A, 76h
+        "DD0E88"        // LD C, 88h
+        "DDA1"          // AND C (00h, 01010100)
+        // Test odd parity
+        "DD3E2B"        // LD A, 2Bh
+        "DD167E"        // LD D, 7Eh
+        "DDA2"          // AND D (2Ah, 00111000)
+        // Test even parity
+        "DD3E2B"        // LD A, 2Bh
+        "DD1E7C"        // LD E, 7Ch
+        "DDA3";         // AND E (28h, 00111100)
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
-    runCycles(z80, m, 18);
+    runCycles(z80, m, 30);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xA1B0);
-    runCycles(z80, m, 18);
+    runCycles(z80, m, 30);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0054);
-    runCycles(z80, m, 18);
+    runCycles(z80, m, 30);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2A38);
-    runCycles(z80, m, 18);
+    runCycles(z80, m, 30);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x283C);
 }
 
+BOOST_AUTO_TEST_CASE(and_ry_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test sign
+        "FD3EF3"        // LD A, F3h
+        "FD06A5"        // LD B, A5h
+        "FDA0"          // AND B (A1h, 10110000)
+        // Test zero
+        "FD3E76"        // LD A, 76h
+        "FD0E88"        // LD C, 88h
+        "FDA1"          // AND C (00h, 01010100)
+        // Test odd parity
+        "FD3E2B"        // LD A, 2Bh
+        "FD167E"        // LD D, 7Eh
+        "FDA2"          // AND D (2Ah, 00111000)
+        // Test even parity
+        "FD3E2B"        // LD A, 2Bh
+        "FD1E7C"        // LD E, 7Ch
+        "FDA3";         // AND E (28h, 00111100)
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xA1B0);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0054);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2A38);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x283C);
+}
+
+/*
 BOOST_AUTO_TEST_CASE(or_r_test)
 {
     Z80 z80;
