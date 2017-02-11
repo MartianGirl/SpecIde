@@ -48,6 +48,9 @@
 #include "Z80DecReg.h"
 
 #include "Z80AddByte.h"
+#include "Z80AdcByte.h"
+#include "Z80SubByte.h"
+#include "Z80SbcByte.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -95,6 +98,9 @@ class Z80Unprefixed
         Z80DecReg iDecReg;
 
         Z80AddByte iAddByte;
+        Z80AdcByte iAdcByte;
+        Z80SubByte iSubByte;
+        Z80SbcByte iSbcByte;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -398,7 +404,7 @@ class Z80Unprefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iAdcByte,      // 11001110: ADC A, n
                         &iNop
                     },
                     // y = 2
@@ -409,7 +415,7 @@ class Z80Unprefixed
                         &iNop,
                         &iNop,
                         &iPushReg,      // 11010101: PUSH DE
-                        &iNop,
+                        &iSubByte,      // 11010110: SUB n
                         &iNop
                     },
                     // y = 3
@@ -420,7 +426,7 @@ class Z80Unprefixed
                         &iNop,
                         &iNop,
                         &iPrefixDD,     // 11011101: DD Prefix
-                        &iNop,
+                        &iSbcByte,      // 11011110: SBC A, n
                         &iNop
                     },
                     // y = 4
