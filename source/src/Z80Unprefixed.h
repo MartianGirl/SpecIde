@@ -51,6 +51,10 @@
 #include "Z80AdcByte.h"
 #include "Z80SubByte.h"
 #include "Z80SbcByte.h"
+#include "Z80AndByte.h"
+#include "Z80XorByte.h"
+#include "Z80OrByte.h"
+#include "Z80CpByte.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -101,6 +105,10 @@ class Z80Unprefixed
         Z80AdcByte iAdcByte;
         Z80SubByte iSubByte;
         Z80SbcByte iSbcByte;
+        Z80AndByte iAndByte;
+        Z80XorByte iXorByte;
+        Z80OrByte iOrByte;
+        Z80CpByte iCpByte;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -437,7 +445,7 @@ class Z80Unprefixed
                         &iExPtrSpHl,    // 11100011: EX (SP), HL
                         &iNop,
                         &iPushReg,      // 11100101: PUSH HL
-                        &iNop,
+                        &iAndByte,      // 11100110: AND n
                         &iNop
                     },
                     // y = 5
@@ -448,7 +456,7 @@ class Z80Unprefixed
                         &iExDeHl,       // 11101011: EX DE, HL
                         &iNop,
                         &iPrefixED,     // 11101101: ED Prefix
-                        &iNop,
+                        &iXorByte,      // 11101110: XOR n
                         &iNop
                     },
                     // y = 6
@@ -459,7 +467,7 @@ class Z80Unprefixed
                         &iNop,
                         &iNop,
                         &iPushReg,      // 11110101: PUSH AF
-                        &iNop,
+                        &iOrByte,       // 11110110: OR n
                         &iNop
                     },
                     // y = 7
@@ -470,7 +478,7 @@ class Z80Unprefixed
                         &iNop,
                         &iNop,
                         &iPrefixFD,     // 11111101: FD Prefix
-                        &iNop,
+                        &iCpByte,       // 11111110: CP n
                         &iNop
                     }
                 }
