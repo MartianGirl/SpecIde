@@ -1121,70 +1121,137 @@ BOOST_AUTO_TEST_CASE(cp_ry_test)
     runCycles(z80, m, 30);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x761A);
 }
-/*
-BOOST_AUTO_TEST_CASE(inc_r_test)
+
+BOOST_AUTO_TEST_CASE(inc_rx_test)
 {
     Z80 z80;
     Memory m(16, false);
 
-    // Test sign
-    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0xFE;   // LD A, FEh
-    m.memory[0x0002] = 0x47;                            // LD B, A
-    m.memory[0x0003] = 0x04;                            // INC B (0xFF, 10101000)
-    m.memory[0x0004] = 0x48;                            // LD C, B
-    m.memory[0x0005] = 0x0C;                            // INC C (0x00, 01010000)
-    m.memory[0x0006] = 0x51;                            // LD D, C
-    m.memory[0x0007] = 0x14;                            // INC D (0x01, 00000000)
-    m.memory[0x0008] = 0x1E; m.memory[0x0009] = 0x7F;   // LD E, 7Fh
-    m.memory[0x000A] = 0x1C;                            // INC E (0x80, 10010100)
+    string code = 
+        "DD3EFE"        // LD A, FEh
+        "DD47"          // LD B, A
+        "DD04"          // INC B (0xFF, 10101000)
+        "DD48"          // LD C, B
+        "DD0C"          // INC C (0x00, 01010000)
+        "DD51"          // LD D, C
+        "DD14"          // INC D (0x01, 00000000)
+        "DD1E7F"        // LD E, 7Fh
+        "DD1C";         // INC E (0x80, 10010100)
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
     z80.decoder.regs.af.l = 0x00;
-    runCycles(z80, m, 15);
+    runCycles(z80, m, 27);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEA8);
-    runCycles(z80, m, 8);
+    runCycles(z80, m, 20);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFF00);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFE50);
-    runCycles(z80, m, 8);
+    runCycles(z80, m, 20);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x01FF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFE00);
-    runCycles(z80, m, 11);
+    runCycles(z80, m, 23);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x0180);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFE94);
 }
 
-BOOST_AUTO_TEST_CASE(dec_r_test)
+BOOST_AUTO_TEST_CASE(inc_ry_test)
 {
     Z80 z80;
     Memory m(16, false);
 
-    // Test sign
-    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0x01;   // LD A, 01h
-    m.memory[0x0002] = 0x47;                            // LD B, A
-    m.memory[0x0003] = 0x05;                            // DEC B (0x00, 01000010)
-    m.memory[0x0004] = 0x48;                            // LD C, B
-    m.memory[0x0005] = 0x0D;                            // DEC C (0xFF, 10111010)
-    m.memory[0x0006] = 0x51;                            // LD D, C
-    m.memory[0x0007] = 0x15;                            // DEC D (0xFE, 10101010)
-    m.memory[0x0008] = 0x1E; m.memory[0x0009] = 0x80;   // LD E, 80h
-    m.memory[0x000A] = 0x1D;                            // DEC E (0x7F, 00111110)
+    string code = 
+        "FD3EFE"        // LD A, FEh
+        "FD47"          // LD B, A
+        "FD04"          // INC B (0xFF, 10101000)
+        "FD48"          // LD C, B
+        "FD0C"          // INC C (0x00, 01010000)
+        "FD51"          // LD D, C
+        "FD14"          // INC D (0x01, 00000000)
+        "FD1E7F"        // LD E, 7Fh
+        "FD1C";         // INC E (0x80, 10010100)
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
     z80.decoder.regs.af.l = 0x00;
-    runCycles(z80, m, 15);
+    runCycles(z80, m, 27);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEA8);
+    runCycles(z80, m, 20);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFF00);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFE50);
+    runCycles(z80, m, 20);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x01FF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFE00);
+    runCycles(z80, m, 23);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x0180);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFE94);
+}
+
+BOOST_AUTO_TEST_CASE(dec_rx_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "DD3E01"        // LD A, 01h
+        "DD47"          // LD B, A
+        "DD05"          // DEC B (0x00, 01000010)
+        "DD48"          // LD C, B
+        "DD0D"          // DEC C (0xFF, 10111010)
+        "DD51"          // LD D, C
+        "DD15"          // DEC D (0xFE, 10101010)
+        "DD1E80"        // LD E, 80h
+        "DD1D";         // DEC E (0x7F, 00111110)
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    z80.decoder.regs.af.l = 0x00;
+    runCycles(z80, m, 27);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x00FF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0142);
-    runCycles(z80, m, 8);
+    runCycles(z80, m, 20);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x00FF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x01BA);
-    runCycles(z80, m, 8);
+    runCycles(z80, m, 20);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFEFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x01AA);
-    runCycles(z80, m, 11);
+    runCycles(z80, m, 23);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFE7F);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x013E);
 }
-*/
+
+BOOST_AUTO_TEST_CASE(dec_ry_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "FD3E01"        // LD A, 01h
+        "FD47"          // LD B, A
+        "FD05"          // DEC B (0x00, 01000010)
+        "FD48"          // LD C, B
+        "FD0D"          // DEC C (0xFF, 10111010)
+        "FD51"          // LD D, C
+        "FD15"          // DEC D (0xFE, 10101010)
+        "FD1E80"        // LD E, 80h
+        "FD1D";         // DEC E (0x7F, 00111110)
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    z80.decoder.regs.af.l = 0x00;
+    runCycles(z80, m, 27);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x00FF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0142);
+    runCycles(z80, m, 20);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x00FF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x01BA);
+    runCycles(z80, m, 20);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFEFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x01AA);
+    runCycles(z80, m, 23);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFE7F);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x013E);
+}
 // EOF
 // vim: et:sw=4:ts=4
