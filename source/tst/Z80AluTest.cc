@@ -1478,7 +1478,7 @@ BOOST_AUTO_TEST_CASE(or_n_test)
         "DD3E38"        // LD A, 38h
         "DDF604"        // OR 04h (3Ch, 00101100)
         // Test even parity
-        "DD3E38"        // LD A, 38h
+        "FD3E38"        // LD A, 38h
         "FDF610";       // OR 18h (38h, 00101000)
 
     loadBinary(code, m, 0x0000);
@@ -1501,7 +1501,7 @@ BOOST_AUTO_TEST_CASE(xor_n_test)
     string code =
         // Test sign
         "3EF3"          // LD A, F3h
-        "EE35"          // XOR A5h (C6h, 10000100)
+        "EE35"          // XOR 35h (C6h, 10000100)
         // Test zero
         "3E43"          // LD A, 43h
         "EE43"          // XOR 43h (00h, 01000100)
@@ -1547,6 +1547,365 @@ BOOST_AUTO_TEST_CASE(cp_n_test)
     runCycles(z80, m, 22);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x4342);
     runCycles(z80, m, 22);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x761A);
+}
+
+BOOST_AUTO_TEST_CASE(add_ptrhl_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test sign
+        "210001"        // LD HL, 0100h     (F3h)
+        "3E0C"          // LD A, 0Ch
+        "86"            // ADD A, (HL)      (FFh, 10101000)
+        // Test zero
+        "210101"        // LD HL, 0101h     (F4h)
+        "3E0C"          // LD A, 0Ch
+        "86"            // ADD A, (HL)      (00h, 01010001)
+        // Test half carry
+        "210201"        // LD HL, 0102h     (28h)
+        "3E08"          // LD A, 08h
+        "86"            // ADD A, (HL)      (30h, 00110000)
+        // Test overflow
+        "210301"        // LD HL, 0103h     (10h)
+        "3E7F"          // LD A, 7Fh
+        "86"            // ADD A, (HL)      (8Fh, 10001100)
+        // Test carry
+        "210401"        // LD HL, 0104h     (88h)
+        "3E80"          // LD A, 80h
+        "86"            // ADD A, (HL)      (08h, 00001101)
+        // Test 80h
+        "210501"        // LD HL, 0105h     (80h)
+        "3E00"          // LD A, 00h
+        "86";           // ADD A, (HL)      (80h, 10000000)
+
+    string data = "F3F428108880";
+
+    loadBinary(code, m, 0x0000);
+    loadBinary(data, m, 0x0100);
+    startZ80(z80);
+    z80.decoder.regs.af.l = 0x00;
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFFA8);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0051);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x3030);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8F8C);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x080D);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8080);
+}
+
+BOOST_AUTO_TEST_CASE(adc_ptrhl_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test sign
+        "210001"        // LD HL, 0100h (F2h)
+        "3E0C"          // LD A, 0Ch
+        "8E"            // ADC A, (HL)  (FFh, 10101000)
+        // Test zero
+        "210101"        // LD HL, 0101h (F3h)
+        "3E0C"          // LD A, 0Ch
+        "8E"            // ADC A, (HL)  (00h, 01010001)
+        // Test half carry
+        "210201"        // LD HL, 0102h (28h)
+        "3E07"          // LD A, 07h
+        "8E"            // ADC A, (HL)  (30h, 00110000)
+        // Test overflow
+        "210301"        // LD HL, 0103h (10h)
+        "3E7F"          // LD A, 7Fh
+        "8E"            // ADC A, (HL)  (90h, 10010100)
+        // Test carry
+        "210401"        // LD HL, 0104h (88h)
+        "3E80"          // LD A, 80h
+        "8E"            // ADC A, (HL)  (09h, 00001101)
+        // Test 80h
+        "210501"        // LD HL, 0105h (7Fh)
+        "3E00"          // LD A, 00h
+        "8E";           // ADC A, (HL)  (80h, 10000000)
+
+    string data = "F2F32810887F";
+
+    loadBinary(code, m, 0x0000);
+    loadBinary(data, m, 0x0100);
+    startZ80(z80);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFFA8);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0051);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x3030);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x9094);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x090D);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8094);
+}
+
+BOOST_AUTO_TEST_CASE(sub_ptrhl_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test sign
+        "210001"        // LD HL, 0100h (0Eh)
+        "3E0C"          // LD A, 0Ch
+        "96"            // SUB (HL) (FEh, 10111011)
+        // Test zero
+        "210101"        // LD HL, 0101h (0Ch)
+        "3E0C"          // LD A, 0Ch
+        "96"            // SUB (HL) (00h, 01000010)
+        // Test half carry
+        "210201"        // LD HL, 0102h (08h)
+        "3E50"          // LD A, 50h
+        "96"            // SUB (HL) (48h, 00011010)
+        // Test overflow
+        "210301"        // LD HL, 0103h (81h)
+        "3E7F"          // LD A, 7Fh
+        "96"            // SUB (HL) (FEh, 10101111)
+        // Test carry
+        "210401"        // LD HL, 0104h (02h)
+        "3E81"          // LD A, 81h
+        "96"            // SUB (HL) (7Fh, 00111110)
+        // Test 0x80
+        "210501"        // LD HL, 0105h (80h)
+        "3E00"          // LD A, 00h
+        "96";           // SUB (HL) (80h, 10000111)
+
+    string data = "0E0C08810280";
+
+    loadBinary(code, m, 0x0000);
+    loadBinary(data, m, 0x0100);
+    startZ80(z80);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEBB);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0042);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x481A);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEAF);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x7F3E);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8087);
+}
+
+BOOST_AUTO_TEST_CASE(sbc_ptrhl_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test sign
+        "210001"        // LD HL, 0100h (0Dh)
+        "3E0C"          // LD A, 0Ch
+        "9E"            // SBC A, (HL) (FEh, 10111011)
+        // Test zero
+        "210101"        // LD HL, 0101h (0Bh)
+        "3E0C"          // LD A, 0Ch
+        "9E"            // SBC A, (HL) (00h, 01000010)
+        // Test half carry
+        "210201"        // LD HL, 0102h (07h)
+        "3E50"          // LD A, 50h
+        "9E"            // SBC A, (HL) (48h, 00011010)
+        // Test overflow
+        "210301"        // LD HL, 0103h (80h)
+        "3E7F"          // LD A, 7Fh
+        "9E"            // SBC A, (HL) (FEh, 10101111)
+        // Test carry
+        "210401"        // LD HL, 0104h (03h)
+        "3E81"          // LD A, 81h
+        "9E"            // SBC A, (HL) (7Dh, 00111110)
+        // Test 0x80
+        "210501"        // LD HL, 0105h (80h)
+        "3E00"          // LD A, 00h
+        "9E";           // SBC A, (HL) (7Fh, 00111011)
+
+    string data = "0D0B07800380";
+
+    loadBinary(code, m, 0x0000);
+    loadBinary(data, m, 0x0100);
+    startZ80(z80);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEBB);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0042);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x481A);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEAF);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x7D3E);
+    z80.decoder.regs.af.l |= 0x01;
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x7F3B);
+}
+
+BOOST_AUTO_TEST_CASE(and_ptrhl_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test sign
+        "210001"        // LD HL, 0100h (A5h)
+        "3EF3"          // LD A, F3h
+        "A6"            // AND (HL) (A1h, 10110000)
+        // Test zero
+        "210101"        // LD HL, 0101h
+        "3E76"          // LD A, 76h
+        "A6"            // AND (HL) (00h, 01010100)
+        // Test odd parity
+        "210201"        // LD HL, 0102h
+        "3E2B"          // LD A, 2Bh
+        "A6"            // AND (HL) (2Ah, 00111000)
+        // Test even parity
+        "210301"        // LD HL, 0103h
+        "3E2B"          // LD A, 2Bh
+        "A6";           // AND (HL) (28h, 00111100)
+
+    string data = "A5887E7C";
+
+    loadBinary(code, m, 0x0000);
+    loadBinary(data, m, 0x0100);
+    startZ80(z80);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xA1B0);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0054);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2A38);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x283C);
+}
+
+BOOST_AUTO_TEST_CASE(or_ptrhl_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test sign
+        "210001"        // LD HL, 0100h (A5h)
+        "3EF3"          // LD A, F3h
+        "B6"            // OR (HL) (F7h, 10100000)
+        // Test zero
+        "210101"        // LD HL, 0101h (00h)
+        "3E00"          // LD A, 00h
+        "B6"            // OR (HL) (00h, 01000100)
+        // Test odd parity
+        "210201"        // LD HL, 0102h (04h)
+        "3E38"          // LD A, 38h
+        "B6"            // OR (HL) (3Ch, 00101100)
+        // Test even parity
+        "210301"        // LD HL, 0103h (18h)
+        "3E38"          // LD A, 38h
+        "B6";           // OR (HL) (38h, 00101000)
+
+    string data = "A5000418";
+
+    loadBinary(code, m, 0x0000);
+    loadBinary(data, m, 0x0100);
+    startZ80(z80);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xF7A0);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0044);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x3C2C);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x3828);
+}
+
+BOOST_AUTO_TEST_CASE(xor_ptrhl_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test sign
+        "210001"        // LD HL, 0100h (A5h)
+        "3EF3"          // LD A, F3h
+        "AE"            // XOR (HL) (C6h, 10000100)
+        // Test zero
+        "210101"        // LD HL, 0101h (43h)
+        "3E43"          // LD A, 43h
+        "AE"            // XOR (HL) (00h, 01000100)
+        // Test odd parity
+        "210201"        // LD HL, 0102h (5Ch)
+        "3E76"          // LD A, 76h
+        "AE"            // XOR (HL) (2Ah, 00101000)
+        // Test even parity
+        "210301"        // LD HL, 0103h (58h)
+        "3E76"          // LD A, 76h
+        "AE";           // XOR (HL) (2Eh, 00101100)
+
+    string data = "35435C58";
+
+    loadBinary(code, m, 0x0000);
+    loadBinary(data, m, 0x0100);
+    startZ80(z80);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xC684);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0044);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2A28);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2E2C);
+}
+
+BOOST_AUTO_TEST_CASE(cp_ptrhl_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test sign
+        "210001"        // LD HL, 0100h (A5h)
+        "3E73"          // LD A, 73h
+        "BE"            // CP (HL) (10110111)
+        // Test zero
+        "210101"        // LD HL, 0101h (43h)
+        "3E43"          // LD A, 43h
+        "BE"            // CP (HL) (01000010)
+        // Test odd parity
+        "210201"        // LD HL, 0102h (5Ch)
+        "3E76"          // LD A, 76h
+        "BE";           // CP (HL) (00011010)
+
+    string data = "A5435C";
+
+    loadBinary(code, m, 0x0000);
+    loadBinary(data, m, 0x0100);
+    startZ80(z80);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x73B7);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x4342);
+    runCycles(z80, m, 24);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x761A);
 }
 

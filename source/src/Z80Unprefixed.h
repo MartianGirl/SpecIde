@@ -56,6 +56,15 @@
 #include "Z80OrByte.h"
 #include "Z80CpByte.h"
 
+#include "Z80AddPtrHl.h"
+#include "Z80AdcPtrHl.h"
+#include "Z80SubPtrHl.h"
+#include "Z80SbcPtrHl.h"
+#include "Z80AndPtrHl.h"
+#include "Z80XorPtrHl.h"
+#include "Z80OrPtrHl.h"
+#include "Z80CpPtrHl.h"
+
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
 #include "Z80PrefixFD.h"
@@ -109,6 +118,15 @@ class Z80Unprefixed
         Z80XorByte iXorByte;
         Z80OrByte iOrByte;
         Z80CpByte iCpByte;
+
+        Z80AddPtrHl iAddPtrHl;
+        Z80AdcPtrHl iAdcPtrHl;
+        Z80SubPtrHl iSubPtrHl;
+        Z80SbcPtrHl iSbcPtrHl;
+        Z80AndPtrHl iAndPtrHl;
+        Z80XorPtrHl iXorPtrHl;
+        Z80OrPtrHl iOrPtrHl;
+        Z80CpPtrHl iCpPtrHl;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -310,7 +328,7 @@ class Z80Unprefixed
                         &iAddReg,       // 10000011: ADD A, E
                         &iAddReg,       // 10000100: ADD A, H
                         &iAddReg,       // 10000101: ADD A, L
-                        &iNop,
+                        &iAddPtrHl,     // 10000110: ADD A, (HL)
                         &iAddReg        // 10000111: ADD A, A
                     },
                     // y = 1
@@ -321,7 +339,7 @@ class Z80Unprefixed
                         &iAdcReg,       // 10001011: ADC A, E
                         &iAdcReg,       // 10001100: ADC A, H
                         &iAdcReg,       // 10001101: ADC A, L
-                        &iNop,
+                        &iAdcPtrHl,     // 10001110: ADC A, (HL)
                         &iAdcReg        // 10001111: ADC A, A
                     },
                     // y = 2
@@ -332,7 +350,7 @@ class Z80Unprefixed
                         &iSubReg,       // 10010011: SUB E
                         &iSubReg,       // 10010100: SUB H
                         &iSubReg,       // 10010101: SUB L
-                        &iNop,
+                        &iSubPtrHl,     // 10010110: SUB (HL)
                         &iSubReg        // 10010111: SUB A
                     },
                     // y = 3
@@ -343,7 +361,7 @@ class Z80Unprefixed
                         &iSbcReg,       // 10011011: SBC A, E
                         &iSbcReg,       // 10011100: SBC A, H
                         &iSbcReg,       // 10011101: SBC A, L
-                        &iNop,
+                        &iSbcPtrHl,     // 10011110: SBC A, (HL)
                         &iSbcReg        // 10011111: SBC A, A
                     },
                     // y = 4
@@ -354,7 +372,7 @@ class Z80Unprefixed
                         &iAndReg,       // 10100011: AND E
                         &iAndReg,       // 10100100: AND H
                         &iAndReg,       // 10100101: AND L
-                        &iAndReg,
+                        &iAndPtrHl,     // 10100110: AND (HL)
                         &iAndReg        // 10100111: AND A
                     },
                     // y = 5
@@ -365,7 +383,7 @@ class Z80Unprefixed
                         &iXorReg,       // 10101011: XOR E
                         &iXorReg,       // 10101100: XOR H
                         &iXorReg,       // 10101101: XOR L
-                        &iNop,
+                        &iXorPtrHl,     // 10101110: XOR (HL)
                         &iXorReg        // 10101111: XOR A
                     },
                     // y = 6
@@ -376,7 +394,7 @@ class Z80Unprefixed
                         &iOrReg,        // 10110011: OR E
                         &iOrReg,        // 10110100: OR H
                         &iOrReg,        // 10110101: OR L
-                        &iNop,
+                        &iOrPtrHl,      // 10110110: OR (HL)
                         &iOrReg         // 10110111: OR A
                     },
                     // y = 7
@@ -387,7 +405,7 @@ class Z80Unprefixed
                         &iCpReg,        // 10111011: CP E
                         &iCpReg,        // 10111100: CP H
                         &iCpReg,        // 10111101: CP L
-                        &iNop,
+                        &iCpPtrHl,      // 10111110: CP (HL)
                         &iCpReg         // 10111111: CP A
                     }
                 },
