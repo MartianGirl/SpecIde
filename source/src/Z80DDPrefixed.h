@@ -46,6 +46,7 @@
 #include "Z80AndRegX.h"
 #include "Z80XorRegX.h"
 #include "Z80OrRegX.h"
+#include "Z80CpRegX.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -91,6 +92,7 @@ class Z80DDPrefixed
         Z80AndRegX iAndRegX;
         Z80XorRegX iXorRegX;
         Z80OrRegX iOrRegX;
+        Z80CpRegX iCpRegX;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -352,25 +354,25 @@ class Z80DDPrefixed
                     },
                     // y = 6
                     {
-                        &iOrRegX,      // 10110000: OR B
-                        &iOrRegX,      // 10110001: OR C
-                        &iOrRegX,      // 10110010: OR D
-                        &iOrRegX,      // 10110011: OR E
-                        &iOrRegX,      // 10110100: OR IXh
-                        &iOrRegX,      // 10110101: OR IXl
+                        &iOrRegX,       // 10110000: OR B
+                        &iOrRegX,       // 10110001: OR C
+                        &iOrRegX,       // 10110010: OR D
+                        &iOrRegX,       // 10110011: OR E
+                        &iOrRegX,       // 10110100: OR IXh
+                        &iOrRegX,       // 10110101: OR IXl
                         &iNop,
-                        &iOrRegX       // 10110111: OR A
+                        &iOrRegX        // 10110111: OR A
                     },
                     // y = 7
                     {
+                        &iCpRegX,       // 10111000: CP B
+                        &iCpRegX,       // 10111001: CP C
+                        &iCpRegX,       // 10111010: CP D
+                        &iCpRegX,       // 10111011: CP E
+                        &iCpRegX,       // 10111100: CP IXh
+                        &iCpRegX,       // 10111101: CP IXl
                         &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iCpRegX        // 10111111: CP A
                     }
                 },
                 // x = 3

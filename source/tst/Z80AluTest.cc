@@ -1064,34 +1064,64 @@ BOOST_AUTO_TEST_CASE(xor_ry_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2E2C);
 }
 
-/*
-BOOST_AUTO_TEST_CASE(cp_r_test)
+BOOST_AUTO_TEST_CASE(cp_rx_test)
 {
     Z80 z80;
     Memory m(16, false);
 
-    // Test sign
-    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0x73;   // LD A, 73h
-    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0xA5;   // LD B, A5h
-    m.memory[0x0004] = 0xB8;                            // CP B (10110111)
-    // Test zero
-    m.memory[0x0005] = 0x3E; m.memory[0x0006] = 0x43;   // LD A, 43h
-    m.memory[0x0007] = 0x0E; m.memory[0x0008] = 0x43;   // LD C, 43h
-    m.memory[0x0009] = 0xB9;                            // CP C (01000010)
-    // Test odd parity
-    m.memory[0x000A] = 0x3E; m.memory[0x000B] = 0x76;   // LD A, 76h
-    m.memory[0x000C] = 0x16; m.memory[0x000D] = 0x5C;   // LD D, 5Ch
-    m.memory[0x000E] = 0xBA;                            // CP D (00011010)
+    string code =
+        // Test sign
+        "DD3E73"        // LD A, 73h
+        "DD06A5"        // LD B, A5h
+        "DDB8"          // CP B (10110111)
+        // Test zero
+        "DD3E43"        // LD A, 43h
+        "DD0E43"        // LD C, 43h
+        "DDB9"          // CP C (01000010)
+        // Test odd parity
+        "DD3E76"        // LD A, 76h
+        "DD165C"        // LD D, 5Ch
+        "DDBA";         // CP D (00011010)
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
-    runCycles(z80, m, 18);
+    runCycles(z80, m, 30);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x73B7);
-    runCycles(z80, m, 18);
+    runCycles(z80, m, 30);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x4342);
-    runCycles(z80, m, 18);
+    runCycles(z80, m, 30);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x761A);
 }
 
+BOOST_AUTO_TEST_CASE(cp_ry_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test sign
+        "FD3E73"        // LD A, 73h
+        "FD06A5"        // LD B, A5h
+        "FDB8"          // CP B (10110111)
+        // Test zero
+        "FD3E43"        // LD A, 43h
+        "FD0E43"        // LD C, 43h
+        "FDB9"          // CP C (01000010)
+        // Test odd parity
+        "FD3E76"        // LD A, 76h
+        "FD165C"        // LD D, 5Ch
+        "FDBA";         // CP D (00011010)
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x73B7);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x4342);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x761A);
+}
+/*
 BOOST_AUTO_TEST_CASE(inc_r_test)
 {
     Z80 z80;

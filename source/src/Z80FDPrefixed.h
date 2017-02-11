@@ -46,6 +46,7 @@
 #include "Z80AndRegY.h"
 #include "Z80XorRegY.h"
 #include "Z80OrRegY.h"
+#include "Z80CpRegY.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -91,6 +92,7 @@ class Z80FDPrefixed
         Z80AndRegY iAndRegY;
         Z80XorRegY iXorRegY;
         Z80OrRegY iOrRegY;
+        Z80CpRegY iCpRegY;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -363,14 +365,14 @@ class Z80FDPrefixed
                     },
                     // y = 7
                     {
+                        &iCpRegY,       // 10111000: CP B
+                        &iCpRegY,       // 10111001: CP C
+                        &iCpRegY,       // 10111010: CP D
+                        &iCpRegY,       // 10111011: CP E
+                        &iCpRegY,       // 10111100: CP IYh
+                        &iCpRegY,       // 10111101: CP IYl
                         &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iCpRegY        // 10111111: CP A
                     }
                 },
                 // x = 3
