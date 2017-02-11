@@ -42,6 +42,7 @@
 #include "Z80AddRegY.h"
 #include "Z80AdcRegY.h"
 #include "Z80SubRegY.h"
+#include "Z80SbcRegY.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -83,6 +84,7 @@ class Z80FDPrefixed
         Z80AddRegY iAddRegY;
         Z80AdcRegY iAdcRegY;
         Z80SubRegY iSubRegY;
+        Z80SbcRegY iSbcRegY;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -311,14 +313,14 @@ class Z80FDPrefixed
                     },
                     // y = 3
                     {
+                        &iSbcRegY,      // 10011000: SBC B
+                        &iSbcRegY,      // 10011001: SBC C
+                        &iSbcRegY,      // 10011010: SBC D
+                        &iSbcRegY,      // 10011011: SBC E
+                        &iSbcRegY,      // 10011100: SBC IYh
+                        &iSbcRegY,      // 10011101: SBC IYl
                         &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iSbcRegY       // 10011111: SBC A
                     },
                     // y = 4
                     {

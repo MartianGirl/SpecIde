@@ -42,6 +42,7 @@
 #include "Z80AddRegX.h"
 #include "Z80AdcRegX.h"
 #include "Z80SubRegX.h"
+#include "Z80SbcRegX.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -83,6 +84,7 @@ class Z80DDPrefixed
         Z80AddRegX iAddRegX;
         Z80AdcRegX iAdcRegX;
         Z80SubRegX iSubRegX;
+        Z80SbcRegX iSbcRegX;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -311,14 +313,14 @@ class Z80DDPrefixed
                     },
                     // y = 3
                     {
+                        &iSbcRegX,      // 10011000: SBC B
+                        &iSbcRegX,      // 10011001: SBC C
+                        &iSbcRegX,      // 10011010: SBC D
+                        &iSbcRegX,      // 10011011: SBC E
+                        &iSbcRegX,      // 10011100: SBC IXh
+                        &iSbcRegX,      // 10011101: SBC IXl
                         &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop,
-                        &iNop
+                        &iSbcRegX       // 10011111: SBC A
                     },
                     // y = 4
                     {
