@@ -654,52 +654,101 @@ BOOST_AUTO_TEST_CASE(adc_ry_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
 }
 
-/*
-BOOST_AUTO_TEST_CASE(sub_r_test)
+BOOST_AUTO_TEST_CASE(sub_rx_test)
 {
     Z80 z80;
     Memory m(16, false);
 
-    // Test sign
-    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0x0C;   // LD A, 0Ch
-    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0x0E;   // LD B, 0Eh
-    m.memory[0x0004] = 0x90;                            // SUB B (FEh, 10111011)
-    // Test zero
-    m.memory[0x0005] = 0x3E; m.memory[0x0006] = 0x0C;   // LD A, 0Ch
-    m.memory[0x0007] = 0x0E; m.memory[0x0008] = 0x0C;   // LD C, 0Ch
-    m.memory[0x0009] = 0x91;                            // SUB C (00h, 01000010)
-    // Test half carry
-    m.memory[0x000A] = 0x3E; m.memory[0x000B] = 0x50;   // LD A, 50h
-    m.memory[0x000C] = 0x16; m.memory[0x000D] = 0x08;   // LD D, 08h
-    m.memory[0x000E] = 0x92;                            // SUB D (48h, 00011010)
-    // Test overflow
-    m.memory[0x000F] = 0x3E; m.memory[0x0010] = 0x7F;   // LD A, 7Fh
-    m.memory[0x0011] = 0x1E; m.memory[0x0012] = 0x81;   // LD E, 81h
-    m.memory[0x0013] = 0x93;                            // SUB E (FEh, 10101111)
-    // Test carry
-    m.memory[0x0014] = 0x3E; m.memory[0x0015] = 0x81;   // LD A, 81h
-    m.memory[0x0016] = 0x26; m.memory[0x0017] = 0x02;   // LD H, 02h
-    m.memory[0x0018] = 0x94;                            // SUB H (7Fh, 00111110)
-    // Test 0x80
-    m.memory[0x0019] = 0x3E; m.memory[0x001A] = 0x00;   // LD A, 00h
-    m.memory[0x001B] = 0x2E; m.memory[0x001C] = 0x80;   // LD L, 80h
-    m.memory[0x001D] = 0x95;                            // SUB L (80h, 10000111)
+    string code =
+        // Test sign
+        "DD3E0C"        // LD A, 0Ch
+        "DD060E"        // LD B, 0Eh
+        "DD90"          // SUB B (FEh, 10111011)
+        // Test zero
+        "DD3E0C"        // LD A, 0Ch
+        "DD0E0C"        // LD C, 0Ch
+        "DD91"          // SUB C (00h, 01000010)
+        // Test half carry
+        "DD3E50"        // LD A, 50h
+        "DD1608"        // LD D, 08h
+        "DD92"          // SUB D (48h, 00011010)
+        // Test overflow
+        "DD3E7F"        // LD A, 7Fh
+        "DD1E81"        // LD E, 81h
+        "DD93"          // SUB E (FEh, 10101111)
+        // Test carry
+        "DD3E81"        // LD A, 81h
+        "DD2602"        // LD IXh, 02h
+        "DD94"          // SUB IXh (7Fh, 00111110)
+        // Test 0x80
+        "DD3E00"        // LD A, 00h
+        "DD2E80"        // LD IXl, 80h
+        "DD95";         // SUB IXl (80h, 10000111)
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
-    runCycles(z80, m, 18);
+    runCycles(z80, m, 30);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEBB);
-    runCycles(z80, m, 18);
+    runCycles(z80, m, 30);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0042);
-    runCycles(z80, m, 18);
+    runCycles(z80, m, 30);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x481A);
-    runCycles(z80, m, 18);
+    runCycles(z80, m, 30);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEAF);
-    runCycles(z80, m, 18);
+    runCycles(z80, m, 30);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x7F3E);
-    runCycles(z80, m, 18);
+    runCycles(z80, m, 30);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8087);
 }
 
+BOOST_AUTO_TEST_CASE(sub_ry_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test sign
+        "FD3E0C"        // LD A, 0Ch
+        "FD060E"        // LD B, 0Eh
+        "FD90"          // SUB B (FEh, 10111011)
+        // Test zero
+        "FD3E0C"        // LD A, 0Ch
+        "FD0E0C"        // LD C, 0Ch
+        "FD91"          // SUB C (00h, 01000010)
+        // Test half carry
+        "FD3E50"        // LD A, 50h
+        "FD1608"        // LD D, 08h
+        "FD92"          // SUB D (48h, 00011010)
+        // Test overflow
+        "FD3E7F"        // LD A, 7Fh
+        "FD1E81"        // LD E, 81h
+        "FD93"          // SUB E (FEh, 10101111)
+        // Test carry
+        "FD3E81"        // LD A, 81h
+        "FD2602"        // LD IYh, 02h
+        "FD94"          // SUB IYh (7Fh, 00111110)
+        // Test 0x80
+        "FD3E00"        // LD A, 00h
+        "FD2E80"        // LD IYh, 80h
+        "FD95";         // SUB IYh (80h, 10000111)
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEBB);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0042);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x481A);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFEAF);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x7F3E);
+    runCycles(z80, m, 30);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8087);
+}
+
+/*
 BOOST_AUTO_TEST_CASE(sbc_r_test)
 {
     Z80 z80;
