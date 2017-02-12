@@ -2,7 +2,7 @@
 
 /** Z80LdPtrIxReg.h
  *
- * Instruction: LD (IX + d), r
+ * Instruction: LD (IX+d), r
  *
  */
 

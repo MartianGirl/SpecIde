@@ -59,6 +59,15 @@
 #include "Z80OrByte.h"
 #include "Z80CpByte.h"
 
+#include "Z80AddPtrIx.h"
+#include "Z80AdcPtrIx.h"
+#include "Z80SubPtrIx.h"
+#include "Z80SbcPtrIx.h"
+#include "Z80AndPtrIx.h"
+#include "Z80XorPtrIx.h"
+#include "Z80OrPtrIx.h"
+#include "Z80CpPtrIx.h"
+
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
 #include "Z80PrefixFD.h"
@@ -115,6 +124,15 @@ class Z80DDPrefixed
         Z80XorByte iXorByte;
         Z80OrByte iOrByte;
         Z80CpByte iCpByte;
+
+        Z80AddPtrIx iAddPtrIx;
+        Z80AdcPtrIx iAdcPtrIx;
+        Z80SubPtrIx iSubPtrIx;
+        Z80SbcPtrIx iSbcPtrIx;
+        Z80AndPtrIx iAndPtrIx;
+        Z80XorPtrIx iXorPtrIx;
+        Z80OrPtrIx iOrPtrIx;
+        Z80CpPtrIx iCpPtrIx;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -200,7 +218,7 @@ class Z80DDPrefixed
                         &iNop,
                         &iNop,
                         &iNop,
-                        &iLdPtrIxByte,  // 00110110: LD (IX + d), n
+                        &iLdPtrIxByte,  // 00110110: LD (IX+d), n
                         &iNop
                     },
                     // y = 7
@@ -225,7 +243,7 @@ class Z80DDPrefixed
                         &iLdRegXRegX,   // 01000011: LD B, E
                         &iLdRegXRegX,   // 01000100: LD B, IXh
                         &iLdRegXRegX,   // 01000101: LD B, IXl
-                        &iLdRegPtrIx,   // 01000110: LD B, (IX + d)
+                        &iLdRegPtrIx,   // 01000110: LD B, (IX+d)
                         &iLdRegXRegX    // 01000111: LD B, A
                     },
                     // y = 1
@@ -236,7 +254,7 @@ class Z80DDPrefixed
                         &iLdRegXRegX,   // 01001011: LD C, E
                         &iLdRegXRegX,   // 01001100: LD C, IXh
                         &iLdRegXRegX,   // 01001101: LD C, IXl
-                        &iLdRegPtrIx,   // 01001110: LD C, (IX + d)
+                        &iLdRegPtrIx,   // 01001110: LD C, (IX+d)
                         &iLdRegXRegX    // 01001111: LD C, A
                     },
                     // y = 2
@@ -247,7 +265,7 @@ class Z80DDPrefixed
                         &iLdRegXRegX,   // 01010011: LD D, E
                         &iLdRegXRegX,   // 01010100: LD D, IXh
                         &iLdRegXRegX,   // 01010101: LD D, IXl
-                        &iLdRegPtrIx,   // 01010110: LD D, (IX + d)
+                        &iLdRegPtrIx,   // 01010110: LD D, (IX+d)
                         &iLdRegXRegX    // 01010111: LD D, A
                     },
                     // y = 3
@@ -258,7 +276,7 @@ class Z80DDPrefixed
                         &iLdRegXRegX,   // 01011011: LD E, E
                         &iLdRegXRegX,   // 01011100: LD E, IXh
                         &iLdRegXRegX,   // 01011101: LD E, IXl
-                        &iLdRegPtrIx,   // 01011110: LD E, (IX + d)
+                        &iLdRegPtrIx,   // 01011110: LD E, (IX+d)
                         &iLdRegXRegX    // 01011111: LD E, A
                     },
                     // y = 4
@@ -269,7 +287,7 @@ class Z80DDPrefixed
                         &iLdRegXRegX,   // 01100011: LD H, E
                         &iLdRegXRegX,   // 01100100: LD H, IXh
                         &iLdRegXRegX,   // 01100101: LD H, IXl
-                        &iLdRegPtrIx,   // 01100110: LD H, (IX + d)
+                        &iLdRegPtrIx,   // 01100110: LD H, (IX+d)
                         &iLdRegXRegX    // 01100111: LD H, A
                     },
                     // y = 5
@@ -280,19 +298,19 @@ class Z80DDPrefixed
                         &iLdRegXRegX,   // 01101011: LD L, E
                         &iLdRegXRegX,   // 01101100: LD L, IXh
                         &iLdRegXRegX,   // 01101101: LD L, IXl
-                        &iLdRegPtrIx,   // 01101110: LD L, (IX + d)
+                        &iLdRegPtrIx,   // 01101110: LD L, (IX+d)
                         &iLdRegXRegX    // 01101111: LD L, A
                     },
                     // y = 6
                     {
-                        &iLdPtrIxReg,   // 01110000: LD (IX + d), B
-                        &iLdPtrIxReg,   // 01110001: LD (IX + d), C
-                        &iLdPtrIxReg,   // 01110010: LD (IX + d), D
-                        &iLdPtrIxReg,   // 01110011: LD (IX + d), E
-                        &iLdPtrIxReg,   // 01110100: LD (IX + d), H
-                        &iLdPtrIxReg,   // 01110101: LD (IX + d), L
+                        &iLdPtrIxReg,   // 01110000: LD (IX+d), B
+                        &iLdPtrIxReg,   // 01110001: LD (IX+d), C
+                        &iLdPtrIxReg,   // 01110010: LD (IX+d), D
+                        &iLdPtrIxReg,   // 01110011: LD (IX+d), E
+                        &iLdPtrIxReg,   // 01110100: LD (IX+d), H
+                        &iLdPtrIxReg,   // 01110101: LD (IX+d), L
                         &iNop,          // 01110110: HALT
-                        &iLdPtrIxReg    // 01110111: LD (IX + d), A
+                        &iLdPtrIxReg    // 01110111: LD (IX+d), A
                     },
                     // y = 7
                     {
@@ -302,7 +320,7 @@ class Z80DDPrefixed
                         &iLdRegXRegX,   // 01111011: LD A, E
                         &iLdRegXRegX,   // 01111100: LD A, IXh
                         &iLdRegXRegX,   // 01111101: LD A, IXl
-                        &iLdRegPtrIx,   // 01111110: LD A, (IX + d)
+                        &iLdRegPtrIx,   // 01111110: LD A, (IX+d)
                         &iLdRegXRegX    // 01111111: LD A, A
                     }
                 },
@@ -316,7 +334,7 @@ class Z80DDPrefixed
                         &iAddRegX,      // 10000011: ADD A, E         
                         &iAddRegX,      // 10000100: ADD A, IXh
                         &iAddRegX,      // 10000101: ADD A, IXl
-                        &iNop,
+                        &iAddPtrIx,     // 10000110: ADD A, (IX+d)
                         &iAddRegX       // 10000111: ADD A, A
                     },
                     // y = 1
@@ -327,7 +345,7 @@ class Z80DDPrefixed
                         &iAdcRegX,      // 10001011: ADC A, E
                         &iAdcRegX,      // 10001100: ADC A, IXh
                         &iAdcRegX,      // 10001101: ADC A, IXl
-                        &iNop,
+                        &iAdcPtrIx,     // 10001110: ADC A, (IX+d)
                         &iAdcRegX       // 10001111: ADC A, A
                     },
                     // y = 2
@@ -338,19 +356,19 @@ class Z80DDPrefixed
                         &iSubRegX,      // 10010011: SUB E
                         &iSubRegX,      // 10010100: SUB IXh
                         &iSubRegX,      // 10010101: SUB IXl
-                        &iNop,
+                        &iSubPtrIx,     // 10010110: SUB (IX+d)
                         &iSubRegX       // 10010111: SUB A
                     },
                     // y = 3
                     {
-                        &iSbcRegX,      // 10011000: SBC B
-                        &iSbcRegX,      // 10011001: SBC C
-                        &iSbcRegX,      // 10011010: SBC D
-                        &iSbcRegX,      // 10011011: SBC E
-                        &iSbcRegX,      // 10011100: SBC IXh
-                        &iSbcRegX,      // 10011101: SBC IXl
-                        &iNop,
-                        &iSbcRegX       // 10011111: SBC A
+                        &iSbcRegX,      // 10011000: SBC A, B
+                        &iSbcRegX,      // 10011001: SBC A, C
+                        &iSbcRegX,      // 10011010: SBC A, D
+                        &iSbcRegX,      // 10011011: SBC A, E
+                        &iSbcRegX,      // 10011100: SBC A, IXh
+                        &iSbcRegX,      // 10011101: SBC A, IXl
+                        &iSbcPtrIx,     // 10011110: SBC A, (IX+d)
+                        &iSbcRegX       // 10011111: SBC A, A
                     },
                     // y = 4
                     {
@@ -360,7 +378,7 @@ class Z80DDPrefixed
                         &iAndRegX,      // 10100011: AND E
                         &iAndRegX,      // 10100100: AND IXh
                         &iAndRegX,      // 10100101: AND IXl
-                        &iNop,
+                        &iAndPtrIx,     // 10100110: AND (IX+d)
                         &iAndRegX       // 10100111: AND A
                     },
                     // y = 5
@@ -371,7 +389,7 @@ class Z80DDPrefixed
                         &iXorRegX,      // 10101011: XOR E
                         &iXorRegX,      // 10101100: XOR IXh
                         &iXorRegX,      // 10101101: XOR IXl
-                        &iNop,
+                        &iXorPtrIx,     // 10101110: XOR (IX+d)
                         &iXorRegX       // 10101111: XOR A
                     },
                     // y = 6
@@ -382,7 +400,7 @@ class Z80DDPrefixed
                         &iOrRegX,       // 10110011: OR E
                         &iOrRegX,       // 10110100: OR IXh
                         &iOrRegX,       // 10110101: OR IXl
-                        &iNop,
+                        &iOrPtrIx,      // 10110110: OR (IX+d)
                         &iOrRegX        // 10110111: OR A
                     },
                     // y = 7
@@ -393,7 +411,7 @@ class Z80DDPrefixed
                         &iCpRegX,       // 10111011: CP E
                         &iCpRegX,       // 10111100: CP IXh
                         &iCpRegX,       // 10111101: CP IXl
-                        &iNop,
+                        &iCpPtrIx,      // 10111110: CP (IX+d)
                         &iCpRegX        // 10111111: CP A
                     }
                 },

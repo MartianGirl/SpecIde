@@ -2,7 +2,7 @@
 
 /** Z80LdPtrIyReg.h
  *
- * Instruction: LD (IY + d), r
+ * Instruction: LD (IY+d), r
  *
  */
 

@@ -1,18 +1,18 @@
 #pragma once
 
-/** Z80LdRegPtrIx.h
+/** Z80AndPtrIx.h
  *
- * Instruction: LD r, (IX+d)
+ * Instruction: AND (IX+d)
  *
  */
 
 #include "Z80Instruction.h"
 #include "Z80RegisterSet.h"
 
-class Z80LdRegPtrIx : public Z80Instruction
+class Z80AndPtrIx : public Z80Instruction
 {
     public:
-        Z80LdRegPtrIx() {}
+        Z80AndPtrIx() {}
 
         bool operator()(Z80RegisterSet* r)
         {
@@ -44,7 +44,17 @@ class Z80LdRegPtrIx : public Z80Instruction
                     return true;
 
                 case 6:
-                    *(r->reg8[r->y]) = r->iReg.h;
+                    // Calculate the result.
+                    r->acc.l = r->acc.h = r->af.h & r->iReg.h;
+                    r->acc.h ^= r->acc.h >> 1;
+                    r->acc.h ^= r->acc.h >> 2;
+                    r->acc.h ^= r->acc.h >> 4;
+                    r->af.l = (r->acc.h & 0x01) 
+                        ? FLAG_H : FLAG_H | FLAG_PV;                // ...H.P00
+                    r->af.l |=
+                        r->acc.l & (FLAG_S | FLAG_5 | FLAG_3);      // S.5H3P00
+                    r->af.l |= (r->acc.l) ? 0x00 : FLAG_Z;          // SZ5H3P00
+                    r->af.h = r->acc.l;
                     r->prefix = PREFIX_NO;
                     return true;
 

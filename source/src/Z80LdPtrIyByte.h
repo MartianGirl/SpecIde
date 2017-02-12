@@ -2,7 +2,7 @@
 
 /** Z80LdPtrIyByte.h
  *
- * Instruction: LD (IY + d), n
+ * Instruction: LD (IY+d), n
  *
  */
 

@@ -36,8 +36,8 @@ uint_fast16_t Z80Decoder::getAddress()
             break;
         case 0x05:  // Indirect SP:
             break;
-        case 0x06:  // Indexed IX + d:      LD A, (IX + d)
-        case 0x07:  // Indexed IY + d:      LD A, (IY + d)
+        case 0x06:  // Indexed IX+d, IY+d:  LD A, (IX+d), LD A, (IY+d)
+        case 0x07:
             regs.addr.w = regs.tmp.w;
             break;
         case 0x08:  // Indirect nn:         LD A, (nn)
