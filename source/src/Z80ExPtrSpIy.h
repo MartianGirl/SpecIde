@@ -28,8 +28,8 @@ class Z80ExPtrSpIy : public Z80Instruction
                     return true;
 
                 case 2:
-                    r->outWord.l = r->iy.h;
-                    r->outWord.h = r->iy.l;
+                    r->oReg.l = r->iy.h;
+                    r->oReg.h = r->iy.l;
                     return false;
 
                 case 3:
@@ -42,7 +42,7 @@ class Z80ExPtrSpIy : public Z80Instruction
                     return false;
 
                 case 6:
-                    r->iy.w = r->operand.w;
+                    r->iy.w = r->iReg.w;
                     return false;
 
                 case 7:

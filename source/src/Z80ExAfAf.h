@@ -23,9 +23,9 @@ class Z80ExAfAf : public Z80Instruction
                     r->memWrCycles = 0;
                     r->memAddrMode = 0x00000000;
 
-                    r->operand.w = r->af.w;
+                    r->acc.w = r->af.w;
                     r->af.w = r->af_.w;
-                    r->af_.w = r->operand.w;
+                    r->af_.w = r->acc.w;
                     r->prefix = PREFIX_NO;
                     return true;
 

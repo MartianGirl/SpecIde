@@ -29,7 +29,7 @@ class Z80LdPtrWordA : public Z80Instruction
 
                 case 2:
                     r->memWrCycles = 1;
-                    r->outWord.l = r->af.h;
+                    r->oReg.l = r->af.h;
                     return true;
 
                 case 3:

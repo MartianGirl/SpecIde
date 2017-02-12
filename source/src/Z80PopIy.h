@@ -28,7 +28,7 @@ class Z80PopIy : public Z80Instruction
                     return true;
 
                 case 2:
-                    r->iy.w = r->operand.w;
+                    r->iy.w = r->iReg.w;
                     r->prefix = PREFIX_NO;
                     return true;
 

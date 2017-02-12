@@ -25,14 +25,15 @@ class Z80LdRegPtrIy : public Z80Instruction
                     return true;
 
                 case 1:
-                    r->offset.w = r->operand.w >> 8;
+                    r->tmp.l = r->iReg.h;
                     return false;
 
                 case 2:
-                    r->offset.h = ((r->offset.l & 0x80) == 0x80) ? 0xFF : 0x00;
+                    r->tmp.h = ((r->tmp.l & 0x80) == 0x80) ? 0xFF : 0x00;
                     return false;
 
                 case 3:
+                    r->tmp.w += r->iy.w;
                     return false;
 
                 case 4:
@@ -43,7 +44,7 @@ class Z80LdRegPtrIy : public Z80Instruction
                     return true;
 
                 case 6:
-                    *(r->reg8[r->y]) = r->operand.h;
+                    *(r->reg8[r->y]) = r->iReg.h;
                     r->prefix = PREFIX_NO;
                     return true;
 

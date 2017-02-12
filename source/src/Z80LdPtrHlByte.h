@@ -25,7 +25,7 @@ class Z80LdPtrHlByte : public Z80Instruction
                     return true;
 
                 case 1:
-                    r->outWord.l = r->operand.h;
+                    r->oReg.l = r->iReg.h;
                     return true;
 
                 case 2:

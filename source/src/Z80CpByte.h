@@ -26,21 +26,21 @@ class Z80CpByte : public Z80Instruction
 
                 case 1:
                     // Flags 5 & 3 are copied from the operand.
-                    r->af.l = r->operand.h & (FLAG_5 | FLAG_3);     // ..5.3...
+                    r->af.l = r->iReg.h & (FLAG_5 | FLAG_3);        // ..5.3...
                     r->af.l |= FLAG_N;                              // ..5.3.N.
 
                     // Calculate half-carry. This is done by doing a 4-bit
                     // subtraction. Half-carry will be in bit 4.
-                    r->acc.w = (r->af.h & 0x0F) - (r->operand.h & 0x0F);
+                    r->acc.w = (r->af.h & 0x0F) - (r->iReg.h & 0x0F);
                     r->af.l |= (r->acc.l & FLAG_H);                 // ..5H3.N.  
 
                     // Calculate carry in the bit 7. Overflow flag is
                     // (carry in bit 7) XOR (carry in bit 8).
-                    r->acc.w = (r->af.h & 0x7F) - (r->operand.h & 0x7F);
+                    r->acc.w = (r->af.h & 0x7F) - (r->iReg.h & 0x7F);
                     r->af.l |= (r->acc.w >> 5) & FLAG_PV;
 
                     // Calculate the result.
-                    r->acc.w = r->af.h - r->operand.h;
+                    r->acc.w = r->af.h - r->iReg.h;
                     r->af.l |= r->acc.l & FLAG_S;                   // S.5H3.N.
                     r->af.l |= r->acc.h & FLAG_C;                   // S.5H3.NC
                     r->af.l ^= (r->acc.w >> 6) & FLAG_PV;           // S.5H3VNC

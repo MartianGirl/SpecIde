@@ -34,7 +34,7 @@ class Z80LdRegPtrWord : public Z80Instruction
                     return true;
 
                 case 4:
-                    *(r->regp[r->p]) = r->operand.w;
+                    *(r->regp[r->p]) = r->iReg.w;
                     r->prefix = PREFIX_NO;
                     return true;
 

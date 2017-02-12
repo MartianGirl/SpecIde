@@ -22,12 +22,11 @@ class Z80PushIy : public Z80Instruction
                     r->memRdCycles = 0;
                     r->memWrCycles = 2;
                     r->memAddrMode = 0x000000AA;
-                    r->operand.w = r->iy.w;
                     return false;
 
                 case 1:
-                    r->outWord.l = r->operand.h;
-                    r->outWord.h = r->operand.l;
+                    r->oReg.l = r->iy.h;
+                    r->oReg.h = r->iy.l;
                     return true;
 
                 case 2:

@@ -25,7 +25,7 @@ class Z80LdRegByte : public Z80Instruction
                     return true;
 
                 case 1:
-                    *(r->reg8[r->y]) = r->operand.h;
+                    *(r->reg8[r->y]) = r->iReg.h;
                     r->prefix = PREFIX_NO;
                     return true;
 

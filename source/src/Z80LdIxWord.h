@@ -28,7 +28,7 @@ class Z80LdIxWord : public Z80Instruction
                     return true;
 
                 case 2:
-                    r->ix.w = r->operand.w;
+                    r->ix.w = r->iReg.w;
                     r->prefix = PREFIX_NO;
                     return true;
 

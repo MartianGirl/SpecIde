@@ -29,6 +29,11 @@ void Z80RegisterSet::reset()
     ix.w = 0xFFFF;
     iy.w = 0xFFFF;
 
+    iReg.w = 0xFFFF;
+    oReg.w = 0xFFFF;
+    addr.w = 0xFFFF;
+    tmp.w = 0xFFFF;
+
     iff = 0x00;
     im = 0x00;
 }

@@ -25,19 +25,20 @@ class Z80LdPtrIxByte : public Z80Instruction
                     return true;
 
                 case 1:
-                    r->offset.w = r->operand.w >> 8;
+                    r->tmp.l = r->iReg.h;
                     return true;
 
                 case 2:
-                    r->offset.h = ((r->offset.l & 0x80) == 0x80) ? 0xFF : 0x00;
+                    r->tmp.h = ((r->tmp.l & 0x80) == 0x80) ? 0xFF : 0x00;
                     return false;
 
                 case 3:
+                    r->tmp.w += r->ix.w;
                     return false;
 
                 case 4:
                     r->memWrCycles = 1;
-                    r->outWord.l = r->operand.h;
+                    r->oReg.l = r->iReg.h;
                     return true;
 
                 case 5:

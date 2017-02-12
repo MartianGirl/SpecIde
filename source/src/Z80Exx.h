@@ -23,17 +23,17 @@ class Z80Exx : public Z80Instruction
                     r->memWrCycles = 0;
                     r->memAddrMode = 0x00000000;
 
-                    r->operand.w = r->bc.w;
+                    r->acc.w = r->bc.w;
                     r->bc.w = r->bc_.w;
-                    r->bc_.w = r->operand.w;
+                    r->bc_.w = r->acc.w;
 
-                    r->operand.w = r->de.w;
+                    r->acc.w = r->de.w;
                     r->de.w = r->de_.w;
-                    r->de_.w = r->operand.w;
+                    r->de_.w = r->acc.w;
 
-                    r->operand.w = r->hl.w;
+                    r->acc.w = r->hl.w;
                     r->hl.w = r->hl_.w;
-                    r->hl_.w = r->operand.w;
+                    r->hl_.w = r->acc.w;
 
                     r->prefix = PREFIX_NO;
                     return true;

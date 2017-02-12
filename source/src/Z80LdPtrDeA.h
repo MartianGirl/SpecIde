@@ -23,7 +23,7 @@ class Z80LdPtrDeA : public Z80Instruction
                     r->memWrCycles = 1;
                     r->memAddrMode = 0x00000004;
 
-                    r->outWord.l = r->af.h;
+                    r->oReg.l = r->af.h;
                     return true;
 
                 case 1:

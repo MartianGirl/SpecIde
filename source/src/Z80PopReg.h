@@ -28,7 +28,7 @@ class Z80PopReg : public Z80Instruction
                     return true;
 
                 case 2:
-                    *(r->regp2[r->p]) = r->operand.w;
+                    *(r->regp2[r->p]) = r->iReg.w;
                     r->prefix = PREFIX_NO;
                     return true;
 

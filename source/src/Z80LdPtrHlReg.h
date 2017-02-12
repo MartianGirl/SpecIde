@@ -23,7 +23,7 @@ class Z80LdPtrHlReg : public Z80Instruction
                     r->memWrCycles = 1;
                     r->memAddrMode = 0x00000002;
 
-                    r->outWord.l = *(r->reg8[r->z]);
+                    r->oReg.l = *(r->reg8[r->z]);
                     return true;
 
                 case 1:

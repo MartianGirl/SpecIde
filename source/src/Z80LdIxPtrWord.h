@@ -34,7 +34,7 @@ class Z80LdIxPtrWord : public Z80Instruction
                     return true;
 
                 case 4:
-                    r->ix.w = r->operand.w;
+                    r->ix.w = r->iReg.w;
                     r->prefix = PREFIX_NO;
                     return true;
 

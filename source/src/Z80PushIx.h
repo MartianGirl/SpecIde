@@ -22,12 +22,12 @@ class Z80PushIx : public Z80Instruction
                     r->memRdCycles = 0;
                     r->memWrCycles = 2;
                     r->memAddrMode = 0x000000AA;
-                    r->operand.w = r->ix.w;
+                    r->acc.w = r->ix.w;
                     return false;
 
                 case 1:
-                    r->outWord.l = r->operand.h;
-                    r->outWord.h = r->operand.l;
+                    r->oReg.l = r->acc.h;
+                    r->oReg.h = r->acc.l;
                     return true;
 
                 case 2:

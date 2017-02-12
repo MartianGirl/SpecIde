@@ -23,9 +23,9 @@ class Z80ExDeHl : public Z80Instruction
                     r->memWrCycles = 0;
                     r->memAddrMode = 0x00000000;
 
-                    r->operand.w = r->de.w;
+                    r->acc.w = r->de.w;
                     r->de.w = r->hl.w;
-                    r->hl.w = r->operand.w;
+                    r->hl.w = r->acc.w;
                     r->prefix = PREFIX_NO;
                     return true;
 

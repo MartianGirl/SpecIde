@@ -25,7 +25,7 @@ class Z80Lddr : public Z80Instruction
                     return true;
 
                 case 1:
-                    r->outWord.l = r->operand.h;
+                    r->oReg.l = r->iReg.h;
                     return true;
 
                 case 2:
@@ -35,10 +35,10 @@ class Z80Lddr : public Z80Instruction
                     return false;
 
                 case 3:
-                    r->operand.h += r->af.h;
+                    r->iReg.h += r->af.h;
                     r->af.l &= FLAG_S | FLAG_Z | FLAG_C;            // SZ00000C
-                    r->af.l |= (r->operand.h & FLAG_3);             // SZ00300C
-                    r->af.l |= (r->operand.h & FLAG_N) << 4;        // SZ50300C
+                    r->af.l |= (r->iReg.h & FLAG_3);                // SZ00300C
+                    r->af.l |= (r->iReg.h & FLAG_N) << 4;           // SZ50300C
                     r->af.l |= (r->bc.w) ? FLAG_PV : 0x00;          // SZ503P0C
                     return false;
 

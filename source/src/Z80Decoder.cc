@@ -22,38 +22,36 @@ uint_fast16_t Z80Decoder::getAddress()
         case 0x00:  // Direct Implicit:     LD A, B
             break;
         case 0x01:  // Direct Immediate:    LD A, n
-            regs.address.w = regs.pc.w;
+            regs.addr.w = regs.pc.w;
             regs.pc.w++;
             break;
         case 0x02:  // Indirect HL:         LD A, (HL)
-            regs.address.w = regs.hl.w;
+            regs.addr.w = regs.hl.w;
             break;
         case 0x03:  // Indirect BC:         LD A, (BC)
-            regs.address.w = regs.bc.w;
+            regs.addr.w = regs.bc.w;
             break;
         case 0x04:  // Indirect DE:         LD A, (DE)
-            regs.address.w = regs.de.w;
+            regs.addr.w = regs.de.w;
             break;
         case 0x05:  // Indirect SP:
             break;
         case 0x06:  // Indexed IX + d:      LD A, (IX + d)
-            regs.address.w = regs.offset.w + regs.ix.w;
-            break;
         case 0x07:  // Indexed IY + d:      LD A, (IY + d)
-            regs.address.w = regs.offset.w + regs.iy.w;
+            regs.addr.w = regs.tmp.w;
             break;
         case 0x08:  // Indirect nn:         LD A, (nn)
-            regs.address.w = regs.operand.w;
+            regs.addr.w = regs.iReg.w;
             break;
         case 0x09:  // Indirect extended    LD HL, (nn) - high byte read
-            regs.address.w++;
+            regs.addr.w++;
             break;
         case 0x0A:  // Push                 PUSH AF
             regs.sp.w--;
-            regs.address.w = regs.sp.w;
+            regs.addr.w = regs.sp.w;
             break;
         case 0x0B:  // Pop                  POP AF
-            regs.address.w = regs.sp.w;
+            regs.addr.w = regs.sp.w;
             regs.sp.w++;
             break;
         default:
@@ -62,20 +60,22 @@ uint_fast16_t Z80Decoder::getAddress()
 
     regs.memAddrMode >>= 4;
     
-    return regs.address.w;
+    return regs.addr.w;
 }
 
 void Z80Decoder::readByte(uint_fast8_t byte)
 {
     regs.memRdCycles--;
-    regs.operand.l = regs.operand.h;
-    regs.operand.h = byte;
+    regs.iReg.l = regs.iReg.h;
+    regs.iReg.h = byte;
 }
 
-void Z80Decoder::writeByte()
+uint_fast8_t Z80Decoder::writeByte()
 {
+    uint_fast8_t byte = regs.oReg.l;
+    regs.oReg.l = regs.oReg.h;
     regs.memWrCycles--;
-    regs.outWord.l = regs.outWord.h;
+    return byte;
 }
 
 bool Z80Decoder::execute()

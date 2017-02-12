@@ -26,7 +26,7 @@ class Z80AndPtrHl : public Z80Instruction
 
                 case 1:
                     // Calculate the result.
-                    r->acc.l = r->acc.h = r->af.h & r->operand.h;
+                    r->acc.l = r->acc.h = r->af.h & r->iReg.h;
                     r->acc.h ^= r->acc.h >> 1;
                     r->acc.h ^= r->acc.h >> 2;
                     r->acc.h ^= r->acc.h >> 4;

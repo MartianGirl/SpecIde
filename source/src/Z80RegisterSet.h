@@ -37,10 +37,10 @@ class Z80RegisterSet
         uint16_t* regp[4];
         uint16_t* regp2[4];
 
-        Z80Register operand;
-        Z80Register address;
-        Z80Register outWord;
-        Z80Register offset;
+        Z80Register iReg;
+        Z80Register oReg;
+        Z80Register addr;
+        Z80Register tmp;
         Z80Register acc;
 
         uint_fast8_t iff;
