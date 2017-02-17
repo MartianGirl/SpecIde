@@ -67,6 +67,8 @@
 #include "Z80XorPtrIy.h"
 #include "Z80OrPtrIy.h"
 #include "Z80CpPtrIy.h"
+#include "Z80IncPtrIy.h"
+#include "Z80DecPtrIy.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -133,6 +135,8 @@ class Z80FDPrefixed
         Z80XorPtrIy iXorPtrIy;
         Z80OrPtrIy iOrPtrIy;
         Z80CpPtrIy iCpPtrIy;
+        Z80IncPtrIy iIncPtrIy;
+        Z80DecPtrIy iDecPtrIy;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -216,8 +220,8 @@ class Z80FDPrefixed
                         &iLdRegWord,    // 00110001: LD SP, nn
                         &iLdPtrWordA,   // 00110010: LD (nn), A
                         &iNop,
-                        &iNop,
-                        &iNop,
+                        &iIncPtrIy,     // 00110100: INC (IY+d)
+                        &iDecPtrIy,     // 00110101: DEC (IY+d)
                         &iLdPtrIyByte,  // 00110110: LD (IY+d), n
                         &iNop
                     },
