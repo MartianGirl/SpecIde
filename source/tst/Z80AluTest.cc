@@ -2750,5 +2750,41 @@ BOOST_AUTO_TEST_CASE(dec_ptriy_test)
     BOOST_CHECK_EQUAL(m.memory[0x0104], 0x7F);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x3E);
 }
+
+BOOST_AUTO_TEST_CASE(daa_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "27";           // DAA
+
+    loadBinary(code, m, 0x0000);
+
+    // H:0-9 L:0-9 CF:0 HF:0 -> 00 CF':0 HF':0
+    startZ80(z80);
+    z80.decoder.regs.af.w = 0x9900;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x998C);
+
+    // H:0-9 L:0-9 CF:0 HF:1 -> 06 CF':0 HF':0
+    startZ80(z80);
+    z80.decoder.regs.af.w = 0x9110;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x9780);
+
+    // H:0-8 L:A-F CF:0 HF:0 -> 06 CF':0 HF':1
+    startZ80(z80);
+    z80.decoder.regs.af.w = 0x3F00;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x4510);
+
+    // H:0-8 L:A-F CF:0 HF:1 -> 06 CF':0 HF':1
+    startZ80(z80);
+    z80.decoder.regs.af.w = 0x3F10;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x4510);
+}
+
 // EOF
 // vim: et:sw=4:ts=4

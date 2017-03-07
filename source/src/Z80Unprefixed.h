@@ -67,6 +67,8 @@
 #include "Z80IncPtrHl.h"
 #include "Z80DecPtrHl.h"
 
+#include "Z80Daa.h"
+
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
 #include "Z80PrefixFD.h"
@@ -132,6 +134,8 @@ class Z80Unprefixed
         Z80IncPtrHl iIncPtrHl;
         Z80DecPtrHl iDecPtrHl;
 
+        Z80Daa iDaa;
+
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
         Z80PrefixFD iPrefixFD;
@@ -195,7 +199,7 @@ class Z80Unprefixed
                         &iIncReg,       // 00100100: INC H
                         &iDecReg,       // 00100101: DEC H
                         &iLdRegByte,    // 00100110: LD H, n
-                        &iNop
+                        &iDaa           // 00100111: DAA
                     },
                     // y = 5
                     {
