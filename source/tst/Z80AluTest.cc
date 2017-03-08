@@ -2784,6 +2784,30 @@ BOOST_AUTO_TEST_CASE(daa_test)
     z80.decoder.regs.af.w = 0x3F10;
     runCycles(z80, m, 4);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x4510);
+
+    // H:A-F L:0-9 CF:0 HF:0 -> 60 CF':1 HF':0
+    startZ80(z80);
+    z80.decoder.regs.af.w = 0xC400;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2425);
+
+    // H:0-F L:0-9 CF:1 HF:0 -> 60 CF':1 HF':0
+    startZ80(z80);
+    z80.decoder.regs.af.w = 0x3901;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x998D);
+
+    // H:0-F L:0-9 CF:1 HF:1 -> 66 CF':1 HF':0
+    startZ80(z80);
+    z80.decoder.regs.af.w = 0x3111;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x9781);
+
+    // H:0-F L:A-F CF:1 HF:0 -> 66 CF':1 HF':1
+    startZ80(z80);
+    z80.decoder.regs.af.w = 0xEE01;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x5411);
 }
 
 // EOF
