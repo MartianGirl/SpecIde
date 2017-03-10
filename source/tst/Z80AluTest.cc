@@ -2846,5 +2846,53 @@ BOOST_AUTO_TEST_CASE(daa_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x7D3E);
 }
 
+BOOST_AUTO_TEST_CASE(cpl_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "3EA5"          // LD A, A5h
+        "2F"            // CPL
+        "2F";           // CPL
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    z80.decoder.regs.af.l = 0x00;
+    runCycles(z80, m, 11);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x5A1A);
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xA532);
+}
+
+BOOST_AUTO_TEST_CASE(neg_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "3EA5"          // LD A, A5h
+        "ED44"          // NEG
+        "3E00"          // LD A, 00h
+        "ED44"          // NEG
+        "3E80"          // LD A, 80h
+        "ED44"          // NEG
+        "3EFF"          // LD A, FFh
+        "ED44";         // NEG
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    z80.decoder.regs.af.l = 0x00;
+    runCycles(z80, m, 15);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x5B1B);
+    runCycles(z80, m, 15);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0042);
+    runCycles(z80, m, 15);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8087);
+    runCycles(z80, m, 15);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0113);
+}
+
+
 // EOF
 // vim: et:sw=4:ts=4

@@ -26,6 +26,8 @@
 #include "Z80Cpd.h"
 #include "Z80Cpdr.h"
 
+#include "Z80Neg.h"
+
 class Z80EDPrefixed
 {
     public:
@@ -48,6 +50,8 @@ class Z80EDPrefixed
         Z80Cpir iCpir;
         Z80Cpd iCpd;
         Z80Cpdr iCpdr;
+
+        Z80Neg iNeg;
 
         Z80Instruction* table[4][8][8];
 
@@ -152,7 +156,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iNop,
                         &iLdPtrWordReg, // 01000011: LD (nn), BC
-                        &iNop,
+                        &iNeg,          // 01000100: NEG
                         &iNop,
                         &iNop,
                         &iLdIA          // 01000111: LD I, A
