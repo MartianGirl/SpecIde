@@ -71,6 +71,7 @@
 #include "Z80DecPtrIy.h"
 
 #include "Z80Daa.h"
+#include "Z80Cpl.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -141,6 +142,7 @@ class Z80FDPrefixed
         Z80DecPtrIy iDecPtrIy;
 
         Z80Daa iDaa;
+        Z80Cpl iCpl;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -216,7 +218,7 @@ class Z80FDPrefixed
                         &iIncRegY,      // 00101100: INC IYl
                         &iDecRegY,      // 00101101: DEC IYl
                         &iLdRegYByte,   // 00101110: LD IYl, n
-                        &iNop
+                        &iCpl           // 00101111: CPL
                     },
                     // y = 6
                     {
