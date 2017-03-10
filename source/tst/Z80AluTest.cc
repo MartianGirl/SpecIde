@@ -2808,6 +2808,42 @@ BOOST_AUTO_TEST_CASE(daa_test)
     z80.decoder.regs.af.w = 0xEE01;
     runCycles(z80, m, 4);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x5411);
+
+    // H:0-F L:A-F CF:1 HF:1 -> 66 CF':1 HF':1
+    startZ80(z80);
+    z80.decoder.regs.af.w = 0xEE11;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x5411);
+
+    // H:9-F L:A-F CF:0 HF:0 -> 66 CF':1 HF':1
+    startZ80(z80);
+    z80.decoder.regs.af.w = 0xEE00;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x5411);
+
+    // H:A-F L:0-9 CF:0 HF:1 -> 66 CF':1 HF':0
+    startZ80(z80);
+    z80.decoder.regs.af.w = 0xE310;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x4909);
+
+    // H:A-F L:0-F CF:0 HF:0 -> 60 CF':1 HF':0 (Subtraction)
+    startZ80(z80);
+    z80.decoder.regs.af.w = 0xE802;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x888F);
+
+    // H:A-F L:6-F CF:0 HF:1 -> 66 CF':1 HF':0 (Subtraction)
+    startZ80(z80);
+    z80.decoder.regs.af.w = 0xE712;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8187);
+
+    // H:0-9 L:0-5 CF:0 HF:1 -> 06 CF':1 HF':1 (Subtraction)
+    startZ80(z80);
+    z80.decoder.regs.af.w = 0x8312;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x7D3E);
 }
 
 // EOF
