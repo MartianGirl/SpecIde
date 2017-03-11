@@ -73,6 +73,7 @@
 #include "Z80Daa.h"
 #include "Z80Cpl.h"
 #include "Z80Ccf.h"
+#include "Z80Scf.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -145,6 +146,7 @@ class Z80DDPrefixed
         Z80Daa iDaa;
         Z80Cpl iCpl;
         Z80Ccf iCcf;
+        Z80Scf iScf;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -231,7 +233,7 @@ class Z80DDPrefixed
                         &iIncPtrIx,     // 00110100: INC (IX+d)
                         &iDecPtrIx,     // 00110101: DEC (IX+d)
                         &iLdPtrIxByte,  // 00110110: LD (IX+d), n
-                        &iNop
+                        &iScf           // 00110111: SCF
                     },
                     // y = 7
                     {

@@ -2911,5 +2911,20 @@ BOOST_AUTO_TEST_CASE(ccf_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFF38);
 }
 
+BOOST_AUTO_TEST_CASE(scf_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "37";           // SCF
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    z80.decoder.regs.af.w = 0xFF00;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFF29);
+}
+
 // EOF
 // vim: et:sw=4:ts=4
