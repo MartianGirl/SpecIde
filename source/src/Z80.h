@@ -39,6 +39,11 @@ class Z80 :
 
         // Internals
         Z80Decoder decoder;
+
+        // NMI requested
+        bool nmiDelayed;
+        bool nmiProcess;
+        bool nmiRequest;
 };
 
 // vim: et:sw=4:ts=4

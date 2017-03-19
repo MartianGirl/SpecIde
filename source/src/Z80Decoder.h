@@ -17,6 +17,8 @@
 #include "Z80EDPrefixed.h"
 #include "Z80FDPrefixed.h"
 
+#include "Z80Nmi.h"
+
 using namespace std;
 
 class Z80Decoder
@@ -29,6 +31,7 @@ class Z80Decoder
         uint_fast16_t getAddress();
         uint_fast8_t writeByte();
         bool execute();
+        bool executeNmi();
         void reset();
 
         Z80RegisterSet regs;
@@ -37,6 +40,8 @@ class Z80Decoder
         Z80DDPrefixed DDPrefixed;
         Z80EDPrefixed EDPrefixed;
         Z80FDPrefixed FDPrefixed;
+
+        Z80Nmi z80Nmi;
 };
 
 // vim: et:sw=4:ts=4

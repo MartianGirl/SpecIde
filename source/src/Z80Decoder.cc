@@ -113,6 +113,13 @@ bool Z80Decoder::execute()
     return finished;
 }
 
+bool Z80Decoder::executeNmi()
+{
+    bool finished = z80Nmi(&regs);
+    regs.executionStep++;
+    return finished;
+}
+
 void Z80Decoder::reset()
 {
     regs.reset();
