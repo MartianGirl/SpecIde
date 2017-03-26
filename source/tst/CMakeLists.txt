@@ -104,6 +104,19 @@ target_link_libraries(Z80InterruptTest
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
+add_executable(Z80JumpTest
+    Z80JumpTest.cc
+    ${PROJECT_SOURCE_DIR}/src/CPU.cc
+    ${PROJECT_SOURCE_DIR}/src/Memory.cc
+    ${PROJECT_SOURCE_DIR}/src/Z80.cc
+    ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc
+    ${PROJECT_SOURCE_DIR}/src/Z80RegisterSet.cc
+    ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
+target_link_libraries(Z80JumpTest
+    #${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${SFML_LIBRARIES}
+    ${SFML_DEPENDENCIES})
+
 add_executable(MemoryTest
     MemoryTest.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc)
@@ -122,7 +135,7 @@ target_link_libraries(Z80RegisterTest
 
 install(TARGETS GraphicWindowTest ScreenTest
     ComputerTest SpectrumTest
-    CPUTest Z80Test Z80AluTest Z80InterruptTest
+    CPUTest Z80Test Z80AluTest Z80InterruptTest Z80JumpTest
     MemoryTest Z80RegisterTest
     RUNTIME
     DESTINATION ${PROJECT_INSTALL_DIR}/tst)

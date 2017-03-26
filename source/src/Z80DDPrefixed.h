@@ -75,6 +75,8 @@
 #include "Z80Ccf.h"
 #include "Z80Scf.h"
 
+#include "Z80JpWord.h"
+
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
 #include "Z80PrefixFD.h"
@@ -147,6 +149,8 @@ class Z80DDPrefixed
         Z80Cpl iCpl;
         Z80Ccf iCcf;
         Z80Scf iScf;
+
+        Z80JpWord iJpWord;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -436,7 +440,7 @@ class Z80DDPrefixed
                         &iNop,
                         &iPopReg,       // 11000001: POP BC
                         &iNop,
-                        &iNop,
+                        &iJpWord,       // 11000011: JP nn
                         &iNop,
                         &iPushReg,      // 11000101: PUSH BC
                         &iAddByte,      // 11000110: ADD A, n
