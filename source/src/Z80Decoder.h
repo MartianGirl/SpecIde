@@ -32,6 +32,7 @@ class Z80Decoder
         uint_fast8_t writeByte();
         bool execute();
         bool executeNmi();
+        bool executeInt();
         void reset();
 
         Z80RegisterSet regs;

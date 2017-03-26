@@ -120,6 +120,24 @@ bool Z80Decoder::executeNmi()
     return finished;
 }
 
+bool Z80Decoder::executeInt()
+{
+    bool finished = true;
+
+    switch (regs.im)
+    {
+        case 0:
+            finished = execute();
+            break;
+
+        default:
+            assert(false);
+            break;
+    }
+
+    return finished;
+}
+
 void Z80Decoder::reset()
 {
     regs.reset();

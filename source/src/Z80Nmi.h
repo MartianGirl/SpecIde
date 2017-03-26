@@ -35,7 +35,6 @@ class Z80Nmi : public Z80Instruction
 
                 case 3:
                     r->pc.w = 0x0066;
-                    r->iff &= ~(IFF1);
                     r->prefix = PREFIX_NO;
                     return true;
 

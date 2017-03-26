@@ -23,9 +23,13 @@ void Z80::clock()
     // NMI is edge-triggered.
     if (!(c & SIGNAL_NMI_))
     {
+        // If falling edge in NMI is detected, accept the NMI and clear
+        // the IFF1 flag.
         if (nmiDelayed == false)
-            nmiRequest = true;
-
+        {
+            nmiAccept = true;
+            decoder.regs.iff &= ~(IFF1);
+        }
         nmiDelayed = true;
     }
     else
@@ -44,7 +48,9 @@ void Z80::clock()
         // M1. Machine cycle
         case Z80State::ST_M1_T1_ADDRWR:
             a = decoder.regs.pc.w;
-            decoder.regs.pc.w++;
+
+            if (!intProcess && !nmiProcess)
+                decoder.regs.pc.w++;
             c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
@@ -54,24 +60,22 @@ void Z80::clock()
         case Z80State::ST_M1_T2_DATARD:
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
-            if (c & SIGNAL_WAIT_)
+            if (c & SIGNAL_WAIT_ && !nmiProcess)
                 state = Z80State::ST_M1_T3_RFSH1;
             break;
 
         case Z80State::ST_M1_T3_RFSH1:
-        case Z80State::ST_NMI_T3_RFSH1:
             a = decoder.regs.ir.w & 0xFF7F;
             decoder.decode(d);
             decoder.regs.ir.l = (decoder.regs.ir.l & 0x80) 
                 | ((decoder.regs.ir.l + 1) & 0x7F);
-            c |= (SIGNAL_RD_ | SIGNAL_M1_);
+            c |= (SIGNAL_RD_ | SIGNAL_M1_ | SIGNAL_IORQ_);
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
 
             state = Z80State::ST_M1_T4_RFSH2;
             break;
 
         case Z80State::ST_M1_T4_RFSH2:
-        case Z80State::ST_NMI_T4_RFSH2:
             c |= (SIGNAL_MREQ_);
             c &= ~(SIGNAL_RFSH_);
 
@@ -97,12 +101,40 @@ void Z80::clock()
 
             // This state could be done in ST_M1_T2_DATARD by moving to refresh
             // if SIGNAL_WAIT_ is high, or if NMI...
-            state = Z80State::ST_NMI_T3_RFSH1;
+            state = Z80State::ST_M1_T3_RFSH1;
+            break;
+
+        case Z80State::ST_INT_T1_ADDRWR:
+            a = decoder.regs.pc.w;
+            c |= SIGNAL_RFSH_;
+            c &= ~SIGNAL_M1_;
+
+            state = Z80State::ST_INT_T2_DATARD;
+            break;
+
+        case Z80State::ST_INT_T2_DATARD:
+            c &= ~SIGNAL_M1_;
+
+            state = Z80State::ST_INT_T3_WAIT1;
+            break;
+
+        case Z80State::ST_INT_T3_WAIT1:
+            c &= ~(SIGNAL_M1_ | SIGNAL_IORQ_);
+
+            if (c & SIGNAL_WAIT_)
+                state = Z80State::ST_INT_T4_WAIT2;
+            break;
+
+        case Z80State::ST_INT_T4_WAIT2:
+            c &= ~(SIGNAL_M1_ | SIGNAL_IORQ_);
+
+            state = Z80State::ST_M1_T3_RFSH1;
             break;
 
         // M2. Memory read cycle
         case Z80State::ST_M2_T1_ADDRWR:
-            a = decoder.getAddress();
+            if (!intProcess)
+                a = decoder.getAddress();
             c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_);
 
@@ -159,32 +191,60 @@ void Z80::clock()
 
 Z80State Z80::finishMemoryCycle()
 {
-    bool finished = true;
-
-    if (nmiProcess == true)
-        finished = decoder.executeNmi();
-    else
-        finished = decoder.execute();
+    bool finished = execute();
     
     if (finished == false)
         return Z80State::ST_M0_T0_WAITST;
+    // BUSRQ goes here, after a complete machine cycle.
     else if (decoder.regs.memRdCycles)
         return Z80State::ST_M2_T1_ADDRWR;
     else if (decoder.regs.memWrCycles)
         return Z80State::ST_M3_T1_ADDRWR;
-    else if (nmiRequest == true && (decoder.regs.prefix == PREFIX_NO))
+    // NMI goes here, after a complete instruction.
+    else if (nmiAccept == true && (decoder.regs.prefix == PREFIX_NO))
     {
-        nmiRequest = false;
+        nmiAccept = false;
         nmiProcess = true;
         return Z80State::ST_NMI_T1_ADDRWR;
     }
-    // else if (c & ~(SIGNAL_INT_) && decoder.regs.iff1
-    // return Z80State::ST_INT_T1_ADDRWR;
-    else
+    else if (((c & SIGNAL_INT_) == 0x0000) 
+            && ((decoder.regs.iff & IFF1) == IFF1))
     {
-        nmiProcess = false;
-        return Z80State::ST_M1_T1_ADDRWR;
+        decoder.regs.iff &= ~(IFF1 | IFF2);
+        intProcess = true;
+        return Z80State::ST_INT_T1_ADDRWR;
     }
+    else
+        return Z80State::ST_M1_T1_ADDRWR;
+}
+
+bool Z80::execute()
+{
+    bool finished = true;
+
+    if (nmiProcess == true)
+    {
+        finished = decoder.executeNmi();
+        if (finished && instructionDone())
+            nmiProcess = false;
+    }
+    else if (intProcess == true)
+    {
+        finished = decoder.executeInt();
+        if (finished && instructionDone())
+            intProcess = false;
+    }
+    else
+        finished = decoder.execute();
+
+    return finished;
+}
+
+bool Z80::instructionDone()
+{
+    return (decoder.regs.prefix == PREFIX_NO
+            && decoder.regs.memRdCycles == 0
+            && decoder.regs.memWrCycles == 0);
 }
 
 void Z80::start()
@@ -194,9 +254,11 @@ void Z80::start()
     c = 0xFFFF;
     d = 0xFF;
 
+    nmiAccept = false;
     nmiDelayed = false;
     nmiProcess = false;
-    nmiRequest = false;
+
+    intProcess = false;
 
     decoder.reset();
 }

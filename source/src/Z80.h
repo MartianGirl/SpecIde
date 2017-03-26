@@ -28,6 +28,8 @@ class Z80 :
 
         void start();
         Z80State finishMemoryCycle();
+        bool execute();
+        bool instructionDone();
 
         // Signals
         uint_fast16_t a;
@@ -41,9 +43,12 @@ class Z80 :
         Z80Decoder decoder;
 
         // NMI requested
+        bool nmiAccept;
         bool nmiDelayed;
         bool nmiProcess;
-        bool nmiRequest;
+
+        // INT requested
+        bool intProcess;
 };
 
 // vim: et:sw=4:ts=4
