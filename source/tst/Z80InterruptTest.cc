@@ -123,10 +123,11 @@ BOOST_AUTO_TEST_CASE(int_mode_0_test)
     runIntCycles(z80, 0x01, 4);
     runIntCycles(z80, 0xCC, 3);
     runIntCycles(z80, 0xBB, 3);
+    runCycles(z80, m, 7);   // Run another instruction.
 
-    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0004);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0006);
     BOOST_CHECK_EQUAL(z80.decoder.regs.iff, 0x00);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xBBCC);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x03FF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
 }
