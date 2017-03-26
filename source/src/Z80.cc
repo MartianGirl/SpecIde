@@ -51,6 +51,7 @@ void Z80::clock()
 
             if (!intProcess && !nmiProcess)
                 decoder.regs.pc.w++;
+
             c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
@@ -191,22 +192,31 @@ void Z80::clock()
 
 Z80State Z80::finishMemoryCycle()
 {
-    bool finished = execute();
+    bool endOfCycle = execute();
     
-    if (finished == false)
+    if (endOfCycle == false)    // Extend machine cycle. Some instructions do.
         return Z80State::ST_M0_T0_WAITST;
     // BUSRQ goes here, after a complete machine cycle.
-    else if (decoder.regs.memRdCycles)
+    // I'd have to consider if these extra states are actually part of the
+    // machine cycle, or if they are something else.
+    else if (decoder.regs.memRdCycles)  // Perform read cycles.
         return Z80State::ST_M2_T1_ADDRWR;
-    else if (decoder.regs.memWrCycles)
+    else if (decoder.regs.memWrCycles)  // Perform write cycles.
         return Z80State::ST_M3_T1_ADDRWR;
-    // NMI goes here, after a complete instruction.
-    else if (nmiAccept == true && (decoder.regs.prefix == PREFIX_NO))
+    // At this point we have completed a instruction. NMI and INT can
+    // happen here.
+    // NMI has priority over INT. Now we check the NMI latch, which is
+    // set above, when a falling edge is detected in the NMI signal.
+    // Since prefixes are handled as one-cycle instructions, we have
+    // to check we're not in the middle of a instruction.
+    else if (decoder.regs.prefix == PREFIX_NO
+            && nmiAccept == true)
     {
         nmiAccept = false;
         nmiProcess = true;
         return Z80State::ST_NMI_T1_ADDRWR;
     }
+    // INT only happens if there is no NMI.
     else if (((c & SIGNAL_INT_) == 0x0000) 
             && ((decoder.regs.iff & IFF1) == IFF1))
     {
@@ -220,27 +230,29 @@ Z80State Z80::finishMemoryCycle()
 
 bool Z80::execute()
 {
-    bool finished = true;
+    bool endOfCycle = true;
 
     if (nmiProcess == true)
     {
-        finished = decoder.executeNmi();
-        if (finished && instructionDone())
+        endOfCycle = decoder.executeNmi();
+        if (endOfCycle && endOfInstruction())
             nmiProcess = false;
     }
     else if (intProcess == true)
     {
-        finished = decoder.executeInt();
-        if (finished && instructionDone())
+        endOfCycle = decoder.executeInt();
+        if (endOfCycle && endOfInstruction())
             intProcess = false;
     }
     else
-        finished = decoder.execute();
+    {
+        endOfCycle = decoder.execute();
+    }
 
-    return finished;
+    return endOfCycle;
 }
 
-bool Z80::instructionDone()
+bool Z80::endOfInstruction()
 {
     return (decoder.regs.prefix == PREFIX_NO
             && decoder.regs.memRdCycles == 0

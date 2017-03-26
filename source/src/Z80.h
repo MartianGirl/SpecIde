@@ -29,7 +29,7 @@ class Z80 :
         void start();
         Z80State finishMemoryCycle();
         bool execute();
-        bool instructionDone();
+        bool endOfInstruction();
 
         // Signals
         uint_fast16_t a;
