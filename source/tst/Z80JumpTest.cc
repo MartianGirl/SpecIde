@@ -62,28 +62,74 @@ BOOST_AUTO_TEST_CASE(jp_test)
     Memory m(16, false);
 
     string code_0000h =
-        "0601"          // LD B, 01h
-        "0E02"          // LD C, 02h
-        "1603"          // LD D, 03h
-        "1E04"          // LD E, 04h
-        "2605"          // LD H, 05h
-        "2E06"          // LD L, 06h
-        "C30001";       // JP 0100h
-
+        "010000"        // LD BC, 0000h
+        "3EAA"          // LD A, AAh
+        "C34000"        // JP 0040h
+        "0100EE";
     loadBinary(code_0000h, m, 0x0000);
 
-    string code_0100h =
-        "06BB"          // LD B, BBh
-        "0ECC"          // LD C, CCh
-        "16DD"          // LD D, DDh
-        "1EEE";         // LD E, EEh
+    string code_0040h =
+        "010100"        // LD BC, 0001h
+        "A7"            // AND A (A = AAh, NZ, NC)
+        "C28000"        // JP NZ, 0080h
+        "0101EE";
+    loadBinary(code_0040h, m, 0x0040);
 
+    string code_0080h =
+        "010200"        // LD BC, 0002h
+        "AF"            // XOR A (A = 00h, Z, NC)
+        "CAC000"        // JP Z, 00C0h
+        "0102EE";
+    loadBinary(code_0080h, m, 0x0080);
+
+    string code_00C0h =
+        "010300"        // LD BC, 0003h
+        "2F"            // CPL (A = FFh, NZ, NC)
+        "D20001"        // JP NC, 0100h
+        "0103EE";
+    loadBinary(code_00C0h, m, 0x00C0);
+
+    string code_0100h =
+        "010400"        // LD BC, 0004h
+        "37"            // SCF (A = FFh, NZ, C)
+        "DA4001"        // JP C, 0140h
+        "0104EE";
     loadBinary(code_0100h, m, 0x0100);
 
+    string code_0140h =
+        "010500"        // LD BC, 0005h
+        "E601"          // AND 01h (A = 01h, NZ, NC, PO)
+        "E28001"        // JP PO, 0180h
+        "0105EE";
+    loadBinary(code_0140h, m, 0x0140);
+
+    string code_0180h =
+        "010600"        // LD BC, 0006h
+        "F602"          // OR 02h (A = 03h, NZ, NC, PE)
+        "EAC001"        // JP PE, 01C0h
+        "0106EE";
+    loadBinary(code_0180h, m, 0x0180);
+
+    string code_01C0h =
+        "010700"        // LD BC, 0007h
+        "3C"            // INC A (A = 04h, NZ, NC, PO, P)
+        "F20002"        // JP P, 0200h
+        "0107EE";
+    loadBinary(code_01C0h, m, 0x01C0);
+
+    string code_0200h =
+        "010800"        // LD BC, 0008h
+        "ED44"          // NEG (A = FCh, NZ, NC, PE, M)
+        "FA4002"        // JP M, 0240h
+        "0108EE";
+    loadBinary(code_0200h, m, 0x0200);
+   
+    string code_0240h =
+        "01AAAA";       // LD BC, AAAAh
+    loadBinary(code_0240h, m, 0x0240);
+
     startZ80(z80);
-    runCycles(z80, m, 80);  // Run all the code.
-    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0108);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xBBCC);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xDDEE);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x0506);
+    runCycles(z80, m, 239);  // Run all the code.
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0243);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xAAAA);
 }

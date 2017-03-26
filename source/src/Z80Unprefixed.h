@@ -73,6 +73,7 @@
 #include "Z80Scf.h"
 
 #include "Z80JpWord.h"
+#include "Z80JpCcWord.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -145,6 +146,7 @@ class Z80Unprefixed
         Z80Scf iScf;
 
         Z80JpWord iJpWord;
+        Z80JpCcWord iJpCcWord;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -433,7 +435,7 @@ class Z80Unprefixed
                     {
                         &iNop,
                         &iPopReg,       // 11000001: POP BC
-                        &iNop,
+                        &iJpCcWord,     // 11000010: JP NZ, nn
                         &iJpWord,       // 11000011: JP nn
                         &iNop,
                         &iPushReg,      // 11000101: PUSH BC
@@ -444,7 +446,7 @@ class Z80Unprefixed
                     {
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iJpCcWord,     // 11001010: JP Z, nn
                         &iNop,
                         &iNop,
                         &iNop,
@@ -455,7 +457,7 @@ class Z80Unprefixed
                     {
                         &iNop,
                         &iPopReg,       // 11010001: POP DE
-                        &iNop,
+                        &iJpCcWord,     // 11010010: JP NC, nn
                         &iNop,
                         &iNop,
                         &iPushReg,      // 11010101: PUSH DE
@@ -466,7 +468,7 @@ class Z80Unprefixed
                     {
                         &iNop,
                         &iExx,          // 11011001: EXX
-                        &iNop,
+                        &iJpCcWord,     // 11011010: JP C, nn
                         &iNop,
                         &iNop,
                         &iPrefixDD,     // 11011101: DD Prefix
@@ -477,7 +479,7 @@ class Z80Unprefixed
                     {
                         &iNop,
                         &iPopReg,       // 11100001: POP HL
-                        &iNop,
+                        &iJpCcWord,     // 11100010: JP PO, nn
                         &iExPtrSpHl,    // 11100011: EX (SP), HL
                         &iNop,
                         &iPushReg,      // 11100101: PUSH HL
@@ -488,7 +490,7 @@ class Z80Unprefixed
                     {
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iJpCcWord,     // 11101010: JP PE, nn
                         &iExDeHl,       // 11101011: EX DE, HL
                         &iNop,
                         &iPrefixED,     // 11101101: ED Prefix
@@ -499,7 +501,7 @@ class Z80Unprefixed
                     {
                         &iNop,
                         &iPopReg,       // 11110001: POP AF
-                        &iNop,
+                        &iJpCcWord,     // 11110010: JP P, nn
                         &iNop,
                         &iNop,
                         &iPushReg,      // 11110101: PUSH AF
@@ -510,7 +512,7 @@ class Z80Unprefixed
                     {
                         &iNop,
                         &iLdSpHl,       // 11111001: LD SP, HL
-                        &iNop,
+                        &iJpCcWord,     // 11111010: JP M, nn
                         &iNop,
                         &iNop,
                         &iPrefixFD,     // 11111101: FD Prefix
