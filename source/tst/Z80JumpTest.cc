@@ -268,5 +268,28 @@ BOOST_AUTO_TEST_CASE(jp_iy_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0xFF00);
     BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0xFF00);
 }
+
+BOOST_AUTO_TEST_CASE(djnz_test)
+{
+    // Create a Z80 and some memory.
+    Z80 z80;
+    Memory m(16, false);
+
+    string code_0000h =
+        "01000A"        // LD BC, 0A00h
+        "0C"            // INC C
+        "10FD"          // DJNZ FDh
+        "3EAA";         // LD A, AAh
+
+    loadBinary(code_0000h, m, 0x0000);
+
+    startZ80(z80);
+    runCycles(z80, m, 182);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0008);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x000A);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.h, 0xAA);
+
+}
+
 // EOF
 // vim: et:sw=4:ts=4:

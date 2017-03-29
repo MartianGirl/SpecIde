@@ -80,6 +80,7 @@
 #include "Z80JrByte.h"
 #include "Z80JrCcByte.h"
 #include "Z80JpIx.h"
+#include "Z80Djnz.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -159,6 +160,7 @@ class Z80DDPrefixed
         Z80JrByte iJrByte;
         Z80JrCcByte iJrCcByte;
         Z80JpIx iJpIx;
+        Z80Djnz iDjnz;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -194,7 +196,7 @@ class Z80DDPrefixed
                     },
                     // y = 2
                     {
-                        &iNop,
+                        &iDjnz,         // 00010000: DJNZ n
                         &iLdRegWord,    // 00010001: LD DE, nn
                         &iLdPtrDeA,     // 00010010: LD (DE), A
                         &iNop,
