@@ -74,6 +74,8 @@
 
 #include "Z80JpWord.h"
 #include "Z80JpCcWord.h"
+#include "Z80JrByte.h"
+#include "Z80JrCcByte.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -147,6 +149,8 @@ class Z80Unprefixed
 
         Z80JpWord iJpWord;
         Z80JpCcWord iJpCcWord;
+        Z80JrByte iJrByte;
+        Z80JrCcByte iJrCcByte;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -193,7 +197,7 @@ class Z80Unprefixed
                     },
                     // y = 3
                     {
-                        &iNop,
+                        &iJrByte,       // 00011000: JR n
                         &iNop,
                         &iLdAPtrDe,     // 00011010: LD A, (DE)
                         &iNop,
@@ -204,7 +208,7 @@ class Z80Unprefixed
                     },
                     // y = 4
                     {
-                        &iNop,
+                        &iJrCcByte,     // 00100000: JR NZ, n
                         &iLdRegWord,    // 00100001: LD HL, nn
                         &iLdPtrWordHl,  // 00100010: LD (nn), HL
                         &iNop,
@@ -215,7 +219,7 @@ class Z80Unprefixed
                     },
                     // y = 5
                     {
-                        &iNop,
+                        &iJrCcByte,     // 00101000: JR Z, n
                         &iNop,
                         &iLdHlPtrWord,  // 00101010: LD HL, (nn)
                         &iNop,
@@ -226,7 +230,7 @@ class Z80Unprefixed
                     },
                     // y = 6
                     {
-                        &iNop,
+                        &iJrCcByte,     // 00110000: JR NC, n
                         &iLdRegWord,    // 00110001: LD SP, nn
                         &iLdPtrWordA,   // 00110010: LD (nn), A
                         &iNop,
@@ -237,7 +241,7 @@ class Z80Unprefixed
                     },
                     // y = 7
                     {
-                        &iNop,
+                        &iJrCcByte,     // 00111000: JR C, n
                         &iNop,
                         &iLdAPtrWord,   // 00111010: LD A, (nn)
                         &iNop,

@@ -133,3 +133,90 @@ BOOST_AUTO_TEST_CASE(jp_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0243);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xAAAA);
 }
+
+BOOST_AUTO_TEST_CASE(jr_test)
+{
+    // Create a Z80 and some memory.
+    Z80 z80;
+    Memory m(16, false);
+
+    string code_0000h =
+        "010000"        // LD BC, 0000h
+        "3EAA"          // LD A, AAh
+        "1879"          // JR 79h (07h + 79h = 80h)
+        "0100EE";
+    loadBinary(code_0000h, m, 0x0000);
+
+    string code_0080h =
+        "010100"        // LD BC, 0001h
+        "A7"            // AND A (A = AAh, NZ, NC)
+        "20BA"          // JR NZ, BAh (86h - 46h = 40h)
+        "0101EE";
+    loadBinary(code_0080h, m, 0x0080);
+
+    string code_0040h =
+        "010200"        // LD BC, 0002h
+        "AF"            // XOR A (A = 00h, Z, NC)
+        "287A"          // JR Z, 79h
+        "0102EE";
+    loadBinary(code_0040h, m, 0x0040);
+
+    string code_00C0h =
+        "010300"        // LD BC, 0003h
+        "2F"            // CPL (A = FFh, Z, NC)
+        "307A"          // JR NC, 79h
+        "0103EE";
+    loadBinary(code_00C0h, m, 0x00C0);
+
+    string code_0140h =
+        "010400"        // LD BC, 0004h
+        "37"            // SCF (A = FFh, Z, C)
+        "38BA"          // JR C, BAh
+        "0104EE";
+    loadBinary(code_0140h, m, 0x0140);
+
+    string code_0100h =
+        "B7"            // OR A (NZ, NC)
+        "37"            // SCF (NZ, C)
+        "30FE"          // JR NC, FEh (reexecute)
+        "28FE"          // JR Z, FEh
+        "AF"            // XOR A (A = 00h, Z, NC)
+        "20FE"          // JR NZ, FEh
+        "38FE"          // JR C, FEh
+        "01AAAA";       // LD BC, AAAAh
+    loadBinary(code_0100h, m, 0x0100);
+
+    startZ80(z80);
+    runCycles(z80, m, 29);  // JR n
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0080);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x0000);
+    runCycles(z80, m, 26);  // JR NZ, n
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0040);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x0001);
+    runCycles(z80, m, 26);  // JR Z, n
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x00C0);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x0002);
+    runCycles(z80, m, 26);  // JR NC, n
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0140);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x0003);
+    runCycles(z80, m, 26);  // JR C, n
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0100);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x0004);
+    runCycles(z80, m, 8);   // OR A, SCF
+    runCycles(z80, m, 7);   // Negative conditions
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0104);
+    runCycles(z80, m, 7);   // Negative conditions
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0106);
+    runCycles(z80, m, 4);   // XOR A
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.h, 0x00);
+    runCycles(z80, m, 7);   // Negative conditions
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0109);
+    runCycles(z80, m, 7);   // Negative conditions
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x010B);
+    runCycles(z80, m, 10);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x010E);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xAAAA);
+}
+
+// EOF
+// vim: et:sw=4:ts=4:
