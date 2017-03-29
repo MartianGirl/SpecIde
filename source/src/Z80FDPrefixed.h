@@ -79,6 +79,7 @@
 #include "Z80JpCcWord.h"
 #include "Z80JrByte.h"
 #include "Z80JrCcByte.h"
+#include "Z80JpIy.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -157,6 +158,7 @@ class Z80FDPrefixed
         Z80JpCcWord iJpCcWord;
         Z80JrByte iJrByte;
         Z80JrCcByte iJrCcByte;
+        Z80JpIy iJpIy;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -499,7 +501,7 @@ class Z80FDPrefixed
                     // y = 5
                     {
                         &iNop,
-                        &iNop,
+                        &iJpIy,         // 11101001: JP (IY)
                         &iJpCcWord,     // 11101010: JP PE, nn
                         &iExDeHl,       // 11101011: EX DE, HL
                         &iNop,

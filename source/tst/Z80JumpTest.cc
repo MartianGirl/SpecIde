@@ -218,5 +218,55 @@ BOOST_AUTO_TEST_CASE(jr_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xAAAA);
 }
 
+BOOST_AUTO_TEST_CASE(jp_hl_test)
+{
+    // Create a Z80 and some memory.
+    Z80 z80;
+    Memory m(16, false);
+
+    string code_0000h =
+        "2100FF"        // LD HL, FF00h
+        "E9";           // JP (HL)
+    loadBinary(code_0000h, m, 0x0000);
+
+    startZ80(z80);
+    runCycles(z80, m, 14);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0xFF00);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFF00);
+}
+
+BOOST_AUTO_TEST_CASE(jp_ix_test)
+{
+    // Create a Z80 and some memory.
+    Z80 z80;
+    Memory m(16, false);
+
+    string code_0000h =
+        "DD2100FF"      // LD IX, FF00h
+        "DDE9";         // JP (IX)
+    loadBinary(code_0000h, m, 0x0000);
+
+    startZ80(z80);
+    runCycles(z80, m, 22);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0xFF00);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0xFF00);
+}
+
+BOOST_AUTO_TEST_CASE(jp_iy_test)
+{
+    // Create a Z80 and some memory.
+    Z80 z80;
+    Memory m(16, false);
+
+    string code_0000h =
+        "FD2100FF"      // LD IY, FF00h
+        "FDE9";         // JP (IY)
+    loadBinary(code_0000h, m, 0x0000);
+
+    startZ80(z80);
+    runCycles(z80, m, 22);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0xFF00);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0xFF00);
+}
 // EOF
 // vim: et:sw=4:ts=4:
