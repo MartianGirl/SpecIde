@@ -32,21 +32,11 @@ class Z80JrCcByte : public Z80Instruction
 
                     switch (r->y)
                     {
-                        case 4:
-                            return ((r->af.l & FLAG_Z) == FLAG_Z);
-
-                        case 5:
-                            return ((r->af.l & FLAG_Z) == 0x00);
-
-                        case 6:
-                            return ((r->af.l & FLAG_C) == FLAG_C);
-
-                        case 7:
-                            return ((r->af.l & FLAG_C) == 0x00);
-
-                        default:
-                            assert(false);
-                            return true;
+                        case 4: return ((r->af.l & FLAG_Z) == FLAG_Z);
+                        case 5: return ((r->af.l & FLAG_Z) == 0x00);
+                        case 6: return ((r->af.l & FLAG_C) == FLAG_C);
+                        case 7: return ((r->af.l & FLAG_C) == 0x00);
+                        default: assert(false); return true;
                     }
 
                 case 2:

@@ -288,7 +288,31 @@ BOOST_AUTO_TEST_CASE(djnz_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0008);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x000A);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.h, 0xAA);
+}
 
+BOOST_AUTO_TEST_CASE(call_test)
+{
+    // Create a Z80 and some memory.
+    Z80 z80;
+    Memory m(16, false);
+
+    string code_0000h =
+        "CD0002";       // CALL 0200h
+    loadBinary(code_0000h, m, 0x0000);
+
+    string code_0200h =
+        "01AAAA"        // LD BC, AAAAh
+        "C9";           // RET
+    loadBinary(code_0200h, m, 0x0200);
+
+    startZ80(z80);
+    runCycles(z80, m, 17);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0200);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFD);
+    runCycles(z80, m, 20);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0003);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xAAAA);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFF);
 }
 
 // EOF

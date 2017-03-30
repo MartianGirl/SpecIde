@@ -79,6 +79,11 @@
 #include "Z80JpHl.h"
 #include "Z80Djnz.h"
 
+#include "Z80Call.h"
+#include "Z80Ret.h"
+#include "Z80CallCc.h"
+#include "Z80RetCc.h"
+
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
 #include "Z80PrefixFD.h"
@@ -155,6 +160,11 @@ class Z80Unprefixed
         Z80JrCcByte iJrCcByte;
         Z80JpHl iJpHl;
         Z80Djnz iDjnz;
+
+        Z80Call iCall;
+        Z80Ret iRet;
+        Z80CallCc iCallCc;
+        Z80RetCc iRetCc;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -441,88 +451,88 @@ class Z80Unprefixed
                 {
                     // y = 0
                     {
-                        &iNop,
+                        &iRetCc,        // 11000000: RET NZ
                         &iPopReg,       // 11000001: POP BC
                         &iJpCcWord,     // 11000010: JP NZ, nn
                         &iJpWord,       // 11000011: JP nn
-                        &iNop,
+                        &iCallCc,       // 11000100: CALL NZ, nn
                         &iPushReg,      // 11000101: PUSH BC
                         &iAddByte,      // 11000110: ADD A, n
                         &iNop
                     },
                     // y = 1
                     {
-                        &iNop,
-                        &iNop,
+                        &iRetCc,        // 11001000: RET Z
+                        &iRet,          // 11001001: RET
                         &iJpCcWord,     // 11001010: JP Z, nn
                         &iNop,
-                        &iNop,
-                        &iNop,
+                        &iCallCc,       // 11001100: CALL Z, nn
+                        &iCall,         // 11001101: CALL nn
                         &iAdcByte,      // 11001110: ADC A, n
                         &iNop
                     },
                     // y = 2
                     {
-                        &iNop,
+                        &iRetCc,        // 11010000: RET NC
                         &iPopReg,       // 11010001: POP DE
                         &iJpCcWord,     // 11010010: JP NC, nn
                         &iNop,
-                        &iNop,
+                        &iCallCc,       // 11010100: CALL NC, nn
                         &iPushReg,      // 11010101: PUSH DE
                         &iSubByte,      // 11010110: SUB n
                         &iNop
                     },
                     // y = 3
                     {
-                        &iNop,
+                        &iRetCc,        // 11011000: RET C
                         &iExx,          // 11011001: EXX
                         &iJpCcWord,     // 11011010: JP C, nn
                         &iNop,
-                        &iNop,
+                        &iCallCc,       // 11011100: CALL C, nn
                         &iPrefixDD,     // 11011101: DD Prefix
                         &iSbcByte,      // 11011110: SBC A, n
                         &iNop
                     },
                     // y = 4
                     {
-                        &iNop,
+                        &iRetCc,        // 11100000: RET PO
                         &iPopReg,       // 11100001: POP HL
                         &iJpCcWord,     // 11100010: JP PO, nn
                         &iExPtrSpHl,    // 11100011: EX (SP), HL
-                        &iNop,
+                        &iCallCc,       // 11100100: CALL PO, nn
                         &iPushReg,      // 11100101: PUSH HL
                         &iAndByte,      // 11100110: AND n
                         &iNop
                     },
                     // y = 5
                     {
-                        &iNop,
+                        &iRetCc,        // 11101000: RET PE
                         &iJpHl,         // 11101001: JP (HL)
                         &iJpCcWord,     // 11101010: JP PE, nn
                         &iExDeHl,       // 11101011: EX DE, HL
-                        &iNop,
+                        &iCallCc,       // 11101100: CALL PE, nn
                         &iPrefixED,     // 11101101: ED Prefix
                         &iXorByte,      // 11101110: XOR n
                         &iNop
                     },
                     // y = 6
                     {
-                        &iNop,
+                        &iRetCc,        // 11110000: RET P
                         &iPopReg,       // 11110001: POP AF
                         &iJpCcWord,     // 11110010: JP P, nn
                         &iNop,
-                        &iNop,
+                        &iCallCc,       // 11110100: CALL P, nn
                         &iPushReg,      // 11110101: PUSH AF
                         &iOrByte,       // 11110110: OR n
                         &iNop
                     },
                     // y = 7
                     {
-                        &iNop,
+                        &iRetCc,        // 11111000: RET M
                         &iLdSpHl,       // 11111001: LD SP, HL
                         &iJpCcWord,     // 11111010: JP M, nn
                         &iNop,
-                        &iNop,
+                        &iCallCc,       // 11111100: CALL M, nn
                         &iPrefixFD,     // 11111101: FD Prefix
                         &iCpByte,       // 11111110: CP n
                         &iNop
