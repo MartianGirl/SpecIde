@@ -173,5 +173,51 @@ BOOST_AUTO_TEST_CASE(int_mode_1_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xAAAA);
 }
 
+BOOST_AUTO_TEST_CASE(int_mode_2_test)
+{
+    // Create a Z80 and some memory.
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "0601"          // LD B, 01h
+        "0E02"          // LD C, 02h
+        "1603"          // LD D, 03h
+        "1E04"          // LD E, 04h
+        "2605"          // LD H, 05h
+        "2E06";         // LD L, 06h
+    loadBinary(code, m, 0x0000);
+
+    string ivec = "0002";
+    loadBinary(ivec, m, 0x4055);
+
+    string ihnd =
+        "21AAAA"        // LD HL, AAAAh
+        "ED4D";         // RETI
+    loadBinary(ihnd, m, 0x0200);
+
+    startZ80(z80);
+    z80.decoder.regs.ir.h = 0x40;
+    z80.decoder.regs.iff = IFF1 | IFF2;
+    z80.decoder.regs.im = 2;
+    runCycles(z80, m, 7);   // Run first instruction.
+    runCycles(z80, m, 2);   // Run two cycles of second instruction.
+    z80.c &= ~SIGNAL_INT_;  // Signal INT.
+    runCycles(z80, m, 4);   // Rest of second instruction.
+    runCycles(z80, m, 1);   // Rest of second instruction.
+    z80.c ^= SIGNAL_INT_;   // Clear INT.
+    runIntCycles(z80, 0x55, 6);  // Place interrupt vector in bus.
+    runCycles(z80, m, 13);
+    runCycles(z80, m, 10);  // Execute instruction at 0200h
+    runCycles(z80, m, 14);  // Execute RETI.
+    runCycles(z80, m, 7);   // Execute one more instruction.
+
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0006);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.iff, 0x00);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x0102);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x03FF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xAAAA);
+}
+
 // EOF
 // vim: et:sw=4:ts=4:

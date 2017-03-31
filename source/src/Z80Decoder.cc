@@ -11,6 +11,7 @@ void Z80Decoder::decode(uint_fast8_t opcode)
     regs.z = (opcode & 0x07);      // .....zzz
     regs.p = regs.y >> 1;          // ..pp....
     regs.q = regs.y & 0x01;        // ....q...
+    regs.opcode = opcode;
 }
 
 void Z80Decoder::startInstruction()
@@ -57,7 +58,11 @@ uint_fast16_t Z80Decoder::getAddress()
             regs.addr.w = regs.sp.w;
             regs.sp.w++;
             break;
+        case 0x0C:  // Interrupt Mode 2
+            regs.addr.w = ((regs.ir.h << 8) | regs.opcode);
+            break;
         default:
+            assert(false);
             break;
     }
 
@@ -129,13 +134,18 @@ bool Z80Decoder::executeInt()
 
     switch (regs.im)
     {
-        case 0:
+        case 0:             // Mode 0: Execute the instruction in the data bus.
             finished = execute();
             break;
 
-        case 1:
-            decode(0xFF);   // RST 38h
+        case 1:             // Mode 1: Execute RST 38h
+            decode(0xFF);
             finished = execute();
+            break;
+
+        case 2:             // Mode 2: Jump to the address in IR.h & data bus.
+            finished = z80IntMode2(&regs);
+            regs.executionStep++;
             break;
 
         default:

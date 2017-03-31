@@ -47,6 +47,7 @@ class Z80RegisterSet
         uint_fast8_t im;
 
         uint_fast8_t x, y, z, p, q;
+        uint_fast8_t opcode;
         uint_fast8_t prefix;
         size_t executionStep;
         size_t memRdCycles, memWrCycles;

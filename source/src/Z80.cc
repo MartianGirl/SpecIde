@@ -140,8 +140,9 @@ void Z80::clock()
 
         // M2. Memory read cycle
         case Z80State::ST_M2_T1_ADDRWR:
-            if (!intProcess)
-                a = decoder.getAddress();
+            // INT mode 0 places bytes directly on the bus.
+             if (intProcess == false || decoder.regs.im == 2)
+                 a = decoder.getAddress();
             c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_);
 

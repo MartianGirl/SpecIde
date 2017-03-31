@@ -18,6 +18,7 @@
 #include "Z80FDPrefixed.h"
 
 #include "Z80Nmi.h"
+#include "Z80IntMode2.h"
 
 using namespace std;
 
@@ -44,6 +45,7 @@ class Z80Decoder
         Z80FDPrefixed FDPrefixed;
 
         Z80Nmi z80Nmi;
+        Z80IntMode2 z80IntMode2;
 };
 
 // vim: et:sw=4:ts=4
