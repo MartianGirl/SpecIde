@@ -315,5 +315,87 @@ BOOST_AUTO_TEST_CASE(call_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFF);
 }
 
+BOOST_AUTO_TEST_CASE(call_cc_test)
+{
+    // Create a Z80 and some memory.
+    Z80 z80;
+    Memory m(16, false);
+
+    string code_0000h =
+        "010001"        // LD BC, 0000h
+        "AF"            // XOR A (PZE0)
+        "3C"            // INC A (P0O0)
+        "C40001"        // CALL NZ, 0100h
+        "010002"        // LD BC, 0001h
+        "CC2001"        // CALL Z, 0120h
+        "010003"        // LD BC, 0002h
+        "D44001"        // CALL NC, 0140h
+        "010004"        // LD BC, 0003h
+        "DC6001"        // CALL C, 0160h
+        "010005"        // LD BC, 0004h
+        "E48001"        // CALL PO, 0180h
+        "010006"        // LD BC, 0005h
+        "ECA001"        // CALL PE, 01A0h
+        "010007"        // LD BC, 0006h
+        "F4C001"        // CALL P, 01C0h
+        "010008"        // LD BC, 0007h
+        "FCE001"        // CALL M, 01E0h
+        "CC0000"        // CALL Z, 0000h
+        "01AAAA";       // LD BC, AAAAh
+    loadBinary(code_0000h, m, 0x0000);
+
+    string code_0100h =
+        "AF"            // XOR A (PZE0)
+        "C8"            // RET Z
+        "0101EE";
+    loadBinary(code_0100h, m, 0x0100);
+
+    string code_0120h =
+        "AF"            // XOR A (PZE0)
+        "D0"            // RET NC
+        "0102EE";
+    loadBinary(code_0120h, m, 0x0120);
+
+    string code_0140h =
+        "37"            // SCF (PZEC)
+        "D8"            // RET C
+        "0103EE";
+    loadBinary(code_0140h, m, 0x0140);
+
+    string code_0160h =
+        "B0"            // OR B (P0O0)
+        "E0"            // RET PO
+        "0104EE";
+    loadBinary(code_0160h, m, 0x0160);
+
+    string code_0180h =
+        "AF"            // XOR A (PZE0)
+        "E8"            // RET PE
+        "0105EE";
+    loadBinary(code_0180h, m, 0x0180);
+
+    string code_01A0h =
+        "AF"            // XOR A (PZE0)
+        "F0"            // RET P
+        "0106EE";
+    loadBinary(code_01A0h, m, 0x01A0);
+
+    string code_01C0h =
+        "3D"            // DEC D (M0E0)
+        "F8"            // RET M
+        "0107EE";
+    loadBinary(code_01C0h, m, 0x01C0);
+
+    string code_01E0h =
+        "3D"            // DEC D (M0O0)
+        "C0"            // RET NZ
+        "0108EE";
+    loadBinary(code_01E0h, m, 0x01E0);
+   
+    startZ80(z80);
+    runCycles(z80, m, 364);  // Run all the code.
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0038);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xAAAA);
+}
 // EOF
 // vim: et:sw=4:ts=4:
