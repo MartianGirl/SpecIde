@@ -28,6 +28,8 @@
 
 #include "Z80Neg.h"
 
+#include "Z80RetI.h"
+
 class Z80EDPrefixed
 {
     public:
@@ -52,6 +54,8 @@ class Z80EDPrefixed
         Z80Cpdr iCpdr;
 
         Z80Neg iNeg;
+
+        Z80RetI iRetI;
 
         Z80Instruction* table[4][8][8];
 
@@ -157,7 +161,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iLdPtrWordReg, // 01000011: LD (nn), BC
                         &iNeg,          // 01000100: NEG
-                        &iNop,
+                        &iRetI,         // 01000101: RETN
                         &iNop,
                         &iLdIA          // 01000111: LD I, A
                     },
@@ -168,7 +172,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iLdRegPtrWord, // 01001011: LD BC, (nn)
                         &iNop,
-                        &iNop,
+                        &iRetI,         // 01001101: RETI
                         &iNop,
                         &iLdRA          // 01001111: LD R, A
                     },
@@ -179,7 +183,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iLdPtrWordReg, // 01010011: LD (nn), DE
                         &iNop,
-                        &iNop,
+                        &iRetI,         // 01010101: RETN*
                         &iNop,
                         &iLdAI          // 01010111: LD A, I
                     },
@@ -190,7 +194,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iLdRegPtrWord, // 01011011: LD DE, (nn)
                         &iNop,
-                        &iNop,
+                        &iRetI,         // 01011101: RETN*
                         &iNop,
                         &iLdAR          // 01011111: LD A, R
                     },
@@ -201,7 +205,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iLdPtrWordReg, // 01100011: LD (nn), HL
                         &iNop,
-                        &iNop,
+                        &iRetI,         // 01100101: RETN*
                         &iNop,
                         &iNop
                     },
@@ -212,7 +216,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iLdRegPtrWord, // 01101011: LD HL, (nn)
                         &iNop,
-                        &iNop,
+                        &iRetI,         // 01101101: RETN*
                         &iNop,
                         &iNop
                     },
@@ -223,7 +227,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iLdPtrWordReg, // 01110011: LD (nn), SP
                         &iNop,
-                        &iNop,
+                        &iRetI,         // 01110101: RETN*
                         &iNop,
                         &iNop
                     },
@@ -234,7 +238,7 @@ class Z80EDPrefixed
                         &iNop,
                         &iLdRegPtrWord, // 01111011: LD SP, (nn)
                         &iNop,
-                        &iNop,
+                        &iRetI,         // 01111101: RETN*
                         &iNop,
                         &iNop
                     }

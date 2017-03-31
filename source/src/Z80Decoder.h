@@ -27,6 +27,7 @@ class Z80Decoder
         Z80Decoder();
 
         void decode(uint_fast8_t byte);
+        void startInstruction();
         void readByte(uint_fast8_t byte);
         uint_fast16_t getAddress();
         uint_fast8_t writeByte();

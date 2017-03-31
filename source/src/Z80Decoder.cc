@@ -11,7 +11,10 @@ void Z80Decoder::decode(uint_fast8_t opcode)
     regs.z = (opcode & 0x07);      // .....zzz
     regs.p = regs.y >> 1;          // ..pp....
     regs.q = regs.y & 0x01;        // ....q...
+}
 
+void Z80Decoder::startInstruction()
+{
     regs.executionStep = 0;
 }
 
@@ -127,6 +130,11 @@ bool Z80Decoder::executeInt()
     switch (regs.im)
     {
         case 0:
+            finished = execute();
+            break;
+
+        case 1:
+            decode(0xFF);   // RST 38h
             finished = execute();
             break;
 

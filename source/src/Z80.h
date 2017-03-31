@@ -26,6 +26,8 @@ class Z80 :
         void reset();
         void clock();
 
+        void updateNmi();
+
         void start();
         Z80State finishMemoryCycle();
         bool execute();

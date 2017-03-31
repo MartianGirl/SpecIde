@@ -15,11 +15,8 @@ void Z80::reset()
     c &= ~SIGNAL_RESET_;
 }
 
-void Z80::clock()
+void Z80::updateNmi()
 {
-    if (!(c & SIGNAL_RESET_))
-        state = Z80State::ST_RESET;
-
     // NMI is edge-triggered.
     if (!(c & SIGNAL_NMI_))
     {
@@ -36,6 +33,14 @@ void Z80::clock()
     {
         nmiDelayed = false;
     }
+}
+
+void Z80::clock()
+{
+    if (!(c & SIGNAL_RESET_))
+        state = Z80State::ST_RESET;
+
+    updateNmi();
 
     switch (state)
     {
@@ -68,6 +73,7 @@ void Z80::clock()
         case Z80State::ST_M1_T3_RFSH1:
             a = decoder.regs.ir.w & 0xFF7F;
             decoder.decode(d);
+            decoder.startInstruction();
             decoder.regs.ir.l = (decoder.regs.ir.l & 0x80) 
                 | ((decoder.regs.ir.l + 1) & 0x7F);
             c |= (SIGNAL_RD_ | SIGNAL_M1_ | SIGNAL_IORQ_);
