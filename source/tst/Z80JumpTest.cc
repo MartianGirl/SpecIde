@@ -397,5 +397,37 @@ BOOST_AUTO_TEST_CASE(call_cc_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0038);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xAAAA);
 }
+
+BOOST_AUTO_TEST_CASE(rst_test)
+{
+    // Create a Z80 and some memory.
+    Z80 z80;
+    Memory m(16, false);
+
+    string code_0000h =
+        "CF01AAAA"      // RST 08h + LD BC, AAAAh
+        "00000000"
+        "D7C90000"      // RST 10h + RET
+        "00000000"
+        "DFC90000"      // RST 18h + RET
+        "00000000"
+        "E7C90000"      // RST 20h + RET
+        "00000000"
+        "EFC90000"      // RST 28h + RET
+        "00000000"
+        "F7C90000"      // RST 30h + RET
+        "00000000"
+        "FFC90000"      // RST 38h + RET
+        "00000000"
+        "C9000000";     // RET
+    loadBinary(code_0000h, m, 0x0000);
+
+    startZ80(z80);
+    runCycles(z80, m, 157);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0004);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xAAAA);
+}
+
 // EOF
 // vim: et:sw=4:ts=4:

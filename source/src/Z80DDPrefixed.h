@@ -86,6 +86,7 @@
 #include "Z80Ret.h"
 #include "Z80CallCc.h"
 #include "Z80RetCc.h"
+#include "Z80Rst.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -171,6 +172,7 @@ class Z80DDPrefixed
         Z80Ret iRet;
         Z80CallCc iCallCc;
         Z80RetCc iRetCc;
+        Z80Rst iRst;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -464,7 +466,7 @@ class Z80DDPrefixed
                         &iCallCc,       // 11000100: CALL NZ, nn
                         &iPushReg,      // 11000101: PUSH BC
                         &iAddByte,      // 11000110: ADD A, n
-                        &iNop
+                        &iRst           // 11000111: RST 0h
                     },
                     // y = 1
                     {
@@ -475,7 +477,7 @@ class Z80DDPrefixed
                         &iCallCc,       // 11001100: CALL Z, nn
                         &iCall,         // 11001101: CALL nn
                         &iAdcByte,      // 11001110: ADC A, n
-                        &iNop
+                        &iRst           // 11001111: RST 8h
                     },
                     // y = 2
                     {
@@ -486,7 +488,7 @@ class Z80DDPrefixed
                         &iCallCc,       // 11010100: CALL NC, nn
                         &iPushReg,      // 11010101: PUSH DE
                         &iSubByte,      // 11010110: SUB n
-                        &iNop
+                        &iRst           // 11010111: RST 10h
                     },
                     // y = 3
                     {
@@ -497,7 +499,7 @@ class Z80DDPrefixed
                         &iCallCc,       // 11011100: CALL C, nn
                         &iPrefixDD,     // 11011101: DD Prefix
                         &iSbcByte,      // 11011110: SBC A, n
-                        &iNop
+                        &iRst           // 11011111: RST 18h
                     },
                     // y = 4
                     {
@@ -508,7 +510,7 @@ class Z80DDPrefixed
                         &iCallCc,       // 11100100: CALL PO, nn
                         &iPushIx,       // 11100101: PUSH IX
                         &iAndByte,      // 11100110: AND n
-                        &iNop
+                        &iRst           // 11100111: RST 20h
                     },
                     // y = 5
                     {
@@ -519,7 +521,7 @@ class Z80DDPrefixed
                         &iCallCc,       // 11101100: CALL PE, nn
                         &iPrefixED,     // 11101101: ED Prefix
                         &iXorByte,      // 11101110: XOR n
-                        &iNop
+                        &iRst           // 11101111: RST 28h
                     },
                     // y = 6
                     {
@@ -530,7 +532,7 @@ class Z80DDPrefixed
                         &iCallCc,       // 11110100: CALL P, nn
                         &iPushReg,      // 11110101: PUSH AF
                         &iOrByte,       // 11110110: OR n
-                        &iNop
+                        &iRst           // 11110111: RST 30h
                     },
                     // y = 7
                     {
@@ -541,7 +543,7 @@ class Z80DDPrefixed
                         &iCallCc,       // 11111100: CALL M, nn
                         &iPrefixFD,     // 11111101: FD Prefix
                         &iCpByte,       // 11111110: CP n
-                        &iNop
+                        &iRst           // 11111111: RST 38h
                     }
                 }
             }
