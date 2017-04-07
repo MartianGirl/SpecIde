@@ -327,5 +327,41 @@ BOOST_AUTO_TEST_CASE(ei_di_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x000B);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xDDDD);
 }
+
+BOOST_AUTO_TEST_CASE(im_test)
+{
+    // Create a Z80 and some memory.
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "ED46"
+        "ED4E"
+        "ED56"
+        "ED5E"
+        "ED66"
+        "ED6E"
+        "ED76"
+        "ED7E";
+    loadBinary(code, m, 0x0000);
+
+    startZ80(z80);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.im, 0);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.im, 0);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.im, 1);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.im, 2);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.im, 0);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.im, 0);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.im, 1);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.im, 2);
+}
 // EOF
 // vim: et:sw=4:ts=4:
