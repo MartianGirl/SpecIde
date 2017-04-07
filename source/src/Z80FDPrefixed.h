@@ -74,6 +74,7 @@
 #include "Z80Cpl.h"
 #include "Z80Ccf.h"
 #include "Z80Scf.h"
+#include "Z80Halt.h"
 
 #include "Z80JpWord.h"
 #include "Z80JpCcWord.h"
@@ -160,6 +161,7 @@ class Z80FDPrefixed
         Z80Cpl iCpl;
         Z80Ccf iCcf;
         Z80Scf iScf;
+        Z80Halt iHalt;
 
         Z80JpWord iJpWord;
         Z80JpCcWord iJpCcWord;
@@ -349,7 +351,7 @@ class Z80FDPrefixed
                         &iLdPtrIyReg,   // 01110011: LD (IY+d), E
                         &iLdPtrIyReg,   // 01110100: LD (IY+d), H
                         &iLdPtrIyReg,   // 01110101: LD (IY+d), L
-                        &iNop,          // 01110110: HALT
+                        &iHalt,         // 01110110: HALT
                         &iLdPtrIyReg    // 01110111: LD (IY+d), A
                     },
                     // y = 7

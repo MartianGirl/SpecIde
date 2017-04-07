@@ -36,6 +36,9 @@ void Z80RegisterSet::reset()
 
     iff = 0x00;
     im = 0x00;
+
+    halt = false;
+
 }
 
 // vim: et:sw=4:ts=4

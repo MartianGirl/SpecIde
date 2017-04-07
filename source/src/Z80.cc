@@ -42,6 +42,11 @@ void Z80::clock()
 
     updateNmi();
 
+    if (decoder.regs.halt == true)
+        c &= ~SIGNAL_HALT_;
+    else
+        c |= SIGNAL_HALT_;
+    
     switch (state)
     {
         case Z80State::ST_RESET:
@@ -54,7 +59,7 @@ void Z80::clock()
         case Z80State::ST_M1_T1_ADDRWR:
             a = decoder.regs.pc.w;
 
-            if (!intProcess && !nmiProcess)
+            if (!intProcess && !nmiProcess && !decoder.regs.halt)
                 decoder.regs.pc.w++;
 
             c |= SIGNAL_RFSH_;
@@ -72,7 +77,8 @@ void Z80::clock()
 
         case Z80State::ST_M1_T3_RFSH1:
             a = decoder.regs.ir.w & 0xFF7F;
-            decoder.decode(d);
+            if (decoder.regs.halt == false)
+                decoder.decode(d);
             decoder.startInstruction();
             decoder.regs.ir.l = (decoder.regs.ir.l & 0x80) 
                 | ((decoder.regs.ir.l + 1) & 0x7F);
@@ -221,6 +227,7 @@ Z80State Z80::finishMemoryCycle()
     {
         nmiAccept = false;
         nmiProcess = true;
+        decoder.regs.halt = false;
         return Z80State::ST_NMI_T1_ADDRWR;
     }
     // INT only happens if there is no NMI.
@@ -229,6 +236,7 @@ Z80State Z80::finishMemoryCycle()
     {
         decoder.regs.iff &= ~(IFF1 | IFF2);
         intProcess = true;
+        decoder.regs.halt = false;
         return Z80State::ST_INT_T1_ADDRWR;
     }
     else
