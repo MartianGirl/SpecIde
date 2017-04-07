@@ -32,6 +32,7 @@ constexpr uint_fast8_t FLAG_S = 0x80;
 
 constexpr uint_fast8_t IFF1 = 0x01;
 constexpr uint_fast8_t IFF2 = 0x04;
+constexpr uint_fast8_t HALT = 0x80;
 
 constexpr uint_fast8_t PREFIX_NO = 0x00;
 constexpr uint_fast8_t PREFIX_CB = 0x01;

@@ -284,9 +284,48 @@ BOOST_AUTO_TEST_CASE(halt_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xAAAA);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xAAAA);
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xAAAA);
-
-
 }
 
+BOOST_AUTO_TEST_CASE(ei_di_test)
+{
+    // Create a Z80 and some memory.
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "FB"
+        "01AAAA"
+        "F3"
+        "01CCCC"
+        "01DDDD";
+    loadBinary(code, m, 0x0000);
+
+    string ihnd =
+        "01BBBB"
+        "ED4D";
+    loadBinary(ihnd, m, 0x0038);
+
+    startZ80(z80);
+
+    z80.decoder.regs.im = 1;
+    z80.c &= ~SIGNAL_INT_;
+    runCycles(z80, m, 14);
+    z80.c |= SIGNAL_INT_;
+    runCycles(z80, m, 13);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0038);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xAAAA);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0004);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xBBBB);
+
+    z80.c &= ~SIGNAL_INT_;
+    runCycles(z80, m, 14);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0008);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xCCCC);
+    z80.c |= SIGNAL_INT_;
+    runCycles(z80, m, 10);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x000B);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xDDDD);
+}
 // EOF
 // vim: et:sw=4:ts=4:

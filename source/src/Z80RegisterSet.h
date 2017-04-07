@@ -45,7 +45,6 @@ class Z80RegisterSet
 
         uint_fast8_t iff;
         uint_fast8_t im;
-        bool halt;
 
         uint_fast8_t x, y, z, p, q;
         uint_fast8_t opcode;

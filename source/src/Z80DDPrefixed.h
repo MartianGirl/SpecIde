@@ -75,6 +75,8 @@
 #include "Z80Ccf.h"
 #include "Z80Scf.h"
 #include "Z80Halt.h"
+#include "Z80Di.h"
+#include "Z80Ei.h"
 
 #include "Z80JpWord.h"
 #include "Z80JpCcWord.h"
@@ -162,6 +164,8 @@ class Z80DDPrefixed
         Z80Ccf iCcf;
         Z80Scf iScf;
         Z80Halt iHalt;
+        Z80Di iDi;
+        Z80Ei iEi;
 
         Z80JpWord iJpWord;
         Z80JpCcWord iJpCcWord;
@@ -530,7 +534,7 @@ class Z80DDPrefixed
                         &iRetCc,        // 11110000: RET P
                         &iPopReg,       // 11110001: POP AF
                         &iJpCcWord,     // 11110010: JP P, nn
-                        &iNop,
+                        &iDi,           // 11110011: DI
                         &iCallCc,       // 11110100: CALL P, nn
                         &iPushReg,      // 11110101: PUSH AF
                         &iOrByte,       // 11110110: OR n
@@ -541,7 +545,7 @@ class Z80DDPrefixed
                         &iRetCc,        // 11111000: RET M
                         &iLdSpIx,       // 11111001: LD SP, IX
                         &iJpCcWord,     // 11111010: JP M, nn
-                        &iNop,
+                        &iEi,           // 11111011: EI
                         &iCallCc,       // 11111100: CALL M, nn
                         &iPrefixFD,     // 11111101: FD Prefix
                         &iCpByte,       // 11111110: CP n

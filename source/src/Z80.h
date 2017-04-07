@@ -51,6 +51,7 @@ class Z80 :
 
         // INT requested
         bool intProcess;
+        uint_fast8_t iff;
 };
 
 // vim: et:sw=4:ts=4
