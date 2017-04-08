@@ -29,8 +29,10 @@
 #include "Z80Neg.h"
 
 #include "Z80Im.h"
-
 #include "Z80RetI.h"
+
+#include "Z80AdcHlReg.h"
+
 
 class Z80EDPrefixed
 {
@@ -58,8 +60,9 @@ class Z80EDPrefixed
         Z80Neg iNeg;
 
         Z80Im iIm;
-
         Z80RetI iRetI;
+
+        Z80AdcHlReg iAdcHlReg;
 
         Z80Instruction* table[4][8][8];
 
@@ -173,7 +176,7 @@ class Z80EDPrefixed
                     {
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iAdcHlReg,     // 01001010: ADC HL, BC
                         &iLdRegPtrWord, // 01001011: LD BC, (nn)
                         &iNop,
                         &iRetI,         // 01001101: RETI
@@ -195,7 +198,7 @@ class Z80EDPrefixed
                     {
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iAdcHlReg,     // 01011010: ADC HL, DE
                         &iLdRegPtrWord, // 01011011: LD DE, (nn)
                         &iNop,
                         &iRetI,         // 01011101: RETN*
@@ -217,7 +220,7 @@ class Z80EDPrefixed
                     {
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iAdcHlReg,     // 01101010: ADC HL, HL
                         &iLdRegPtrWord, // 01101011: LD HL, (nn)
                         &iNop,
                         &iRetI,         // 01101101: RETN*
@@ -239,7 +242,7 @@ class Z80EDPrefixed
                     {
                         &iNop,
                         &iNop,
-                        &iNop,
+                        &iAdcHlReg,     // 01111010: ADC HL, SP
                         &iLdRegPtrWord, // 01111011: LD SP, (nn)
                         &iNop,
                         &iRetI,         // 01111101: RETN*

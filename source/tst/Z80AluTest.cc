@@ -2926,5 +2926,111 @@ BOOST_AUTO_TEST_CASE(scf_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0xFF29);
 }
 
+BOOST_AUTO_TEST_CASE(adc_hl_rr_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test sign
+        "210100"        // LD HL, 0001h
+        "01FE7F"        // LD BC, 7FFEh
+        "A7"            // AND A (CF = 0)
+        "ED4A"          // ADC HL, BC   (7FFFh: F=00101000 28h)
+        // Test sign
+        "210100"        // LD HL, 0001h
+        "01FE7F"        // LD BC, 7FFEh
+        "37"            // SCF (CF = 1)
+        "ED4A"          // ADC HL, BC   (8000h: F=10010100 94h)
+        // Test carry
+        "210100"        // LD HL, 0001h
+        "11FEFF"        // LD DE, FFFEh
+        "A7"            // AND A (CF = 0)
+        "ED5A"          // ADC HL, DE   (FFFFh: F=10101000 A8h)
+        // Test carry
+        "210100"        // LD HL, 0001h
+        "11FEFF"        // LD DE, FFFEh
+        "37"            // SCF (CF = 1)
+        "ED5A"          // ADC HL, DE   (0000h: F=01010001 51h)
+        // Test half carry
+        "210800"        // LD HL, 0008h
+        "210800"        // LD HL, 0008h
+        "A7"            // AND A (CF = 0)
+        "ED6A"          // ADC HL, HL   (0010h: F=00000000 00h)
+        // Test half carry
+        "210008"        // LD HL, 0800h
+        "210008"        // LD HL, 0800h
+        "A7"            // AND A (CF = 0)
+        "ED6A"          // ADC HL, HL   (1000h: F=00010000 10h)
+        // Test overflow
+        "214000"        // LD HL, 0040h
+        "316400"        // LD SP, 0064h
+        "A7"            // AND A (CF = 0)
+        "ED7A"          // ADC HL, SP   (00A4h: F=00000000 00h)
+        // Test overflow
+        "210040"        // LD HL, 4000h
+        "310064"        // LD SP, 6400h
+        "A7"            // AND A (CF = 0)
+        "ED7A"          // ADC HL, SP   (A400h: F=10100100 A4h)
+        // Test overflow
+        "210080"        // LD HL, 8000h
+        "3100A4"        // LD SP, A400h
+        "A7"            // AND A (CF = 0)
+        "ED7A"          // ADC HL, SP   (2400h: F=00100101 25h)
+        // Test carry
+        "21FFFF"        // LD HL, FFFFh
+        "010100"        // LD BC, 0001h
+        "A7"            // AND A (CF = 0)
+        "ED4A"          // ADC HL, BC   (0000h: F=01010001 51h)
+        // Test carry
+        "21FF7F"        // LD HL, 7FFFh
+        "010100"        // LD BC, 0001h
+        "A7"            // AND A (CF = 0)
+        "ED4A"          // ADC HL, BC   (8000h: F=10010100 94h)
+        // Test zero
+        "214000"        // LD HL, 0040h
+        "01C0FF"        // LD BC, FFC0h
+        "A7"            // AND A (CF = 0)
+        "ED4A";         // ADC HL, BC   (0000h: F=01010001 51h)
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    runCycles(z80, m, 39);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x7FFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x28);
+    runCycles(z80, m, 39);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x8000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x94);
+    runCycles(z80, m, 39);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA8);
+    runCycles(z80, m, 39);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x51);
+    runCycles(z80, m, 39);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x0010);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    runCycles(z80, m, 39);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x1000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x10);
+    runCycles(z80, m, 39);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x00A4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    runCycles(z80, m, 39);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xA400);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA4);
+    runCycles(z80, m, 39);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x2400);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x25);
+    runCycles(z80, m, 39);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x51);
+    runCycles(z80, m, 39);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x8000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x94);
+    runCycles(z80, m, 39);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x51);
+}
 // EOF
 // vim: et:sw=4:ts=4
