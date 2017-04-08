@@ -78,6 +78,8 @@
 #include "Z80Ei.h"
 
 #include "Z80AddIyRegY.h"
+#include "Z80IncRegPY.h"
+#include "Z80DecRegPY.h"
 
 #include "Z80JpWord.h"
 #include "Z80JpCcWord.h"
@@ -168,6 +170,8 @@ class Z80FDPrefixed
         Z80Ei iEi;
 
         Z80AddIyRegY iAddIyRegY;
+        Z80IncRegPY iIncRegPY;
+        Z80DecRegPY iDecRegPY;
 
         Z80JpWord iJpWord;
         Z80JpCcWord iJpCcWord;
@@ -194,10 +198,10 @@ class Z80FDPrefixed
                 {
                     // y = 0
                     {
-                        &iNop,
+                        &iNop,          // 00000000: NOP
                         &iLdRegYWord,   // 00000001: LD BC, nn
                         &iLdPtrBcA,     // 00000010: LD (BC), A
-                        &iNop,
+                        &iIncRegPY,     // 00000011: INC BC
                         &iIncRegY,      // 00000100: INC B
                         &iDecRegY,      // 00000101: DEC B
                         &iLdRegYByte,   // 00000110: LD B, n
@@ -208,7 +212,7 @@ class Z80FDPrefixed
                         &iExAfAf,       // 00001000: EX AF, AF'
                         &iAddIyRegY,    // 00001001: ADD IY, BC
                         &iLdAPtrBc,     // 00001010: LD A, (BC)
-                        &iNop,
+                        &iDecRegPY,     // 00001011: DEC BC
                         &iIncRegY,      // 00001100: INC C
                         &iDecRegY,      // 00001101: DEC C
                         &iLdRegYByte,   // 00001110: LD C, n
@@ -219,7 +223,7 @@ class Z80FDPrefixed
                         &iDjnz,         // 00010000: DJNZ n
                         &iLdRegYWord,   // 00010001: LD DE, nn
                         &iLdPtrDeA,     // 00010010: LD (DE), A
-                        &iNop,
+                        &iIncRegPY,     // 00010011: INC DE
                         &iIncRegY,      // 00010100: INC D
                         &iDecRegY,      // 00010101: DEC D
                         &iLdRegYByte,   // 00010110: LD D, n
@@ -230,7 +234,7 @@ class Z80FDPrefixed
                         &iJrByte,       // 00011000: JR n
                         &iAddIyRegY,    // 00011001: ADD IY, DE
                         &iLdAPtrDe,     // 00011010: LD A, (DE)
-                        &iNop,
+                        &iDecRegPY,     // 00011011: DEC DE
                         &iIncRegY,      // 00011100: INC E
                         &iDecRegY,      // 00011100: DEC E
                         &iLdRegYByte,   // 00011110: LD E, n
@@ -241,7 +245,7 @@ class Z80FDPrefixed
                         &iJrCcByte,     // 00100000: JR NZ, n
                         &iLdRegYWord,   // 00100001: LD IY, nn
                         &iLdPtrWordIy,  // 00100010: LD (nn), IY
-                        &iNop,
+                        &iIncRegPY,     // 00100011: INC IY
                         &iIncRegY,      // 00100100: INC IYh
                         &iDecRegY,      // 00100101: DEC IYh
                         &iLdRegYByte,   // 00100110: LD IYh, n
@@ -252,7 +256,7 @@ class Z80FDPrefixed
                         &iJrCcByte,     // 00101000: JR Z, n
                         &iAddIyRegY,    // 00101001: ADD IY, IY
                         &iLdIyPtrWord,  // 00101010: LD IY, (nn)
-                        &iNop,
+                        &iDecRegPY,     // 00101011: DEC IY
                         &iIncRegY,      // 00101100: INC IYl
                         &iDecRegY,      // 00101101: DEC IYl
                         &iLdRegYByte,   // 00101110: LD IYl, n
@@ -263,7 +267,7 @@ class Z80FDPrefixed
                         &iJrCcByte,     // 00110000: JR NC, n
                         &iLdRegYWord,   // 00110001: LD SP, nn
                         &iLdPtrWordA,   // 00110010: LD (nn), A
-                        &iNop,
+                        &iIncRegPY,     // 00110011: INC SP
                         &iIncPtrIy,     // 00110100: INC (IY+d)
                         &iDecPtrIy,     // 00110101: DEC (IY+d)
                         &iLdPtrIyByte,  // 00110110: LD (IY+d), n
@@ -274,7 +278,7 @@ class Z80FDPrefixed
                         &iJrCcByte,     // 00111000: JR C, n
                         &iAddIyRegY,    // 00111001: ADD IY, SP
                         &iLdAPtrWord,   // 00111010: LD A, (nn)
-                        &iNop,
+                        &iDecRegPY,     // 00111011: DEC SP
                         &iIncRegY,      // 00111100: INC A
                         &iDecRegY,      // 00111101: DEC A
                         &iLdRegYByte,   // 00111110: LD A, n

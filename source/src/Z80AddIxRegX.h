@@ -33,9 +33,9 @@ class Z80AddIxRegX : public Z80Instruction
                 case 2:
                     // First, do the low byte addition. Carry is in lowest
                     // bit of H. Add carry here.
-                    r->ix.w = r->acc.l + r->tmp.l + (r->af.l & FLAG_C);
+                    r->ix.w = r->acc.l + r->tmp.l;
                     r->acc.w = r->acc.h;
-                    r->af.l = r->af.l & (FLAG_S | FLAG_Z | FLAG_PV);
+                    r->af.l &= (FLAG_S | FLAG_Z | FLAG_PV);
                     r->af.l |= r->ix.h & FLAG_C;
 
                     // Perform the addition in H, including low byte carry.

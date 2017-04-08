@@ -3139,5 +3139,269 @@ BOOST_AUTO_TEST_CASE(sbc_hl_rr_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x0000);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x42);
 }
+
+BOOST_AUTO_TEST_CASE(add_hl_rr_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test carry
+        "210100"        // LD HL, 0001h
+        "01FEFF"        // LD BC, FFFEh
+        "09"            // ADD HL, BC   (FFFFh: F=00101000 28h)
+        // Test carry
+        "210200"        // LD HL, 0002h
+        "11FEFF"        // LD DE, FFFEh
+        "19"            // ADD HL, DE   (0000h: F=00010001 11h)
+        // Test half carry
+        "210800"        // LD HL, 0008h
+        "210800"        // LD HL, 0008h
+        "29"            // ADD HL, HL   (0010h: F=00000000 00h)
+        // Test half carry
+        "210008"        // LD HL, 0800h
+        "310008"        // LD SP, 0800h
+        "39";           // ADD HL, SP   (1000h: F=00010000 10h)
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    z80.decoder.regs.af.l = 0;
+    runCycles(z80, m, 31);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x28);
+    runCycles(z80, m, 31);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x11);
+    runCycles(z80, m, 31);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x0010);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    runCycles(z80, m, 31);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x1000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x10);
+}
+
+BOOST_AUTO_TEST_CASE(add_ix_rr_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test carry
+        "DD210100"      // LD IX, 0001h
+        "DD01FEFF"      // LD BC, FFFEh
+        "DD09"          // ADD IX, BC   (FFFFh: F=00101000 28h)
+        // Test carry
+        "DD210200"      // LD IX, 0002h
+        "DD11FEFF"      // LD DE, FFFEh
+        "DD19"          // ADD IX, DE   (0000h: F=00010001 11h)
+        // Test half carry
+        "DD210800"      // LD IX, 0008h
+        "DD210800"      // LD IX, 0008h
+        "DD29"          // ADD IX, IX   (0010h: F=00000000 00h)
+        // Test half carry
+        "DD210008"      // LD IX, 0800h
+        "DD310008"      // LD SP, 0800h
+        "DD39";         // ADD IX, SP   (1000h: F=00010000 10h)
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    z80.decoder.regs.af.l = 0;
+    runCycles(z80, m, 43);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x28);
+    runCycles(z80, m, 43);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x11);
+    runCycles(z80, m, 43);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0x0010);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    runCycles(z80, m, 43);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0x1000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x10);
+}
+
+BOOST_AUTO_TEST_CASE(add_iy_rr_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        // Test carry
+        "FD210100"      // LD IY, 0001h
+        "FD01FEFF"      // LD BC, FFFEh
+        "FD09"          // ADD IY, BC   (FFFFh: F=00101000 28h)
+        // Test carry
+        "FD210200"      // LD IY, 0002h
+        "FD11FEFF"      // LD DE, FFFEh
+        "FD19"          // ADD IY, DE   (0000h: F=00010001 11h)
+        // Test half carry
+        "FD210800"      // LD IY, 0008h
+        "FD210800"      // LD IY, 0008h
+        "FD29"          // ADD IY, IY   (0010h: F=00000000 00h)
+        // Test half carry
+        "FD210008"      // LD IY, 0800h
+        "FD310008"      // LD SP, 0800h
+        "FD39";         // ADD IY, SP   (1000h: F=00010000 10h)
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    z80.decoder.regs.af.l = 0;
+    runCycles(z80, m, 43);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x28);
+    runCycles(z80, m, 43);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x11);
+    runCycles(z80, m, 43);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0x0010);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    runCycles(z80, m, 43);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0x1000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x10);
+}
+
+BOOST_AUTO_TEST_CASE(inc_rr_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "01FFFF"        // LD BC, FFFFh
+        "03"            // INC BC
+        "110300"        // LD DE, 0003h
+        "13"            // INC DE
+        "213312"        // LD HL, 1233h
+        "23"            // INC HL
+        "31FF07"        // LD SP, 07FFh
+        "33";           // INC SP
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    runCycles(z80, m, 64);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x0004);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x1234);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x0800);
+}
+
+BOOST_AUTO_TEST_CASE(dec_rr_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "010000"        // LD BC, 0000h
+        "0B"            // INC BC
+        "110300"        // LD DE, 0003h
+        "1B"            // INC DE
+        "213512"        // LD HL, 1235h
+        "2B"            // INC HL
+        "310008"        // LD SP, 0800h
+        "3B";           // INC SP
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    runCycles(z80, m, 64);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x0002);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x1234);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x07FF);
+}
+
+BOOST_AUTO_TEST_CASE(inc_rrx_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "DD01FFFF"      // LD BC, FFFFh
+        "DD03"          // INC BC
+        "DD110300"      // LD DE, 0003h
+        "DD13"          // INC DE
+        "DD213312"      // LD IX, 1233h
+        "DD23"          // INC IX
+        "DD31FF07"      // LD SP, 07FFh
+        "DD33";         // INC SP
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    runCycles(z80, m, 96);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x0004);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0x1234);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x0800);
+}
+
+BOOST_AUTO_TEST_CASE(dec_rrx_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "DD010000"      // LD BC, 0000h
+        "DD0B"          // INC BC
+        "DD110300"      // LD DE, 0003h
+        "DD1B"          // INC DE
+        "DD213512"      // LD IX, 1235h
+        "DD2B"          // INC IX
+        "DD310008"      // LD SP, 0800h
+        "DD3B";         // INC SP
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    runCycles(z80, m, 96);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x0002);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0x1234);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x07FF);
+}
+
+BOOST_AUTO_TEST_CASE(inc_rry_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "FD01FFFF"      // LD BC, FFFFh
+        "FD03"          // INC BC
+        "FD110300"      // LD DE, 0003h
+        "FD13"          // INC DE
+        "FD213312"      // LD IY, 1233h
+        "FD23"          // INC IY
+        "FD31FF07"      // LD SP, 07FFh
+        "FD33";         // INC SP
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    runCycles(z80, m, 96);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x0000);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x0004);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0x1234);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x0800);
+}
+
+BOOST_AUTO_TEST_CASE(dec_rry_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "FD010000"      // LD BC, 0000h
+        "FD0B"          // INC BC
+        "FD110300"      // LD DE, 0003h
+        "FD1B"          // INC DE
+        "FD213512"      // LD IY, 1235h
+        "FD2B"          // INC IY
+        "FD310008"      // LD SP, 0800h
+        "FD3B";         // INC SP
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    runCycles(z80, m, 96);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x0002);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0x1234);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0x07FF);
+}
 // EOF
 // vim: et:sw=4:ts=4

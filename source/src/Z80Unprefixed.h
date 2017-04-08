@@ -76,6 +76,8 @@
 #include "Z80Ei.h"
 
 #include "Z80AddHlReg.h"
+#include "Z80IncRegP.h"
+#include "Z80DecRegP.h"
 
 #include "Z80JpWord.h"
 #include "Z80JpCcWord.h"
@@ -164,6 +166,8 @@ class Z80Unprefixed
         Z80Ei iEi;
 
         Z80AddHlReg iAddHlReg;
+        Z80IncRegP iIncRegP;
+        Z80DecRegP iDecRegP;
 
         Z80JpWord iJpWord;
         Z80JpCcWord iJpCcWord;
@@ -190,10 +194,10 @@ class Z80Unprefixed
                 {
                     // y = 0
                     {
-                        &iNop,
+                        &iNop,          // 00000000: NOP
                         &iLdRegWord,    // 00000001: LD BC, nn
                         &iLdPtrBcA,     // 00000010: LD (BC), A
-                        &iNop,
+                        &iIncRegP,      // 00000011: INC BC
                         &iIncReg,       // 00000100: INC B
                         &iDecReg,       // 00000101: DEC B
                         &iLdRegByte,    // 00000110: LD B, n
@@ -204,7 +208,7 @@ class Z80Unprefixed
                         &iExAfAf,       // 00001000: EX AF, AF'
                         &iAddHlReg,     // 00001001: ADD HL, BC
                         &iLdAPtrBc,     // 00001010: LD A, (BC)
-                        &iNop,
+                        &iDecRegP,      // 00001011: DEC BC
                         &iIncReg,       // 00001100: INC C
                         &iDecReg,       // 00001101: DEC C
                         &iLdRegByte,    // 00001110: LD C, n
@@ -215,7 +219,7 @@ class Z80Unprefixed
                         &iDjnz,         // 00010000: DJNZ n
                         &iLdRegWord,    // 00010001: LD DE, nn
                         &iLdPtrDeA,     // 00010010: LD (DE), A
-                        &iNop,
+                        &iIncRegP,      // 00010011: INC DE
                         &iIncReg,       // 00010100: INC D
                         &iDecReg,       // 00010101: DEC D
                         &iLdRegByte,    // 00010110: LD D, n
@@ -226,7 +230,7 @@ class Z80Unprefixed
                         &iJrByte,       // 00011000: JR n
                         &iAddHlReg,     // 00011001: ADD HL, DE
                         &iLdAPtrDe,     // 00011010: LD A, (DE)
-                        &iNop,
+                        &iDecRegP,      // 00011011: DEC DE
                         &iIncReg,       // 00011100: INC E
                         &iDecReg,       // 00011101: DEC E
                         &iLdRegByte,    // 00011110: LD E, n
@@ -237,7 +241,7 @@ class Z80Unprefixed
                         &iJrCcByte,     // 00100000: JR NZ, n
                         &iLdRegWord,    // 00100001: LD HL, nn
                         &iLdPtrWordHl,  // 00100010: LD (nn), HL
-                        &iNop,
+                        &iIncRegP,      // 00100011: INC HL
                         &iIncReg,       // 00100100: INC H
                         &iDecReg,       // 00100101: DEC H
                         &iLdRegByte,    // 00100110: LD H, n
@@ -248,7 +252,7 @@ class Z80Unprefixed
                         &iJrCcByte,     // 00101000: JR Z, n
                         &iAddHlReg,     // 00101001: ADD HL, HL
                         &iLdHlPtrWord,  // 00101010: LD HL, (nn)
-                        &iNop,
+                        &iDecRegP,      // 00101011: DEC HL
                         &iIncReg,       // 00101100: INC L
                         &iDecReg,       // 00101101: DEC L
                         &iLdRegByte,    // 00101110: LD L, n
@@ -259,7 +263,7 @@ class Z80Unprefixed
                         &iJrCcByte,     // 00110000: JR NC, n
                         &iLdRegWord,    // 00110001: LD SP, nn
                         &iLdPtrWordA,   // 00110010: LD (nn), A
-                        &iNop,
+                        &iIncRegP,      // 00110011: INC SP
                         &iIncPtrHl,     // 00110100: INC (HL)
                         &iDecPtrHl,     // 00110101: DEC (HL)
                         &iLdPtrHlByte,  // 00110110: LD (HL), n
@@ -270,7 +274,7 @@ class Z80Unprefixed
                         &iJrCcByte,     // 00111000: JR C, n
                         &iAddHlReg,     // 00111001: ADD HL, SP
                         &iLdAPtrWord,   // 00111010: LD A, (nn)
-                        &iNop,
+                        &iDecRegP,      // 00111011: DEC SP
                         &iIncReg,       // 00111100: INC A
                         &iDecReg,       // 00111101: DEC A
                         &iLdRegByte,    // 00111110: LD A, n
