@@ -1,18 +1,22 @@
 #pragma once
 
-/** Z80LdIyWord.h
+/** Z80LdRegYWord.h
  *
+ * FD Prefixed instructions.
+ * Instruction: LD BC, nn
+ * Instruction: LD DE, nn
  * Instruction: LD IY, nn
+ * Instruction: LD SP, nn
  *
  */
 
 #include "Z80Instruction.h"
 #include "Z80RegisterSet.h"
 
-class Z80LdIyWord : public Z80Instruction
+class Z80LdRegYWord : public Z80Instruction
 {
     public:
-        Z80LdIyWord() {}
+        Z80LdRegYWord() {}
 
         bool operator()(Z80RegisterSet* r)
         {
@@ -28,7 +32,7 @@ class Z80LdIyWord : public Z80Instruction
                     return true;
 
                 case 2:
-                    r->iy.w = r->iReg.w;
+                    *r->regpy[r->p] = r->iReg.w;
                     r->prefix = PREFIX_NO;
                     return true;
 

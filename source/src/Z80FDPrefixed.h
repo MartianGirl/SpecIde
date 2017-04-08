@@ -24,8 +24,7 @@
 #include "Z80LdPtrIyByte.h"
 #include "Z80LdPtrIyReg.h"
 
-#include "Z80LdRegWord.h"
-#include "Z80LdIyWord.h"
+#include "Z80LdRegYWord.h"
 #include "Z80LdIyPtrWord.h"
 #include "Z80LdPtrWordIy.h"
 #include "Z80LdSpIy.h"
@@ -78,6 +77,8 @@
 #include "Z80Di.h"
 #include "Z80Ei.h"
 
+#include "Z80AddIyRegY.h"
+
 #include "Z80JpWord.h"
 #include "Z80JpCcWord.h"
 #include "Z80JrByte.h"
@@ -113,8 +114,7 @@ class Z80FDPrefixed
         Z80LdPtrIyByte iLdPtrIyByte;
         Z80LdPtrIyReg iLdPtrIyReg;
 
-        Z80LdRegWord iLdRegWord;
-        Z80LdIyWord iLdIyWord;
+        Z80LdRegYWord iLdRegYWord;
         Z80LdIyPtrWord iLdIyPtrWord;
         Z80LdPtrWordIy iLdPtrWordIy;
         Z80LdSpIy iLdSpIy;
@@ -167,6 +167,8 @@ class Z80FDPrefixed
         Z80Di iDi;
         Z80Ei iEi;
 
+        Z80AddIyRegY iAddIyRegY;
+
         Z80JpWord iJpWord;
         Z80JpCcWord iJpCcWord;
         Z80JrByte iJrByte;
@@ -193,7 +195,7 @@ class Z80FDPrefixed
                     // y = 0
                     {
                         &iNop,
-                        &iLdRegWord,    // 00000001: LD BC, nn
+                        &iLdRegYWord,   // 00000001: LD BC, nn
                         &iLdPtrBcA,     // 00000010: LD (BC), A
                         &iNop,
                         &iIncRegY,      // 00000100: INC B
@@ -204,7 +206,7 @@ class Z80FDPrefixed
                     // y = 1
                     {
                         &iExAfAf,       // 00001000: EX AF, AF'
-                        &iNop,
+                        &iAddIyRegY,    // 00001001: ADD IY, BC
                         &iLdAPtrBc,     // 00001010: LD A, (BC)
                         &iNop,
                         &iIncRegY,      // 00001100: INC C
@@ -215,7 +217,7 @@ class Z80FDPrefixed
                     // y = 2
                     {
                         &iDjnz,         // 00010000: DJNZ n
-                        &iLdRegWord,    // 00010001: LD DE, nn
+                        &iLdRegYWord,   // 00010001: LD DE, nn
                         &iLdPtrDeA,     // 00010010: LD (DE), A
                         &iNop,
                         &iIncRegY,      // 00010100: INC D
@@ -226,7 +228,7 @@ class Z80FDPrefixed
                     // y = 3
                     {
                         &iJrByte,       // 00011000: JR n
-                        &iNop,
+                        &iAddIyRegY,    // 00011001: ADD IY, DE
                         &iLdAPtrDe,     // 00011010: LD A, (DE)
                         &iNop,
                         &iIncRegY,      // 00011100: INC E
@@ -237,7 +239,7 @@ class Z80FDPrefixed
                     // y = 4
                     {
                         &iJrCcByte,     // 00100000: JR NZ, n
-                        &iLdIyWord,     // 00100001: LD IY, nn
+                        &iLdRegYWord,   // 00100001: LD IY, nn
                         &iLdPtrWordIy,  // 00100010: LD (nn), IY
                         &iNop,
                         &iIncRegY,      // 00100100: INC IYh
@@ -248,7 +250,7 @@ class Z80FDPrefixed
                     // y = 5
                     {
                         &iJrCcByte,     // 00101000: JR Z, n
-                        &iNop,
+                        &iAddIyRegY,    // 00101001: ADD IY, IY
                         &iLdIyPtrWord,  // 00101010: LD IY, (nn)
                         &iNop,
                         &iIncRegY,      // 00101100: INC IYl
@@ -259,7 +261,7 @@ class Z80FDPrefixed
                     // y = 6
                     {
                         &iJrCcByte,     // 00110000: JR NC, n
-                        &iLdRegWord,    // 00110001: LD SP, nn
+                        &iLdRegYWord,   // 00110001: LD SP, nn
                         &iLdPtrWordA,   // 00110010: LD (nn), A
                         &iNop,
                         &iIncPtrIy,     // 00110100: INC (IY+d)
@@ -270,7 +272,7 @@ class Z80FDPrefixed
                     // y = 7
                     {
                         &iJrCcByte,     // 00111000: JR C, n
-                        &iNop,
+                        &iAddIyRegY,    // 00111001: ADD IY, SP
                         &iLdAPtrWord,   // 00111010: LD A, (nn)
                         &iNop,
                         &iIncRegY,      // 00111100: INC A

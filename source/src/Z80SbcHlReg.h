@@ -1,18 +1,18 @@
 #pragma once
 
-/** Z80AdcHlReg.h
+/** Z80SbcHlReg.h
  *
- * Instruction: ADC HL, rr
+ * Instruction: SBC HL, rr
  *
  */
 
 #include "Z80Instruction.h"
 #include "Z80RegisterSet.h"
 
-class Z80AdcHlReg : public Z80Instruction
+class Z80SbcHlReg : public Z80Instruction
 {
     public:
-        Z80AdcHlReg() {}
+        Z80SbcHlReg() {}
 
         bool operator()(Z80RegisterSet* r)
         {
@@ -31,14 +31,14 @@ class Z80AdcHlReg : public Z80Instruction
                     return false;
 
                 case 2:
-                    // First, do the low byte addition. Carry is in lowest
+                    // First, do the low byte subtraction. Carry is in lowest
                     // bit of H. Add carry here.
-                    r->hl.w = r->acc.l + r->tmp.l + (r->af.l & FLAG_C);
+                    r->hl.w = r->tmp.l - r->acc.l - (r->af.l & FLAG_C);
                     r->acc.w = r->acc.h;
                     r->af.l = r->hl.h & FLAG_C;
 
-                    // Perform the addition in H, including low byte carry.
-                    r->hl.h = r->acc.l + r->tmp.h + (r->af.l & FLAG_C);
+                    // Perform the subtraction in H, including low byte carry.
+                    r->hl.h = r->tmp.h - r->acc.l - (r->af.l & FLAG_C);
                     return false;
 
                 case 3:
@@ -52,7 +52,7 @@ class Z80AdcHlReg : public Z80Instruction
 
                 case 4:
                     // Carry out of bit 7
-                    r->acc.w += r->tmp.h + (r->af.l & FLAG_C);
+                    r->acc.w = r->tmp.h - r->acc.l - (r->af.l & FLAG_C);
                     r->af.l ^= ((r->acc.h & FLAG_C) << 2) & FLAG_PV;
                     r->af.l &= ~FLAG_C;
                     r->af.l |= (r->acc.h & FLAG_C);
@@ -62,6 +62,7 @@ class Z80AdcHlReg : public Z80Instruction
                     // Sign is affected by the 16-bit result - hence high byte.
                     // 5 and 3 are affected by the high byte.
                     r->af.l |= r->hl.h & (FLAG_S | FLAG_5 | FLAG_3);
+                    r->af.l |= FLAG_N;
                     return false;
 
                 case 6:

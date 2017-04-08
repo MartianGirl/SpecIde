@@ -75,6 +75,8 @@
 #include "Z80Di.h"
 #include "Z80Ei.h"
 
+#include "Z80AddHlReg.h"
+
 #include "Z80JpWord.h"
 #include "Z80JpCcWord.h"
 #include "Z80JrByte.h"
@@ -161,6 +163,8 @@ class Z80Unprefixed
         Z80Di iDi;
         Z80Ei iEi;
 
+        Z80AddHlReg iAddHlReg;
+
         Z80JpWord iJpWord;
         Z80JpCcWord iJpCcWord;
         Z80JrByte iJrByte;
@@ -198,7 +202,7 @@ class Z80Unprefixed
                     // y = 1
                     {
                         &iExAfAf,       // 00001000: EX AF, AF'
-                        &iNop,
+                        &iAddHlReg,     // 00001001: ADD HL, BC
                         &iLdAPtrBc,     // 00001010: LD A, (BC)
                         &iNop,
                         &iIncReg,       // 00001100: INC C
@@ -220,7 +224,7 @@ class Z80Unprefixed
                     // y = 3
                     {
                         &iJrByte,       // 00011000: JR n
-                        &iNop,
+                        &iAddHlReg,     // 00011001: ADD HL, DE
                         &iLdAPtrDe,     // 00011010: LD A, (DE)
                         &iNop,
                         &iIncReg,       // 00011100: INC E
@@ -242,7 +246,7 @@ class Z80Unprefixed
                     // y = 5
                     {
                         &iJrCcByte,     // 00101000: JR Z, n
-                        &iNop,
+                        &iAddHlReg,     // 00101001: ADD HL, HL
                         &iLdHlPtrWord,  // 00101010: LD HL, (nn)
                         &iNop,
                         &iIncReg,       // 00101100: INC L
@@ -264,7 +268,7 @@ class Z80Unprefixed
                     // y = 7
                     {
                         &iJrCcByte,     // 00111000: JR C, n
-                        &iNop,
+                        &iAddHlReg,     // 00111001: ADD HL, SP
                         &iLdAPtrWord,   // 00111010: LD A, (nn)
                         &iNop,
                         &iIncReg,       // 00111100: INC A

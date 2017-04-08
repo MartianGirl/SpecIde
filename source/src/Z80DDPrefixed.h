@@ -24,8 +24,7 @@
 #include "Z80LdPtrIxByte.h"
 #include "Z80LdPtrIxReg.h"
 
-#include "Z80LdRegWord.h"
-#include "Z80LdIxWord.h"
+#include "Z80LdRegXWord.h"
 #include "Z80LdIxPtrWord.h"
 #include "Z80LdPtrWordIx.h"
 #include "Z80LdSpIx.h"
@@ -78,6 +77,8 @@
 #include "Z80Di.h"
 #include "Z80Ei.h"
 
+#include "Z80AddIxRegX.h"
+
 #include "Z80JpWord.h"
 #include "Z80JpCcWord.h"
 #include "Z80JrByte.h"
@@ -113,8 +114,7 @@ class Z80DDPrefixed
         Z80LdPtrIxByte iLdPtrIxByte;
         Z80LdPtrIxReg iLdPtrIxReg;
 
-        Z80LdRegWord iLdRegWord;
-        Z80LdIxWord iLdIxWord;
+        Z80LdRegXWord iLdRegXWord;
         Z80LdIxPtrWord iLdIxPtrWord;
         Z80LdPtrWordIx iLdPtrWordIx;
         Z80LdSpIx iLdSpIx;
@@ -167,6 +167,8 @@ class Z80DDPrefixed
         Z80Di iDi;
         Z80Ei iEi;
 
+        Z80AddIxRegX iAddIxRegX;
+
         Z80JpWord iJpWord;
         Z80JpCcWord iJpCcWord;
         Z80JrByte iJrByte;
@@ -193,7 +195,7 @@ class Z80DDPrefixed
                     // y = 0
                     {
                         &iNop,
-                        &iLdRegWord,    // 00000001: LD BC, nn
+                        &iLdRegXWord,   // 00000001: LD BC, nn
                         &iLdPtrBcA,     // 00000010: LD (BC), A
                         &iNop,
                         &iIncRegX,      // 00000100: INC B
@@ -204,7 +206,7 @@ class Z80DDPrefixed
                     // y = 1
                     {
                         &iExAfAf,       // 00001000: EX AF, AF'
-                        &iNop,
+                        &iAddIxRegX,    // 00001001: ADD IX, BC
                         &iLdAPtrBc,     // 00001010: LD A, (BC)
                         &iNop,
                         &iIncRegX,      // 00001100: INC C
@@ -215,7 +217,7 @@ class Z80DDPrefixed
                     // y = 2
                     {
                         &iDjnz,         // 00010000: DJNZ n
-                        &iLdRegWord,    // 00010001: LD DE, nn
+                        &iLdRegXWord,   // 00010001: LD DE, nn
                         &iLdPtrDeA,     // 00010010: LD (DE), A
                         &iNop,
                         &iIncRegX,      // 00010100: INC D
@@ -226,7 +228,7 @@ class Z80DDPrefixed
                     // y = 3
                     {
                         &iJrByte,       // 00011000: JR n
-                        &iNop,
+                        &iAddIxRegX,    // 00011001: ADD IX, DE
                         &iLdAPtrDe,     // 00011010: LD A, (DE)
                         &iNop,
                         &iIncRegX,      // 00011100: INC E
@@ -237,7 +239,7 @@ class Z80DDPrefixed
                     // y = 4
                     {
                         &iJrCcByte,     // 00100000: JR NZ, n
-                        &iLdIxWord,     // 00100001: LD IX, nn
+                        &iLdRegXWord,   // 00100001: LD IX, nn
                         &iLdPtrWordIx,  // 00100010: LD (nn), IX
                         &iNop,
                         &iIncRegX,      // 00100100: INC IXh
@@ -248,7 +250,7 @@ class Z80DDPrefixed
                     // y = 5
                     {
                         &iJrCcByte,     // 00101000: JR Z, n
-                        &iNop,
+                        &iAddIxRegX,    // 00101001: ADD IX, IX
                         &iLdIxPtrWord,  // 00101010: LD IX, (nn)
                         &iNop,
                         &iIncRegX,      // 00101100: INC IXl
@@ -259,7 +261,7 @@ class Z80DDPrefixed
                     // y = 6
                     {
                         &iJrCcByte,     // 00110000: JR NC, n
-                        &iLdRegWord,    // 00110001: LD SP, nn
+                        &iLdRegXWord,   // 00110001: LD SP, nn
                         &iLdPtrWordA,   // 00110010: LD (nn), A
                         &iNop,
                         &iIncPtrIx,     // 00110100: INC (IX+d)
@@ -270,7 +272,7 @@ class Z80DDPrefixed
                     // y = 7
                     {
                         &iJrCcByte,     // 00111000: JR C, n
-                        &iNop,
+                        &iAddIxRegX,    // 00111001: ADD IX, SP
                         &iLdAPtrWord,   // 00111010: LD A, (nn)
                         &iNop,
                         &iIncRegX,      // 00111100: INC A

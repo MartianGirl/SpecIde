@@ -36,6 +36,8 @@ class Z80RegisterSet
         uint8_t* regy8[8];
         uint16_t* regp[4];
         uint16_t* regp2[4];
+        uint16_t* regpx[4];
+        uint16_t* regpy[4];
 
         Z80Register iReg;
         Z80Register oReg;

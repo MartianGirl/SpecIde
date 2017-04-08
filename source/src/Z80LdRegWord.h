@@ -28,7 +28,7 @@ class Z80LdRegWord : public Z80Instruction
                     return true;
 
                 case 2:
-                    *(r->regp[r->p]) = r->iReg.w;
+                    *r->regp[r->p] = r->iReg.w;
                     r->prefix = PREFIX_NO;
                     return true;
 

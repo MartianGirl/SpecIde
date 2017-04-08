@@ -6,6 +6,8 @@ Z80RegisterSet::Z80RegisterSet() :
     regy8{&bc.h, &bc.l, &de.h, &de.l, &iy.h, &iy.l, nullptr, &af.h},
     regp{&bc.w, &de.w, &hl.w, &sp.w},
     regp2{&bc.w, &de.w, &hl.w, &af.w},
+    regpx{&bc.w, &de.w, &ix.w, &sp.w},
+    regpy{&bc.w, &de.w, &iy.w, &sp.w},
     x(0), y(0), z(0), p(0), q(0),
     prefix(0),
     executionStep(0),
