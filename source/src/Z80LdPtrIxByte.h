@@ -4,6 +4,10 @@
  *
  * Instruction: LD (IX+d), n
  *
+ * Encoding: 11 011 101  00 110 110
+ * M Cycles: 5 (DD, OCF, MRB, MRB/CPU, MWB)
+ * T States: 19
+ *
  */
 
 #include "Z80Instruction.h"
@@ -20,7 +24,6 @@ class Z80LdPtrIxByte : public Z80Instruction
             {
                 case 0:
                     r->memRdCycles = 2;
-                    r->memWrCycles = 0;
                     r->memAddrMode = 0x00000611;
                     return true;
 

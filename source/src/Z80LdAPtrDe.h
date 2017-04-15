@@ -4,6 +4,10 @@
  *
  * Instruction: LD A, (DE)
  *
+ * Encoding: 00 011 010
+ * M Cycles: 2 (OCF, MRB)
+ * T States: 7
+ *
  */
 
 #include "Z80Instruction.h"
@@ -20,7 +24,6 @@ class Z80LdAPtrDe : public Z80Instruction
             {
                 case 0:
                     r->memRdCycles = 1;
-                    r->memWrCycles = 0;
                     r->memAddrMode = 0x00000004;
                     return true;
 

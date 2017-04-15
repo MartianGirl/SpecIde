@@ -4,6 +4,20 @@
  *
  * Instruction: LD r, n
  *
+ * Encoding: 00 rrr 110
+ * M Cycles: 2 (OCF, MRB)
+ * T States: 7
+ *
+ * Reg rrr
+ * --- ---
+ *  B  000
+ *  C  001
+ *  D  010
+ *  E  011
+ *  H  100
+ *  L  101
+ *  A  111
+ *
  */
 
 #include "Z80Instruction.h"
@@ -20,7 +34,6 @@ class Z80LdRegByte : public Z80Instruction
             {
                 case 0:
                     r->memRdCycles = 1;
-                    r->memWrCycles = 0;
                     r->memAddrMode = 0x00000001;
                     return true;
 

@@ -4,6 +4,20 @@
  *
  * Instruction: FD-prefixed LD r, n
  *
+ * Encoding: 11 111 101  00 rrr 110
+ * M Cycles: 3 (FD, OCF, MRB)
+ * T States: 11
+ *
+ * Reg rrr
+ * --- ---
+ *  B  000
+ *  C  001
+ *  D  010
+ *  E  011
+ * IYh 100
+ * IYl 101
+ *  A  111
+ *
  */
 
 #include "Z80Instruction.h"
@@ -20,7 +34,6 @@ class Z80LdRegYByte : public Z80Instruction
             {
                 case 0:
                     r->memRdCycles = 1;
-                    r->memWrCycles = 0;
                     r->memAddrMode = 0x00000001;
                     return true;
 

@@ -32,6 +32,7 @@ class Z80Decoder
         void readByte(uint_fast8_t byte);
         uint_fast16_t getAddress();
         uint_fast8_t writeByte();
+        void cpuProcCycle();
         bool execute();
         bool executeNmi();
         bool executeInt();

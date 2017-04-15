@@ -53,6 +53,8 @@ class Z80RegisterSet
         uint_fast8_t prefix;
         size_t executionStep;
         size_t memRdCycles, memWrCycles;
+        size_t ioRdCycles, ioWrCycles;
+        size_t cpuProcCycles;
         uint_fast32_t memAddrMode;
 };
 

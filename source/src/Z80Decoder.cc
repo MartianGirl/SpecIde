@@ -17,6 +17,12 @@ void Z80Decoder::decode(uint_fast8_t opcode)
 void Z80Decoder::startInstruction()
 {
     regs.executionStep = 0;
+
+    regs.memRdCycles = 0;
+    regs.memWrCycles = 0;
+    regs.ioRdCycles = 0;
+    regs.ioWrCycles = 0;
+    regs.cpuProcCycles = 0;
 }
 
 uint_fast16_t Z80Decoder::getAddress()
@@ -27,7 +33,7 @@ uint_fast16_t Z80Decoder::getAddress()
             break;
         case 0x01:  // Direct Immediate:    LD A, n
             regs.addr.w = regs.pc.w;
-            regs.pc.w++;
+            ++regs.pc.w;
             break;
         case 0x02:  // Indirect HL:         LD A, (HL)
             regs.addr.w = regs.hl.w;
@@ -48,15 +54,15 @@ uint_fast16_t Z80Decoder::getAddress()
             regs.addr.w = regs.iReg.w;
             break;
         case 0x09:  // Indirect extended    LD HL, (nn) - high byte read
-            regs.addr.w++;
+            ++regs.addr.w;
             break;
         case 0x0A:  // Push                 PUSH AF
-            regs.sp.w--;
+            --regs.sp.w;
             regs.addr.w = regs.sp.w;
             break;
         case 0x0B:  // Pop                  POP AF
             regs.addr.w = regs.sp.w;
-            regs.sp.w++;
+            ++regs.sp.w;
             break;
         case 0x0C:  // Interrupt Mode 2
             regs.addr.w = ((regs.ir.h << 8) | regs.opcode);
@@ -73,7 +79,7 @@ uint_fast16_t Z80Decoder::getAddress()
 
 void Z80Decoder::readByte(uint_fast8_t byte)
 {
-    regs.memRdCycles--;
+    --regs.memRdCycles;
     regs.iReg.l = regs.iReg.h;
     regs.iReg.h = byte;
 }
@@ -82,8 +88,13 @@ uint_fast8_t Z80Decoder::writeByte()
 {
     uint_fast8_t byte = regs.oReg.l;
     regs.oReg.l = regs.oReg.h;
-    regs.memWrCycles--;
+    --regs.memWrCycles;
     return byte;
+}
+
+void Z80Decoder::cpuProcCycle()
+{
+    --regs.cpuProcCycles;
 }
 
 bool Z80Decoder::execute()
@@ -117,14 +128,14 @@ bool Z80Decoder::execute()
             break;
     }
 
-    regs.executionStep++;
+    ++regs.executionStep;
     return finished;
 }
 
 bool Z80Decoder::executeNmi()
 {
     bool finished = z80Nmi(&regs);
-    regs.executionStep++;
+    ++regs.executionStep;
     return finished;
 }
 
@@ -145,7 +156,7 @@ bool Z80Decoder::executeInt()
 
         case 2:             // Mode 2: Jump to the address in IR.h & data bus.
             finished = z80IntMode2(&regs);
-            regs.executionStep++;
+            ++regs.executionStep;
             break;
 
         default:

@@ -2,7 +2,21 @@
 
 /** Z80LdRegXRegX.h
  *
- * Instruction: LD r, r' (DD-Prefixed)
+ * Instruction: LD r, s (DD-Prefixed)
+ *
+ * Encoding: 11 011 101  01 rrr sss
+ * M Cycles: 2 (DD, OCF)
+ * T States: 8
+ *
+ * Reg rrr
+ * --- ---
+ *  B  000
+ *  C  001
+ *  D  010
+ *  E  011
+ * IXh 100
+ * IXl 101
+ *  A  111
  *
  */
 
@@ -19,8 +33,6 @@ class Z80LdRegXRegX : public Z80Instruction
             switch (r->executionStep)
             {
                 case 0:
-                    r->memRdCycles = 0;
-                    r->memWrCycles = 0;
                     r->memAddrMode = 0x00000000;
 
                     *(r->regx8[r->y]) = *(r->regx8[r->z]);

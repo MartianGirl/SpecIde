@@ -62,7 +62,7 @@ void Z80::clock()
             a = decoder.regs.pc.w;
 
             if (!intProcess && !nmiProcess && !(iff & HALT))
-                decoder.regs.pc.w++;
+                ++decoder.regs.pc.w;
 
             c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
@@ -193,9 +193,22 @@ void Z80::clock()
             state = finishMemoryCycle();
             break;
 
-        // M0. Wait state / Execution cycle (?)
+        // M0. CPU internal cycle. This is just a delimiter, it is almost
+        // the same as ST_M0_T0_WAITST, but it helps in setting end of cycle
+        // points for BUSRQ/BUSAK, for instance...
+        // The CPU internal cycle begins here, and it is extended by using
+        // WAITSTates.
+        case Z80State::ST_M0_T0_CPUPROC:
+            c |= SIGNAL_RFSH_;
+            decoder.cpuProcCycle();
+
+            state = finishMemoryCycle();
+            break;
+
+        // M0. Wait state
         case Z80State::ST_M0_T0_WAITST:
             c |= SIGNAL_RFSH_;
+
             state = finishMemoryCycle();
             break;
 
@@ -209,14 +222,16 @@ Z80State Z80::finishMemoryCycle()
 {
     bool endOfCycle = execute();
     
-    if (endOfCycle == false)    // Extend machine cycle. Some instructions do.
+    if (endOfCycle == false)    // Machine cycle not finished, insert a state.
         return Z80State::ST_M0_T0_WAITST;
     // BUSRQ goes here, after a complete machine cycle.
     // I'd have to consider if these extra states are actually part of the
     // machine cycle, or if they are something else.
-    else if (decoder.regs.memRdCycles)  // Perform read cycles.
+    else if (decoder.regs.memRdCycles)      // Perform read cycles.
         return Z80State::ST_M2_T1_ADDRWR;
-    else if (decoder.regs.memWrCycles)  // Perform write cycles.
+    else if (decoder.regs.cpuProcCycles)    // Perform internal CPU cycles.
+        return Z80State::ST_M0_T0_CPUPROC;
+    else if (decoder.regs.memWrCycles)      // Perform write cycles.
         return Z80State::ST_M3_T1_ADDRWR;
     // At this point we have completed a instruction. NMI and INT can
     // happen here.

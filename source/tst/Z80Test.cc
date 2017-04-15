@@ -618,7 +618,7 @@ BOOST_AUTO_TEST_CASE(ld_r_memix_test)
     loadBinary(code, m, 0x0000);
     loadBinary(data, m, 0x0100);
     startZ80(z80);
-    runCycles(z80, m, 149);
+    runCycles(z80, m, 155);
 
     BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0x0104);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.h, 0xA7);
@@ -648,7 +648,7 @@ BOOST_AUTO_TEST_CASE(ld_r_memiy_test)
     loadBinary(code, m, 0x0000);
     loadBinary(data, m, 0x0100);
     startZ80(z80);
-    runCycles(z80, m, 149);
+    runCycles(z80, m, 155);
 
     BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0x0104);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.h, 0xA7);
@@ -662,27 +662,29 @@ BOOST_AUTO_TEST_CASE(ld_memhl_r_test)
     Z80 z80;
     Memory m(16, false);
 
-    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0xA7;   // LD A, A7h
-    m.memory[0x0002] = 0x06; m.memory[0x0003] = 0xB0;   // LD B, B0h
-    m.memory[0x0004] = 0x0E; m.memory[0x0005] = 0xC1;   // LD C, C1h
-    m.memory[0x0006] = 0x16; m.memory[0x0007] = 0xD2;   // LD D, D2h
-    m.memory[0x0008] = 0x1E; m.memory[0x0009] = 0xE3;   // LD E, E3h
-    m.memory[0x000A] = 0x26; m.memory[0x000B] = 0x01;   // LD H, 01h
-    m.memory[0x000C] = 0x2E; m.memory[0x000D] = 0x07;   // LD L, 07h
-    m.memory[0x000E] = 0x77;                            // LD (HL), A 
-    m.memory[0x000F] = 0x2E; m.memory[0x0010] = 0x00;   // LD L, 00h
-    m.memory[0x0011] = 0x70;                            // LD (HL), B
-    m.memory[0x0012] = 0x2E; m.memory[0x0013] = 0x01;   // LD L, 01h
-    m.memory[0x0014] = 0x71;                            // LD (HL), C
-    m.memory[0x0015] = 0x2E; m.memory[0x0016] = 0x02;   // LD L, 02h
-    m.memory[0x0017] = 0x72;                            // LD (HL), D
-    m.memory[0x0018] = 0x2E; m.memory[0x0019] = 0x03;   // LD L, 03h
-    m.memory[0x001A] = 0x73;                            // LD (HL), E
-    m.memory[0x001B] = 0x2E; m.memory[0x001C] = 0x04;   // LD L, 04h
-    m.memory[0x001D] = 0x74;                            // LD (HL), H
-    m.memory[0x001E] = 0x2E; m.memory[0x001F] = 0x05;   // LD L, 05h
-    m.memory[0x0020] = 0x75;                            // LD (HL), L
+    string code =
+        "3EA7"          // LD A, A7h
+        "06B0"          // LD B, B0h
+        "0EC1"          // LD C, C1h
+        "16D2"          // LD D, D2h
+        "1EE3"          // LD E, E3h
+        "2601"          // LD H, 01h
+        "2E07"          // LD L, 07h
+        "77"            // LD (HL), A 
+        "2E00"          // LD L, 00h
+        "70"            // LD (HL), B
+        "2E01"          // LD L, 01h
+        "71"            // LD (HL), C
+        "2E02"          // LD L, 02h
+        "72"            // LD (HL), D
+        "2E03"          // LD L, 03h
+        "73"            // LD (HL), E
+        "2E04"          // LD L, 04h
+        "74"            // LD (HL), H
+        "2E05"          // LD L, 05h
+        "75";           // LD (HL), L
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
     runCycles(z80, m, 140);
 
@@ -704,23 +706,25 @@ BOOST_AUTO_TEST_CASE(ld_memix_r_test)
     Z80 z80;
     Memory m(16, false);
 
-    m.memory[0x0000] = 0xDD; m.memory[0x0001] = 0x26; m.memory[0x0002] = 0x01;  // LD IXh, 01h
-    m.memory[0x0003] = 0xDD; m.memory[0x0004] = 0x2E; m.memory[0x0005] = 0x04;  // LD IXl, 04h
-    m.memory[0x0006] = 0x3E; m.memory[0x0007] = 0xA7;                           // LD A, A7h
-    m.memory[0x0008] = 0x06; m.memory[0x0009] = 0xB0;                           // LD B, B0h
-    m.memory[0x000A] = 0x0E; m.memory[0x000B] = 0xC1;                           // LD C, C1h
-    m.memory[0x000C] = 0x16; m.memory[0x000D] = 0xD2;                           // LD D, D2h
-    m.memory[0x000E] = 0x1E; m.memory[0x000F] = 0xE3;                           // LD E, E3h
-    m.memory[0x0010] = 0x26; m.memory[0x0011] = 0x44;                           // LD H, 44h
-    m.memory[0x0012] = 0x2E; m.memory[0x0013] = 0x15;                           // LD L, 15h
-    m.memory[0x0014] = 0xDD; m.memory[0x0015] = 0x77; m.memory[0x0016] = 0x03;  // LD (IX + 3), A
-    m.memory[0x0017] = 0xDD; m.memory[0x0018] = 0x70; m.memory[0x0019] = 0xFC;  // LD (IX - 4), B
-    m.memory[0x001A] = 0xDD; m.memory[0x001B] = 0x71; m.memory[0x001C] = 0xFD;  // LD (IX - 3), C
-    m.memory[0x001D] = 0xDD; m.memory[0x001E] = 0x72; m.memory[0x001F] = 0xFE;  // LD (IX - 2), D
-    m.memory[0x0020] = 0xDD; m.memory[0x0021] = 0x73; m.memory[0x0022] = 0xFF;  // LD (IX - 1), E
-    m.memory[0x0023] = 0xDD; m.memory[0x0024] = 0x74; m.memory[0x0025] = 0x00;  // LD (IX + 0), H
-    m.memory[0x0026] = 0xDD; m.memory[0x0027] = 0x75; m.memory[0x0028] = 0x01;  // LD (IX + 1), L
+    string code =
+        "DD2601"        // LD IXh, 01h
+        "DD2E04"        // LD IXl, 04h
+        "3EA7"          // LD A, A7h
+        "06B0"          // LD B, B0h
+        "0EC1"          // LD C, C1h
+        "16D2"          // LD D, D2h
+        "1EE3"          // LD E, E3h
+        "2644"          // LD H, 44h
+        "2E15"          // LD L, 15h
+        "DD7703"        // LD (IX + 3), A
+        "DD70FC"        // LD (IX - 4), B
+        "DD71FD"        // LD (IX - 3), C
+        "DD72FE"        // LD (IX - 2), D
+        "DD73FF"        // LD (IX - 1), E
+        "DD7400"        // LD (IX + 0), H
+        "DD7501";       // LD (IX + 1), L
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
     runCycles(z80, m, 204);
 
@@ -743,23 +747,25 @@ BOOST_AUTO_TEST_CASE(ld_memiy_r_test)
     Z80 z80;
     Memory m(16, false);
 
-    m.memory[0x0000] = 0xFD; m.memory[0x0001] = 0x26; m.memory[0x0002] = 0x01;  // LD IYh, 01h
-    m.memory[0x0003] = 0xFD; m.memory[0x0004] = 0x2E; m.memory[0x0005] = 0x04;  // LD IYl, 04h
-    m.memory[0x0006] = 0x3E; m.memory[0x0007] = 0xA7;                           // LD A, A7h
-    m.memory[0x0008] = 0x06; m.memory[0x0009] = 0xB0;                           // LD B, B0h
-    m.memory[0x000A] = 0x0E; m.memory[0x000B] = 0xC1;                           // LD C, C1h
-    m.memory[0x000C] = 0x16; m.memory[0x000D] = 0xD2;                           // LD D, D2h
-    m.memory[0x000E] = 0x1E; m.memory[0x000F] = 0xE3;                           // LD E, E3h
-    m.memory[0x0010] = 0x26; m.memory[0x0011] = 0x44;                           // LD H, 44h
-    m.memory[0x0012] = 0x2E; m.memory[0x0013] = 0x15;                           // LD L, 15h
-    m.memory[0x0014] = 0xFD; m.memory[0x0015] = 0x77; m.memory[0x0016] = 0x03;  // LD (IY + 3), A
-    m.memory[0x0017] = 0xFD; m.memory[0x0018] = 0x70; m.memory[0x0019] = 0xFC;  // LD (IY - 4), B
-    m.memory[0x001A] = 0xFD; m.memory[0x001B] = 0x71; m.memory[0x001C] = 0xFD;  // LD (IY - 3), C
-    m.memory[0x001D] = 0xFD; m.memory[0x001E] = 0x72; m.memory[0x001F] = 0xFE;  // LD (IY - 2), D
-    m.memory[0x0020] = 0xFD; m.memory[0x0021] = 0x73; m.memory[0x0022] = 0xFF;  // LD (IY - 1), E
-    m.memory[0x0023] = 0xFD; m.memory[0x0024] = 0x74; m.memory[0x0025] = 0x00;  // LD (IY + 0), H
-    m.memory[0x0026] = 0xFD; m.memory[0x0027] = 0x75; m.memory[0x0028] = 0x01;  // LD (IY + 1), L
+    string code =
+        "FD2601"        // LD IYh, 01h
+        "FD2E04"        // LD IYl, 04h
+        "3EA7"          // LD A, A7h
+        "06B0"          // LD B, B0h
+        "0EC1"          // LD C, C1h
+        "16D2"          // LD D, D2h
+        "1EE3"          // LD E, E3h
+        "2644"          // LD H, 44h
+        "2E15"          // LD L, 15h
+        "FD7703"        // LD (IY + 3), A
+        "FD70FC"        // LD (IY - 4), B
+        "FD71FD"        // LD (IY - 3), C
+        "FD72FE"        // LD (IY - 2), D
+        "FD73FF"        // LD (IY - 1), E
+        "FD7400"        // LD (IY + 0), H
+        "FD7501";       // LD (IY + 1), L
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
     runCycles(z80, m, 204);
 
@@ -1792,5 +1798,144 @@ BOOST_AUTO_TEST_CASE(cpdr_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x46);
 }
 
+BOOST_AUTO_TEST_CASE(ld_r_memix_states_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "DD2601"        // LD IXh, 01h
+        "DD2E04"        // LD IXl, 04h
+        "DD7E03"        // LD A, (IX + 3)
+        "DD46FC"        // LD B, (IX - 4)
+        "DD4EFD"        // LD C, (IX - 3)
+        "DD56FE"        // LD D, (IX - 2)
+        "67";           // LD H, A
+
+    string data = "B0C1D2E3441500A7";
+
+    loadBinary(code, m, 0x0000);
+    loadBinary(data, m, 0x0100);
+    startZ80(z80);
+
+    runCycles(z80, m, 98);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0x0104);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.h, 0xA7);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xB0C1);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xD2FF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
+
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xA7FF);
+}
+
+BOOST_AUTO_TEST_CASE(ld_r_memiy_states_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "FD2601"        // LD IYh, 01h
+        "FD2E04"        // LD IYl, 04h
+        "FD7E03"        // LD A, (IY + 3)
+        "FD46FC"        // LD B, (IY - 4)
+        "FD4EFD"        // LD C, (IY - 3)
+        "FD56FE"        // LD D, (IY - 2)
+        "67";           // LD H, A
+
+    string data = "B0C1D2E3441500A7";
+
+    loadBinary(code, m, 0x0000);
+    loadBinary(data, m, 0x0100);
+    startZ80(z80);
+
+    runCycles(z80, m, 98);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0x0104);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.h, 0xA7);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xB0C1);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xD2FF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
+
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xA7FF);
+}
+
+BOOST_AUTO_TEST_CASE(ld_memix_r_states_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "DD2601"        // LD IXh, 01h
+        "DD2E04"        // LD IXl, 04h
+        "3EA7"          // LD A, A7h
+        "06B0"          // LD B, B0h
+        "0EC1"          // LD C, C1h
+        "16D2"          // LD D, D2h
+        "DD7703"        // LD (IX + 3), A
+        "DD70FC"        // LD (IX - 4), B
+        "DD71FD"        // LD (IX - 3), C
+        "DD72FE"        // LD (IX - 2), D
+        "67";           // LD H, A
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+
+    runCycles(z80, m, 126);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.ix.w, 0x0104);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.h, 0xA7);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xB0C1);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xD2FF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(m.memory[0x0107], 0xA7);
+    BOOST_CHECK_EQUAL(m.memory[0x0100], 0xB0);
+    BOOST_CHECK_EQUAL(m.memory[0x0101], 0xC1);
+    BOOST_CHECK_EQUAL(m.memory[0x0102], 0xD2);
+    BOOST_CHECK_EQUAL(m.memory[0x0103], 0x00);
+    BOOST_CHECK_EQUAL(m.memory[0x0104], 0x00);
+    BOOST_CHECK_EQUAL(m.memory[0x0105], 0x00);
+
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xA7FF);
+}
+
+BOOST_AUTO_TEST_CASE(ld_memiy_r_states_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "FD2601"        // LD IYh, 01h
+        "FD2E04"        // LD IYl, 04h
+        "3EA7"          // LD A, A7h
+        "06B0"          // LD B, B0h
+        "0EC1"          // LD C, C1h
+        "16D2"          // LD D, D2h
+        "FD7703"        // LD (IY + 3), A
+        "FD70FC"        // LD (IY - 4), B
+        "FD71FD"        // LD (IY - 3), C
+        "FD72FE"        // LD (IY - 2), D
+        "67";           // LD H, A
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+
+    runCycles(z80, m, 126);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.iy.w, 0x0104);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.h, 0xA7);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xB0C1);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xD2FF);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
+    BOOST_CHECK_EQUAL(m.memory[0x0107], 0xA7);
+    BOOST_CHECK_EQUAL(m.memory[0x0100], 0xB0);
+    BOOST_CHECK_EQUAL(m.memory[0x0101], 0xC1);
+    BOOST_CHECK_EQUAL(m.memory[0x0102], 0xD2);
+    BOOST_CHECK_EQUAL(m.memory[0x0103], 0x00);
+    BOOST_CHECK_EQUAL(m.memory[0x0104], 0x00);
+    BOOST_CHECK_EQUAL(m.memory[0x0105], 0x00);
+
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xA7FF);
+}
 // EOF
 // vim: et:sw=4:ts=4

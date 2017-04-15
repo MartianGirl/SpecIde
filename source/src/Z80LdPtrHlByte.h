@@ -4,6 +4,10 @@
  *
  * Instruction: LD (HL), n
  *
+ * Encoding: 00 110 110
+ * M Cycles: 3 (OCF, MRB, MWB)
+ * T States: 10
+ *
  */
 
 #include "Z80Instruction.h"

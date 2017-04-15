@@ -11,7 +11,9 @@ Z80RegisterSet::Z80RegisterSet() :
     x(0), y(0), z(0), p(0), q(0),
     prefix(0),
     executionStep(0),
-    memRdCycles(0), memWrCycles(0)
+    memRdCycles(0), memWrCycles(0),
+    ioRdCycles(0), ioWrCycles(0),
+    cpuProcCycles(0)
 {
 }
 

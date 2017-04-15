@@ -4,6 +4,10 @@
  *
  * Instruction: LD R, A
  *
+ * Encoding: 11 101 101  01 001 111
+ * M Cycles: 2 (ED, OCF)
+ * T States: 9
+ *
  */
 
 #include "Z80Instruction.h"
@@ -19,13 +23,11 @@ class Z80LdRA : public Z80Instruction
             switch (r->executionStep)
             {
                 case 0:
-                    r->memRdCycles = 0;
-                    r->memWrCycles = 0;
                     r->memAddrMode = 0x00000000;
-                    r->ir.l = r->af.h;
                     return false;
 
                 case 1:
+                    r->ir.l = r->af.h;
                     r->prefix = PREFIX_NO;
                     return true;
 

@@ -65,6 +65,7 @@ enum class Z80State
     ST_M3_T2_WAITST,
     ST_M3_T3_DATAWR,
 
+    ST_M0_T0_CPUPROC,
     ST_M0_T0_WAITST
 };
 
