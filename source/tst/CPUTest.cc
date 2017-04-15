@@ -1,7 +1,7 @@
-//#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE CPU test
-//#include <boost/test/unit_test.hpp>
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
+//#include <boost/test/included/unit_test.hpp>
 
 #include "CPU.h"
 
