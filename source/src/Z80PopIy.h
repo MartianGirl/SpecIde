@@ -4,6 +4,10 @@
  *
  * Instruction: POP IY
  *
+ * Encoding: 11 111 101  11 100 001
+ * M Cycles: 4 (FD, OCF, MRL, MRH)
+ * T States: 15
+ *
  */
 
 #include "Z80Instruction.h"
@@ -20,7 +24,6 @@ class Z80PopIy : public Z80Instruction
             {
                 case 0:
                     r->memRdCycles = 2;
-                    r->memWrCycles = 0;
                     r->memAddrMode = 0x000000BB;
                     return true;
 

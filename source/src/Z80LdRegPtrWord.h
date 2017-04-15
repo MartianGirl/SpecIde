@@ -4,6 +4,17 @@
  *
  * Instruction: LD rr, (nn)
  *
+ * Encoding: 11 101 101  01 rr1 011
+ * M Cycles: 5 (ED, OCF, MRL, MRH, MRL, MRH)
+ * T States: 20
+ *
+ *  Reg rr
+ * --------
+ *  BC  00
+ *  DE  01
+ *  IY  10
+ *  SP  11
+ *
  */
 
 #include "Z80Instruction.h"
@@ -20,7 +31,6 @@ class Z80LdRegPtrWord : public Z80Instruction
             {
                 case 0:
                     r->memRdCycles = 4;
-                    r->memWrCycles = 0;
                     r->memAddrMode = 0x00009811;
                     return true;
 

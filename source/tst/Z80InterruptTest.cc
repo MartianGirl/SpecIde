@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(halt_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.c & SIGNAL_HALT_, 0);
+    BOOST_CHECK((z80.c & SIGNAL_HALT_) == 0);
 
     runCycles(z80, m, 2);
     z80.c &= ~SIGNAL_NMI_;
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(halt_test)
     z80.c ^= SIGNAL_NMI_;
     runCycles(z80, m, 11);
     BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0066);
-    BOOST_CHECK_EQUAL(z80.c & SIGNAL_HALT_, SIGNAL_HALT_);
+    BOOST_CHECK((z80.c & SIGNAL_HALT_) == SIGNAL_HALT_);
     runCycles(z80, m, 24);
     BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0001);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFFFF);
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(halt_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xAAAA);
     BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.c & SIGNAL_HALT_, 0);
+    BOOST_CHECK((z80.c & SIGNAL_HALT_) == 0);
 
     runCycles(z80, m, 2);
     z80.c &= ~SIGNAL_INT_;
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE(halt_test)
     z80.c ^= SIGNAL_INT_;
     runCycles(z80, m, 13);
     BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0038);
-    BOOST_CHECK_EQUAL(z80.c & SIGNAL_HALT_, SIGNAL_HALT_);
+    BOOST_CHECK((z80.c & SIGNAL_HALT_) == SIGNAL_HALT_);
     runCycles(z80, m, 34);
     BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0005);
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xAAAA);

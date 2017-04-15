@@ -4,6 +4,10 @@
  *
  * Instruction: PUSH IX
  *
+ * Encoding: 11 011 101  11 100 101
+ * M Cycles: 4 (DD, OCF, MWL, MWH)
+ * T States: 15
+ *
  */
 
 #include "Z80Instruction.h"
@@ -19,15 +23,13 @@ class Z80PushIx : public Z80Instruction
             switch (r->executionStep)
             {
                 case 0:
-                    r->memRdCycles = 0;
                     r->memWrCycles = 2;
                     r->memAddrMode = 0x000000AA;
-                    r->acc.w = r->ix.w;
                     return false;
 
                 case 1:
-                    r->oReg.l = r->acc.h;
-                    r->oReg.h = r->acc.l;
+                    r->oReg.l = r->ix.h;
+                    r->oReg.h = r->ix.l;
                     return true;
 
                 case 2:

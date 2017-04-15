@@ -4,6 +4,17 @@
  *
  * Instruction: PUSH rr
  *
+ * Encoding: 11 rr0 101
+ * M Cycles: 3 (OCF, MWL, MWH)
+ * T States: 11
+ *
+ *  Reg rr
+ * --------
+ *  BC  00
+ *  DE  01
+ *  HL  10
+ *  AF  11
+ *
  */
 
 #include "Z80Instruction.h"
@@ -19,7 +30,6 @@ class Z80PushReg : public Z80Instruction
             switch (r->executionStep)
             {
                 case 0:
-                    r->memRdCycles = 0;
                     r->memWrCycles = 2;
                     r->memAddrMode = 0x000000AA;
                     r->acc.w = *(r->regp2[r->p]);

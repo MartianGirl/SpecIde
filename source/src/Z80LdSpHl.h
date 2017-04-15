@@ -4,6 +4,10 @@
  *
  * Instruction: LD SP, HL
  *
+ * Encoding: 11 111 001
+ * M Cycles: 1 (OCF)
+ * T States: 6
+ *
  */
 
 #include "Z80Instruction.h"
@@ -19,8 +23,6 @@ class Z80LdSpHl : public Z80Instruction
             switch (r->executionStep)
             {
                 case 0:
-                    r->memRdCycles = 0;
-                    r->memWrCycles = 0;
                     r->memAddrMode = 0x00000000;
                     return false;
 

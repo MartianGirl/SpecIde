@@ -5,7 +5,7 @@
  * Instruction: LD r, s
  *
  * Encoding: 01 rrr sss
- * M Cycles: 1
+ * M Cycles: 1 (OCF)
  * T States: 4
  *
  * Reg rrr

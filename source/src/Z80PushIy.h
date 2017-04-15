@@ -4,6 +4,10 @@
  *
  * Instruction: PUSH IY
  *
+ * Encoding: 11 111 101  11 100 101
+ * M Cycles: 4 (FD, OCF, MWL, MWH)
+ * T States: 15
+ *
  */
 
 #include "Z80Instruction.h"
@@ -19,7 +23,6 @@ class Z80PushIy : public Z80Instruction
             switch (r->executionStep)
             {
                 case 0:
-                    r->memRdCycles = 0;
                     r->memWrCycles = 2;
                     r->memAddrMode = 0x000000AA;
                     return false;
