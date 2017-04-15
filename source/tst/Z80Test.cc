@@ -788,25 +788,19 @@ BOOST_AUTO_TEST_CASE(ld_memix_n_test)
     Z80 z80;
     Memory m(16, false);
 
-    m.memory[0x0000] = 0xDD; m.memory[0x0001] = 0x26; m.memory[0x0002] = 0x01;  // LD IXh, 01h
-    m.memory[0x0003] = 0xDD; m.memory[0x0004] = 0x2E; m.memory[0x0005] = 0x04;  // LD IXl, 04h
-    m.memory[0x0006] = 0xDD; m.memory[0x0007] = 0x36;
-    m.memory[0x0008] = 0xFC; m.memory[0x0009] = 0xF0;                           // LD (IX - 4), F0h
-    m.memory[0x000A] = 0xDD; m.memory[0x000B] = 0x36;
-    m.memory[0x000C] = 0xFD; m.memory[0x000D] = 0xF1;                           // LD (IX - 3), F1h
-    m.memory[0x000E] = 0xDD; m.memory[0x000F] = 0x36;
-    m.memory[0x0010] = 0xFE; m.memory[0x0011] = 0xF2;                           // LD (IX - 2), F2h
-    m.memory[0x0012] = 0xDD; m.memory[0x0013] = 0x36;
-    m.memory[0x0014] = 0xFF; m.memory[0x0015] = 0xF3;                           // LD (IX - 1), F3h
-    m.memory[0x0016] = 0xDD; m.memory[0x0017] = 0x36;
-    m.memory[0x0018] = 0x00; m.memory[0x0019] = 0xF4;                           // LD (IX + 0), F4h
-    m.memory[0x001A] = 0xDD; m.memory[0x001B] = 0x36;
-    m.memory[0x001C] = 0x01; m.memory[0x001D] = 0xF5;                           // LD (IX + 1), F5h
-    m.memory[0x001E] = 0xDD; m.memory[0x001F] = 0x36;
-    m.memory[0x0020] = 0x02; m.memory[0x0021] = 0xF6;                           // LD (IX + 2), F6h
-    m.memory[0x0022] = 0xDD; m.memory[0x0023] = 0x36;
-    m.memory[0x0024] = 0x03; m.memory[0x0025] = 0xF7;                           // LD (IX + 3), F7h
+    string code =
+        "DD2601"        // LD IXh, 01h
+        "DD2E04"        // LD IXl, 04h
+        "DD36FCF0"      // LD (IX - 4), F0h
+        "DD36FDF1"      // LD (IX - 3), F1h
+        "DD36FEF2"      // LD (IX - 2), F2h
+        "DD36FFF3"      // LD (IX - 1), F3h
+        "DD3600F4"      // LD (IX + 0), F4h
+        "DD3601F5"      // LD (IX + 1), F5h
+        "DD3602F6"      // LD (IX + 2), F6h
+        "DD3603F7";     // LD (IX + 3), F7h
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
     runCycles(z80, m, 174);
 
@@ -826,25 +820,19 @@ BOOST_AUTO_TEST_CASE(ld_memiy_n_test)
     Z80 z80;
     Memory m(16, false);
 
-    m.memory[0x0000] = 0xFD; m.memory[0x0001] = 0x26; m.memory[0x0002] = 0x01;  // LD IYh, 01h
-    m.memory[0x0003] = 0xFD; m.memory[0x0004] = 0x2E; m.memory[0x0005] = 0x04;  // LD IYl, 04h
-    m.memory[0x0006] = 0xFD; m.memory[0x0007] = 0x36;
-    m.memory[0x0008] = 0xFC; m.memory[0x0009] = 0xF0;                           // LD (IY - 4), F0h
-    m.memory[0x000A] = 0xFD; m.memory[0x000B] = 0x36;
-    m.memory[0x000C] = 0xFD; m.memory[0x000D] = 0xF1;                           // LD (IY - 3), F1h
-    m.memory[0x000E] = 0xFD; m.memory[0x000F] = 0x36;
-    m.memory[0x0010] = 0xFE; m.memory[0x0011] = 0xF2;                           // LD (IY - 2), F2h
-    m.memory[0x0012] = 0xFD; m.memory[0x0013] = 0x36;
-    m.memory[0x0014] = 0xFF; m.memory[0x0015] = 0xF3;                           // LD (IY - 1), F3h
-    m.memory[0x0016] = 0xFD; m.memory[0x0017] = 0x36;
-    m.memory[0x0018] = 0x00; m.memory[0x0019] = 0xF4;                           // LD (IY + 0), F4h
-    m.memory[0x001A] = 0xFD; m.memory[0x001B] = 0x36;
-    m.memory[0x001C] = 0x01; m.memory[0x001D] = 0xF5;                           // LD (IY + 1), F5h
-    m.memory[0x001E] = 0xFD; m.memory[0x001F] = 0x36;
-    m.memory[0x0020] = 0x02; m.memory[0x0021] = 0xF6;                           // LD (IY + 2), F6h
-    m.memory[0x0022] = 0xFD; m.memory[0x0023] = 0x36;
-    m.memory[0x0024] = 0x03; m.memory[0x0025] = 0xF7;                           // LD (IY + 3), F7h
+    string code =
+        "FD2601"        // LD IYh, 01h
+        "FD2E04"        // LD IYl, 04h
+        "FD36FCF0"      // LD (IY - 4), F0h
+        "FD36FDF1"      // LD (IY - 3), F1h
+        "FD36FEF2"      // LD (IY - 2), F2h
+        "FD36FFF3"      // LD (IY - 1), F3h
+        "FD3600F4"      // LD (IY + 0), F4h
+        "FD3601F5"      // LD (IY + 1), F5h
+        "FD3602F6"      // LD (IY + 2), F6h
+        "FD3603F7";     // LD (IY + 3), F7h
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
     runCycles(z80, m, 174);
 
@@ -864,12 +852,14 @@ BOOST_AUTO_TEST_CASE(ld_a_membc_test)
     Z80 z80;
     Memory m(16, false);
 
-    m.memory[0x0000] = 0x06; m.memory[0x0001] = 0x10; // LD B, 0x10
-    m.memory[0x0002] = 0x0E; m.memory[0x0003] = 0x20; // LD C, 0x20
-    m.memory[0x0004] = 0x0A;                          // LD A, (BC)
+    string code =
+        "0610"          // LD B, 0x10
+        "0E20"          // LD C, 0x20
+        "0A";           // LD A, (BC)
 
     m.memory[0x1020] = 0x56;
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
     runCycles(z80, m, 21);
 
@@ -882,12 +872,14 @@ BOOST_AUTO_TEST_CASE(ld_a_memde_test)
     Z80 z80;
     Memory m(16, false);
 
-    m.memory[0x0000] = 0x16; m.memory[0x0001] = 0x10; // LD D, 0x10
-    m.memory[0x0002] = 0x1E; m.memory[0x0003] = 0x20; // LD E, 0x20
-    m.memory[0x0004] = 0x1A;                          // LD A, (BC)
+    string code =
+        "1610"          // LD D, 0x10
+        "1E20"          // LD E, 0x20
+        "1A";           // LD A, (BC)
 
     m.memory[0x1020] = 0x78;
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
     runCycles(z80, m, 21);
 
@@ -900,9 +892,12 @@ BOOST_AUTO_TEST_CASE(ld_a_memnn_test)
     Z80 z80;
     Memory m(16, false);
 
-    m.memory[0x0000] = 0x3A; m.memory[0x0001] = 0x20; m.memory[0x0002] = 0x10;  // LD A, (1020h)
+    string code =
+        "3A2010";       // LD A, (1020h)
+
     m.memory[0x1020] = 0x78;
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
     runCycles(z80, m, 13);
 
@@ -914,12 +909,15 @@ BOOST_AUTO_TEST_CASE(ld_membc_a_test)
     Z80 z80;
     Memory m(16, false);
 
-    m.memory[0x0000] = 0x06; m.memory[0x0001] = 0x10; // LD B, 0x10
-    m.memory[0x0002] = 0x0E; m.memory[0x0003] = 0x20; // LD C, 0x20
-    m.memory[0x0004] = 0x3E; m.memory[0x0005] = 0x23; // LD A, 0x23
-    m.memory[0x0006] = 0x02;                          // LD (BC), A
+    string code =
+        "0610"          // LD B, 0x10
+        "0E20"          // LD C, 0x20
+        "3E23"          // LD A, 0x23
+        "02";           // LD (BC), A
+
     m.memory[0x1020] = 0x56;
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
     runCycles(z80, m, 28);
 
@@ -933,12 +931,15 @@ BOOST_AUTO_TEST_CASE(ld_memde_a_test)
     Z80 z80;
     Memory m(16, false);
 
-    m.memory[0x0000] = 0x16; m.memory[0x0001] = 0x10; // LD D, 0x10
-    m.memory[0x0002] = 0x1E; m.memory[0x0003] = 0x20; // LD E, 0x20
-    m.memory[0x0004] = 0x3E; m.memory[0x0005] = 0x48; // LD A, 0x48
-    m.memory[0x0006] = 0x12;                          // LD (DE), A
+    string code =
+        "1610"          // LD D, 0x10
+        "1E20"          // LD E, 0x20
+        "3E48"          // LD A, 0x48
+        "12";           // LD (DE), A
+
     m.memory[0x1020] = 0x56;
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
     runCycles(z80, m, 28);
 
@@ -952,10 +953,13 @@ BOOST_AUTO_TEST_CASE(ld_memnn_a_test)
     Z80 z80;
     Memory m(16, false);
 
-    m.memory[0x0000] = 0x3E; m.memory[0x0001] = 0x69;                           // LD A, 69h
-    m.memory[0x0002] = 0x32; m.memory[0x0003] = 0x20; m.memory[0x0004] = 0x10;  // LD (1020h), A
+    string code =
+        "3E69"          // LD A, 69h
+        "322010";       // LD (1020h), A
+
     m.memory[0x1020] = 0x78;
 
+    loadBinary(code, m, 0x0000);
     startZ80(z80);
     runCycles(z80, m, 20);
 
