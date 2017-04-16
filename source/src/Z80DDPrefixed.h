@@ -95,6 +95,7 @@
 #include "Z80Rst.h"
 
 #include "Z80InAPtrByte.h"
+#include "Z80OutPtrByteA.h"
 
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
@@ -189,6 +190,7 @@ class Z80DDPrefixed
         Z80Rst iRst;
 
         Z80InAPtrByte iInAPtrByte;
+        Z80OutPtrByteA iOutPtrByteA;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -500,7 +502,7 @@ class Z80DDPrefixed
                         &iRetCc,        // 11010000: RET NC
                         &iPopReg,       // 11010001: POP DE
                         &iJpCcWord,     // 11010010: JP NC, nn
-                        &iNop,
+                        &iOutPtrByteA,  // 11010011: OUT (n), A
                         &iCallCc,       // 11010100: CALL NC, nn
                         &iPushReg,      // 11010101: PUSH DE
                         &iSubByte,      // 11010110: SUB n
