@@ -32,6 +32,7 @@
 #include "Z80RetI.h"
 
 #include "Z80InRegPtrC.h"
+#include "Z80OutPtrCReg.h"
 
 #include "Z80AdcHlReg.h"
 #include "Z80SbcHlReg.h"
@@ -66,6 +67,7 @@ class Z80EDPrefixed
         Z80RetI iRetI;
 
         Z80InRegPtrC iInRegPtrC;
+        Z80OutPtrCReg iOutPtrCReg;
 
         Z80AdcHlReg iAdcHlReg;
         Z80SbcHlReg iSbcHlReg;
@@ -170,7 +172,7 @@ class Z80EDPrefixed
                     // y = 0
                     {
                         &iInRegPtrC,    // 01000000: IN B, (C)
-                        &iNop,
+                        &iOutPtrCReg,   // 01000001: OUT (C), B
                         &iSbcHlReg,     // 01000010: SBC HL, BC
                         &iLdPtrWordReg, // 01000011: LD (nn), BC
                         &iNeg,          // 01000100: NEG
@@ -181,7 +183,7 @@ class Z80EDPrefixed
                     // y = 1
                     {
                         &iInRegPtrC,    // 01001000: IN C, (C)
-                        &iNop,
+                        &iOutPtrCReg,   // 01001001: OUT (C), C
                         &iAdcHlReg,     // 01001010: ADC HL, BC
                         &iLdRegPtrWord, // 01001011: LD BC, (nn)
                         &iNop,
@@ -192,7 +194,7 @@ class Z80EDPrefixed
                     // y = 2
                     {
                         &iInRegPtrC,    // 01010000: IN D, (C)
-                        &iNop,
+                        &iOutPtrCReg,   // 01010001: OUT (C), D
                         &iSbcHlReg,     // 01010010: SBC HL, DE
                         &iLdPtrWordReg, // 01010011: LD (nn), DE
                         &iNop,
@@ -203,7 +205,7 @@ class Z80EDPrefixed
                     // y = 3
                     {
                         &iInRegPtrC,    // 01011000: IN E, (C)
-                        &iNop,
+                        &iOutPtrCReg,   // 01011001: OUT (C), E
                         &iAdcHlReg,     // 01011010: ADC HL, DE
                         &iLdRegPtrWord, // 01011011: LD DE, (nn)
                         &iNop,
@@ -214,7 +216,7 @@ class Z80EDPrefixed
                     // y = 4
                     {
                         &iInRegPtrC,    // 01100000: IN H, (C)
-                        &iNop,
+                        &iOutPtrCReg,   // 01100001: OUT (C), H
                         &iSbcHlReg,     // 01100010: SBC HL, HL
                         &iLdPtrWordReg, // 01100011: LD (nn), HL
                         &iNop,
@@ -225,7 +227,7 @@ class Z80EDPrefixed
                     // y = 5
                     {
                         &iInRegPtrC,    // 01101000: IN L, (C)
-                        &iNop,
+                        &iOutPtrCReg,   // 01101001: OUT (C), L
                         &iAdcHlReg,     // 01101010: ADC HL, HL
                         &iLdRegPtrWord, // 01101011: LD HL, (nn)
                         &iNop,
@@ -236,7 +238,7 @@ class Z80EDPrefixed
                     // y = 6
                     {
                         &iInRegPtrC,    // 01110000: IN F, (C)
-                        &iNop,
+                        &iOutPtrCReg,   // 01110001: OUT (C), 0
                         &iSbcHlReg,     // 01110010: SBC HL, SP
                         &iLdPtrWordReg, // 01110011: LD (nn), SP
                         &iNop,
@@ -247,7 +249,7 @@ class Z80EDPrefixed
                     // y = 7
                     {
                         &iInRegPtrC,    // 01111000: IN A, (C)
-                        &iNop,
+                        &iOutPtrCReg,   // 01111001: OUT (C), A
                         &iAdcHlReg,     // 01111010: ADC HL, SP
                         &iLdRegPtrWord, // 01111011: LD SP, (nn)
                         &iNop,
