@@ -13,10 +13,10 @@
 #include "Z80Instruction.h"
 #include "Z80RegisterSet.h"
 
-class Z80LdAPtrBc : public Z80Instruction
+class Z80InAPtrByte : public Z80Instruction
 {
     public:
-        Z80LdAPtrBc() {}
+        Z80InAPtrByte() {}
 
         bool operator()(Z80RegisterSet* r)
         {
