@@ -92,6 +92,8 @@
 #include "Z80RetCc.h"
 #include "Z80Rst.h"
 
+#include "Z80InAPtrByte.h"
+
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
 #include "Z80PrefixFD.h"
@@ -181,6 +183,8 @@ class Z80Unprefixed
         Z80CallCc iCallCc;
         Z80RetCc iRetCc;
         Z80Rst iRst;
+
+        Z80InAPtrByte iInAPtrByte;
 
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
@@ -503,7 +507,7 @@ class Z80Unprefixed
                         &iRetCc,        // 11011000: RET C
                         &iExx,          // 11011001: EXX
                         &iJpCcWord,     // 11011010: JP C, nn
-                        &iNop,
+                        &iInAPtrByte,   // 11011011: IN A, (n)
                         &iCallCc,       // 11011100: CALL C, nn
                         &iPrefixDD,     // 11011101: DD Prefix
                         &iSbcByte,      // 11011110: SBC A, n
