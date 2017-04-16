@@ -29,13 +29,21 @@ class Z80Decoder
 
         void decode(uint_fast8_t byte);
         void startInstruction();
-        void readByte(uint_fast8_t byte);
+
         uint_fast16_t getAddress();
-        uint_fast8_t writeByte();
+
+        void readMem(uint_fast8_t byte);
+        uint_fast8_t writeMem();
+
+        void readIo(uint_fast8_t byte);
+        uint_fast8_t writeIo();
+
         void cpuProcCycle();
+
         bool execute();
         bool executeNmi();
         bool executeInt();
+
         void reset();
 
         Z80RegisterSet regs;

@@ -53,58 +53,58 @@ void Z80::clock()
     {
         case Z80State::ST_RESET:
             start();
-
-            state = Z80State::ST_M1_T1_ADDRWR;
+            state = Z80State::ST_OCF_T1_ADDRWR;
             break;
 
-        // M1. Machine cycle
-        case Z80State::ST_M1_T1_ADDRWR:
+        // Machine cycle
+        case Z80State::ST_OCF_T1_ADDRWR:
             a = decoder.regs.pc.w;
-
             if (!intProcess && !nmiProcess && !(iff & HALT))
                 ++decoder.regs.pc.w;
 
             c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
-            state = Z80State::ST_M1_T2_DATARD;
+            state = Z80State::ST_OCF_T2_DATARD;
             break;
 
-        case Z80State::ST_M1_T2_DATARD:
+        case Z80State::ST_OCF_T2_DATARD:
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
             if (c & SIGNAL_WAIT_ && !nmiProcess)
-                state = Z80State::ST_M1_T3_RFSH1;
+                state = Z80State::ST_OCF_T3_RFSH1;
             break;
 
-        case Z80State::ST_M1_T3_RFSH1:
+        case Z80State::ST_OCF_T3_RFSH1:
             a = decoder.regs.ir.w & 0xFF7F;
             if (!(iff & HALT))
                 decoder.decode(d);
             decoder.startInstruction();
             decoder.regs.ir.l = (decoder.regs.ir.l & 0x80) 
                 | ((decoder.regs.ir.l + 1) & 0x7F);
+
             c |= (SIGNAL_RD_ | SIGNAL_M1_ | SIGNAL_IORQ_);
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
 
-            state = Z80State::ST_M1_T4_RFSH2;
+            state = Z80State::ST_OCF_T4_RFSH2;
             break;
 
-        case Z80State::ST_M1_T4_RFSH2:
+        case Z80State::ST_OCF_T4_RFSH2:
             c |= (SIGNAL_MREQ_);
             c &= ~(SIGNAL_RFSH_);
 
-            state = finishMemoryCycle();
+            state = finishMachineCycle();
             break;
 
         // NMI. Machine cycle after NMI.
-        // Maybe I'll merge these with ST_M1_Tn, but for now I'll keep them
+        // Maybe I'll merge these with ST_OCF_Tn, but for now I'll keep them
         // separate, since it is clearer.
         // I'll decide when I've implemented also the INT cycle.
         case Z80State::ST_NMI_T1_ADDRWR:
-            // This state could be done in ST_M1_T1_ADDRWR by incrementing
+            // This state could be done in ST_OCF_T1_ADDRWR by incrementing
             // PC only if NMI is false...
             a = decoder.regs.pc.w;
+
             c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
@@ -114,13 +114,14 @@ void Z80::clock()
         case Z80State::ST_NMI_T2_DATARD:
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
-            // This state could be done in ST_M1_T2_DATARD by moving to refresh
+            // This state could be done in ST_OCF_T2_DATARD by moving to refresh
             // if SIGNAL_WAIT_ is high, or if NMI...
-            state = Z80State::ST_M1_T3_RFSH1;
+            state = Z80State::ST_OCF_T3_RFSH1;
             break;
 
         case Z80State::ST_INT_T1_ADDRWR:
             a = decoder.regs.pc.w;
+
             c |= SIGNAL_RFSH_;
             c &= ~SIGNAL_M1_;
 
@@ -143,73 +144,129 @@ void Z80::clock()
         case Z80State::ST_INT_T4_WAIT2:
             c &= ~(SIGNAL_M1_ | SIGNAL_IORQ_);
 
-            state = Z80State::ST_M1_T3_RFSH1;
+            state = Z80State::ST_OCF_T3_RFSH1;
             break;
 
-        // M2. Memory read cycle
-        case Z80State::ST_M2_T1_ADDRWR:
+        // Memory read cycle
+        case Z80State::ST_MEMRD_T1_ADDRWR:
             // INT mode 0 places bytes directly on the bus.
              if (intProcess == false || decoder.regs.im == 2)
                  a = decoder.getAddress();
+
             c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_);
 
-            state = Z80State::ST_M2_T2_WAITST;
+            state = Z80State::ST_MEMRD_T2_WAITST;
             break;
 
-        case Z80State::ST_M2_T2_WAITST:
-            c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_);
-
+        case Z80State::ST_MEMRD_T2_WAITST:
             if (c & SIGNAL_WAIT_)
-                state = Z80State::ST_M2_T3_DATARD;
+                state = Z80State::ST_MEMRD_T3_DATARD;
             break;
 
-        case Z80State::ST_M2_T3_DATARD:
-            decoder.readByte(d);
+        case Z80State::ST_MEMRD_T3_DATARD:
+            decoder.readMem(d);
+
             c |= SIGNAL_MREQ_ | SIGNAL_RD_;
 
-            state = finishMemoryCycle();
+            state = finishMachineCycle();
             break;
 
-        // M3. Memory write cycle
-        case Z80State::ST_M3_T1_ADDRWR:
+        // Memory write cycle
+        case Z80State::ST_MEMWR_T1_ADDRWR:
             a = decoder.getAddress();
-            d = decoder.writeByte();
+            d = decoder.writeMem();
 
             c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_);
-            state = Z80State::ST_M3_T2_WAITST;
+
+            state = Z80State::ST_MEMWR_T2_WAITST;
             break;
 
-        case Z80State::ST_M3_T2_WAITST:
+        case Z80State::ST_MEMWR_T2_WAITST:
             c &= ~(SIGNAL_WR_);
+
             if (c & SIGNAL_WAIT_)
-                state = Z80State::ST_M3_T3_DATAWR;
+                state = Z80State::ST_MEMWR_T3_DATAWR;
             break;
 
-        case Z80State::ST_M3_T3_DATAWR:
+        case Z80State::ST_MEMWR_T3_DATAWR:
             c |= SIGNAL_MREQ_ | SIGNAL_WR_;
 
-            state = finishMemoryCycle();
+            state = finishMachineCycle();
             break;
 
-        // M0. CPU internal cycle. This is just a delimiter, it is almost
-        // the same as ST_M0_T0_WAITST, but it helps in setting end of cycle
+        // I/O read cycle
+        case Z80State::ST_IORD_T1_ADDRWR:
+            a = decoder.getAddress();
+
+            c |= SIGNAL_RFSH_;
+
+            state = Z80State::ST_IORD_T2_IORQ;
+            break;
+
+        case Z80State::ST_IORD_T2_IORQ:
+            c &= ~(SIGNAL_IORQ_ | SIGNAL_RD_);
+
+            state = Z80State::ST_IORD_TW_WAITST;
+            break;
+
+        case Z80State::ST_IORD_TW_WAITST:
+            if (c & SIGNAL_WAIT_)
+                state = Z80State::ST_IORD_T3_DATARD;
+            break;
+
+        case Z80State::ST_IORD_T3_DATARD:
+            decoder.readIo(d);
+
+            c |= SIGNAL_IORQ_ | SIGNAL_RD_;
+            state = finishMachineCycle();
+            break;
+
+            // I/O write cycle
+        case Z80State::ST_IOWR_T1_ADDRWR:
+            a = decoder.getAddress();
+            d = decoder.writeIo();
+
+            c |= SIGNAL_RFSH_;
+
+            state = Z80State::ST_IOWR_T2_IORQ;
+            break;
+
+        case Z80State::ST_IOWR_T2_IORQ:
+            c &= ~(SIGNAL_IORQ_ | SIGNAL_WR_);
+
+            state = Z80State::ST_IOWR_TW_WAITST;
+            break;
+
+        case Z80State::ST_IOWR_TW_WAITST:
+            if (c & SIGNAL_WAIT_)
+                state = Z80State::ST_IOWR_T3_DATAWR;
+            break;
+
+        case Z80State::ST_IOWR_T3_DATAWR:
+            c |= SIGNAL_IORQ_ | SIGNAL_WR_;
+
+            state = finishMachineCycle();
+            break;
+
+        // CPU internal cycle. This is just a delimiter, it is almost
+        // the same as ST_CPU_T0_WAITST, but it helps in setting end of cycle
         // points for BUSRQ/BUSAK, for instance...
         // The CPU internal cycle begins here, and it is extended by using
         // WAITSTates.
-        case Z80State::ST_M0_T0_CPUPROC:
+        case Z80State::ST_CPU_T0_CPUPROC:
             c |= SIGNAL_RFSH_;
             decoder.cpuProcCycle();
 
-            state = finishMemoryCycle();
+            state = finishMachineCycle();
             break;
 
-        // M0. Wait state
-        case Z80State::ST_M0_T0_WAITST:
+        // Wait state
+        case Z80State::ST_CPU_T0_WAITST:
             c |= SIGNAL_RFSH_;
 
-            state = finishMemoryCycle();
+            state = finishMachineCycle();
             break;
 
         default:
@@ -218,21 +275,23 @@ void Z80::clock()
     }
 }
 
-Z80State Z80::finishMemoryCycle()
+Z80State Z80::finishMachineCycle()
 {
     bool endOfCycle = execute();
     
     if (endOfCycle == false)    // Machine cycle not finished, insert a state.
-        return Z80State::ST_M0_T0_WAITST;
+        return Z80State::ST_CPU_T0_WAITST;
     // BUSRQ goes here, after a complete machine cycle.
-    // I'd have to consider if these extra states are actually part of the
-    // machine cycle, or if they are something else.
-    else if (decoder.regs.memRdCycles)      // Perform read cycles.
-        return Z80State::ST_M2_T1_ADDRWR;
+    else if (decoder.regs.memRdCycles)      // Perform memory read cycles.
+        return Z80State::ST_MEMRD_T1_ADDRWR;
+    else if (decoder.regs.ioRdCycles)       // Perform I/O read cycles.
+        return Z80State::ST_IORD_T1_ADDRWR;
     else if (decoder.regs.cpuProcCycles)    // Perform internal CPU cycles.
-        return Z80State::ST_M0_T0_CPUPROC;
-    else if (decoder.regs.memWrCycles)      // Perform write cycles.
-        return Z80State::ST_M3_T1_ADDRWR;
+        return Z80State::ST_CPU_T0_CPUPROC;
+    else if (decoder.regs.memWrCycles)      // Perform memory write cycles.
+        return Z80State::ST_MEMWR_T1_ADDRWR;
+    else if (decoder.regs.ioWrCycles)       // Perform I/O write cycles.
+        return Z80State::ST_IOWR_T1_ADDRWR;
     // At this point we have completed a instruction. NMI and INT can
     // happen here.
     // NMI has priority over INT. Now we check the NMI latch, which is
@@ -258,7 +317,7 @@ Z80State Z80::finishMemoryCycle()
         return Z80State::ST_INT_T1_ADDRWR;
     }
     else
-        return Z80State::ST_M1_T1_ADDRWR;
+        return Z80State::ST_OCF_T1_ADDRWR;
 }
 
 bool Z80::execute()

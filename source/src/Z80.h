@@ -29,7 +29,7 @@ class Z80 :
         void updateNmi();
 
         void start();
-        Z80State finishMemoryCycle();
+        Z80State finishMachineCycle();
         bool execute();
         bool endOfInstruction();
 

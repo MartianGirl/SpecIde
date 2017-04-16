@@ -67,6 +67,13 @@ uint_fast16_t Z80Decoder::getAddress()
         case 0x0C:  // Interrupt Mode 2
             regs.addr.w = ((regs.ir.h << 8) | regs.opcode);
             break;
+        case 0x0D:  // I/O Indirect n:      IN A, (n)
+            regs.addr.w = (regs.af.h << 8) | regs.iReg.h;
+            break;
+        case 0x0E:  // I/O Indirect C:
+            regs.addr.w = regs.bc.w;
+            break;
+
         default:
             assert(false);
             break;
@@ -77,18 +84,33 @@ uint_fast16_t Z80Decoder::getAddress()
     return regs.addr.w;
 }
 
-void Z80Decoder::readByte(uint_fast8_t byte)
+void Z80Decoder::readMem(uint_fast8_t byte)
 {
-    --regs.memRdCycles;
     regs.iReg.l = regs.iReg.h;
     regs.iReg.h = byte;
+    --regs.memRdCycles;
 }
 
-uint_fast8_t Z80Decoder::writeByte()
+uint_fast8_t Z80Decoder::writeMem()
 {
     uint_fast8_t byte = regs.oReg.l;
     regs.oReg.l = regs.oReg.h;
     --regs.memWrCycles;
+    return byte;
+}
+
+void Z80Decoder::readIo(uint_fast8_t byte)
+{
+    regs.iReg.l = regs.iReg.h;
+    regs.iReg.h = byte;
+    --regs.ioRdCycles;
+}
+
+uint_fast8_t Z80Decoder::writeIo()
+{
+    uint_fast8_t byte = regs.oReg.l;
+    regs.oReg.l = regs.oReg.h;
+    --regs.ioWrCycles;
     return byte;
 }
 
