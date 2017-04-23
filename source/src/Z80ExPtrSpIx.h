@@ -4,6 +4,10 @@
  *
  * Instruction: EX (SP), IX
  *
+ * Encoding: 11 011 101  11 100 011
+ * M Cycles: 6 (OCF, OCF, SRB(3), SRB(4), SWB(3), SWB(5))
+ * T States: 23
+ *
  */
 
 #include "Z80Instruction.h"
