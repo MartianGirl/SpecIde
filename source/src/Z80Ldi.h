@@ -4,6 +4,19 @@
  *
  * Instruction: LDI
  *
+ * Encoding: 11 101 101  10 100 000
+ * M Cycles: 4 (OCF, OCF, MRB), MWB(5))
+ * T States: 16
+ *
+ * Flags:
+ * - Let's call 'n' the value of the byte being transferred plus the value
+ *   of register A.
+ * - S, Z, C are not changed.
+ * - H is always zero.
+ * - P/V is set if BC != 0000h
+ * - 3 is bit 3 of n.
+ * - 5 is bit 1 of n.
+ *
  */
 
 #include "Z80Instruction.h"
@@ -29,16 +42,16 @@ class Z80Ldi : public Z80Instruction
                     return true;
 
                 case 2:
-                    r->bc.w--;
-                    r->de.w++;
-                    r->hl.w++;
+                    --r->bc.w;
+                    ++r->de.w;
+                    ++r->hl.w;
                     return false;
 
                 case 3:
-                    r->iReg.h += r->af.h;
+                    r->tmp.l = r->iReg.h + r->af.h;
                     r->af.l &= FLAG_S | FLAG_Z | FLAG_C;            // SZ.0..0C
-                    r->af.l |= (r->iReg.h & FLAG_3);                // SZ.03.0C
-                    r->af.l |= (r->iReg.h & FLAG_N) << 4;           // SZ503.0C
+                    r->af.l |= (r->tmp.l & FLAG_3);                 // SZ.03.0C
+                    r->af.l |= (r->tmp.l << 4) & FLAG_5;            // SZ503.0C
                     r->af.l |= (r->bc.w) ? FLAG_PV : 0x00;          // SZ503P0C
                     return false;
 
