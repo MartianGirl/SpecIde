@@ -33,6 +33,14 @@
 
 #include "Z80InRegPtrC.h"
 #include "Z80OutPtrCReg.h"
+#include "Z80Ini.h"
+#include "Z80Inir.h"
+#include "Z80Ind.h"
+#include "Z80Indr.h"
+#include "Z80Outi.h"
+#include "Z80Otir.h"
+#include "Z80Outd.h"
+#include "Z80Otdr.h"
 
 #include "Z80AdcHlReg.h"
 #include "Z80SbcHlReg.h"
@@ -68,6 +76,14 @@ class Z80EDPrefixed
 
         Z80InRegPtrC iInRegPtrC;
         Z80OutPtrCReg iOutPtrCReg;
+        Z80Ini iIni;
+        Z80Inir iInir;
+        Z80Ind iInd;
+        Z80Indr iIndr;
+        Z80Outi iOuti;
+        Z80Otir iOtir;
+        Z80Outd iOutd;
+        Z80Otdr iOtdr;
 
         Z80AdcHlReg iAdcHlReg;
         Z80SbcHlReg iSbcHlReg;
@@ -308,8 +324,8 @@ class Z80EDPrefixed
                     {
                         &iLdi,      // 10100000: LDI
                         &iCpi,      // 10100001: CPI
-                        &iNop,
-                        &iNop,
+                        &iIni,      // 10100010: INI
+                        &iOuti,     // 10100011: OUTI
                         &iNop,
                         &iNop,
                         &iNop,
@@ -319,8 +335,8 @@ class Z80EDPrefixed
                     {
                         &iLdd,      // 10101000: LDD
                         &iCpd,      // 10101001: CPD
-                        &iNop,
-                        &iNop,
+                        &iInd,      // 10101010: IND
+                        &iOutd,     // 10101011: OUTD
                         &iNop,
                         &iNop,
                         &iNop,
@@ -330,8 +346,8 @@ class Z80EDPrefixed
                     {
                         &iLdir,     // 10110000: LDIR
                         &iCpir,     // 10110001: CPIR
-                        &iNop,
-                        &iNop,
+                        &iInir,     // 10110010: INIR
+                        &iOtir,     // 10110011: OTIR
                         &iNop,
                         &iNop,
                         &iNop,
@@ -341,8 +357,8 @@ class Z80EDPrefixed
                     {
                         &iLddr,     // 10111000: LDDR
                         &iCpdr,     // 10111001: CPDR
-                        &iNop,
-                        &iNop,
+                        &iIndr,     // 10111010: INDR
+                        &iOtdr,     // 10111011: OTDR
                         &iNop,
                         &iNop,
                         &iNop,
