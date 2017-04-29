@@ -97,6 +97,11 @@
 #include "Z80InAPtrByte.h"
 #include "Z80OutPtrByteA.h"
 
+#include "Z80Rlca.h"
+#include "Z80Rla.h"
+#include "Z80Rrca.h"
+#include "Z80Rra.h"
+
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
 #include "Z80PrefixFD.h"
@@ -192,6 +197,11 @@ class Z80DDPrefixed
         Z80InAPtrByte iInAPtrByte;
         Z80OutPtrByteA iOutPtrByteA;
 
+        Z80Rlca iRlca;
+        Z80Rla iRla;
+        Z80Rrca iRrca;
+        Z80Rra iRra;
+
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
         Z80PrefixFD iPrefixFD;
@@ -211,7 +221,7 @@ class Z80DDPrefixed
                         &iIncRegX,      // 00000100: INC B
                         &iDecRegX,      // 00000101: DEC B
                         &iLdRegXByte,   // 00000110: LD B, n
-                        &iNop
+                        &iRlca          // 00000111: RLCA
                     },
                     // y = 1
                     {
@@ -222,7 +232,7 @@ class Z80DDPrefixed
                         &iIncRegX,      // 00001100: INC C
                         &iDecRegX,      // 00001101: DEC C
                         &iLdRegXByte,   // 00001110: LD C, n
-                        &iNop
+                        &iRrca          // 00001111: RRCA
                     },
                     // y = 2
                     {
@@ -233,7 +243,7 @@ class Z80DDPrefixed
                         &iIncRegX,      // 00010100: INC D
                         &iDecRegX,      // 00010101: DEC D
                         &iLdRegXByte,   // 00010110: LD D, n
-                        &iNop
+                        &iRla           // 00010111: RLA
                     },
                     // y = 3
                     {
@@ -244,7 +254,7 @@ class Z80DDPrefixed
                         &iIncRegX,      // 00011100: INC E
                         &iDecRegX,      // 00011101: DEC E
                         &iLdRegXByte,   // 00011110: LD E, n
-                        &iNop
+                        &iRra           // 00011111: RRA
                     },
                     // y = 4
                     {
