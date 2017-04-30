@@ -18,6 +18,15 @@
 #include "Z80SllReg.h"
 #include "Z80SrlReg.h"
 
+#include "Z80RlcPtrHl.h"
+#include "Z80RrcPtrHl.h"
+#include "Z80RlPtrHl.h"
+#include "Z80RrPtrHl.h"
+#include "Z80SlaPtrHl.h"
+#include "Z80SraPtrHl.h"
+#include "Z80SllPtrHl.h"
+#include "Z80SrlPtrHl.h"
+
 class Z80CBPrefixed
 {
     public:
@@ -33,6 +42,15 @@ class Z80CBPrefixed
         Z80SllReg iSllReg;
         Z80SrlReg iSrlReg;
 
+        Z80RlcPtrHl iRlcPtrHl;
+        Z80RrcPtrHl iRrcPtrHl;
+        Z80RlPtrHl iRlPtrHl;
+        Z80RrPtrHl iRrPtrHl;
+        Z80SlaPtrHl iSlaPtrHl;
+        Z80SraPtrHl iSraPtrHl;
+        Z80SllPtrHl iSllPtrHl;
+        Z80SrlPtrHl iSrlPtrHl;
+
         Z80Instruction* table[4][8][8];
 
         Z80CBPrefixed() :
@@ -47,7 +65,7 @@ class Z80CBPrefixed
                         &iRlcReg,       // 00000011: RLC E
                         &iRlcReg,       // 00000100: RLC H
                         &iRlcReg,       // 00000101: RLC L
-                        &iNop,
+                        &iRlcPtrHl,     // 00000110: RLC (HL)
                         &iRlcReg        // 00000111: RLC A
                     },
                     // y = 1
@@ -58,7 +76,7 @@ class Z80CBPrefixed
                         &iRrcReg,       // 00001011: RRC E
                         &iRrcReg,       // 00001100: RRC H
                         &iRrcReg,       // 00001101: RRC L
-                        &iNop,
+                        &iRrcPtrHl,     // 00001110: RRC (HL)
                         &iRrcReg        // 00001111: RRC A
                     },
                     // y = 2
@@ -69,7 +87,7 @@ class Z80CBPrefixed
                         &iRlReg,        // 00010011: RL E
                         &iRlReg,        // 00010100: RL H
                         &iRlReg,        // 00010101: RL L
-                        &iNop,
+                        &iRlPtrHl,      // 00010110: RL (HL)
                         &iRlReg         // 00010111: RL A
                     },
                     // y = 3
@@ -80,7 +98,7 @@ class Z80CBPrefixed
                         &iRrReg,        // 00011011: RR E
                         &iRrReg,        // 00011100: RR H
                         &iRrReg,        // 00011101: RR L
-                        &iNop,
+                        &iRrPtrHl,      // 00011110: RR (HL)
                         &iRrReg         // 00011111: RR A
                     },
                     // y = 4
@@ -91,7 +109,7 @@ class Z80CBPrefixed
                         &iSlaReg,       // 00100011: SLA E
                         &iSlaReg,       // 00100100: SLA H
                         &iSlaReg,       // 00100101: SLA L
-                        &iNop,
+                        &iSlaPtrHl,     // 00100110: SLA (HL)
                         &iSlaReg        // 00100111: SLA A
                     },
                     // y = 5
@@ -102,7 +120,7 @@ class Z80CBPrefixed
                         &iSraReg,       // 00101011: SRA E
                         &iSraReg,       // 00101100: SRA H
                         &iSraReg,       // 00101101: SRA L
-                        &iNop,
+                        &iSraPtrHl,     // 00101110: SRA (HL)
                         &iSraReg        // 00101111: SRA A
                     },
                     // y = 6
@@ -113,7 +131,7 @@ class Z80CBPrefixed
                         &iSllReg,       // 00110011: SLL E
                         &iSllReg,       // 00110100: SLL H
                         &iSllReg,       // 00100101: SLL L
-                        &iNop,
+                        &iSllPtrHl,     // 00100110: SLL (HL)
                         &iSllReg        // 00100111: SLL A
                     },
                     // y = 7
@@ -124,7 +142,7 @@ class Z80CBPrefixed
                         &iSrlReg,       // 00111011: SRL E
                         &iSrlReg,       // 00111100: SRL H
                         &iSrlReg,       // 00111101: SRL L
-                        &iNop,
+                        &iSrlPtrHl,     // 00111110: SRL (HL)
                         &iSrlReg        // 00111111: SRL A
                     }
                 },
