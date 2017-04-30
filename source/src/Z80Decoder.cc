@@ -129,18 +129,18 @@ bool Z80Decoder::execute()
             finished = (*EDPrefixed.table[regs.x][regs.y][regs.z])(&regs);
             break;
         case PREFIX_CB:
-            finished = true;
+            finished = (*CBPrefixed.table[regs.x][regs.y][regs.z])(&regs);
             break;
         case PREFIX_DD:
             finished = (*DDPrefixed.table[regs.x][regs.y][regs.z])(&regs);
             break;
         case PREFIX_DD | PREFIX_CB:
-            finished = true;
+            finished = (*DDCBPrefixed.table[regs.x][regs.y][regs.z])(&regs);
         case PREFIX_FD:
             finished = (*FDPrefixed.table[regs.x][regs.y][regs.z])(&regs);
             break;
         case PREFIX_FD | PREFIX_CB:
-            finished = true;
+            finished = (*FDCBPrefixed.table[regs.x][regs.y][regs.z])(&regs);
             break;
         case PREFIX_NO:
             finished = (*unprefixed.table[regs.x][regs.y][regs.z])(&regs);

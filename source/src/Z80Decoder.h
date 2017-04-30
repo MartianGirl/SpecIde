@@ -13,9 +13,12 @@
 #include "Z80Register.h"
 #include "Z80RegisterSet.h"
 #include "Z80Unprefixed.h"
+#include "Z80CBPrefixed.h"
 #include "Z80DDPrefixed.h"
 #include "Z80EDPrefixed.h"
 #include "Z80FDPrefixed.h"
+#include "Z80DDCBPrefixed.h"
+#include "Z80FDCBPrefixed.h"
 
 #include "Z80Nmi.h"
 #include "Z80IntMode2.h"
@@ -49,9 +52,12 @@ class Z80Decoder
         Z80RegisterSet regs;
 
         Z80Unprefixed unprefixed;
+        Z80CBPrefixed CBPrefixed;
         Z80DDPrefixed DDPrefixed;
         Z80EDPrefixed EDPrefixed;
         Z80FDPrefixed FDPrefixed;
+        Z80DDCBPrefixed DDCBPrefixed;
+        Z80FDCBPrefixed FDCBPrefixed;
 
         Z80Nmi z80Nmi;
         Z80IntMode2 z80IntMode2;

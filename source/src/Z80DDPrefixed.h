@@ -102,6 +102,7 @@
 #include "Z80Rrca.h"
 #include "Z80Rra.h"
 
+#include "Z80PrefixDDCB.h"
 #include "Z80PrefixDD.h"
 #include "Z80PrefixED.h"
 #include "Z80PrefixFD.h"
@@ -202,6 +203,7 @@ class Z80DDPrefixed
         Z80Rrca iRrca;
         Z80Rra iRra;
 
+        Z80PrefixDDCB iPrefixDDCB;
         Z80PrefixDD iPrefixDD;
         Z80PrefixED iPrefixED;
         Z80PrefixFD iPrefixFD;
@@ -501,7 +503,7 @@ class Z80DDPrefixed
                         &iRetCc,        // 11001000: RET Z
                         &iRet,          // 11001001: RET
                         &iJpCcWord,     // 11001010: JP Z, nn
-                        &iNop,
+                        &iPrefixDDCB,   // 11001011: CB Prefix
                         &iCallCc,       // 11001100: CALL Z, nn
                         &iCall,         // 11001101: CALL nn
                         &iAdcByte,      // 11001110: ADC A, n

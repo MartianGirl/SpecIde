@@ -1,18 +1,18 @@
 #pragma once
 
-/** Z80PrefixED.h
+/** Z80PrefixCB.h
  *
- * Prefix ED.
+ * Prefix CB.
  *
  */
 
 #include "Z80Instruction.h"
 #include "Z80RegisterSet.h"
 
-class Z80PrefixED : public Z80Instruction
+class Z80PrefixCB : public Z80Instruction
 {
     public:
-        Z80PrefixED() {}
+        Z80PrefixCB() {}
 
         bool operator()(Z80RegisterSet* r)
         {
@@ -20,7 +20,7 @@ class Z80PrefixED : public Z80Instruction
             {
                 case 0:
                     r->memAddrMode = 0x00000000;
-                    r->prefix = PREFIX_ED;
+                    r->prefix = PREFIX_CB;
                     return true;
 
                 default:    // Should not happen
