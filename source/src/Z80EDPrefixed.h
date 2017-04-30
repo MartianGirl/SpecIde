@@ -45,6 +45,9 @@
 #include "Z80AdcHlReg.h"
 #include "Z80SbcHlReg.h"
 
+#include "Z80Rld.h"
+#include "Z80Rrd.h"
+
 
 class Z80EDPrefixed
 {
@@ -87,6 +90,9 @@ class Z80EDPrefixed
 
         Z80AdcHlReg iAdcHlReg;
         Z80SbcHlReg iSbcHlReg;
+
+        Z80Rld iRld;
+        Z80Rrd iRrd;
 
         Z80Instruction* table[4][8][8];
 
@@ -202,7 +208,7 @@ class Z80EDPrefixed
                         &iOutPtrCReg,   // 01001001: OUT (C), C
                         &iAdcHlReg,     // 01001010: ADC HL, BC
                         &iLdRegPtrWord, // 01001011: LD BC, (nn)
-                        &iNop,
+                        &iNeg,          // 01001100: NEG*
                         &iRetI,         // 01001101: RETI
                         &iIm,           // 01001110: IM 0*
                         &iLdRA          // 01001111: LD R, A
@@ -213,7 +219,7 @@ class Z80EDPrefixed
                         &iOutPtrCReg,   // 01010001: OUT (C), D
                         &iSbcHlReg,     // 01010010: SBC HL, DE
                         &iLdPtrWordReg, // 01010011: LD (nn), DE
-                        &iNop,
+                        &iNeg,          // 01010100: NEG*
                         &iRetI,         // 01010101: RETN*
                         &iIm,           // 01010110: IM 1
                         &iLdAI          // 01010111: LD A, I
@@ -224,7 +230,7 @@ class Z80EDPrefixed
                         &iOutPtrCReg,   // 01011001: OUT (C), E
                         &iAdcHlReg,     // 01011010: ADC HL, DE
                         &iLdRegPtrWord, // 01011011: LD DE, (nn)
-                        &iNop,
+                        &iNeg,          // 01011100: NEG*
                         &iRetI,         // 01011101: RETN*
                         &iIm,           // 01011110: IM 2
                         &iLdAR          // 01011111: LD A, R
@@ -235,10 +241,10 @@ class Z80EDPrefixed
                         &iOutPtrCReg,   // 01100001: OUT (C), H
                         &iSbcHlReg,     // 01100010: SBC HL, HL
                         &iLdPtrWordReg, // 01100011: LD (nn), HL
-                        &iNop,
+                        &iNeg,          // 01100100: NEG*
                         &iRetI,         // 01100101: RETN*
                         &iIm,           // 01100110: IM 0*
-                        &iNop
+                        &iRrd           // 01100111: RRD
                     },
                     // y = 5
                     {
@@ -246,10 +252,10 @@ class Z80EDPrefixed
                         &iOutPtrCReg,   // 01101001: OUT (C), L
                         &iAdcHlReg,     // 01101010: ADC HL, HL
                         &iLdRegPtrWord, // 01101011: LD HL, (nn)
-                        &iNop,
+                        &iNeg,          // 01101100: NEG
                         &iRetI,         // 01101101: RETN*
                         &iIm,           // 01101110: IM 0*
-                        &iNop
+                        &iRld           // 01101111: RLD
                     },
                     // y = 6
                     {
@@ -257,10 +263,10 @@ class Z80EDPrefixed
                         &iOutPtrCReg,   // 01110001: OUT (C), 0
                         &iSbcHlReg,     // 01110010: SBC HL, SP
                         &iLdPtrWordReg, // 01110011: LD (nn), SP
-                        &iNop,
+                        &iNeg,          // 01110100: NEG
                         &iRetI,         // 01110101: RETN*
                         &iIm,           // 01110110: IM 1*
-                        &iNop
+                        &iNop           // 01110111: NOP*
                     },
                     // y = 7
                     {
@@ -268,10 +274,10 @@ class Z80EDPrefixed
                         &iOutPtrCReg,   // 01111001: OUT (C), A
                         &iAdcHlReg,     // 01111010: ADC HL, SP
                         &iLdRegPtrWord, // 01111011: LD SP, (nn)
-                        &iNop,
+                        &iNeg,          // 01111100: NEG*
                         &iRetI,         // 01111101: RETN*
                         &iIm,           // 01111110: IM 2*
-                        &iNop
+                        &iNop           // 01111111: NOP*
                     }
                 },
                 // x = 2
