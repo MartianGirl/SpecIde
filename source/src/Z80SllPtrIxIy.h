@@ -1,12 +1,27 @@
 #pragma once
 
-/** Z80SllPtrHl.h
+/** Z80SllPtrIxIy.h
  *
- * Instruction: SLL (HL)
+ * Instruction: SLL (IX + d)
+ * Instruction: SLL (IX + d), r
+ * Instruction: SLL (IY + d)
+ * Instruction: SLL (IY + d), r
  *
- * Encoding: 11 001 011  00 110 110
- * M Cycles: 4 (OCF, OCF, MRB(4), MWB)
- * T States: 15
+ * Encoding: 11 011 101  11 001 011  dd ddd ddd  00 110 rrr
+ * Encoding: 11 111 101  11 001 011  dd ddd ddd  00 110 rrr
+ * M Cycles: 6 (OCF, OCF, MRB(5), MRB, MRB(4), MWB)
+ * T States: 23
+ *
+ *  r  rrr
+ * --- ---
+ *  B  000
+ *  C  001
+ *  D  010
+ *  E  011
+ *  H  100
+ *  L  101
+ *  -  110
+ *  A  111
  *
  * Flags: SZ503P0C
  * - 1 is shifted into the LSB.
@@ -16,22 +31,17 @@
 #include "Z80Instruction.h"
 #include "Z80RegisterSet.h"
 
-class Z80SllPtrHl : public Z80Instruction
+class Z80SllPtrIxIy : public Z80Instruction
 {
     public:
-        Z80SllPtrHl() {}
+        Z80SllPtrIxIy() {}
 
         bool operator()(Z80RegisterSet* r)
         {
             switch (r->executionStep)
             {
-                case 0:
-                    r->memRdCycles = 1;
-                    r->memWrCycles = 1;
-                    r->memAddrMode = 0x00000022;
-                    return true;
-
-                case 1:
+                // Previous steps are executed by the prefix.
+                case 5:
                     r->acc.w = (r->iReg.h << 1) | 0x01;
                     r->af.l = r->acc.h & FLAG_C;
                     r->acc.h = r->acc.l;
@@ -43,11 +53,13 @@ class Z80SllPtrHl : public Z80Instruction
                     r->af.l |= (r->acc.h & 0x01) ? 0x00 : FLAG_PV;
                     return false;
 
-                case 2:
+                case 6:
+                    if (r->z != 6)
+                        *r->reg8[r->z] = r->acc.l;
                     r->oReg.l = r->acc.l;
                     return true;
 
-                case 3:
+                case 7:
                     r->prefix = PREFIX_NO;
                     return true;
 

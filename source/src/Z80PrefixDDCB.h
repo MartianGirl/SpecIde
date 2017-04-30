@@ -20,7 +20,7 @@ class Z80PrefixDDCB : public Z80Instruction
             {
                 case 0:
                     r->memRdCycles = 2;
-                    r->memAddrMode = 0x00000011;
+                    r->memAddrMode = 0x00006611;
                     return true;
 
                 case 1: // This is the displacement.
@@ -46,10 +46,8 @@ class Z80PrefixDDCB : public Z80Instruction
                     r->p = r->y >> 1;               // ..pp....
                     r->q = r->y & 0x01;             // ....q...
 
-                    r->executionStep = 0;
-
-                    r->memRdCycles = 0;
-                    r->memWrCycles = 0;
+                    r->memRdCycles = 1;
+                    r->memWrCycles = (r->x == 1) ? 0 : 1;
                     r->ioRdCycles = 0;
                     r->ioWrCycles = 0;
                     r->cpuProcCycles = 0;

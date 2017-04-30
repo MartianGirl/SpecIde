@@ -1055,5 +1055,41 @@ BOOST_AUTO_TEST_CASE(srl_ptrhl_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x44);
 }
 
+BOOST_AUTO_TEST_CASE(shift_rotation_ptrix_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "DD210001"      // LD IX, 0100h
+        "DDCB0000"      // RLC (IX + 0), B
+        "DDCB0109"      // RRC (IX + 1), C
+        "DDCB0212"      // RL (IX + 2), D
+        "DDCB031B"      // RR (IX + 3), E
+        "DDCB0424"      // SLA (IX + 4), H
+        "DDCB052D"      // SRA (IX + 5), L
+        "DDCB073F"      // SRL (IX + 7), A
+        "DDCB0636";     // SLL (IX + 6)
+
+    string data = "07070F031F7FFF07";
+
+    loadBinary(code, m, 0x0000);
+    loadBinary(data, m, 0x0100);
+    startZ80(z80);
+    z80.decoder.regs.af.l = 0x00;
+    runCycles(z80, m, 198);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x0E83);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x1F01);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x3E3F);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x03AD);
+    BOOST_CHECK_EQUAL(m.memory[0x0100], 0x0E);
+    BOOST_CHECK_EQUAL(m.memory[0x0101], 0x83);
+    BOOST_CHECK_EQUAL(m.memory[0x0102], 0x1F);
+    BOOST_CHECK_EQUAL(m.memory[0x0103], 0x01);
+    BOOST_CHECK_EQUAL(m.memory[0x0104], 0x3E);
+    BOOST_CHECK_EQUAL(m.memory[0x0105], 0x3F);
+    BOOST_CHECK_EQUAL(m.memory[0x0106], 0xFF);
+    BOOST_CHECK_EQUAL(m.memory[0x0107], 0x03);
+}
 // EOF
 // vim: et:sw=4:ts=4

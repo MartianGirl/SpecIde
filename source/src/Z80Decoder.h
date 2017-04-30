@@ -17,8 +17,7 @@
 #include "Z80DDPrefixed.h"
 #include "Z80EDPrefixed.h"
 #include "Z80FDPrefixed.h"
-#include "Z80DDCBPrefixed.h"
-#include "Z80FDCBPrefixed.h"
+#include "Z80XXCBPrefixed.h"
 
 #include "Z80Nmi.h"
 #include "Z80IntMode2.h"
@@ -56,8 +55,7 @@ class Z80Decoder
         Z80DDPrefixed DDPrefixed;
         Z80EDPrefixed EDPrefixed;
         Z80FDPrefixed FDPrefixed;
-        Z80DDCBPrefixed DDCBPrefixed;
-        Z80FDCBPrefixed FDCBPrefixed;
+        Z80XXCBPrefixed XXCBPrefixed;
 
         Z80Nmi z80Nmi;
         Z80IntMode2 z80IntMode2;
