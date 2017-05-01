@@ -48,6 +48,9 @@ void Z80::clock()
         c &= ~SIGNAL_HALT_;
     else
         c |= SIGNAL_HALT_;
+   
+    if ((c & SIGNAL_BUSRQ_) == SIGNAL_BUSRQ_)
+        c |= SIGNAL_BUSAK_;
 
     switch (state)
     {
@@ -277,11 +280,20 @@ void Z80::clock()
 
 Z80State Z80::finishMachineCycle()
 {
-    bool endOfCycle = execute();
+    bool endOfCycle = false;
+
+    // If we are in a BUSRQ cycle, we just insert wait states.
+    if ((c & SIGNAL_BUSAK_) == SIGNAL_BUSAK_)
+        endOfCycle = execute();
     
     if (endOfCycle == false)    // Machine cycle not finished, insert a state.
         return Z80State::ST_CPU_T0_WAITST;
     // BUSRQ goes here, after a complete machine cycle.
+    else if ((c & SIGNAL_BUSRQ_) == 0x0000)
+    {
+        c &= ~SIGNAL_BUSAK_;
+        return Z80State::ST_CPU_T0_WAITST;
+    }
     else if (decoder.regs.memRdCycles)      // Perform memory read cycles.
         return Z80State::ST_MEMRD_T1_ADDRWR;
     else if (decoder.regs.ioRdCycles)       // Perform I/O read cycles.

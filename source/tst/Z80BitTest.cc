@@ -1091,5 +1091,47 @@ BOOST_AUTO_TEST_CASE(shift_rotation_ptrix_test)
     BOOST_CHECK_EQUAL(m.memory[0x0106], 0xFF);
     BOOST_CHECK_EQUAL(m.memory[0x0107], 0x03);
 }
+
+BOOST_AUTO_TEST_CASE(bit_manipulation_reg_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "AF"        // XOR A
+        "CBC7"      // SET 0, A
+        "CBD7"      // SET 2, A
+        "CBE7"      // SET 4, A
+        "CBF7"      // SET 6, A
+        "47"        // LD B, A
+        "4F"        // LD C, A
+        "CB80"      // RES 0, B
+        "CB90"      // RES 2, B
+        "CBA1"      // RES 4, C
+        "CBB1"      // RES 6, C
+        "CB00"      // RLC B
+        "CB01"      // RLC C
+        "CB68"      // BIT 5, B
+        "CB59"      // BIT 3, C
+        "CB70"      // BIT 6, B
+        "CB50";     // BIT 2, C
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    runCycles(z80, m, 76);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x5544);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x5005);
+    runCycles(z80, m, 16);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x550C);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xA00A);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x30);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x18);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x54);
+    runCycles(z80, m, 8);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x54);
+}
 // EOF
 // vim: et:sw=4:ts=4
