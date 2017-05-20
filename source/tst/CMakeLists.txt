@@ -45,6 +45,7 @@ target_link_libraries(ComputerTest
 add_executable(SpectrumTest
     SpectrumTest.cc
     ${PROJECT_SOURCE_DIR}/src/CPU.cc
+    ${PROJECT_SOURCE_DIR}/src/ULA.cc
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc

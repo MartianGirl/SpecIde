@@ -27,7 +27,7 @@ using namespace std;
 class Memory
 {
     public:
-        Memory(size_t addrWidth, bool readOnly);
+        Memory(size_t addrWidth, bool readOnly = false);
 
         /** Issue a clock tick.
          */

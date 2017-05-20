@@ -15,8 +15,8 @@ include_directories(${SFML_INCLUDE_DIR})
 
 add_executable(SpecIde SpecIde.cc
         GraphicWindow.cc Screen.cc
+        CPU.cc Z80.cc ULA.cc
         Computer.cc Spectrum.cc
-        CPU.cc Z80.cc
         Memory.cc Z80Register.cc Z80RegisterSet.cc Z80Decoder.cc)
 target_link_libraries(SpecIde ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
 

@@ -7,6 +7,7 @@
  */
 
 #include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
 
 #include <string>
 
@@ -22,7 +23,6 @@ class GraphicWindow
         void update();
 
         sf::RenderWindow window;
-
 };
 
 // vim: et:sw=4:ts=4

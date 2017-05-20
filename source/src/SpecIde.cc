@@ -3,7 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "Computer.h"
+#include "Spectrum.h"
 
 #include "Screen.h"
 
@@ -16,6 +16,8 @@ int main()
 
     Screen screen(2);
     screen.open();
+
+    Spectrum spectrum;
 
     bool run = true;
     while (run)
@@ -30,7 +32,7 @@ int main()
             }
         }
 
-        screen.update();
+        // screen.update();
     }
 
     return 0;
