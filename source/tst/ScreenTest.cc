@@ -20,19 +20,26 @@ BOOST_AUTO_TEST_CASE(constructors_test)
 
 BOOST_AUTO_TEST_CASE(update_test)
 {
-    Screen sc0(2);
+    Screen sc0(1);
     sc0.open();
 
+    size_t c = 0;
     for (size_t f = 0; f < 500; ++f)
     {
         for (size_t y = 0; y < 312; ++y)
         {
             for (size_t x = 0; x < 448; ++x)
             {
-                sc0.blank = (x > 0xFF) | (y > 0xFF);
-                sc0.hSync = (x > 352);
-                sc0.vSync = (y > 310);
-                sc0.update((x & 0xFF), (y & 0xFF), 0x7F);
+                sc0.blank = (x >= 320) && (x <= 415);
+                sc0.hSync = (x >= 336) && (x <= 367);
+                sc0.vSync = (y >= 248) && (y <= 251) && sc0.hSync;
+                c = (c + 1) % 1000;
+                uint_fast8_t b = (c >> 9) * 192;
+                if (((x >= 256) && (x <= 447))
+                        || ((y >= 192) && (y <= 312)))
+                    sc0.update(b, 0, 0);
+                else
+                    sc0.update((x & 0xFF), (y & 0xFF), 0x7F);
             }
         }
     }
