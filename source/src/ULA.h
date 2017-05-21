@@ -21,12 +21,18 @@ class ULA
         uint16_t c;
         uint8_t d;
 
+        bool as_, rd_;
+
         bool hiz;
         bool tState;
 
         size_t scan, maxScan;
         size_t pixel, maxPixel;
 
+        uint8_t borderAttr;
+        uint8_t flash;
+        uint8_t data, attr;
+        uint8_t dataOut, attrOut;
         uint16_t dataLatch, attrLatch;
         uint16_t dataAddr, attrAddr;
 

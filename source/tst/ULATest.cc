@@ -17,6 +17,9 @@ BOOST_AUTO_TEST_CASE(display_position_test)
     Screen sc0(2);
     ULA ula;
 
+    ula.borderAttr = 0x28;
+    ula.d = 0x8D;
+
     for (size_t i = 0; i < 13977600; ++i)
     {
         ula.clock();
@@ -29,6 +32,7 @@ BOOST_AUTO_TEST_CASE(display_position_test)
 
 BOOST_AUTO_TEST_CASE(image_generation_test)
 {
+    Screen sc0(2);
     ULA ula;
     Memory m(16, false);
 
@@ -48,6 +52,24 @@ BOOST_AUTO_TEST_CASE(image_generation_test)
         m.memory[i + 0x5800] = static_cast<uint8_t>(i); // Attrs, 1st third.
         m.memory[i + 0x5900] = static_cast<uint8_t>(i); // Attrs, 2nd third.
         m.memory[i + 0x5A00] = static_cast<uint8_t>(i); // Attrs, 3rd third.
+    }
+
+    ula.borderAttr = 0x10;
+    for (size_t i = 0; i < 139776000; ++i)
+    {
+        ula.clock();
+        sc0.blank = ula.blank;
+        sc0.vSync = ula.vSync;
+        sc0.hSync = ula.hSync;
+        if (ula.hiz == false)
+        {
+            m.a = ula.a | 0x4000;
+            m.rd_ = ula.rd_;
+            m.as_ = ula.as_;
+            m.clock();
+            ula.d = m.d;
+        }
+        sc0.update(ula.r, ula.g, ula.b);
     }
 }
 
