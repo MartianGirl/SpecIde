@@ -30,6 +30,7 @@ void Screen::update(uint_fast8_t r, uint_fast8_t g, uint_fast8_t b)
     {
         yPos = 0;
         window.display();
+        window.clear(sf::Color::Black);
     }
     vSync1d = vSync;
 

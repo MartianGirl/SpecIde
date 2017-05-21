@@ -34,6 +34,17 @@ target_link_libraries(ScreenTest
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
+add_executable(ULATest
+    ULATest.cc
+    ${PROJECT_SOURCE_DIR}/src/GraphicWindow.cc
+    ${PROJECT_SOURCE_DIR}/src/Memory.cc
+    ${PROJECT_SOURCE_DIR}/src/Screen.cc
+    ${PROJECT_SOURCE_DIR}/src/ULA.cc)
+target_link_libraries(ULATest
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${SFML_LIBRARIES}
+    ${SFML_DEPENDENCIES})
+
 add_executable(ComputerTest
     ComputerTest.cc
     ${PROJECT_SOURCE_DIR}/src/Computer.cc)
@@ -147,8 +158,9 @@ target_link_libraries(Z80RegisterTest
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
-install(TARGETS GraphicWindowTest ScreenTest
-    ComputerTest SpectrumTest
+install(TARGETS
+    GraphicWindowTest ScreenTest
+    ComputerTest SpectrumTest ULATest
     CPUTest Z80Test Z80AluTest Z80InterruptTest Z80JumpTest Z80BitTest
     MemoryTest Z80RegisterTest
     RUNTIME

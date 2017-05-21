@@ -35,5 +35,14 @@ class ULA
         bool blank;
         bool border;
 
+        size_t pixelStart, pixelEnd;
+        size_t hBorderStart, hBorderEnd;
+        size_t hBlankStart, hBlankEnd;
+        size_t hSyncStart, hSyncEnd;
+
+        size_t scanStart, scanEnd;
+        size_t vBorderStart, vBorderEnd;
+        size_t vBlankStart, vBlankEnd;
+        size_t vSyncStart, vSyncEnd;
 };
 // vim: et:sw=4:ts=4

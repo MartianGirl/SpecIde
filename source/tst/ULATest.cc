@@ -5,11 +5,26 @@
 
 #include "Memory.h"
 #include "ULA.h"
-#include "SFML/Graphics.hpp"
+#include "Screen.h"
 
 BOOST_AUTO_TEST_CASE(constructors_test)
 {
     ULA ula;
+}
+
+BOOST_AUTO_TEST_CASE(display_position_test)
+{
+    Screen sc0(2);
+    ULA ula;
+
+    for (size_t i = 0; i < 13977600; ++i)
+    {
+        ula.clock();
+        sc0.blank = ula.blank;
+        sc0.hSync = ula.hSync;
+        sc0.vSync = ula.vSync;
+        sc0.update(ula.r, ula.g, ula.b);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(image_generation_test)
