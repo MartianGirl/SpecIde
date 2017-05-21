@@ -11,21 +11,29 @@
 
 #include "GraphicWindow.h"
 
+#include <cassert>
+#include <vector>
+
 class Screen : public GraphicWindow
 {
     public:
         Screen(size_t scale = 1);
 
         size_t scale;
+        size_t xSize, ySize;
+
         size_t xPos, yPos;
         bool vSync, vSync1d;
         bool hSync, hSync1d;
         bool blank;
         bool frame;
 
-        sf::RectangleShape pixel;
+        size_t texSize;
+        sf::Texture scrTexture;
+        sf::Sprite scrSprite;
+        std::vector<sf::Uint32> pixels;
 
-        void update(uint_fast8_t r, uint_fast8_t g, uint_fast8_t b);
+        void update(uint8_t r, uint8_t g, uint8_t b);
 
 
 

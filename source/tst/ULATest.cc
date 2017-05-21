@@ -7,6 +7,8 @@
 #include "ULA.h"
 #include "Screen.h"
 
+#include <fstream>
+
 BOOST_AUTO_TEST_CASE(constructors_test)
 {
     ULA ula;
@@ -55,7 +57,7 @@ BOOST_AUTO_TEST_CASE(image_generation_test)
     }
 
     ula.borderAttr = 0x10;
-    for (size_t i = 0; i < 139776000; ++i)
+    for (size_t i = 0; i < 13977600; ++i)
     {
         ula.clock();
         sc0.blank = ula.blank;
@@ -73,5 +75,36 @@ BOOST_AUTO_TEST_CASE(image_generation_test)
     }
 }
 
+BOOST_AUTO_TEST_CASE(image_load_test)
+{
+    Screen sc0(2);
+    ULA ula;
+    Memory m(16, false);
+
+    // Prepare some image in the memory.
+    size_t pos = 0x4000;
+    char c;
+    std::ifstream ifs("trapdoor.scr", std::ifstream::binary);
+    while (ifs.get(c))
+        m.memory[pos++] = c;
+
+    ula.borderAttr = 0x10;
+    for (size_t i = 0; i < 139776000; ++i)
+    {
+        ula.clock();
+        sc0.blank = ula.blank;
+        sc0.vSync = ula.vSync;
+        sc0.hSync = ula.hSync;
+        if (ula.hiz == false)
+        {
+            m.a = ula.a | 0x4000;
+            m.rd_ = ula.rd_;
+            m.as_ = ula.as_;
+            m.clock();
+            ula.d = m.d;
+        }
+        sc0.update(ula.r, ula.g, ula.b);
+    }
+}
 // EOF
 // vim: et:sw=4:ts=4
