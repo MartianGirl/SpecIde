@@ -96,10 +96,8 @@ void ULA::clock()
         dataLatch = (dataLatch << 8);
     }
 
-    // 5. Count pixels.
+    // 5. Update counters
     pixel = (pixel + 1) % maxPixel;
-
-    // 6. Count scans.
     if (pixel == hSyncStart)
     {
         flash += (scan == vBlankEnd) ? 0x04 : 0x00;
