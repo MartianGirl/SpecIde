@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(image_load_test)
     // Prepare some image in the memory.
     size_t pos = 0x4000;
     char c;
-    std::ifstream ifs("trapdoor.scr", std::ifstream::binary);
+    std::ifstream ifs("testfile.scr", std::ifstream::binary);
     while (ifs.get(c))
         m.memory[pos++] = c;
 

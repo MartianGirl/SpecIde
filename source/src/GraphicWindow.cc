@@ -1,8 +1,9 @@
 #include "GraphicWindow.h"
 
-GraphicWindow::GraphicWindow(uint_fast32_t x, uint_fast32_t y,
-        std::string const& title) :
-    window(sf::VideoMode(x, y), title)
+GraphicWindow::GraphicWindow(size_t x, size_t y, std::string const& title) :
+    window(
+        sf::VideoMode(static_cast<sf::Uint32>(x), static_cast<sf::Uint32>(y)),
+        title)
 {
     window.clear();
     window.display();

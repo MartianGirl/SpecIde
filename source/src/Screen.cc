@@ -9,10 +9,11 @@ Screen::Screen(size_t scale) :
     texSize(xSize * ySize),
     pixels(texSize, 0xFF)
 {
-    if (!scrTexture.create(xSize, ySize)) assert(false);
+    if (!scrTexture.create(static_cast<sf::Uint32>(xSize), static_cast<sf::Uint32>(ySize)))
+        assert(false);
     scrTexture.setRepeated(false);
     scrSprite.setTexture(scrTexture);
-    scrSprite.setScale(sf::Vector2f(scale, scale));
+    scrSprite.setScale(sf::Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
 }
 
 void Screen::update(uint8_t r, uint8_t g, uint8_t b)

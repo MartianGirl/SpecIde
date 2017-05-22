@@ -1722,7 +1722,7 @@ BOOST_AUTO_TEST_CASE(cpir_test)
     {
         runCycles(z80, m, 21);
 
-        uint8_t s = i;
+        uint8_t s = static_cast<uint8_t>(i);
         uint8_t h = (-(s & 0x0F) & 0x10);
         uint8_t n = 0x20 - s - (h >> 4);
         uint8_t f = h | (n & 0x08) | ((n << 4) & 0x20) | 0x06;
@@ -1798,7 +1798,7 @@ BOOST_AUTO_TEST_CASE(cpdr_test)
     {
         runCycles(z80, m, 21);
 
-        uint8_t s = 0x7F - i;
+        uint8_t s = static_cast<uint8_t>(0x7F - i);
         uint8_t h = (-(s & 0x0F) & 0x10);
         uint8_t n = 0x20 - s - (h >> 4);
         uint8_t f = 0x80 | h | (n & 0x08) | ((n << 4) & 0x20) | 0x06;

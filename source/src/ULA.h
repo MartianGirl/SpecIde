@@ -36,7 +36,7 @@ class ULA
         uint16_t dataLatch, attrLatch;
         uint16_t dataAddr, attrAddr;
 
-        uint_fast32_t r, g, b;
+        uint8_t r, g, b;
         bool hSync, vSync;
         bool blank;
         bool border;

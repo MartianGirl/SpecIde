@@ -35,7 +35,8 @@ BOOST_AUTO_TEST_CASE(update_test)
                 sc0.hSync = (x >= 336) && (x <= 367);
                 sc0.vSync = (y >= 248) && (y <= 251);
                 c = (c + 1) % 1000;
-                uint_fast8_t b = (c >> 9) * 192;
+                uint_fast8_t b = 
+                    static_cast<uint_fast8_t>(((c >> 9) * 192) & 0xFF);
                 if (((x >= 256) && (x <= 447))
                         || ((y >= 192) && (y <= 312)))
                     sc0.update(b, 0, 0);
