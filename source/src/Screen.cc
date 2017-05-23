@@ -16,17 +16,12 @@ Screen::Screen(size_t scale) :
     scrSprite.setScale(sf::Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
 }
 
-void Screen::update(uint8_t r, uint8_t g, uint8_t b)
+void Screen::update(sf::Uint32 rgba)
 {
     // If not blanking, draw.
     if (!blank)
     {
-#if SPECIDE_BYTE_ORDER == 1
-        sf::Uint32 pixel = r << 24 | g << 16 | b << 8 | 0xFF;
-#else
-        sf::Uint32 pixel = 0xFF << 24 | b << 16 | g << 8 | r;
-#endif
-        *(&pixels[0] + yPos * xSize + xPos) = pixel;
+        *(&pixels[0] + yPos * xSize + xPos) = rgba;
         ++xPos;
     }
 

@@ -36,7 +36,7 @@ class ULA
         uint16_t dataLatch, attrLatch;
         uint16_t dataAddr, attrAddr;
 
-        uint8_t r, g, b;
+        uint32_t rgba;
         bool hSync, vSync;
         bool blank;
         bool border;
@@ -50,5 +50,7 @@ class ULA
         size_t vBorderStart, vBorderEnd;
         size_t vBlankStart, vBlankEnd;
         size_t vSyncStart, vSyncEnd;
+
+        uint32_t colourTable[0x100];
 };
 // vim: et:sw=4:ts=4

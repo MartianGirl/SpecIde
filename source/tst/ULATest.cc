@@ -22,13 +22,13 @@ BOOST_AUTO_TEST_CASE(display_position_test)
     ula.borderAttr = 0x28;
     ula.d = 0x8D;
 
-    for (size_t i = 0; i < 13977600; ++i)
+    for (size_t i = 0; i < 139776000; ++i)
     {
         ula.clock();
         sc0.blank = ula.blank;
         sc0.hSync = ula.hSync;
         sc0.vSync = ula.vSync;
-        sc0.update(ula.r, ula.g, ula.b);
+        sc0.update(ula.rgba);
     }
 }
 
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(image_generation_test)
     }
 
     ula.borderAttr = 0x10;
-    for (size_t i = 0; i < 13977600; ++i)
+    for (size_t i = 0; i < 139776000; ++i)
     {
         ula.clock();
         sc0.blank = ula.blank;
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(image_generation_test)
             m.clock();
             ula.d = m.d;
         }
-        sc0.update(ula.r, ula.g, ula.b);
+        sc0.update(ula.rgba);
     }
 }
 
@@ -91,6 +91,9 @@ BOOST_AUTO_TEST_CASE(image_load_test)
     ula.borderAttr = 0x10;
     for (size_t i = 0; i < 139776000; ++i)
     {
+        if (i % 1000 == 0)
+            ula.borderAttr = (ula.borderAttr + 0x08) & 0x38;
+
         ula.clock();
         sc0.blank = ula.blank;
         sc0.vSync = ula.vSync;
@@ -103,7 +106,7 @@ BOOST_AUTO_TEST_CASE(image_load_test)
             m.clock();
             ula.d = m.d;
         }
-        sc0.update(ula.r, ula.g, ula.b);
+        sc0.update(ula.rgba);
     }
 }
 // EOF

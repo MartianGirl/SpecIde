@@ -33,7 +33,7 @@ class Screen : public GraphicWindow
         sf::Sprite scrSprite;
         std::vector<sf::Uint32> pixels;
 
-        void update(uint8_t r, uint8_t g, uint8_t b);
+        void update(sf::Uint32 rgba);
 
 
 
