@@ -40,3 +40,6 @@ SpecIde
 *.ilk
 *.pdb
 *.manifest
+
+# Ignore .scr files which are used in the ULA tests.
+*.scr
