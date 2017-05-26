@@ -33,12 +33,10 @@ class Screen : public GraphicWindow
         sf::Sprite scrSprite;
         std::vector<sf::Uint32> pixels;
 
-        void update(sf::Uint32 rgba);
+        void update();
+        void setRgbaInput(sf::Uint32* input) { rgbaInput = input; }
 
-
-
-
-
+        sf::Uint32 *rgbaInput;
 };
 
 // vim: et:sw=4:ts=4

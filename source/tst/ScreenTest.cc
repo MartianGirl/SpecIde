@@ -9,12 +9,12 @@ BOOST_AUTO_TEST_CASE(constructors_test)
 {
     Screen sc0;
     sc0.open();
-    sc0.update(0);
+    sc0.update();
     sc0.close();
 
     Screen sc1(2);
     sc1.open();
-    sc1.update(0);
+    sc1.update();
     sc1.close();
 }
 
@@ -24,6 +24,8 @@ BOOST_AUTO_TEST_CASE(update_test)
     sc0.open();
 
     size_t c = 0;
+    uint32_t pixel = 0;
+    sc0.setRgbaInput(&pixel);
     for (size_t f = 0; f < 2000; ++f)
     {
         for (size_t y = 0; y < 312; ++y)
@@ -39,9 +41,16 @@ BOOST_AUTO_TEST_CASE(update_test)
                     static_cast<uint_fast8_t>(((c >> 9) * 192) & 0xFF);
                 if (((x >= 256) && (x <= 447))
                         || ((y >= 192) && (y <= 312)))
-                    sc0.update(b | 0xFF << 24);
+                {
+                    pixel = b | (0xFF << 24);
+                    sc0.update();
+                }
                 else
-                    sc0.update((x & 0xFF) | (y & 0xFF) << 8 | 0x7F << 16 | 0xFF << 24);
+                {
+                    pixel = (x & 0xFF) | ((y & 0xFF) << 8) | (0x7F << 16)
+                        | (0xFF << 24);
+                    sc0.update();
+                }
             }
         }
     }

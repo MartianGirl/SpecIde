@@ -31,9 +31,9 @@ class ULA
 
         uint8_t borderAttr;
         uint8_t flash;
-        uint8_t data, attr;
-        uint8_t dataOut, attrOut;
-        uint16_t dataLatch, attrLatch;
+        uint32_t dataReg, attrReg;
+        uint8_t &data, &attr;
+        uint8_t &dataLatch, &attrLatch;
         uint16_t dataAddr, attrAddr;
 
         uint32_t rgba;

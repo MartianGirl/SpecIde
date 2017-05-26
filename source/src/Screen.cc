@@ -18,12 +18,12 @@ Screen::Screen(size_t scale) :
     scrSprite.setScale(sf::Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
 }
 
-void Screen::update(sf::Uint32 rgba)
+void Screen::update()
 {
     // If not blanking, draw.
     if (!blank)
     {
-        *(&pixels[0] + yPos * xSize + xPos) = rgba;
+        pixels[yPos * xSize + xPos] = *rgbaInput;
         ++xPos;
     }
 
@@ -34,7 +34,7 @@ void Screen::update(sf::Uint32 rgba)
         yPos = 0;
 
         scrTexture.update(reinterpret_cast<sf::Uint8*>(&pixels[0]));
-        window.clear(sf::Color::Black);
+        // window.clear(sf::Color::Black);
         window.draw(scrSprite);
         window.display();
     }

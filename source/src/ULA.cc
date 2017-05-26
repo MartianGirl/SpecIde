@@ -8,7 +8,18 @@ ULA::ULA() :
     pixel(0), maxPixel(448),
     borderAttr(0),
     flash(0),
-    data(0), attr(0), dataOut(0), attrOut(0), dataLatch(0), attrLatch(0),
+    dataReg(0), attrReg(0),
+#if SPECIDE_BYTE_ORDER == 1
+    data(*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint32_t) - 3)),
+    attr(*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint32_t) - 3)),
+    dataLatch(*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint32_t) - 1)),
+    attrLatch(*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint32_t) - 1)),
+#else
+    data(*(reinterpret_cast<uint8_t*>(&dataReg) + 2)),
+    attr(*(reinterpret_cast<uint8_t*>(&attrReg) + 2)),
+    dataLatch(*(reinterpret_cast<uint8_t*>(&dataReg) + 0)),
+    attrLatch(*(reinterpret_cast<uint8_t*>(&attrReg) + 0)),
+#endif
     pixelStart(0), pixelEnd(255),
     hBorderStart(256), hBorderEnd(447),
     hBlankStart(320), hBlankEnd(415),
@@ -22,14 +33,14 @@ ULA::ULA() :
     {
         // Generate colour table.
         // dhpppiii
-        uint8_t r = (i & 0x80) ? ((i & 0x02) >> 1) : ((i & 0x10) >> 4);
-        uint8_t g = (i & 0x80) ? ((i & 0x04) >> 2) : ((i & 0x20) >> 5);
-        uint8_t b = (i & 0x80) ? ((i & 0x01) >> 0) : ((i & 0x08) >> 3);
-
 #if SPECIDE_BYTE_ORDER == 1
-        uint32_t colour = r << 24 | g << 16 | b << 8;
+        uint32_t colour = (i & 0x80) ?
+            ((i & 0x02) << 23) | ((i & 0x04) << 14) | ((i & 0x01) << 8) :
+            ((i & 0x10) << 20) | ((i & 0x20) << 11) | ((i & 0x08) << 5);
 #else
-        uint32_t colour = b << 16 | g << 8 | r;
+        uint32_t colour = (i & 0x80) ?
+            ((i & 0x02) >> 1) | ((i & 0x04) << 6) | ((i & 0x01) << 16) :
+            ((i & 0x10) >> 4) | ((i & 0x20) << 3) | ((i & 0x08) << 13);
 #endif
         colour *= (i & 0x40) ? 0xFF : 0xC0;
 #if SPECIDE_BYTE_ORDER == 1
@@ -54,7 +65,7 @@ void ULA::clock()
     border = ((pixel >= hBorderStart) && (pixel <= hBorderEnd))
         || ((scan >= vBorderStart) && (scan <= vBorderEnd));
 
-    // 2. Generate video data. Flash is missing so far.
+    // 2. Generate video data.
     if (border == false)
     {
         switch (pixel & 0x0F)
@@ -81,11 +92,11 @@ void ULA::clock()
             case 0x0C:
                 a = dataAddr + 1; hiz = as_ = rd_ = false; break;
             case 0x0D:
-                dataLatch = (dataLatch << 8) | d; break;
+                dataLatch = d; break;
             case 0x0E:
                 a = attrAddr + 1; hiz = as_ = rd_ = false; break;
             case 0x0F:
-                attrLatch = (attrLatch << 8) | d; break;
+                attrLatch = d; break;
             default:
                 a = 0xFFFF; hiz = as_ = rd_ = true; break;
         }
@@ -98,15 +109,17 @@ void ULA::clock()
     // 4. Update data and attribute registers.
     data <<= 1;
 
-    if ((pixel & 0x07) == 0x07) 
+    // We start outputting data after just a data/attr pair has been fetched.
+    if ((pixel & 0x07) == 0x03)
     {
-        attr = attrOut;
-        data = dataOut;
-
-        attrOut = (attrLatch & 0xFF00) >> 8;
-        dataOut = (dataLatch & 0xFF00) >> 8;
-        attrLatch = (attrLatch << 8) | borderAttr;
-        dataLatch = (dataLatch << 8);
+        // This actually causes the following, due to the placement of the
+        // aliases:
+        // data = dataOut; attr = attrOut;
+        // dataOut = dataLatch; attrOut = attrLatch;
+        // attrLatch = borderAttr; dataLatch = 0;
+        dataReg <<= 8;
+        attrReg <<= 8;
+        attrLatch = borderAttr;
     }
 
     // 5. Update counters

@@ -22,13 +22,15 @@ BOOST_AUTO_TEST_CASE(display_position_test)
     ula.borderAttr = 0x28;
     ula.d = 0x8D;
 
+    sc0.setRgbaInput(&ula.rgba);
+
     for (size_t i = 0; i < 139776000; ++i)
     {
         ula.clock();
         sc0.blank = ula.blank;
         sc0.hSync = ula.hSync;
         sc0.vSync = ula.vSync;
-        sc0.update(ula.rgba);
+        sc0.update();
     }
 }
 
@@ -37,6 +39,8 @@ BOOST_AUTO_TEST_CASE(image_generation_test)
     Screen sc0(2);
     ULA ula;
     Memory m(16, false);
+
+    sc0.setRgbaInput(&ula.rgba);
 
     // Prepare some image in the memory.
     for (size_t i = 0; i < 1024; ++i)
@@ -71,7 +75,7 @@ BOOST_AUTO_TEST_CASE(image_generation_test)
             m.clock();
             ula.d = m.d;
         }
-        sc0.update(ula.rgba);
+        sc0.update();
     }
 }
 
@@ -80,6 +84,8 @@ BOOST_AUTO_TEST_CASE(image_load_test)
     Screen sc0(2);
     ULA ula;
     Memory m(16, false);
+
+    sc0.setRgbaInput(&ula.rgba);
 
     // Prepare some image in the memory.
     size_t pos = 0x4000;
@@ -106,7 +112,7 @@ BOOST_AUTO_TEST_CASE(image_load_test)
             m.clock();
             ula.d = m.d;
         }
-        sc0.update(ula.rgba);
+        sc0.update();
     }
 }
 // EOF
