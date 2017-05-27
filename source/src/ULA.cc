@@ -20,6 +20,7 @@ ULA::ULA() :
     dataLatch(*(reinterpret_cast<uint8_t*>(&dataReg) + 0)),
     attrLatch(*(reinterpret_cast<uint8_t*>(&attrReg) + 0)),
 #endif
+    blank(false), border(false),
     pixelStart(0), pixelEnd(255),
     hBorderStart(256), hBorderEnd(447),
     hBlankStart(320), hBlankEnd(415),
@@ -42,7 +43,7 @@ ULA::ULA() :
             ((i & 0x02) >> 1) | ((i & 0x04) << 6) | ((i & 0x01) << 16) :
             ((i & 0x10) >> 4) | ((i & 0x20) << 3) | ((i & 0x08) << 13);
 #endif
-        colour *= (i & 0x40) ? 0xFF : 0xC0;
+        colour *= (i & 0x40) ? 0xF0 : 0xC0;
 #if SPECIDE_BYTE_ORDER == 1
         colour |= 0xFF;
 #else
@@ -60,13 +61,15 @@ void ULA::clock()
     //    performance.
     hSync = (pixel >= hSyncStart) && (pixel <= hSyncEnd);
     vSync = (scan >= vSyncStart) && (scan <= vSyncEnd);
+    
     blank = ((pixel >= hBlankStart) && (pixel <= hBlankEnd))
         || ((scan >= vBlankStart) && (scan <= vBlankEnd));
+
     border = ((pixel >= hBorderStart) && (pixel <= hBorderEnd))
         || ((scan >= vBorderStart) && (scan <= vBorderEnd));
 
     // 2. Generate video data.
-    if (border == false)
+    if (!border)
     {
         switch (pixel & 0x0F)
         {
@@ -102,32 +105,35 @@ void ULA::clock()
         }
     }
 
-    // 3. Generate colours.
-    uint8_t colourIndex = ((data & 0x80) ^ (attr & flash)) | (attr & 0x7F);
-    rgba = colourTable[colourIndex];
-
-    // 4. Update data and attribute registers.
-    data <<= 1;
-
-    // We start outputting data after just a data/attr pair has been fetched.
-    if ((pixel & 0x07) == 0x03)
+    if (!blank)
     {
-        // This actually causes the following, due to the placement of the
-        // aliases:
-        // data = dataOut; attr = attrOut;
-        // dataOut = dataLatch; attrOut = attrLatch;
-        // attrLatch = borderAttr; dataLatch = 0;
-        dataReg <<= 8;
-        attrReg <<= 8;
-        attrLatch = borderAttr;
+        // 3. Generate colours.
+        rgba = colourTable[((data & 0x80) ^ (attr & flash)) | (attr & 0x7F)];
+
+        // 4. Update data and attribute registers.
+        data <<= 1;
+
+        // We start outputting data after just a data/attr pair has been fetched.
+        if ((pixel & 0x07) == 0x03)
+        {
+            // This actually causes the following, due to the placement of the
+            // aliases:
+            // data = dataOut; attr = attrOut;
+            // dataOut = dataLatch; attrOut = attrLatch;
+            // attrLatch = borderAttr; dataLatch = 0;
+            dataReg <<= 8;
+            attrReg <<= 8;
+            attrLatch = borderAttr;
+        }
     }
 
     // 5. Update counters
     pixel = (pixel + 1) % maxPixel;
     if (pixel == hSyncStart)
     {
-        flash += (scan == vBlankEnd) ? 0x04 : 0x00;
         scan = (scan + 1) % maxScan;
+        if (scan == vBlankEnd)
+            flash += 0x04;
     }
 }
     

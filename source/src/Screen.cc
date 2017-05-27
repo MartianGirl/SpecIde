@@ -7,9 +7,14 @@ Screen::Screen(size_t scale) :
     xPos(0), yPos(8),
     vSync(false), vSync1d(false),
     hSync(false), hSync1d(false),
-    blank(false), frame(false),
+    blank(false), 
+    frame(0),
     texSize(xSize * ySize),
-    pixels(texSize, 0xFF)
+#if SPECIDE_BYTE_ORDER == 1
+    pixels(texSize, 0xFF000000)
+#else
+    pixels(texSize, 0x000000FF)
+#endif
 {
     if (!scrTexture.create(static_cast<sf::Uint32>(xSize), static_cast<sf::Uint32>(ySize)))
         assert(false);

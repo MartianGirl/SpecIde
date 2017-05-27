@@ -8,11 +8,14 @@
 BOOST_AUTO_TEST_CASE(constructors_test)
 {
     Screen sc0;
+    uint32_t rgba = 0xC0C0C0FF;
+    sc0.setRgbaInput(&rgba);
     sc0.open();
     sc0.update();
     sc0.close();
 
-    Screen sc1(2);
+    Screen sc1(1);
+    sc1.setRgbaInput(&rgba);
     sc1.open();
     sc1.update();
     sc1.close();
@@ -20,7 +23,7 @@ BOOST_AUTO_TEST_CASE(constructors_test)
 
 BOOST_AUTO_TEST_CASE(update_test)
 {
-    Screen sc0(2);
+    Screen sc0(1);
     sc0.open();
 
     size_t c = 0;

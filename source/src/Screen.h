@@ -26,7 +26,7 @@ class Screen : public GraphicWindow
         bool vSync, vSync1d;
         bool hSync, hSync1d;
         bool blank;
-        bool frame;
+        size_t frame;
 
         size_t texSize;
         sf::Texture scrTexture;
