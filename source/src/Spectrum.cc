@@ -41,11 +41,11 @@ void Spectrum::clock()
     if (ula.hiz == false)
         ulaMemoryAccess();
 
-    if (ula.cpuClock == true)
-    {
-        z80.clock();
+    if (ula.cpuWait == false)
         z80MemoryAccess();
-    }
+
+    if (ula.cpuClock == true)
+        z80.clock();
 }
 
 void Spectrum::ulaMemoryAccess()

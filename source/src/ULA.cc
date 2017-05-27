@@ -69,7 +69,8 @@ void ULA::clock()
         || ((scan >= vBorderStart) && (scan <= vBorderEnd));
 
     // 1.b. Check for contended memory or I/O accesses.
-    memContention = ((z80_a & 0xC000) == 0x4000);
+    memContention = ((z80_a & 0xC000) == 0x4000)
+        && ((z80_c & SIGNAL_MREQ_) == 0x00);
     ioContention = ((z80_a & 0x0001) == 0x0000) 
         && ((z80_c & SIGNAL_IORQ_) == 0x00);
 
@@ -127,7 +128,7 @@ void ULA::clock()
 
     // 2.b Resolve contention and generate CPU clock.
     cpuWait = (contentionWindow && (memContention || ioContention));
-    cpuClock = ((pixel & 0x0001) == 0x0000) && !cpuWait;
+    cpuClock = ((pixel & 0x0001) == 0x0001) && !cpuWait;
 
     if (!blank)
     {
