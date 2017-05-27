@@ -23,6 +23,9 @@ BOOST_AUTO_TEST_CASE(display_position_test)
     ula.d = 0x8D;
 
     sc0.setRgbaInput(&ula.rgba);
+    sc0.setVSyncInput(&ula.vSync);
+    sc0.setHSyncInput(&ula.hSync);
+    sc0.setBlankInput(&ula.blank);
 
     for (size_t i = 0; i < 139776000; ++i)
     {
@@ -41,6 +44,9 @@ BOOST_AUTO_TEST_CASE(image_generation_test)
     Memory m(16, false);
 
     sc0.setRgbaInput(&ula.rgba);
+    sc0.setVSyncInput(&ula.vSync);
+    sc0.setHSyncInput(&ula.hSync);
+    sc0.setBlankInput(&ula.blank);
 
     // Prepare some image in the memory.
     for (size_t i = 0; i < 1024; ++i)
@@ -86,6 +92,9 @@ BOOST_AUTO_TEST_CASE(image_load_test)
     Memory m(16, false);
 
     sc0.setRgbaInput(&ula.rgba);
+    sc0.setVSyncInput(&ula.vSync);
+    sc0.setHSyncInput(&ula.hSync);
+    sc0.setBlankInput(&ula.blank);
 
     // Prepare some image in the memory.
     size_t pos = 0x4000;

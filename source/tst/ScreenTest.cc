@@ -9,13 +9,20 @@ BOOST_AUTO_TEST_CASE(constructors_test)
 {
     Screen sc0;
     uint32_t rgba = 0xC0C0C0FF;
+    bool vSync, hSync, blank;
     sc0.setRgbaInput(&rgba);
+    sc0.setVSyncInput(&vSync);
+    sc0.setHSyncInput(&hSync);
+    sc0.setBlankInput(&blank);
     sc0.open();
     sc0.update();
     sc0.close();
 
     Screen sc1(1);
     sc1.setRgbaInput(&rgba);
+    sc0.setVSyncInput(&vSync);
+    sc0.setHSyncInput(&hSync);
+    sc0.setBlankInput(&blank);
     sc1.open();
     sc1.update();
     sc1.close();
@@ -28,17 +35,21 @@ BOOST_AUTO_TEST_CASE(update_test)
 
     size_t c = 0;
     uint32_t pixel = 0;
+    bool vSync, hSync, blank;
     sc0.setRgbaInput(&pixel);
+    sc0.setVSyncInput(&vSync);
+    sc0.setHSyncInput(&hSync);
+    sc0.setBlankInput(&blank);
     for (size_t f = 0; f < 2000; ++f)
     {
         for (size_t y = 0; y < 312; ++y)
         {
             for (size_t x = 0; x < 448; ++x)
             {
-                sc0.blank = ((x >= 320) && (x <= 415))
+                blank = ((x >= 320) && (x <= 415))
                     || ((y >= 248) && (y <= 255));
-                sc0.hSync = (x >= 336) && (x <= 367);
-                sc0.vSync = (y >= 248) && (y <= 251);
+                hSync = (x >= 336) && (x <= 367);
+                vSync = (y >= 248) && (y <= 251);
                 c = (c + 1) % 1000;
                 uint_fast8_t b = 
                     static_cast<uint_fast8_t>(((c >> 9) * 192) & 0xFF);
@@ -60,8 +71,5 @@ BOOST_AUTO_TEST_CASE(update_test)
 
     sc0.close();
 }
-
-
-
 // EOF
 // vim: et:sw=4:ts=4

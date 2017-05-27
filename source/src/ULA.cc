@@ -1,9 +1,11 @@
 #include "ULA.h"
 
 ULA::ULA() :
-    as_(true), rd_(true),
     hiz(true),
-    tState(false),
+    as_(*(&hiz)), rd_(*(&hiz)), // Just some aliases.
+    contentionWindow(false),
+    memContention(false), ioContention(false),
+    cpuWait(false), cpuClock(false),
     scan(0), maxScan(312),      // PAL values. Must make this configurable.
     pixel(0), maxPixel(448),
     borderAttr(0),
@@ -56,9 +58,7 @@ ULA::ULA() :
 void ULA::clock()
 {
     // Here we:
-    // 1. Generate video control signals.
-    //    These are generic, but maybe some adjusting can be done for
-    //    performance.
+    // 1.a. Generate video control signals.
     hSync = (pixel >= hSyncStart) && (pixel <= hSyncEnd);
     vSync = (scan >= vSyncStart) && (scan <= vSyncEnd);
     
@@ -68,11 +68,31 @@ void ULA::clock()
     border = ((pixel >= hBorderStart) && (pixel <= hBorderEnd))
         || ((scan >= vBorderStart) && (scan <= vBorderEnd));
 
+    // 1.b. Check for contended memory or I/O accesses.
+    memContention = ((z80_a & 0xC000) == 0x4000);
+    ioContention = ((z80_a & 0x0001) == 0x0000) 
+        && ((z80_c & SIGNAL_IORQ_) == 0x00);
+
     // 2. Generate video data.
     if (!border)
     {
         switch (pixel & 0x0F)
         {
+            case 0x00:
+                contentionWindow = false;
+                a = 0xFFFF; hiz = true; break;
+            case 0x01:
+                break;
+            case 0x02:
+                break;
+            case 0x03:
+                break;
+            case 0x04:
+                contentionWindow = true; break;
+            case 0x05:
+                break;
+            case 0x06:
+                break;
             case 0x07:
                 // Generate addresses (which must be pair).
                 dataAddr = ((pixel & 0xF0) >> 3)    // 000SSSSS SSSPPPP0
@@ -85,25 +105,29 @@ void ULA::clock()
                     | 0x1800;
                 break;
             case 0x08:
-                a = dataAddr; hiz = as_ = rd_ = false; break;
+                a = dataAddr; hiz = false; break;
             case 0x09:
                 dataLatch = d; break;
             case 0x0A:
-                a = attrAddr; hiz = as_ = rd_ = false; break;
+                a = attrAddr; break;
             case 0x0B:
                 attrLatch = d; break;
             case 0x0C:
-                a = dataAddr + 1; hiz = as_ = rd_ = false; break;
+                a = dataAddr + 1; break;
             case 0x0D:
                 dataLatch = d; break;
             case 0x0E:
-                a = attrAddr + 1; hiz = as_ = rd_ = false; break;
+                a = attrAddr + 1; break;
             case 0x0F:
                 attrLatch = d; break;
             default:
-                a = 0xFFFF; hiz = as_ = rd_ = true; break;
+                a = 0xFFFF; rd_ = true; break;
         }
     }
+
+    // 2.b Resolve contention and generate CPU clock.
+    cpuWait = (contentionWindow && (memContention || ioContention));
+    cpuClock = ((pixel & 0x0001) == 0x0000) && !cpuWait;
 
     if (!blank)
     {

@@ -8,6 +8,8 @@
 
 #include <cstdint>
 
+#include "Z80Defs.h"
+
 using namespace std;
 
 class ULA
@@ -17,15 +19,20 @@ class ULA
 
         void clock();
 
+        // Memory signals
         uint16_t a;
-        uint16_t c;
         uint8_t d;
-
-        bool as_, rd_;
-
         bool hiz;
-        bool tState;
+        bool &as_, &rd_;
+        
+        uint16_t z80_a;
+        uint16_t z80_c;
+        bool contentionWindow;
+        bool memContention;
+        bool ioContention;
+        bool cpuWait, cpuClock;
 
+        // Video signals
         size_t scan, maxScan;
         size_t pixel, maxPixel;
 
@@ -52,5 +59,10 @@ class ULA
         size_t vSyncStart, vSyncEnd;
 
         uint32_t colourTable[0x100];
+
+        // Keyboard signals
+
+        // Audio signals
+
 };
 // vim: et:sw=4:ts=4

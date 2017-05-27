@@ -26,7 +26,7 @@ Screen::Screen(size_t scale) :
 void Screen::update()
 {
     // If not blanking, draw.
-    if (!blank)
+    if (!(*blankInput))
     {
         pixels[yPos * xSize + xPos] = *rgbaInput;
         ++xPos;
@@ -34,7 +34,7 @@ void Screen::update()
 
     // Act on sync pulses falling edges:
     // VSYNC falling edge restores the beam to the top of the screen.
-    if (!vSync && vSync1d)
+    if (!(*vSyncInput) && vSync1d)
     {
         yPos = 0;
 
@@ -43,15 +43,15 @@ void Screen::update()
         window.draw(scrSprite);
         window.display();
     }
-    vSync1d = vSync;
+    vSync1d = (*vSyncInput);
 
     // HSYNC falling edge restores the beam to the beginning of the next line.
-    if (!hSync && hSync1d)
+    if (!(*hSyncInput) && hSync1d)
     {
         xPos = 0;
         ++yPos;
     }
-    hSync1d = hSync;
+    hSync1d = (*hSyncInput);
 
     // Move to next pixel with each clock.
 }

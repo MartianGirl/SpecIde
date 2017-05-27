@@ -35,8 +35,14 @@ class Screen : public GraphicWindow
 
         void update();
         void setRgbaInput(sf::Uint32* input) { rgbaInput = input; }
+        void setVSyncInput(bool* input) { vSyncInput = input; }
+        void setHSyncInput(bool* input) { hSyncInput = input; }
+        void setBlankInput(bool* input) { blankInput = input; }
 
         sf::Uint32 *rgbaInput;
+        bool *vSyncInput;
+        bool *hSyncInput;
+        bool *blankInput;
 };
 
 // vim: et:sw=4:ts=4

@@ -19,9 +19,9 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU OR
     set(CMAKE_CXX_FLAGS
         "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -std=c++11")
     set(CMAKE_CXX_FLAGS_DEBUG
-        "${CMAKE_CXX_FLAGS} -g")
+        "${CMAKE_CXX_FLAGS} -g -DDEBUG")
     set(CMAKE_CXX_FLAGS_RELEASE
-        "${CMAKE_CXX_FLAGS} -O2")
+        "${CMAKE_CXX_FLAGS} -O3")
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
     if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
         string(REGEX REPLACE "/W[0-4]" "/W4" 

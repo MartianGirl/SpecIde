@@ -23,13 +23,50 @@ Spectrum::Spectrum() :
         Memory(14, true), Memory(14, true), Memory(14, true), Memory(14, true)},
     map{&rom[0], &ram[0], &ram[1], &ram[2]}
 {
-    if (!screen.create(352, 312))
-        assert(false);
+    size_t pos = 0;
+    char c;
+    std::ifstream ifs("48.rom", std::ifstream::binary);
+    while (ifs.get(c))
+        rom[0].memory[pos++] = c;
 }
 
 void Spectrum::clock()
 {
+    // Clock the ULA. This generates video and contention signals.
+    ula.z80_a = z80.a;
+    ula.z80_c = z80.c;
     ula.clock();
+
+    // If the ULA is reading, we interface with the memory).
+    if (ula.hiz == false)
+        ulaMemoryAccess();
+
+    if (ula.cpuClock == true)
+    {
+        z80.clock();
+        z80MemoryAccess();
+    }
+}
+
+void Spectrum::ulaMemoryAccess()
+{
+    map[1]->a = ula.a;
+    map[1]->rd_ = ula.rd_;
+    map[1]->as_ = ula.as_;
+    map[1]->clock();
+    ula.d = map[1]->d;
+}
+
+void Spectrum::z80MemoryAccess()
+{
+    size_t memIndex = (z80.a & 0xC000) >> 14;
+    map[memIndex]->a = z80.a & 0x3FFF;
+    map[memIndex]->d = z80.d;
+    map[memIndex]->as_ = (z80.c & SIGNAL_MREQ_) == SIGNAL_MREQ_;
+    map[memIndex]->rd_ = (z80.c & SIGNAL_RD_) == SIGNAL_RD_;
+    map[memIndex]->wr_ = (z80.c & SIGNAL_WR_) == SIGNAL_WR_;
+    map[memIndex]->clock();
+    z80.d = map[memIndex]->d;
 }
 
 void Spectrum::reset()

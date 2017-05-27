@@ -12,8 +12,9 @@
 #include "Z80.h"
 #include "Z80Defs.h"
 
+#include <fstream>
+
 // #include <SFML/Audio.hpp>
-#include <SFML/Graphics.hpp>
 
 using namespace std;
 
@@ -33,7 +34,6 @@ class Spectrum :
         Memory rom[16]; // 256KB - Speccy uses 16K, 128K uses 32K, +3 uses 64K
         Memory* map[4];
 
-        sf::RenderTexture screen;
         // sf::SoundBuffer buzzer;
 
         // This one is going to be called at 7MHz, and is going to:
@@ -43,6 +43,9 @@ class Spectrum :
         // 4. Access the memory for the Z80.
         void clock();
         void reset();
+
+        void ulaMemoryAccess();
+        void z80MemoryAccess();
 
         // sf::SoundBuffer ear;
         // sf::SoundBuffer mic;
