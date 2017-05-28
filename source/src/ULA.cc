@@ -70,9 +70,12 @@ void ULA::clock()
 
     // 1.b. Check for contended memory or I/O accesses.
     memContention = ((z80_a & 0xC000) == 0x4000)
-        && ((z80_c & SIGNAL_MREQ_) == 0x00);
+        && ((z80_c & SIGNAL_MREQ_) == 0x00) 
+        && ((z80_c_1d & SIGNAL_MREQ_) == SIGNAL_MREQ_); // MREQ edge means T1.
     ioContention = ((z80_a & 0x0001) == 0x0000) 
-        && ((z80_c & SIGNAL_IORQ_) == 0x00);
+        && ((z80_c & SIGNAL_IORQ_) == 0x00)
+        && ((z80_c_1d & SIGNAL_IORQ_) == SIGNAL_IORQ_); // IORQ edge means T2.
+    z80_c_1d = z80_c;
 
     // 2. Generate video data.
     if (!border)
@@ -127,8 +130,8 @@ void ULA::clock()
     }
 
     // 2.b Resolve contention and generate CPU clock.
-    cpuWait = (contentionWindow && (memContention || ioContention));
-    cpuClock = ((pixel & 0x0001) == 0x0001) && !cpuWait;
+    cpuWait = (contentionWindow && (cpuWait || memContention || ioContention));
+    cpuClock = ((pixel & 0x0001) == 0x0000) && !cpuWait;
 
     if (!blank)
     {
@@ -145,9 +148,10 @@ void ULA::clock()
             // aliases:
             // data = dataOut; attr = attrOut;
             // dataOut = dataLatch; attrOut = attrLatch;
-            // attrLatch = borderAttr; dataLatch = 0;
+            // attrLatch = borderAttr; dataLatch = 0xFF;
             dataReg <<= 8;
             attrReg <<= 8;
+            dataLatch = 0xFF;
             attrLatch = borderAttr;
         }
     }

@@ -26,7 +26,7 @@ class ULA
         bool &as_, &rd_;
         
         uint16_t z80_a;
-        uint16_t z80_c;
+        uint16_t z80_c, z80_c_1d;
         bool contentionWindow;
         bool memContention;
         bool ioContention;
