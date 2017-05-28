@@ -10,6 +10,8 @@
 
 #include "Z80Defs.h"
 
+#include <SFML/Window.hpp>
+
 using namespace std;
 
 class ULA
@@ -18,6 +20,7 @@ class ULA
         ULA();
 
         void clock();
+        void readKeys();
 
         // Memory signals
         uint16_t a;
@@ -62,6 +65,7 @@ class ULA
         // Port 0xFE
         uint8_t ioPortIn;
         uint8_t ioPortOut;
+        bool ulaRead;
 
         // ULA interrupt
         uint16_t c;

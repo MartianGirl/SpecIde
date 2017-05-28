@@ -31,7 +31,7 @@ ULA::ULA() :
     vBorderStart(192), vBorderEnd(311),
     vBlankStart(248), vBlankEnd(255),
     vSyncStart(248), vSyncEnd(251),
-    ioPortIn(0x00), ioPortOut(0x00),
+    ioPortIn(0x00), ioPortOut(0x00), ulaRead(false),
     c(0xFFFF), intCounter(0)
 {
     for (size_t i = 0; i < 0x100; ++i)
@@ -142,11 +142,19 @@ void ULA::clock()
         && ((z80_c_1d & SIGNAL_IORQ_) == 0x00))     // Only in TW
     {
         if ((z80_c & SIGNAL_RD_) == 0x0000)
+        {
+            ulaRead = true;
+            readKeys();
             d = ioPortIn;
+        }
 
         if ((z80_c & SIGNAL_WR_) == 0x0000)
             ioPortOut = d;
     }
+
+    if ((z80_c & SIGNAL_IORQ_) == SIGNAL_IORQ_)
+        ulaRead = false;
+
 
     // 2.d Interrupt.
     c = z80_c;
@@ -194,4 +202,81 @@ void ULA::clock()
             intCounter = 64;
     }
 }
+
+void ULA::readKeys()
+{
+    ioPortIn |= 0x1F;
+    if ((z80_a & 0x8000) == 0x0000)
+    {
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::B)) ? 0xEF : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::N)) ? 0xF7 : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::M)) ? 0xFB : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::RControl)) ? 0xFD : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) ? 0xFE : 0xFF;
+    }
+
+    if ((z80_a & 0x4000) == 0x0000)
+    {
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::H)) ? 0xEF : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::J)) ? 0xF7 : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::K)) ? 0xFB : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::L)) ? 0xFD : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Return)) ? 0xFE : 0xFF;
+    }
     
+    if ((z80_a & 0x2000) == 0x0000)
+    {
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Y)) ? 0xEF : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::U)) ? 0xF7 : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::I)) ? 0xFB : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::O)) ? 0xFD : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::P)) ? 0xFE : 0xFF;
+    }
+
+    if ((z80_a & 0x1000) == 0x0000)
+    {
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num6)) ? 0xEF : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num7)) ? 0xF7 : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num8)) ? 0xFB : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num9)) ? 0xFD : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num0)) ? 0xFE : 0xFF;
+    }
+
+    if ((z80_a & 0x0800) == 0x0000)
+    {
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) ? 0xEF : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) ? 0xF7 : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num3)) ? 0xFB : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num4)) ? 0xFD : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num5)) ? 0xFE : 0xFF;
+    }
+
+    if ((z80_a & 0x0400) == 0x0000)
+    {
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) ? 0xEF : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) ? 0xF7 : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) ? 0xFB : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) ? 0xFD: 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::T)) ? 0xFE : 0xFF;
+    }
+
+    if ((z80_a & 0x0200) == 0x0000)
+    {
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) ? 0xEF : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) ? 0xF7 : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) ? 0xFB : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) ? 0xFD : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::G)) ? 0xFE : 0xFF;
+    }
+
+    if ((z80_a & 0x0100) == 0x0000)
+    {
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) ? 0xEF : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Z)) ? 0xF7 : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::X)) ? 0xFB : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::C)) ? 0xFD : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::V)) ? 0xFE : 0xFF;
+    }
+}
+
+// vim: et:sw=4:ts=4:

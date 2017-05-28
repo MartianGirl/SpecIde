@@ -69,7 +69,10 @@ void Spectrum::z80BusAccess()
     map[memIndex]->rd_ = (z80.c & SIGNAL_RD_) == SIGNAL_RD_;
     map[memIndex]->wr_ = (z80.c & SIGNAL_WR_) == SIGNAL_WR_;
     map[memIndex]->clock();
-    z80.d = map[memIndex]->d;
+    if (ula.ulaRead)
+        z80.d = ula.d;
+    else
+        z80.d = map[memIndex]->d;
 }
 
 void Spectrum::reset()
