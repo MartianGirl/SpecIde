@@ -24,16 +24,15 @@ int main()
     screen.setHSyncInput(&spectrum.ula.hSync);
     screen.setBlankInput(&spectrum.ula.blank);
 
-    bool run = true;
-    while (run)
+    // This is faster than "while(true)".
+    for(;;)
     {
         sf::Event event;
         while (screen.window.pollEvent(event))
         {
             if (event.type == sf::Event::Closed)
             {
-                run = false;
-                break;
+                return 0;
             }
         }
 
@@ -45,8 +44,6 @@ int main()
             // << spectrum.z80.a << std::endl;
 // #endif
     }
-
-    return 0;
 }
 
 // vim: et:sw=4:ts=4
