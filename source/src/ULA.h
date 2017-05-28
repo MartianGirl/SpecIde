@@ -36,7 +36,6 @@ class ULA
         size_t scan, maxScan;
         size_t pixel, maxPixel;
 
-        uint8_t borderAttr;
         uint8_t flash;
         uint32_t dataReg, attrReg;
         uint8_t &data, &attr;
@@ -60,9 +59,12 @@ class ULA
 
         uint32_t colourTable[0x100];
 
-        // Keyboard signals
+        // Port 0xFE
+        uint8_t ioPortIn;
+        uint8_t ioPortOut;
 
-        // Audio signals
-
+        // ULA interrupt
+        uint16_t c;
+        uint32_t intCounter;
 };
 // vim: et:sw=4:ts=4

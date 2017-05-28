@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFF);
     BOOST_CHECK(z80.a == 0x0000);
     BOOST_CHECK(z80.d == 0xFF);
-    BOOST_CHECK(z80.c == (0xFFFF & ~(SIGNAL_M1_ | SIGNAL_MREQ_ | SIGNAL_RD_)));
+    BOOST_CHECK(z80.c == (0xFFFF & ~(SIGNAL_M1_ | SIGNAL_RD_)));
 
     // Clock it once. We've run ST_OCF_T3_RFSH1
     z80.clock();

@@ -72,7 +72,8 @@ void Z80::clock()
             break;
 
         case Z80State::ST_OCF_T2_DATARD:
-            c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
+            c |= SIGNAL_MREQ_;
+            c &= ~(SIGNAL_RD_ | SIGNAL_M1_);
 
             if (c & SIGNAL_WAIT_ && !nmiProcess)
                 state = Z80State::ST_OCF_T3_RFSH1;

@@ -3,12 +3,12 @@
 ULA::ULA() :
     hiz(true),
     as_(*(&hiz)), rd_(*(&hiz)), // Just some aliases.
+    z80_a(0xFFFF), z80_c(0xFFFF), z80_c_1d(0xFFFF),
     contentionWindow(false),
     memContention(false), ioContention(false),
     cpuWait(false), cpuClock(false),
     scan(0), maxScan(312),      // PAL values. Must make this configurable.
     pixel(0), maxPixel(448),
-    borderAttr(0),
     flash(0),
     dataReg(0), attrReg(0),
 #if SPECIDE_BYTE_ORDER == 1
@@ -30,7 +30,9 @@ ULA::ULA() :
     scanStart(0), scanEnd(191),
     vBorderStart(192), vBorderEnd(311),
     vBlankStart(248), vBlankEnd(255),
-    vSyncStart(248), vSyncEnd(251)
+    vSyncStart(248), vSyncEnd(251),
+    ioPortIn(0x00), ioPortOut(0x00),
+    c(0xFFFF), intCounter(0)
 {
     for (size_t i = 0; i < 0x100; ++i)
     {
@@ -75,7 +77,6 @@ void ULA::clock()
     ioContention = ((z80_a & 0x0001) == 0x0000) 
         && ((z80_c & SIGNAL_IORQ_) == 0x00)
         && ((z80_c_1d & SIGNAL_IORQ_) == SIGNAL_IORQ_); // IORQ edge means T2.
-    z80_c_1d = z80_c;
 
     // 2. Generate video data.
     if (!border)
@@ -132,6 +133,32 @@ void ULA::clock()
     // 2.b Resolve contention and generate CPU clock.
     cpuWait = (contentionWindow && (cpuWait || memContention || ioContention));
     cpuClock = ((pixel & 0x0001) == 0x0000) && !cpuWait;
+    if (!cpuWait)
+        z80_c_1d = z80_c;
+
+    // 2.c ULA port.
+    if (((z80_a & 0x0001) == 0x0000) 
+        && ((z80_c & SIGNAL_IORQ_) == 0x00)         // Can be T2 or TW
+        && ((z80_c_1d & SIGNAL_IORQ_) == 0x00))     // Only in TW
+    {
+        if ((z80_c & SIGNAL_RD_) == 0x0000)
+            d = ioPortIn;
+
+        if ((z80_c & SIGNAL_WR_) == 0x0000)
+            ioPortOut = d;
+    }
+
+    // 2.d Interrupt.
+    c = z80_c;
+    if (intCounter)
+    {
+        c &= ~SIGNAL_INT_;
+        --intCounter;
+    }
+    else
+    {
+        c |= SIGNAL_INT_;
+    }
 
     if (!blank)
     {
@@ -148,11 +175,11 @@ void ULA::clock()
             // aliases:
             // data = dataOut; attr = attrOut;
             // dataOut = dataLatch; attrOut = attrLatch;
-            // attrLatch = borderAttr; dataLatch = 0xFF;
+            // attrLatch = ioPortOut; dataLatch = 0xFF;
             dataReg <<= 8;
             attrReg <<= 8;
             dataLatch = 0xFF;
-            attrLatch = borderAttr;
+            attrLatch = ioPortOut & 0x07;
         }
     }
 
@@ -163,6 +190,8 @@ void ULA::clock()
         scan = (scan + 1) % maxScan;
         if (scan == vBlankEnd)
             flash += 0x04;
+        if (scan == vSyncStart)
+            intCounter = 64;
     }
 }
     

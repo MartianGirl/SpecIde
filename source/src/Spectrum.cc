@@ -36,19 +36,22 @@ void Spectrum::clock()
     ula.z80_a = z80.a;
     ula.z80_c = z80.c;
     ula.clock();
+    z80.c = ula.c;
 
     // If the ULA is reading, we interface with the memory).
     if (ula.hiz == false)
-        ulaMemoryAccess();
+        ulaBusAccess();
+    else
+        ula.d = z80.d;
 
     if (ula.cpuWait == false)
-        z80MemoryAccess();
+        z80BusAccess();
 
     if (ula.cpuClock == true)
         z80.clock();
 }
 
-void Spectrum::ulaMemoryAccess()
+void Spectrum::ulaBusAccess()
 {
     map[1]->a = ula.a;
     map[1]->rd_ = ula.rd_;
@@ -57,7 +60,7 @@ void Spectrum::ulaMemoryAccess()
     ula.d = map[1]->d;
 }
 
-void Spectrum::z80MemoryAccess()
+void Spectrum::z80BusAccess()
 {
     size_t memIndex = (z80.a & 0xC000) >> 14;
     map[memIndex]->a = z80.a & 0x3FFF;

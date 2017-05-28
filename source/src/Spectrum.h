@@ -44,8 +44,8 @@ class Spectrum :
         void clock();
         void reset();
 
-        void ulaMemoryAccess();
-        void z80MemoryAccess();
+        void ulaBusAccess();
+        void z80BusAccess();
 
         // sf::SoundBuffer ear;
         // sf::SoundBuffer mic;

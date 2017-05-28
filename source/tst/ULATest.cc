@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(display_position_test)
     Screen sc0(2);
     ULA ula;
 
-    ula.borderAttr = 0x28;
+    ula.ioPortOut = 0x05;
     ula.d = 0x8D;
 
     sc0.setRgbaInput(&ula.rgba);
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(image_generation_test)
         m.memory[i + 0x5A00] = static_cast<uint8_t>(i); // Attrs, 3rd third.
     }
 
-    ula.borderAttr = 0x10;
+    ula.ioPortOut = 0x02;
     for (size_t i = 0; i < 139776000; ++i)
     {
         ula.clock();
@@ -103,11 +103,11 @@ BOOST_AUTO_TEST_CASE(image_load_test)
     while (ifs.get(c))
         m.memory[pos++] = c;
 
-    ula.borderAttr = 0x10;
+    ula.ioPortOut = 0x02;
     for (size_t i = 0; i < 139776000; ++i)
     {
         if (i % 1000 == 0)
-            ula.borderAttr = (ula.borderAttr + 0x08) & 0x38;
+            ula.ioPortOut = (ula.ioPortOut + 0x01) & 0x07;
 
         ula.clock();
         sc0.blank = ula.blank;
