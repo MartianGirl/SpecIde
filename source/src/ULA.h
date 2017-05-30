@@ -48,7 +48,7 @@ class ULA
         uint32_t rgba;
         bool hSync, vSync;
         bool blank;
-        bool border;
+        bool display;
 
         size_t pixelStart, pixelEnd;
         size_t hBorderStart, hBorderEnd;

@@ -22,16 +22,16 @@ ULA::ULA() :
     dataLatch(*(reinterpret_cast<uint8_t*>(&dataReg) + 0)),
     attrLatch(*(reinterpret_cast<uint8_t*>(&attrReg) + 0)),
 #endif
-    blank(false), border(false),
-    pixelStart(0), pixelEnd(255),
-    hBorderStart(256), hBorderEnd(447),
-    hBlankStart(320), hBlankEnd(415),
-    hSyncStart(344), hSyncEnd(375),
-    scanStart(0), scanEnd(191),
-    vBorderStart(192), vBorderEnd(311),
-    vBlankStart(248), vBlankEnd(255),
-    vSyncStart(248), vSyncEnd(251),
-    ioPortIn(0x00), ioPortOut(0x00), ulaRead(false),
+    blank(false), display(false),
+    pixelStart(0x000), pixelEnd(0x0FF),
+    hBorderStart(0x100), hBorderEnd(0x1BF),
+    hBlankStart(0x140), hBlankEnd(0x19F),
+    hSyncStart(0x158), hSyncEnd(0x177),
+    scanStart(0x000), scanEnd(0x0BF),
+    vBorderStart(0x0C0), vBorderEnd(0x137),
+    vBlankStart(0x0F8), vBlankEnd(0x0FF),
+    vSyncStart(0x0F8), vSyncEnd(0x0FB),
+    ioPortIn(0xFF), ioPortOut(0x00), ulaRead(false),
     c(0xFFFF), intCounter(0)
 {
     for (size_t i = 0; i < 0x100; ++i)
@@ -60,27 +60,27 @@ ULA::ULA() :
 void ULA::clock()
 {
     // Here we:
-    // 1.a. Generate video control signals.
+    // 1. Generate video control signals.
     hSync = (pixel >= hSyncStart) && (pixel <= hSyncEnd);
-    vSync = (scan >= vSyncStart) && (scan <= vSyncEnd);
-    
-    blank = ((pixel >= hBlankStart) && (pixel <= hBlankEnd))
-        || ((scan >= vBlankStart) && (scan <= vBlankEnd));
+    vSync = ((scan & 0x0FC) == 0x0F8);
+    // vSync = (scan >= vSyncStart) && (scan <= vSyncEnd);
 
-    border = ((pixel >= hBorderStart) && (pixel <= hBorderEnd))
-        || ((scan >= vBorderStart) && (scan <= vBorderEnd));
-
-    // 1.b. Check for contended memory or I/O accesses.
-    memContention = ((z80_a & 0xC000) == 0x4000)
-        && ((z80_c & SIGNAL_MREQ_) == 0x00) 
-        && ((z80_c_1d & SIGNAL_MREQ_) == SIGNAL_MREQ_); // MREQ edge means T1.
-    ioContention = ((z80_a & 0x0001) == 0x0000) 
-        && ((z80_c & SIGNAL_IORQ_) == 0x00)
-        && ((z80_c_1d & SIGNAL_IORQ_) == SIGNAL_IORQ_); // IORQ edge means T2.
+    blank = ((scan & 0x0F8) == 0x0F8)
+        || ((pixel >= hBlankStart) && (pixel <= hBlankEnd));
+    display = (pixel < 0x100) && (scan < 0x0C0);
 
     // 2. Generate video data.
-    if (!border)
+    if (display)
     {
+        // 2.a. Check for contended memory or I/O accesses.
+        // T1 of a memory cycle can be detected by a falling edge on MREQ.
+        // T2 of an I/O cycle can be detected by a falling edge on IORQ.
+        memContention = ((z80_a & 0xC000) == 0x4000)
+            && ((~z80_c & z80_c_1d & SIGNAL_MREQ_) == SIGNAL_MREQ_);
+        ioContention = ((z80_a & 0x0001) == 0x0000) 
+            && ((~z80_c & z80_c_1d & SIGNAL_IORQ_) == SIGNAL_IORQ_);
+
+        // 2.b. Read from memory.
         switch (pixel & 0x0F)
         {
             case 0x00:
@@ -128,18 +128,22 @@ void ULA::clock()
             default:
                 a = 0xFFFF; rd_ = true; break;
         }
+
+        // 2.c. Resolve contention and generate CPU clock.
+        cpuWait = contentionWindow && (memContention || ioContention);
     }
+    else
+    {
+        cpuWait = false;
+        hiz = true;
+    }
+    
+    cpuClock = !cpuWait && ((pixel & 0x0001) == 0x0000);
 
-    // 2.b Resolve contention and generate CPU clock.
-    cpuWait = (contentionWindow && (cpuWait || memContention || ioContention));
-    cpuClock = ((pixel & 0x0001) == 0x0000) && !cpuWait;
-    if (!cpuWait)
-        z80_c_1d = z80_c;
-
-    // 2.c ULA port.
+    // 3. ULA port.
+    ulaRead = false;
     if (((z80_a & 0x0001) == 0x0000) 
-        && ((z80_c & SIGNAL_IORQ_) == 0x00)         // Can be T2 or TW
-        && ((z80_c_1d & SIGNAL_IORQ_) == 0x00))     // Only in TW
+            && ((z80_c & z80_c_1d & SIGNAL_IORQ_) == 0x0000))   // Only in TW
     {
         if ((z80_c & SIGNAL_RD_) == 0x0000)
         {
@@ -152,28 +156,22 @@ void ULA::clock()
             ioPortOut = d;
     }
 
-    if ((z80_c & SIGNAL_IORQ_) == SIGNAL_IORQ_)
-        ulaRead = false;
+    if (cpuClock) z80_c_1d = z80_c;
 
-
-    // 2.d Interrupt.
+    // 4. Interrupt.
     c = z80_c;
-    if (intCounter)
-    {
+    if (scan == vSyncStart && pixel < 64)
         c &= ~SIGNAL_INT_;
-        --intCounter;
-    }
     else
-    {
         c |= SIGNAL_INT_;
-    }
 
+    // 5. Generate video signal.
     if (!blank)
     {
-        // 3. Generate colours.
+        // 5.a. Generate colours.
         rgba = colourTable[((data & 0x80) ^ (attr & flash)) | (attr & 0x7F)];
 
-        // 4. Update data and attribute registers.
+        // 5.b. Update data and attribute registers.
         data <<= 1;
 
         // We start outputting data after just a data/attr pair has been fetched.
@@ -191,15 +189,13 @@ void ULA::clock()
         }
     }
 
-    // 5. Update counters
+    // 6. Update counters
     pixel = (pixel + 1) % maxPixel;
     if (pixel == hSyncStart)
     {
         scan = (scan + 1) % maxScan;
         if (scan == vBlankEnd)
             flash += 0x04;
-        if (scan == vSyncStart)
-            intCounter = 64;
     }
 }
 

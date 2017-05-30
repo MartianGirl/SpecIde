@@ -37,12 +37,11 @@ int main()
         }
 
         spectrum.clock();
+        if (spectrum.z80.a == 0x0038)
+            std::cout << "Keyboard interrupt attended." << std::endl;
+        if (spectrum.ula.ulaRead)
+            std::cout << "Keyboard data provided." << std::endl;
         screen.update();
-// #ifdef DEBUG
-        // std::cout << "Z80 Address bus: " 
-            // << std::hex << std::setfill('0') << std::setw(4) 
-            // << spectrum.z80.a << std::endl;
-// #endif
     }
 }
 
