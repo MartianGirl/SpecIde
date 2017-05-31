@@ -84,8 +84,7 @@ void ULA::clock()
         switch (pixel & 0x0F)
         {
             case 0x00:
-                contentionWindow = false;
-                a = 0xFFFF; hiz = true; break;
+                contentionWindow = false; break;
             case 0x01:
                 break;
             case 0x02:
@@ -112,19 +111,19 @@ void ULA::clock()
             case 0x08:
                 a = dataAddr; hiz = false; break;
             case 0x09:
-                dataLatch = d; break;
+                dataLatch = d; hiz = true; break;
             case 0x0A:
-                a = attrAddr; break;
+                a = attrAddr; hiz = false; break;
             case 0x0B:
-                attrLatch = d; break;
+                attrLatch = d; hiz = true; break;
             case 0x0C:
-                a = dataAddr + 1; break;
+                a = dataAddr + 1; hiz = false; break;
             case 0x0D:
-                dataLatch = d; break;
+                dataLatch = d; hiz = true; break;
             case 0x0E:
-                a = attrAddr + 1; break;
+                a = attrAddr + 1; hiz = false; break;
             case 0x0F:
-                attrLatch = d; break;
+                attrLatch = d; hiz = true; break;
             default:
                 a = 0xFFFF; rd_ = true; break;
         }
@@ -135,28 +134,28 @@ void ULA::clock()
     else
     {
         cpuWait = false;
-        hiz = true;
     }
     
     cpuClock = !cpuWait && ((pixel & 0x0001) == 0x0000);
 
     // 3. ULA port.
-    ulaRead = false;
-    if (((z80_a & 0x0001) == 0x0000) 
-            && ((z80_c & z80_c_1d & SIGNAL_IORQ_) == 0x0000))   // Only in TW
+    if (cpuClock)
     {
-        if ((z80_c & SIGNAL_RD_) == 0x0000)
+        ulaRead = false;
+        if (((z80_a & 0x0001) == 0x0000) 
+                && ((~z80_c & ~z80_c_1d & SIGNAL_IORQ_) == SIGNAL_IORQ_))   // Only in TW
         {
-            ulaRead = true;
-            readKeys();
-            d = ioPortIn;
+            if ((z80_c & SIGNAL_RD_) == 0x0000)
+            {
+                ulaRead = true;
+                readKeys();
+                d = ioPortIn;
+            }
+            if ((z80_c & SIGNAL_WR_) == 0x0000)
+                ioPortOut = d;
         }
-
-        if ((z80_c & SIGNAL_WR_) == 0x0000)
-            ioPortOut = d;
+        z80_c_1d = z80_c;
     }
-
-    if (cpuClock) z80_c_1d = z80_c;
 
     // 4. Interrupt.
     c = z80_c;
@@ -240,38 +239,38 @@ void ULA::readKeys()
 
     if ((z80_a & 0x0800) == 0x0000)
     {
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) ? 0xEF : 0xFF;
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) ? 0xF7 : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) ? 0xFE : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) ? 0xFD : 0xFF;
         ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num3)) ? 0xFB : 0xFF;
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num4)) ? 0xFD : 0xFF;
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num5)) ? 0xFE : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num4)) ? 0xF7 : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Num5)) ? 0xEF : 0xFF;
     }
 
     if ((z80_a & 0x0400) == 0x0000)
     {
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) ? 0xEF : 0xFF;
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) ? 0xF7 : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) ? 0xFE : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) ? 0xFD : 0xFF;
         ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) ? 0xFB : 0xFF;
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) ? 0xFD: 0xFF;
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::T)) ? 0xFE : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::R)) ? 0xF7: 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::T)) ? 0xEF : 0xFF;
     }
 
     if ((z80_a & 0x0200) == 0x0000)
     {
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) ? 0xEF : 0xFF;
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) ? 0xF7 : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) ? 0xFE : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) ? 0xFD : 0xFF;
         ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) ? 0xFB : 0xFF;
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) ? 0xFD : 0xFF;
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::G)) ? 0xFE : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) ? 0xF7 : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::G)) ? 0xEF : 0xFF;
     }
 
     if ((z80_a & 0x0100) == 0x0000)
     {
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) ? 0xEF : 0xFF;
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Z)) ? 0xF7 : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) ? 0xFE : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::Z)) ? 0xFD : 0xFF;
         ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::X)) ? 0xFB : 0xFF;
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::C)) ? 0xFD : 0xFF;
-        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::V)) ? 0xFE : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::C)) ? 0xF7 : 0xFF;
+        ioPortIn &= (sf::Keyboard::isKeyPressed(sf::Keyboard::V)) ? 0xEF : 0xFF;
     }
 }
 

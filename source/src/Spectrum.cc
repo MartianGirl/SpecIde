@@ -41,7 +41,7 @@ void Spectrum::clock()
     // If the ULA is reading, we interface with the memory.
     if (ula.hiz == false)
         ulaBusAccess();
-    else
+    else if (ula.ulaRead == false)
         ula.d = z80.d;
 
     if (ula.cpuClock == true)

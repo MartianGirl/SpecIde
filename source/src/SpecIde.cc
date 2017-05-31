@@ -37,10 +37,6 @@ int main()
         }
 
         spectrum.clock();
-        if (spectrum.z80.a == 0x0038)
-            std::cout << "Keyboard interrupt attended." << std::endl;
-        if (spectrum.ula.ulaRead)
-            std::cout << "Keyboard data provided." << std::endl;
         screen.update();
     }
 }

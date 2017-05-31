@@ -28,6 +28,10 @@ class Spectrum :
         Z80 z80;
         ULA ula;
 
+        // Buses
+        uint16_t a;
+        uint8_t d;
+
         // I'm going to exceed the original requirements, and then limit the
         // configuration to the required model.
         Memory ram[64]; // 1024KB
