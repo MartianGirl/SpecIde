@@ -30,9 +30,9 @@ int main()
     // This is faster than "while(true)".
     for(;;)
     {
-        if (screen.done) return 0;
         spectrum.clock();
         screen.update();
+        if (screen.done) return 0;
     }
 }
 
