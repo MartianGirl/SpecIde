@@ -1133,5 +1133,139 @@ BOOST_AUTO_TEST_CASE(bit_manipulation_reg_test)
     runCycles(z80, m, 8);
     BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x54);
 }
+
+BOOST_AUTO_TEST_CASE(bit_manipulation_ptrhl_test)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "AF"        // XOR A
+        "210001"    // LD HL, 0100h
+        "3600"      // LD (HL), 00h
+        "CBC6"      // SET 0, (HL)
+        "CBD6"      // SET 2, (HL)
+        "CBE6"      // SET 4, (HL)
+        "CBF6"      // SET 6, (HL)
+        "36FF"      // LD (HL), FFh
+        "CB86"      // RES 0, (HL)
+        "CB96"      // RES 2, (HL)
+        "CBA6"      // RES 4, (HL)
+        "CBB6"      // RES 6, (HL)
+        "CB46"      // BIT 0, (HL)
+        "CB4E"      // BIT 1, (HL)
+        "CB56"      // BIT 2, (HL)
+        "CB5E"      // BIT 3, (HL)
+        "CB66"      // BIT 4, (HL)
+        "CB6E"      // BIT 5, (HL)
+        "CB76"      // BIT 6, (HL)
+        "CB7E";     // BIT 7, (HL)
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    runCycles(z80, m, 24);
+    BOOST_CHECK_EQUAL(m.memory[0x0100], 0x00);
+    runCycles(z80, m, 15);
+    BOOST_CHECK_EQUAL(m.memory[0x0100], 0x01);
+    runCycles(z80, m, 15);
+    BOOST_CHECK_EQUAL(m.memory[0x0100], 0x05);
+    runCycles(z80, m, 15);
+    BOOST_CHECK_EQUAL(m.memory[0x0100], 0x15);
+    runCycles(z80, m, 15);
+    BOOST_CHECK_EQUAL(m.memory[0x0100], 0x55);
+    runCycles(z80, m, 10);
+    BOOST_CHECK_EQUAL(m.memory[0x0100], 0xFF);
+    runCycles(z80, m, 15);
+    BOOST_CHECK_EQUAL(m.memory[0x0100], 0xFE);
+    runCycles(z80, m, 15);
+    BOOST_CHECK_EQUAL(m.memory[0x0100], 0xFA);
+    runCycles(z80, m, 15);
+    BOOST_CHECK_EQUAL(m.memory[0x0100], 0xEA);
+    runCycles(z80, m, 15);
+    BOOST_CHECK_EQUAL(m.memory[0x0100], 0xAA);
+    runCycles(z80, m, 12);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x7C);
+    runCycles(z80, m, 12);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x38);
+    runCycles(z80, m, 12);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x7C);
+    runCycles(z80, m, 12);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x38);
+    runCycles(z80, m, 12);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x7C);
+    runCycles(z80, m, 12);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x38);
+    runCycles(z80, m, 12);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x7C);
+    runCycles(z80, m, 12);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xB8);
+}
+
+BOOST_AUTO_TEST_CASE(bit_manipulation_ptriy)
+{
+    Z80 z80;
+    Memory m(16, false);
+
+    string code =
+        "AF"        // XOR A
+        "FD210008"  // LD IY, 0800h
+        "FD360000"  // LD (IY + 00h), 00h
+        "FDCB00C6"  // SET 0, (IY + 00h)
+        "FDCB00D6"  // SET 2, (IY + 00h)
+        "FDCB00E6"  // SET 4, (IY + 00h)
+        "FDCB00F6"  // SET 6, (IY + 00h)
+        "FD3600FF"  // LD (IY + 00h), FFh
+        "FDCB0086"  // RES 0, (IY + 00h)
+        "FDCB0096"  // RES 2, (IY + 00h)
+        "FDCB00A6"  // RES 4, (IY + 00h)
+        "FDCB00B6"  // RES 6, (IY + 00h)
+        "FDCB0046"  // BIT 0, (IY + 00h)
+        "FDCB004E"  // BIT 1, (IY + 00h)
+        "FDCB0056"  // BIT 2, (IY + 00h)
+        "FDCB005E"  // BIT 3, (IY + 00h)
+        "FDCB0066"  // BIT 4, (IY + 00h)
+        "FDCB006E"  // BIT 5, (IY + 00h)
+        "FDCB0076"  // BIT 6, (IY + 00h)
+        "FDCB007E"; // BIT 7, (IY + 00h)
+
+    loadBinary(code, m, 0x0000);
+    startZ80(z80);
+    runCycles(z80, m, 37);
+    BOOST_CHECK_EQUAL(m.memory[0x0800], 0x00);
+    runCycles(z80, m, 23);
+    BOOST_CHECK_EQUAL(m.memory[0x0800], 0x01);
+    runCycles(z80, m, 23);
+    BOOST_CHECK_EQUAL(m.memory[0x0800], 0x05);
+    runCycles(z80, m, 23);
+    BOOST_CHECK_EQUAL(m.memory[0x0800], 0x15);
+    runCycles(z80, m, 23);
+    BOOST_CHECK_EQUAL(m.memory[0x0800], 0x55);
+    runCycles(z80, m, 19);
+    BOOST_CHECK_EQUAL(m.memory[0x0800], 0xFF);
+    runCycles(z80, m, 23);
+    BOOST_CHECK_EQUAL(m.memory[0x0800], 0xFE);
+    runCycles(z80, m, 23);
+    BOOST_CHECK_EQUAL(m.memory[0x0800], 0xFA);
+    runCycles(z80, m, 23);
+    BOOST_CHECK_EQUAL(m.memory[0x0800], 0xEA);
+    runCycles(z80, m, 23);
+    BOOST_CHECK_EQUAL(m.memory[0x0800], 0xAA);
+    runCycles(z80, m, 20);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x5C);
+    runCycles(z80, m, 20);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x18);
+    runCycles(z80, m, 20);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x5C);
+    runCycles(z80, m, 20);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x18);
+    runCycles(z80, m, 20);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x5C);
+    runCycles(z80, m, 20);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x18);
+    runCycles(z80, m, 20);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x5C);
+    runCycles(z80, m, 20);
+    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x98);
+}
 // EOF
 // vim: et:sw=4:ts=4
