@@ -42,28 +42,28 @@ constexpr uint_fast8_t PREFIX_FD = 0x08;
 
 enum class Z80State
 {
-    ST_RESET,
+    ST_RESET,           // 0
 
-    ST_OCF_T1_ADDRWR,
-    ST_OCF_T2_DATARD,
-    ST_OCF_T3_RFSH1,
-    ST_OCF_T4_RFSH2,
+    ST_OCF_T1_ADDRWR,   // 1
+    ST_OCF_T2_DATARD,   // 2
+    ST_OCF_T3_RFSH1,    // 3
+    ST_OCF_T4_RFSH2,    // 4
 
-    ST_NMI_T1_ADDRWR,
-    ST_NMI_T2_DATARD,
+    ST_NMI_T1_ADDRWR,   // 5
+    ST_NMI_T2_DATARD,   // 6
 
-    ST_INT_T1_ADDRWR,
-    ST_INT_T2_DATARD,
-    ST_INT_T3_WAIT1,
-    ST_INT_T4_WAIT2,
+    ST_INT_T1_ADDRWR,   // 7
+    ST_INT_T2_DATARD,   // 8
+    ST_INT_T3_WAIT1,    // 9
+    ST_INT_T4_WAIT2,    // 10
 
-    ST_MEMRD_T1_ADDRWR,
-    ST_MEMRD_T2_WAITST,
-    ST_MEMRD_T3_DATARD,
+    ST_MEMRD_T1_ADDRWR, // 11
+    ST_MEMRD_T2_WAITST, // 12
+    ST_MEMRD_T3_DATARD, // 13
 
-    ST_MEMWR_T1_ADDRWR,
-    ST_MEMWR_T2_WAITST,
-    ST_MEMWR_T3_DATAWR,
+    ST_MEMWR_T1_ADDRWR, // 14
+    ST_MEMWR_T2_WAITST, // 15
+    ST_MEMWR_T3_DATAWR, // 16
 
     ST_IORD_T1_ADDRWR,
     ST_IORD_T2_IORQ,

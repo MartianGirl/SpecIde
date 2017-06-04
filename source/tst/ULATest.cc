@@ -30,9 +30,6 @@ BOOST_AUTO_TEST_CASE(display_position_test)
     for (size_t i = 0; i < 139776000; ++i)
     {
         ula.clock();
-        sc0.blank = ula.blank;
-        sc0.hSync = ula.hSync;
-        sc0.vSync = ula.vSync;
         sc0.update();
     }
 }
@@ -70,9 +67,6 @@ BOOST_AUTO_TEST_CASE(image_generation_test)
     for (size_t i = 0; i < 139776000; ++i)
     {
         ula.clock();
-        sc0.blank = ula.blank;
-        sc0.vSync = ula.vSync;
-        sc0.hSync = ula.hSync;
         if (ula.hiz == false)
         {
             m.a = ula.a | 0x4000;
@@ -110,9 +104,6 @@ BOOST_AUTO_TEST_CASE(image_load_test)
             ula.ioPortOut = (ula.ioPortOut + 0x01) & 0x07;
 
         ula.clock();
-        sc0.blank = ula.blank;
-        sc0.vSync = ula.vSync;
-        sc0.hSync = ula.hSync;
         if (ula.hiz == false)
         {
             m.a = ula.a | 0x4000;

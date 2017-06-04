@@ -19,12 +19,14 @@ class Screen : public GraphicWindow
     public:
         Screen(size_t scale = 1);
 
+        bool done;
+
         size_t scale;
         size_t xSize, ySize;
 
         size_t xPos, yPos;
-        bool vSync, vSync1d;
-        bool hSync, hSync1d;
+        bool vSyncDelayed;
+        bool hSyncDelayed;
         bool blank;
         size_t frame;
 
@@ -38,11 +40,19 @@ class Screen : public GraphicWindow
         void setVSyncInput(bool* input) { vSyncInput = input; }
         void setHSyncInput(bool* input) { hSyncInput = input; }
         void setBlankInput(bool* input) { blankInput = input; }
+        void setKeyboardPort(uint16_t* in, uint8_t* out)
+        {
+            keyboardAddressIn = in;
+            keyboardDataOut = out;
+        }
 
         sf::Uint32 *rgbaInput;
         bool *vSyncInput;
         bool *hSyncInput;
         bool *blankInput;
+
+        uint16_t *keyboardAddressIn;
+        uint8_t *keyboardDataOut;
 };
 
 // vim: et:sw=4:ts=4

@@ -13,6 +13,8 @@
 #include "Z80Defs.h"
 
 #include <fstream>
+#include <iomanip>
+#include <iostream>
 
 // #include <SFML/Audio.hpp>
 
@@ -29,8 +31,7 @@ class Spectrum :
         ULA ula;
 
         // Buses
-        uint16_t a;
-        uint8_t d;
+        bool as_, rd_, wr_; // Z80 memory control lines.
 
         // I'm going to exceed the original requirements, and then limit the
         // configuration to the required model.
@@ -47,9 +48,6 @@ class Spectrum :
         // 4. Access the memory for the Z80.
         void clock();
         void reset();
-
-        void ulaBusAccess();
-        void z80BusAccess();
 
         // sf::SoundBuffer ear;
         // sf::SoundBuffer mic;

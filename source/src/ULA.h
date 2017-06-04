@@ -20,7 +20,6 @@ class ULA
         ULA();
 
         void clock();
-        void readKeys();
 
         // Memory signals
         uint16_t a;
@@ -29,7 +28,7 @@ class ULA
         bool &as_, &rd_;
         
         uint16_t z80_a;
-        uint16_t z80_c, z80_c_1d;
+        uint16_t z80_c, z80_c_delayed;
         bool contentionWindow;
         bool memContention;
         bool ioContention;
@@ -65,7 +64,10 @@ class ULA
         // Port 0xFE
         uint8_t ioPortIn;
         uint8_t ioPortOut;
-        bool ulaRead;
+        bool read;
+
+        // Keyboard half rows
+        uint8_t keys[8];
 
         // ULA interrupt
         uint16_t c;

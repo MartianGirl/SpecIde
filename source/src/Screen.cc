@@ -1,12 +1,15 @@
 #include "Screen.h"
 
+using namespace sf;
+
 Screen::Screen(size_t scale) :
     GraphicWindow(352 * scale, 312 * scale, "SpecIde"),
+    done(false),
     scale(scale),
     xSize(352), ySize(312),
     xPos(0), yPos(8),
-    vSync(false), vSync1d(false),
-    hSync(false), hSync1d(false),
+    vSyncDelayed(false),
+    hSyncDelayed(false),
     blank(false), 
     frame(0),
     texSize(xSize * ySize),
@@ -16,11 +19,11 @@ Screen::Screen(size_t scale) :
     pixels(texSize, 0x000000FF)
 #endif
 {
-    if (!scrTexture.create(static_cast<sf::Uint32>(xSize), static_cast<sf::Uint32>(ySize)))
+    if (!scrTexture.create(static_cast<Uint32>(xSize), static_cast<Uint32>(ySize)))
         assert(false);
     scrTexture.setRepeated(false);
     scrSprite.setTexture(scrTexture);
-    scrSprite.setScale(sf::Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
+    scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
 }
 
 void Screen::update()
@@ -34,26 +37,103 @@ void Screen::update()
 
     // Act on sync pulses falling edges:
     // VSYNC falling edge restores the beam to the top of the screen.
-    if (!(*vSyncInput) && vSync1d)
+    if (!(*vSyncInput) && vSyncDelayed)
     {
         yPos = 0;
 
-        scrTexture.update(reinterpret_cast<sf::Uint8*>(&pixels[0]));
-        // window.clear(sf::Color::Black);
+        scrTexture.update(reinterpret_cast<Uint8*>(&pixels[0]));
+        // window.clear(Color::Black);
         window.draw(scrSprite);
         window.display();
+
+        // Poll events.
+        Event event;
+        while (window.pollEvent(event))
+        {
+            switch (event.type)
+            {
+                case Event::Closed:
+                    done = true;
+                    break;
+
+                case Event::KeyPressed:
+                case Event::KeyReleased:
+                    keyboardDataOut[0] = 0xFF &
+                        ((Keyboard::isKeyPressed(Keyboard::B)) ? 0xEF : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::N)) ? 0xF7 : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::M)) ? 0xFB : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::LControl)) ? 0xFD : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::RControl)) ? 0xFD : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Space)) ? 0xFE : 0xFF);
+                    keyboardDataOut[1] = 0xFF &
+                        ((Keyboard::isKeyPressed(Keyboard::H)) ? 0xEF : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::J)) ? 0xF7 : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::K)) ? 0xFB : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::L)) ? 0xFD : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Return)) ? 0xFE : 0xFF);
+                    keyboardDataOut[2] = 0xFF &
+                        ((Keyboard::isKeyPressed(Keyboard::Y)) ? 0xEF : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::U)) ? 0xF7 : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::I)) ? 0xFB : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::O)) ? 0xFD : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::P)) ? 0xFE : 0xFF);
+                    keyboardDataOut[3] = 0xFF &
+                        ((Keyboard::isKeyPressed(Keyboard::Num6)) ? 0xEF : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Up)) ? 0xEF : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Num7)) ? 0xF7 : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Down)) ? 0xF7 : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Num8)) ? 0xFB : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Right)) ? 0xFB : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Num9)) ? 0xFD : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Num0)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::BackSpace)) ? 0xFE : 0xFF);
+                    keyboardDataOut[4] = 0xFF &
+                        ((Keyboard::isKeyPressed(Keyboard::Num1)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Num2)) ? 0xFD : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Num3)) ? 0xFB : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Num4)) ? 0xF7 : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Num5)) ? 0xEF : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Left)) ? 0xEF : 0xFF);
+                    keyboardDataOut[5] = 0xFF &
+                        ((Keyboard::isKeyPressed(Keyboard::Q)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::W)) ? 0xFD : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::E)) ? 0xFB : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::R)) ? 0xF7 : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::T)) ? 0xEF : 0xFF);
+                    keyboardDataOut[6] = 0xFF &
+                        ((Keyboard::isKeyPressed(Keyboard::A)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::S)) ? 0xFD : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::D)) ? 0xFB : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::F)) ? 0xF7 : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::G)) ? 0xEF : 0xFF);
+                    keyboardDataOut[7] = 0xFF &
+                        ((Keyboard::isKeyPressed(Keyboard::LShift)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::RShift)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::BackSpace)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Up)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Down)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Left)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Right)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Z)) ? 0xFD : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::X)) ? 0xFB : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::C)) ? 0xF7 : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::V)) ? 0xEF : 0xFF);
+                    break;
+
+                default:
+                    break;
+            }
+        }
     }
-    vSync1d = (*vSyncInput);
+    vSyncDelayed = (*vSyncInput);
 
     // HSYNC falling edge restores the beam to the beginning of the next line.
-    if (!(*hSyncInput) && hSync1d)
+    if (!(*hSyncInput) && hSyncDelayed)
     {
         xPos = 0;
         ++yPos;
     }
-    hSync1d = (*hSyncInput);
-
-    // Move to next pixel with each clock.
+    hSyncDelayed = (*hSyncInput);
 }
 
 // vim: et:sw=4:ts=4

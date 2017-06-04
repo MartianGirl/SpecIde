@@ -24,18 +24,13 @@ int main()
     screen.setHSyncInput(&spectrum.ula.hSync);
     screen.setBlankInput(&spectrum.ula.blank);
 
+    // Connect the keyboard.
+    screen.setKeyboardPort(&spectrum.ula.z80_a, spectrum.ula.keys);
+
     // This is faster than "while(true)".
     for(;;)
     {
-        sf::Event event;
-        while (screen.window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed)
-            {
-                return 0;
-            }
-        }
-
+        if (screen.done) return 0;
         spectrum.clock();
         screen.update();
     }

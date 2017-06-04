@@ -5,6 +5,7 @@ GraphicWindow::GraphicWindow(size_t x, size_t y, std::string const& title) :
         sf::VideoMode(static_cast<sf::Uint32>(x), static_cast<sf::Uint32>(y)),
         title)
 {
+    window.setKeyRepeatEnabled(false);
     window.clear();
     window.display();
 }
