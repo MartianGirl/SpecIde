@@ -20,28 +20,18 @@ class Z80IncPtrHl : public Z80Instruction
             {
                 case 0:
                     r->memRdCycles = 1;
-                    r->memWrCycles = 0;
                     r->memAddrMode = 0x00000022;
                     return true;
 
                 case 1:
-                    // Preserve carry bit.
-                    r->af.l &= FLAG_C;
-
-                    // Calculate half-carry. This is done by doing a 4-bit
-                    // addition. Half-carry will be in bit 4.
-                    r->acc.w = (r->iReg.h & 0x0F) + 1;
-                    r->af.l |= r->acc.l & (FLAG_H | FLAG_3);        // ...H3.0.
-
-                    // Calculate carry in the bit 7. Overflow flag is
-                    // (carry in bit 7) XOR (carry in bit 8).
-                    r->acc.w = (r->iReg.h & 0x7F) + 1;
-                    r->af.l |= (r->acc.w >> 5) & FLAG_PV;
-
-                    // Calculate the result.
                     r->acc.w = r->iReg.h + 1;
-                    r->af.l |= r->acc.l & (FLAG_S | FLAG_5);        // S.5H3.0.
-                    r->af.l ^= (r->acc.w >> 6) & FLAG_PV;           // S.5H3V0.
+
+                    // Preserve carry flag.
+                    r->af.l &= FLAG_C;
+                    r->af.l |= r->acc.l & (FLAG_S | FLAG_5 | FLAG_3);
+                    r->af.l |= (r->acc.l ^ r->iReg.h) & FLAG_H;
+                    r->af.l |= (((r->acc.l ^ r->iReg.h) >> 5) 
+                            ^ (r->acc.h << 2)) & FLAG_PV;
                     r->af.l |= (r->acc.l) ? 0x00 : FLAG_Z;          // SZ5H3V0.
                     return false;
 
