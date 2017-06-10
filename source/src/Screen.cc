@@ -61,10 +61,17 @@ void Screen::update()
                     keyboardDataOut[0] = 0xFF &
                         ((Keyboard::isKeyPressed(Keyboard::B)) ? 0xEF : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::N)) ? 0xF7 : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Comma)) ? 0xF7 : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::M)) ? 0xFB : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Period)) ? 0xFB : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::LControl)) ? 0xFD : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::RControl)) ? 0xFD : 0xFF) &
-                        ((Keyboard::isKeyPressed(Keyboard::Space)) ? 0xFE : 0xFF);
+                        ((Keyboard::isKeyPressed(Keyboard::LAlt)) ? 0xFD : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Comma)) ? 0xFD : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Period)) ? 0xFD : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Quote)) ? 0xFD : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Space)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Escape)) ? 0xFE : 0xFF);
                     keyboardDataOut[1] = 0xFF &
                         ((Keyboard::isKeyPressed(Keyboard::H)) ? 0xEF : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::J)) ? 0xF7 : 0xFF) &
@@ -76,22 +83,28 @@ void Screen::update()
                         ((Keyboard::isKeyPressed(Keyboard::U)) ? 0xF7 : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::I)) ? 0xFB : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::O)) ? 0xFD : 0xFF) &
-                        ((Keyboard::isKeyPressed(Keyboard::P)) ? 0xFE : 0xFF);
+                        ((Keyboard::isKeyPressed(Keyboard::P)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Quote)) ? 0xFE : 0xFF);
                     keyboardDataOut[3] = 0xFF &
                         ((Keyboard::isKeyPressed(Keyboard::Num6)) ? 0xEF : 0xFF) &
-                        ((Keyboard::isKeyPressed(Keyboard::Up)) ? 0xEF : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Down)) ? 0xEF : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::Num7)) ? 0xF7 : 0xFF) &
-                        ((Keyboard::isKeyPressed(Keyboard::Down)) ? 0xF7 : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Up)) ? 0xF7 : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::Num8)) ? 0xFB : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::Right)) ? 0xFB : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::Num9)) ? 0xFD : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Insert)) ? 0xFD : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::Num0)) ? 0xFE : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::BackSpace)) ? 0xFE : 0xFF);
                     keyboardDataOut[4] = 0xFF &
                         ((Keyboard::isKeyPressed(Keyboard::Num1)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Delete)) ? 0xFE : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::Num2)) ? 0xFD : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Tab)) ? 0xFD : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::Num3)) ? 0xFB : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::End)) ? 0xFB : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::Num4)) ? 0xF7 : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Home)) ? 0xF7 : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::Num5)) ? 0xEF : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::Left)) ? 0xEF : 0xFF);
                     keyboardDataOut[5] = 0xFF &
@@ -110,10 +123,17 @@ void Screen::update()
                         ((Keyboard::isKeyPressed(Keyboard::LShift)) ? 0xFE : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::RShift)) ? 0xFE : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::BackSpace)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Escape)) ? 0xFE : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::Up)) ? 0xFE : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::Down)) ? 0xFE : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::Left)) ? 0xFE : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::Right)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::LAlt)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Insert)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::End)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Home)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Tab)) ? 0xFE : 0xFF) &
+                        ((Keyboard::isKeyPressed(Keyboard::Delete)) ? 0xFE : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::Z)) ? 0xFD : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::X)) ? 0xFB : 0xFF) &
                         ((Keyboard::isKeyPressed(Keyboard::C)) ? 0xF7 : 0xFF) &
