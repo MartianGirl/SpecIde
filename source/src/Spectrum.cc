@@ -1,7 +1,7 @@
 #include "Spectrum.h"
 
 Spectrum::Spectrum() :
-    as_(true), rd_(true), wr_(true),
+    as_(true), io_(true), rd_(true), wr_(true),
     ram{Memory(14), Memory(14), Memory(14), Memory(14),     // 64K
         Memory(14), Memory(14), Memory(14), Memory(14),     // 128K
         Memory(14), Memory(14), Memory(14), Memory(14),
@@ -37,6 +37,13 @@ void Spectrum::clock()
     // We need to provide the ULA with the Z80 address and control buses.
     ula.z80_a = z80.a;
     ula.z80_c = z80.c;
+    
+    // ULA gets the data from memory or Z80, or outputs data to Z80.
+    if (ula.hiz == false)           // Is ULA mastering the bus?
+        ula.d = map[1]->d;
+    else if ((io_ || wr_) == false) // Is Z80 mastering and writing?
+        ula.d = z80.d;
+
     // std::cout << "Pixel counter is: " << ula.pixel;
     // std::cout << " (" << (ula.pixel & 0x0F) << ")" << std::endl;
     ula.clock();
@@ -45,6 +52,7 @@ void Spectrum::clock()
 
     // Memory interface
     as_ = ((z80.c & SIGNAL_MREQ_) == SIGNAL_MREQ_);
+    io_ = ((z80.c & SIGNAL_IORQ_) == SIGNAL_IORQ_);
     rd_ = ((z80.c & SIGNAL_RD_) == SIGNAL_RD_);
     wr_ = ((z80.c & SIGNAL_WR_) == SIGNAL_WR_);
 
@@ -80,19 +88,18 @@ void Spectrum::clock()
     map[3]->wr_ = wr_;
     map[3]->clock();
 
-    // ULA gets the data from memory or Z80, or outputs data to Z80.
-    if (ula.hiz == false)           // Is ULA reading from memory?
-        ula.d = map[1]->d;
-    else if (ula.read == false)     // Is ULA not being read?
-        ula.d = z80.d;
-
-    // Z80 gets data from the ULA or memory.
-    if (rd_ == false)
-        z80.d = (ula.read == true) ? ula.d : map[(z80.a & 0xC000) >> 14]->d;
 
     if (ula.cpuClock == true)
     {
-        //std::cout << "Z80 state is: " << static_cast<size_t>(z80.state) << std::endl;
+        // Z80 gets data from the ULA or memory, only when reading.
+        if (rd_ == false)
+        {
+            if (io_ == false)
+                z80.d = ula.d;
+            else if (as_ == false)
+                z80.d = map[(z80.a & 0xC000) >> 14]->d;
+        }
+
         z80.clock();
     }
 }
