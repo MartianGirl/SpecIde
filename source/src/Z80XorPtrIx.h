@@ -20,30 +20,33 @@ class Z80XorPtrIx : public Z80Instruction
             {
                 case 0:
                     r->memRdCycles = 1;
-                    r->memWrCycles = 0;
                     r->memAddrMode = 0x00000061;
                     return true;
 
                 case 1:
+                    r->cpuProcCycles = 1;
+                    return true;
+
+                case 2:
                     r->tmp.l = r->iReg.h;
                     return false;
 
-                case 2:
+                case 3:
                     r->tmp.h = ((r->tmp.l & 0x80) == 0x80) ? 0xFF : 0x00;
                     return false;
 
-                case 3:
+                case 4:
                     r->tmp.w += r->ix.w;
                     return false;
 
-                case 4:
+                case 5:
                     return false;
 
-                case 5:
+                case 6:
                     r->memRdCycles = 1;
                     return true;
 
-                case 6:
+                case 7:
                     // Calculate the result.
                     r->acc.l = r->acc.h = r->af.h ^ r->iReg.h;
                     r->acc.h ^= r->acc.h >> 1;

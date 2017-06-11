@@ -27,7 +27,9 @@ class Z80BitNPtrIxIy : public Z80Instruction
                 case 5:
                     r->acc.l = r->iReg.h;
                     r->acc.l &= (1 << r->y);
+                    return false;
 
+                case 6:
                     r->af.l &= FLAG_C;
                     r->af.l |= FLAG_H;
                     r->af.l |= r->acc.l & FLAG_S;
