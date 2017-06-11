@@ -144,11 +144,11 @@ void ULA::clock()
     cpuClock = !cpuWait && ((pixel & 0x0001) == 0x0000);
 
     // 3. ULA port & Interrupt.
+    c = z80_c;
     if ((scan == vSyncStart) && (pixel < 64))
         c &= ~SIGNAL_INT_;
     else
         c |= SIGNAL_INT_;
-
 
     if (cpuClock)
     {
