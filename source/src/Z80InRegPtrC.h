@@ -52,7 +52,7 @@ class Z80InRegPtrC : public Z80Instruction
                     r->af.l |= (r->acc.l) ? 0x00 : FLAG_Z;
 
                     if (r->y != 6)
-                        *r->reg8[r->y] = r->iReg.h;
+                        *r->reg8[r->y] = r->acc.l;
 
                     r->prefix = PREFIX_NO;
                     return true;

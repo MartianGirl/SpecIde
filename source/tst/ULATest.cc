@@ -70,8 +70,8 @@ BOOST_AUTO_TEST_CASE(image_generation_test)
         if (ula.hiz == false)
         {
             m.a = ula.a | 0x4000;
-            m.rd_ = ula.rd_;
-            m.as_ = ula.as_;
+            m.rd_ = ula.hiz;
+            m.as_ = ula.hiz;
             m.clock();
             ula.d = m.d;
         }
@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(image_load_test)
         if (ula.hiz == false)
         {
             m.a = ula.a | 0x4000;
-            m.rd_ = ula.rd_;
-            m.as_ = ula.as_;
+            m.rd_ = ula.hiz;
+            m.as_ = ula.hiz;
             m.clock();
             ula.d = m.d;
         }

@@ -2,7 +2,6 @@
 
 ULA::ULA() :
     hiz(true),
-    as_(*(&hiz)), rd_(*(&hiz)), // Just some aliases.
     z80_a(0xFFFF), z80_c(0xFFFF), z80_c_delayed(0xFFFF),
     contentionWindow(false),
     memContention(false), ioContention(false),
@@ -31,7 +30,7 @@ ULA::ULA() :
     vBorderStart(0x0C0), vBorderEnd(0x137),
     vBlankStart(0x0F8), vBlankEnd(0x0FF),
     vSyncStart(0x0F8), vSyncEnd(0x0FB),
-    ioPortIn(0xFF), ioPortOut(0x00), read(false),
+    ioPortIn(0xFF), ioPortOut(0x00),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF), intCounter(0)
 {
@@ -85,19 +84,14 @@ void ULA::clock()
         switch (pixel & 0x0F)
         {
             case 0x00:
-                contentionWindow = false; hiz = true; break;
             case 0x01:
-                break;
             case 0x02:
-                break;
             case 0x03:
-                break;
+                contentionWindow = false; hiz = true; break;
             case 0x04:
-                contentionWindow = true; break;
             case 0x05:
-                break;
             case 0x06:
-                break;
+                contentionWindow = true; hiz = true; break;
             case 0x07:
                 // Generate addresses (which must be pair).
                 dataAddr = ((pixel & 0xF0) >> 3)    // 000SSSSS SSSPPPP0
@@ -108,25 +102,34 @@ void ULA::clock()
                 attrAddr = ((pixel & 0xF0) >> 3)    // 000110SS SSSPPPP0
                     | ((scan & 0xF8) << 2)          // 00000076 54376540
                     | 0x1800;
-                break;
+                contentionWindow = true; hiz = true; break;
             case 0x08:
-                a = dataAddr; hiz = false; break;
+                a = dataAddr;
+                contentionWindow = true; hiz = false; break;
             case 0x09:
-                dataLatch = d; break;
+                dataLatch = d;
+                contentionWindow = true; hiz = false; break;
             case 0x0A:
-                a = attrAddr; break;
+                a = attrAddr;
+                contentionWindow = true; hiz = false; break;
             case 0x0B:
-                attrLatch = d; break;
+                attrLatch = d;
+                contentionWindow = true; hiz = false; break;
             case 0x0C:
-                a = dataAddr + 1; break;
+                a = dataAddr + 1;
+                contentionWindow = true; hiz = false; break;
             case 0x0D:
-                dataLatch = d; break;
+                dataLatch = d;
+                contentionWindow = true; hiz = false; break;
             case 0x0E:
-                a = attrAddr + 1; break;
+                a = attrAddr + 1;
+                contentionWindow = true; hiz = false; break;
             case 0x0F:
-                attrLatch = d; break;
+                attrLatch = d;
+                contentionWindow = true; hiz = false; break;
             default:
-                a = 0xFFFF; break;
+                a = 0xFFFF;
+                contentionWindow = false; hiz = true; break;
         }
 
         // 2.c. Resolve contention and generate CPU clock.
@@ -140,17 +143,21 @@ void ULA::clock()
     
     cpuClock = !cpuWait && ((pixel & 0x0001) == 0x0000);
 
-    // 3. ULA port.
+    // 3. ULA port & Interrupt.
+    if ((scan == vSyncStart) && (pixel < 64))
+        c &= ~SIGNAL_INT_;
+    else
+        c |= SIGNAL_INT_;
+
+
     if (cpuClock)
     {
-        read = false;
         // We read keyboard if we're reading the ULA port, during TW.
-        if (((z80_a & 0x0001) == 0x0000) && 
-                ((~z80_c & ~z80_c_delayed & SIGNAL_IORQ_) == SIGNAL_IORQ_))
+        if (((z80_a & 0x0001) == 0x0000)
+                && ((~z80_c & ~z80_c_delayed & SIGNAL_IORQ_) == SIGNAL_IORQ_))
         {
             if ((z80_c & SIGNAL_RD_) == 0x0000)
             {
-                read = true;
                 ioPortIn |= 0x1F;
                 if ((z80_a & 0x8000) == 0x0000) ioPortIn &= keys[0];
                 if ((z80_a & 0x4000) == 0x0000) ioPortIn &= keys[1];
@@ -171,20 +178,13 @@ void ULA::clock()
         z80_c_delayed = z80_c;
     }
 
-    // 4. Interrupt.
-    c = z80_c;
-    if (scan == vSyncStart && pixel < 64)
-        c &= ~SIGNAL_INT_;
-    else
-        c |= SIGNAL_INT_;
-
-    // 5. Generate video signal.
+    // 4. Generate video signal.
     if (!blank)
     {
-        // 5.a. Generate colours.
+        // 4.a. Generate colours.
         rgba = colourTable[((data & 0x80) ^ (attr & flash)) | (attr & 0x7F)];
 
-        // 5.b. Update data and attribute registers.
+        // 4.b. Update data and attribute registers.
         data <<= 1;
 
         // We start outputting data after just a data/attr pair has been fetched.
@@ -202,7 +202,7 @@ void ULA::clock()
         }
     }
 
-    // 6. Update counters
+    // 5. Update counters
     pixel = (pixel + 1) % maxPixel;
     if (pixel == hSyncStart)
     {

@@ -25,7 +25,6 @@ class ULA
         uint16_t a;
         uint8_t d;
         bool hiz;
-        bool &as_, &rd_;
         
         uint16_t z80_a;
         uint16_t z80_c, z80_c_delayed;
@@ -64,7 +63,6 @@ class ULA
         // Port 0xFE
         uint8_t ioPortIn;
         uint8_t ioPortOut;
-        bool read;
 
         // Keyboard half rows
         uint8_t keys[8];

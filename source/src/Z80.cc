@@ -65,7 +65,7 @@ void Z80::clock()
             if (!intProcess && !nmiProcess && !(iff & HALT))
                 ++decoder.regs.pc.w;
 
-            c |= SIGNAL_RFSH_;
+            // c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
             state = Z80State::ST_OCF_T2_DATARD;
@@ -87,15 +87,15 @@ void Z80::clock()
             decoder.regs.ir.l = (decoder.regs.ir.l & 0x80) 
                 | ((decoder.regs.ir.l + 1) & 0x7F);
 
-            c |= (SIGNAL_RD_ | SIGNAL_M1_ | SIGNAL_IORQ_);
-            c &= ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
+            c |= (SIGNAL_RD_ | SIGNAL_M1_ | SIGNAL_IORQ_ | SIGNAL_MREQ_);
+            // c &= ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
 
             state = Z80State::ST_OCF_T4_RFSH2;
             break;
 
         case Z80State::ST_OCF_T4_RFSH2:
-            c |= (SIGNAL_MREQ_);
-            c &= ~(SIGNAL_RFSH_);
+            // c |= (SIGNAL_MREQ_);
+            // c &= ~(SIGNAL_RFSH_);
 
             state = finishMachineCycle();
             break;
@@ -109,14 +109,15 @@ void Z80::clock()
             // PC only if NMI is false...
             a = decoder.regs.pc.w;
 
-            c |= SIGNAL_RFSH_;
+            // c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
 
             state = Z80State::ST_NMI_T2_DATARD;
             break;
 
         case Z80State::ST_NMI_T2_DATARD:
-            c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_ | SIGNAL_M1_);
+            c |= SIGNAL_MREQ_;
+            c &= ~(SIGNAL_RD_ | SIGNAL_M1_);
 
             // This state could be done in ST_OCF_T2_DATARD by moving to refresh
             // if SIGNAL_WAIT_ is high, or if NMI...
@@ -126,7 +127,7 @@ void Z80::clock()
         case Z80State::ST_INT_T1_ADDRWR:
             a = decoder.regs.pc.w;
 
-            c |= SIGNAL_RFSH_;
+            // c |= SIGNAL_RFSH_;
             c &= ~SIGNAL_M1_;
 
             state = Z80State::ST_INT_T2_DATARD;
@@ -157,7 +158,7 @@ void Z80::clock()
              if (intProcess == false || decoder.regs.im == 2)
                  a = decoder.getAddress();
 
-            c |= SIGNAL_RFSH_;
+            // c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_);
 
             state = Z80State::ST_MEMRD_T2_WAITST;
@@ -181,7 +182,7 @@ void Z80::clock()
             a = decoder.getAddress();
             d = decoder.writeMem();
 
-            c |= SIGNAL_RFSH_;
+            // c |= SIGNAL_RFSH_;
             c &= ~(SIGNAL_MREQ_);
 
             state = Z80State::ST_MEMWR_T2_WAITST;
@@ -204,7 +205,7 @@ void Z80::clock()
         case Z80State::ST_IORD_T1_ADDRWR:
             a = decoder.getAddress();
 
-            c |= SIGNAL_RFSH_;
+            // c |= SIGNAL_RFSH_;
 
             state = Z80State::ST_IORD_T2_IORQ;
             break;
@@ -232,7 +233,7 @@ void Z80::clock()
             a = decoder.getAddress();
             d = decoder.writeIo();
 
-            c |= SIGNAL_RFSH_;
+            // c |= SIGNAL_RFSH_;
 
             state = Z80State::ST_IOWR_T2_IORQ;
             break;
@@ -260,7 +261,7 @@ void Z80::clock()
         // The CPU internal cycle begins here, and it is extended by using
         // WAITSTates.
         case Z80State::ST_CPU_T0_CPUPROC:
-            c |= SIGNAL_RFSH_;
+            // c |= SIGNAL_RFSH_;
             decoder.cpuProcCycle();
 
             state = finishMachineCycle();
@@ -268,7 +269,7 @@ void Z80::clock()
 
         // Wait state
         case Z80State::ST_CPU_T0_WAITST:
-            c |= SIGNAL_RFSH_;
+            // c |= SIGNAL_RFSH_;
 
             state = finishMachineCycle();
             break;
@@ -322,7 +323,8 @@ Z80State Z80::finishMachineCycle()
     // INT only happens if there is no NMI.
     else if (((c & SIGNAL_INT_) == 0x0000) 
             && ((iff & IFF1) == IFF1)
-            && ((decoder.regs.iff & IFF1) == IFF1))
+            && ((decoder.regs.iff & IFF1) == IFF1)
+            && decoder.regs.prefix == PREFIX_NO)
     {
         decoder.regs.iff &= ~(IFF1 | IFF2);
         intProcess = true;
@@ -361,7 +363,10 @@ bool Z80::endOfInstruction()
 {
     return (decoder.regs.prefix == PREFIX_NO
             && decoder.regs.memRdCycles == 0
-            && decoder.regs.memWrCycles == 0);
+            && decoder.regs.memWrCycles == 0
+            && decoder.regs.ioRdCycles == 0
+            && decoder.regs.ioWrCycles == 0
+            && decoder.regs.cpuProcCycles == 0);
 }
 
 void Z80::start()

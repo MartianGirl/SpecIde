@@ -26,7 +26,6 @@ class Z80Rst : public Z80Instruction
             switch (r->executionStep)
             {
                 case 0:
-                    r->memRdCycles = 0;
                     r->memWrCycles = 2;
                     r->memAddrMode = 0x000000AA;
 
