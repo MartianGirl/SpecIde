@@ -26,8 +26,10 @@ Screen::Screen(size_t scale) :
     scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
 }
 
-void Screen::update()
+bool Screen::update()
 {
+    bool tick = false;
+
     // If not blanking, draw.
     if (!(*blankInput))
     {
@@ -45,6 +47,7 @@ void Screen::update()
         // window.clear(Color::Black);
         window.draw(scrSprite);
         window.display();
+        tick = true;
 
         // Poll events.
         Event event;
@@ -154,6 +157,8 @@ void Screen::update()
         ++yPos;
     }
     hSyncDelayed = (*hSyncInput);
+
+    return tick;
 }
 
 // vim: et:sw=4:ts=4

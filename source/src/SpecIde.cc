@@ -1,6 +1,9 @@
+#include <chrono>
 #include <iostream>
 #include <iomanip>
 #include <memory>
+#include <sstream>
+#include <thread>
 
 #include <SFML/Graphics.hpp>
 
@@ -9,10 +12,15 @@
 
 #include "config.h"
 
+using namespace std;
+
 int main()
 {
-    std::cout << "SpecIde Version " << SPECIDE_VERSION_MAJOR;
-    std::cout << "." << SPECIDE_VERSION_MINOR << std::endl;
+    using namespace std::this_thread;
+    using namespace std::chrono;
+
+    cout << "SpecIde Version " << SPECIDE_VERSION_MAJOR;
+    cout << "." << SPECIDE_VERSION_MINOR << endl;
 
     // Create a Spectrum
     Spectrum spectrum;
@@ -28,11 +36,27 @@ int main()
     screen.setKeyboardPort(&spectrum.ula.z80_a, spectrum.ula.keys);
 
     // This is faster than "while(true)".
+    high_resolution_clock::time_point tick = system_clock::now();
+    high_resolution_clock::time_point tock = system_clock::now();
+    stringstream ss;
+
+    uint32_t busyTime;
     for(;;)
     {
+        if (screen.done)
+            return 0;
+
         spectrum.clock();
-        screen.update();
-        if (screen.done) return 0;
+        if (screen.update())
+        {
+            tock = system_clock::now();
+            sleep_until(tick + milliseconds(20));
+            busyTime = duration_cast<microseconds>(tock - tick).count() / 200;
+            ss << "SpecIDE - " << busyTime << "%";
+            screen.window.setTitle(ss.str());
+            ss.str("");
+            tick = system_clock::now();
+        }
     }
 }
 

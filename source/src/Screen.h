@@ -35,7 +35,7 @@ class Screen : public GraphicWindow
         sf::Sprite scrSprite;
         std::vector<sf::Uint32> pixels;
 
-        void update();
+        bool update();
         void setRgbaInput(sf::Uint32* input) { rgbaInput = input; }
         void setVSyncInput(bool* input) { vSyncInput = input; }
         void setHSyncInput(bool* input) { hSyncInput = input; }
