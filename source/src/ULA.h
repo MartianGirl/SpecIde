@@ -22,12 +22,12 @@ class ULA
         void clock();
 
         // Memory signals
-        uint16_t a;
-        uint8_t d;
+        uint_fast16_t a;
+        uint_fast8_t d;
         bool hiz;
         
-        uint16_t z80_a;
-        uint16_t z80_c, z80_c_delayed;
+        uint_fast16_t z80_a;
+        uint_fast16_t z80_c, z80_c_delayed;
         bool contentionWindow;
         bool memContention;
         bool ioContention;
@@ -37,11 +37,11 @@ class ULA
         size_t scan, maxScan;
         size_t pixel, maxPixel;
 
-        uint8_t flash;
-        uint32_t dataReg, attrReg;
+        uint_fast8_t flash;
+        uint_fast32_t dataReg, attrReg;
         uint8_t &data, &attr;
         uint8_t &dataLatch, &attrLatch;
-        uint16_t dataAddr, attrAddr;
+        uint_fast16_t dataAddr, attrAddr;
 
         uint32_t rgba;
         bool hSync, vSync;
@@ -61,14 +61,13 @@ class ULA
         uint32_t colourTable[0x100];
 
         // Port 0xFE
-        uint8_t ioPortIn;
-        uint8_t ioPortOut;
+        uint_fast8_t ioPortIn;
+        uint_fast8_t ioPortOut;
 
         // Keyboard half rows
-        uint8_t keys[8];
+        uint_fast8_t keys[8];
 
         // ULA interrupt
-        uint16_t c;
-        uint32_t intCounter;
+        uint_fast16_t c;
 };
 // vim: et:sw=4:ts=4

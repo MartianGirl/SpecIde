@@ -11,10 +11,10 @@ ULA::ULA() :
     flash(0),
     dataReg(0), attrReg(0),
 #if SPECIDE_BYTE_ORDER == 1
-    data(*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint32_t) - 3)),
-    attr(*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint32_t) - 3)),
-    dataLatch(*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint32_t) - 1)),
-    attrLatch(*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint32_t) - 1)),
+    data(*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint_fast32_t) - 3)),
+    attr(*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint_fast32_t) - 3)),
+    dataLatch(*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint_fast32_t) - 1)),
+    attrLatch(*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint_fast32_t) - 1)),
 #else
     data(*(reinterpret_cast<uint8_t*>(&dataReg) + 2)),
     attr(*(reinterpret_cast<uint8_t*>(&attrReg) + 2)),
@@ -32,7 +32,7 @@ ULA::ULA() :
     vSyncStart(0x0F8), vSyncEnd(0x0FB),
     ioPortIn(0xFF), ioPortOut(0x00),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
-    c(0xFFFF), intCounter(0)
+    c(0xFFFF)
 {
     for (size_t i = 0; i < 0x100; ++i)
     {

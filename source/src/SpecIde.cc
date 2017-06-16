@@ -35,12 +35,12 @@ int main()
     // Connect the keyboard.
     screen.setKeyboardPort(&spectrum.ula.z80_a, spectrum.ula.keys);
 
-    // This is faster than "while(true)".
-    high_resolution_clock::time_point tick = system_clock::now();
-    high_resolution_clock::time_point tock = system_clock::now();
+    high_resolution_clock::time_point tick = high_resolution_clock::now();
+    high_resolution_clock::time_point tock = high_resolution_clock::now();
     stringstream ss;
 
-    uint32_t busyTime;
+    size_t busyTime;
+    // This is faster than "while(true)".
     for(;;)
     {
         if (screen.done)
@@ -49,13 +49,13 @@ int main()
         spectrum.clock();
         if (screen.update())
         {
-            tock = system_clock::now();
+            tock = high_resolution_clock::now();
             sleep_until(tick + milliseconds(20));
             busyTime = duration_cast<microseconds>(tock - tick).count() / 200;
             ss << "SpecIDE - " << busyTime << "%";
             screen.window.setTitle(ss.str());
             ss.str("");
-            tick = system_clock::now();
+            tick = high_resolution_clock::now();
         }
     }
 }

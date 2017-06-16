@@ -40,7 +40,7 @@ class Screen : public GraphicWindow
         void setVSyncInput(bool* input) { vSyncInput = input; }
         void setHSyncInput(bool* input) { hSyncInput = input; }
         void setBlankInput(bool* input) { blankInput = input; }
-        void setKeyboardPort(uint16_t* in, uint8_t* out)
+        void setKeyboardPort(uint_fast16_t* in, uint_fast8_t* out)
         {
             keyboardAddressIn = in;
             keyboardDataOut = out;
@@ -51,8 +51,8 @@ class Screen : public GraphicWindow
         bool *hSyncInput;
         bool *blankInput;
 
-        uint16_t *keyboardAddressIn;
-        uint8_t *keyboardDataOut;
+        uint_fast16_t *keyboardAddressIn;
+        uint_fast8_t *keyboardDataOut;
 };
 
 // vim: et:sw=4:ts=4
