@@ -9,6 +9,8 @@
 
 #include "Spectrum.h"
 #include "Screen.h"
+            
+#include "Buzzer.h"
 
 #include "config.h"
 
@@ -32,6 +34,11 @@ int main()
     screen.setHSyncInput(&spectrum.ula.hSync);
     screen.setBlankInput(&spectrum.ula.blank);
 
+    Buzzer buzzer;
+    buzzer.open(&spectrum.ula.ioPortOut);
+
+    size_t sampleCounter = 0;
+
     // Connect the keyboard.
     screen.setKeyboardPort(&spectrum.ula.z80_a, spectrum.ula.keys);
 
@@ -41,11 +48,9 @@ int main()
 
     size_t busyTime;
     // This is faster than "while(true)".
+    buzzer.play();
     for(;;)
     {
-        if (screen.done)
-            return 0;
-
         spectrum.clock();
         if (screen.update())
         {
@@ -56,6 +61,16 @@ int main()
             screen.window.setTitle(ss.str());
             ss.str("");
             tick = high_resolution_clock::now();
+        }
+
+        if (sampleCounter == 0)
+            buzzer.sample();
+        sampleCounter = (sampleCounter + 1) % 158;
+
+        if (screen.done)
+        {
+            buzzer.stop();
+            return 0;
         }
     }
 }

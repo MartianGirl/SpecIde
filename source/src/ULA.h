@@ -10,8 +10,6 @@
 
 #include "Z80Defs.h"
 
-#include <SFML/Window.hpp>
-
 using namespace std;
 
 class ULA

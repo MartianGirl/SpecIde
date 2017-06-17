@@ -7,6 +7,11 @@
  * This class emulates a CRT. It draws an image by scanning the pixels
  * in a zig-zag way, just like a TV screen does.
  *
+ * At the moment, it also reads the keyboard and processes the window
+ * events.
+ *
+ * Maybe it should be called Console instead of Screen.
+ *
  */
 
 #include "GraphicWindow.h"

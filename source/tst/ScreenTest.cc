@@ -8,7 +8,7 @@
 BOOST_AUTO_TEST_CASE(constructors_test)
 {
     Screen sc0;
-    uint_fast32_t rgba = 0xC0C0C0FF;
+    uint32_t rgba = 0xC0C0C0FF;
     uint_fast16_t a = 0x0000;
     uint_fast8_t k[8];
     bool vSync, hSync, blank;
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(update_test)
     sc0.open();
 
     size_t c = 0;
-    uint_fast32_t pixel = 0;
+    uint32_t pixel = 0;
     bool vSync, hSync, blank;
     sc0.setRgbaInput(&pixel);
     sc0.setVSyncInput(&vSync);

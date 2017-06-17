@@ -44,7 +44,7 @@ bool Screen::update()
         yPos = 0;
 
         scrTexture.update(reinterpret_cast<Uint8*>(&pixels[0]));
-        // window.clear(Color::Black);
+        window.clear(Color::Black);
         window.draw(scrSprite);
         window.display();
         tick = true;
