@@ -16,6 +16,10 @@
 
 using namespace std;
 
+constexpr size_t CLOCK_FREQ = 7000000;
+constexpr size_t SAMPLE_RATE = 48000;
+constexpr size_t SAMPLE_SKIP = CLOCK_FREQ / SAMPLE_RATE;
+
 int main()
 {
     using namespace std::this_thread;
@@ -34,8 +38,10 @@ int main()
     screen.setHSyncInput(&spectrum.ula.hSync);
     screen.setBlankInput(&spectrum.ula.blank);
 
+    cout << "Opening sound at " << SAMPLE_RATE << " kHz." << endl;
+    cout << "Sampling each " << SAMPLE_SKIP << " cycles." << endl;
     Buzzer buzzer;
-    buzzer.open(&spectrum.ula.ioPortOut);
+    buzzer.open(&spectrum.ula.ioPortOut, SAMPLE_RATE);
 
     size_t sampleCounter = 0;
 
@@ -65,7 +71,7 @@ int main()
 
         if (sampleCounter == 0)
             buzzer.sample();
-        sampleCounter = (sampleCounter + 1) % 158;
+        sampleCounter = (sampleCounter + 1) % SAMPLE_SKIP;
 
         if (screen.done)
         {
