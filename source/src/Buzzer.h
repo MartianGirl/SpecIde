@@ -38,7 +38,7 @@ class Buzzer : public sf::SoundStream
         bool open(uint_fast8_t* src, size_t sampleRate)
         {
             source = src;
-            initialize(1, sampleRate);
+            initialize(1, static_cast<sf::Uint32>(sampleRate));
             setAttenuation(0);
             setVolume(100);
             queuedBuffers.push(126);

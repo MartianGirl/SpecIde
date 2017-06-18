@@ -17,7 +17,7 @@
 using namespace std;
 
 constexpr size_t CLOCK_FREQ = 7000000;
-constexpr size_t SAMPLE_RATE = 48000;
+constexpr size_t SAMPLE_RATE = 44100;
 constexpr size_t SAMPLE_SKIP = CLOCK_FREQ / SAMPLE_RATE;
 
 int main()
