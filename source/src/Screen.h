@@ -24,7 +24,7 @@ class Screen : public GraphicWindow
     public:
         Screen(size_t scale = 1);
 
-        bool done;
+        bool done, reset;
 
         size_t scale;
         size_t xSize, ySize;
@@ -32,8 +32,6 @@ class Screen : public GraphicWindow
         size_t xPos, yPos;
         bool vSyncDelayed;
         bool hSyncDelayed;
-        bool blank;
-        size_t frame;
 
         size_t texSize;
         sf::Texture scrTexture;
@@ -44,17 +42,21 @@ class Screen : public GraphicWindow
         void setRgbaInput(sf::Uint32* input) { rgbaInput = input; }
         void setVSyncInput(bool* input) { vSyncInput = input; }
         void setHSyncInput(bool* input) { hSyncInput = input; }
-        void setBlankInput(bool* input) { blankInput = input; }
+        void setHBlankInput(bool* input) { hBlankInput = input; }
+        void setVBlankInput(bool* input) { vBlankInput = input; }
         void setKeyboardPort(uint_fast16_t* in, uint_fast8_t* out)
         {
             keyboardAddressIn = in;
             keyboardDataOut = out;
         }
 
+        void pollEvents();
+
         sf::Uint32 *rgbaInput;
-        bool *vSyncInput;
         bool *hSyncInput;
-        bool *blankInput;
+        bool *vSyncInput;
+        bool *hBlankInput;
+        bool *vBlankInput;
 
         uint_fast16_t *keyboardAddressIn;
         uint_fast8_t *keyboardDataOut;

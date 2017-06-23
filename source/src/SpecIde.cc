@@ -9,7 +9,6 @@
 
 #include "Spectrum.h"
 #include "Screen.h"
-            
 #include "Buzzer.h"
 
 #include "config.h"
@@ -34,9 +33,10 @@ int main()
     // Create a screen and "connect" it to the Spectrum ULA.
     Screen screen(2);
     screen.setRgbaInput(&spectrum.ula.rgba);
-    screen.setVSyncInput(&spectrum.ula.vSync);
     screen.setHSyncInput(&spectrum.ula.hSync);
-    screen.setBlankInput(&spectrum.ula.blank);
+    screen.setVSyncInput(&spectrum.ula.vSync);
+    screen.setHBlankInput(&spectrum.ula.hBlank);
+    screen.setVBlankInput(&spectrum.ula.vBlank);
 
     cout << "Opening sound at " << SAMPLE_RATE << " kHz." << endl;
     cout << "Sampling each " << SAMPLE_SKIP << " cycles." << endl;
@@ -57,7 +57,15 @@ int main()
     buzzer.play();
     for(;;)
     {
+        // Update Spectrum hardware.
         spectrum.clock();
+
+        // Sample sound outputs.
+        if (sampleCounter == 0)
+            buzzer.sample();
+        sampleCounter = (sampleCounter + 1) % SAMPLE_SKIP;
+
+        // Update screen.
         if (screen.update())
         {
             tock = high_resolution_clock::now();
@@ -69,14 +77,16 @@ int main()
             tick = high_resolution_clock::now();
         }
 
-        if (sampleCounter == 0)
-            buzzer.sample();
-        sampleCounter = (sampleCounter + 1) % SAMPLE_SKIP;
-
         if (screen.done)
         {
             buzzer.stop();
             return 0;
+        }
+
+        if (screen.reset)
+        {
+            spectrum.reset();
+            screen.reset = false;
         }
     }
 }

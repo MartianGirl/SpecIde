@@ -11,11 +11,12 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     uint32_t rgba = 0xC0C0C0FF;
     uint_fast16_t a = 0x0000;
     uint_fast8_t k[8];
-    bool vSync, hSync, blank;
+    bool vSync, hSync, vBlank, hBlank;
     sc0.setRgbaInput(&rgba);
     sc0.setVSyncInput(&vSync);
     sc0.setHSyncInput(&hSync);
-    sc0.setBlankInput(&blank);
+    sc0.setHBlankInput(&hBlank);
+    sc0.setVBlankInput(&vBlank);
     sc0.setKeyboardPort(&a, k);
     sc0.open();
     sc0.update();
@@ -25,7 +26,8 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     sc1.setRgbaInput(&rgba);
     sc1.setVSyncInput(&vSync);
     sc1.setHSyncInput(&hSync);
-    sc1.setBlankInput(&blank);
+    sc1.setHBlankInput(&hBlank);
+    sc1.setVBlankInput(&vBlank);
     sc1.setKeyboardPort(&a, k);
     sc1.open();
     sc1.update();
@@ -34,24 +36,25 @@ BOOST_AUTO_TEST_CASE(constructors_test)
 
 BOOST_AUTO_TEST_CASE(update_test)
 {
-    Screen sc0(1);
+    Screen sc0(2);
     sc0.open();
 
     size_t c = 0;
     uint32_t pixel = 0;
-    bool vSync, hSync, blank;
+    bool vSync, hSync, hBlank, vBlank;
     sc0.setRgbaInput(&pixel);
     sc0.setVSyncInput(&vSync);
     sc0.setHSyncInput(&hSync);
-    sc0.setBlankInput(&blank);
+    sc0.setHBlankInput(&hBlank);
+    sc0.setVBlankInput(&vBlank);
     for (size_t f = 0; f < 2000; ++f)
     {
         for (size_t y = 0; y < 312; ++y)
         {
             for (size_t x = 0; x < 448; ++x)
             {
-                blank = ((x >= 320) && (x <= 415))
-                    || ((y >= 248) && (y <= 255));
+                hBlank = ((x >= 320) && (x <= 415));
+                vBlank = ((y >= 248) && (y <= 255));
                 hSync = (x >= 336) && (x <= 367);
                 vSync = (y >= 248) && (y <= 251);
                 c = (c + 1) % 1000;

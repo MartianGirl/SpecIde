@@ -21,7 +21,7 @@ ULA::ULA() :
     dataLatch(*(reinterpret_cast<uint8_t*>(&dataReg) + 0)),
     attrLatch(*(reinterpret_cast<uint8_t*>(&attrReg) + 0)),
 #endif
-    blank(false), display(false),
+    hBlank(false), vBlank(false), display(false),
     pixelStart(0x000), pixelEnd(0x0FF),
     hBorderStart(0x100), hBorderEnd(0x1BF),
     hBlankStart(0x140), hBlankEnd(0x19F),
@@ -65,8 +65,8 @@ void ULA::clock()
     vSync = ((scan & 0x0FC) == 0x0F8);
     // vSync = (scan >= vSyncStart) && (scan <= vSyncEnd);
 
-    blank = ((scan & 0x0F8) == 0x0F8)
-        || ((pixel >= hBlankStart) && (pixel <= hBlankEnd));
+    vBlank = ((scan & 0x0F8) == 0x0F8);
+    hBlank = ((pixel >= hBlankStart) && (pixel <= hBlankEnd));
     display = (pixel < 0x100) && (scan < 0x0C0);
 
     // 2. Generate video data.
@@ -179,7 +179,7 @@ void ULA::clock()
     }
 
     // 4. Generate video signal.
-    if (!blank)
+    if (!(hBlank || vBlank))
     {
         // 4.a. Generate colours.
         rgba = colourTable[((data & 0x80) ^ (attr & flash)) | (attr & 0x7F)];
