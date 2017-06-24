@@ -27,6 +27,7 @@ class Buzzer : public sf::SoundStream
         size_t wrSample;
 
         uint_fast8_t *source;
+        uint_fast8_t *tapeIn;
 
         size_t millis;  // Dummy
 
@@ -35,9 +36,10 @@ class Buzzer : public sf::SoundStream
             rdBuffer(0), wrBuffer(1),
             wrSample(0) {}
 
-        bool open(uint_fast8_t* src, size_t sampleRate)
+        bool open(uint_fast8_t* src, uint_fast8_t* ear, size_t sampleRate)
         {
             source = src;
+            tapeIn = ear;
             initialize(1, static_cast<sf::Uint32>(sampleRate));
             setAttenuation(0);
             setVolume(100);
@@ -67,7 +69,7 @@ class Buzzer : public sf::SoundStream
         {
             buffers[wrBuffer][wrSample] = 0x0000;
             buffers[wrBuffer][wrSample] += (*source & 0x10) ? 0x3FFF : -0x3FFF;
-            buffers[wrBuffer][wrSample] += (*source & 0x08) ? 0x07FF : -0x07FF;
+            buffers[wrBuffer][wrSample] += (*tapeIn & 0x40) ? 0x07FF : -0x07FF;
             ++wrSample;
             if (wrSample == MAX_SAMPLES)
             {

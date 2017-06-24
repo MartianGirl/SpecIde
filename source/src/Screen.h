@@ -25,6 +25,7 @@ class Screen : public GraphicWindow
         Screen(size_t scale = 1);
 
         bool done, reset;
+        bool rewind, play;
 
         size_t scale;
         size_t xSize, ySize;

@@ -17,6 +17,14 @@ include_directories(${SFML_INCLUDE_DIRS})
 include_directories(${SFML_INCLUDE_DIR})
 
 # Add the test executable
+add_executable(TZXFileTest
+    TZXFileTest.cc
+    ${PROJECT_SOURCE_DIR}/src/TZXFile.cc)
+target_link_libraries(TZXFileTest
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${SFML_LIBRARIES}
+    ${SFML_DEPENDENCIES})
+
 add_executable(GraphicWindowTest
     GraphicWindowTest.cc
     ${PROJECT_SOURCE_DIR}/src/GraphicWindow.cc)
@@ -163,5 +171,6 @@ install(TARGETS
     ComputerTest SpectrumTest ULATest
     CPUTest Z80Test Z80AluTest Z80InterruptTest Z80JumpTest Z80BitTest
     MemoryTest Z80RegisterTest
+    TZXFileTest
     RUNTIME
     DESTINATION ${PROJECT_INSTALL_DIR}/tst)

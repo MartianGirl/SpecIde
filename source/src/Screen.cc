@@ -3,8 +3,9 @@
 using namespace sf;
 
 Screen::Screen(size_t scale) :
-    GraphicWindow(352 * scale, 304 * scale, "SpecIde"),
+    GraphicWindow(352 * scale, 300 * scale, "SpecIde"),
     done(false), reset(false),
+    rewind(false), play(false),
     scale(scale),
     xSize(352), ySize(304),
     xPos(0), yPos(0),
@@ -31,7 +32,7 @@ bool Screen::update()
     // If not blanking, draw.
     if (!(*hBlankInput || *vBlankInput))
     {
-        if (yPos > 3 && yPos < 308)
+        if (yPos > 3 && yPos < 304)
             pixels[(yPos - 4) * xSize + xPos] = *rgbaInput;
         ++xPos;
     }
@@ -80,6 +81,8 @@ void Screen::pollEvents()
             case Event::KeyReleased:
                 if ((Keyboard::isKeyPressed(Keyboard::F10))) done = true;
                 if ((Keyboard::isKeyPressed(Keyboard::F5))) reset = true;
+                if ((Keyboard::isKeyPressed(Keyboard::F11))) play = true;
+                if ((Keyboard::isKeyPressed(Keyboard::F12))) rewind = true;
 
                 keyboardDataOut[0] = 0xFF &
                     ((Keyboard::isKeyPressed(Keyboard::B)) ? 0xEF : 0xFF) &

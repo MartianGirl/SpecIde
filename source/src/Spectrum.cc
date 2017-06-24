@@ -26,7 +26,7 @@ Spectrum::Spectrum() :
 {
     size_t pos = 0;
     char c;
-    std::ifstream ifs("48.rom", std::ifstream::binary);
+    ifstream ifs("48.rom", ifstream::binary);
     while (ifs.get(c))
         rom[0].memory[pos++] = c;
 }
@@ -44,10 +44,7 @@ void Spectrum::clock()
     else if ((io_ == false) && (wr_ == false)) // Is Z80 mastering and writing?
         ula.d = z80.d;
 
-    // std::cout << "Pixel counter is: " << ula.pixel;
-    // std::cout << " (" << (ula.pixel & 0x0F) << ")" << std::endl;
     ula.clock();
-    // std::cout << "CPUwait is" << ula.cpuWait << std::endl;
     z80.c = ula.c;
 
     // Bank 0: 0000h - ROM

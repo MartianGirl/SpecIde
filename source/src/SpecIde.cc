@@ -10,6 +10,7 @@
 #include "Spectrum.h"
 #include "Screen.h"
 #include "Buzzer.h"
+#include "TZXFile.h"
 
 #include "config.h"
 
@@ -19,13 +20,18 @@ constexpr size_t CLOCK_FREQ = 7000000;
 constexpr size_t SAMPLE_RATE = 44100;
 constexpr size_t SAMPLE_SKIP = CLOCK_FREQ / SAMPLE_RATE;
 
-int main()
+int main(int argc, char* argv[])
 {
     using namespace std::this_thread;
     using namespace std::chrono;
 
     cout << "SpecIde Version " << SPECIDE_VERSION_MAJOR;
     cout << "." << SPECIDE_VERSION_MINOR << endl;
+
+    TZXFile tzx;
+    bool tapeUpdate = false;
+    if (argc == 2)
+        tzx.load(argv[1]);
 
     // Create a Spectrum
     Spectrum spectrum;
@@ -41,7 +47,7 @@ int main()
     cout << "Opening sound at " << SAMPLE_RATE << " kHz." << endl;
     cout << "Sampling each " << SAMPLE_SKIP << " cycles." << endl;
     Buzzer buzzer;
-    buzzer.open(&spectrum.ula.ioPortOut, SAMPLE_RATE);
+    buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.ioPortIn, SAMPLE_RATE);
 
     size_t sampleCounter = 0;
 
@@ -59,6 +65,13 @@ int main()
     {
         // Update Spectrum hardware.
         spectrum.clock();
+
+        tapeUpdate = !tapeUpdate;
+        if (tapeUpdate)
+        {
+            spectrum.ula.ioPortIn &= 0xBF;
+            spectrum.ula.ioPortIn |= (tzx.play() & 0x40);
+        }
 
         // Sample sound outputs.
         if (sampleCounter == 0)
@@ -87,6 +100,20 @@ int main()
         {
             spectrum.reset();
             screen.reset = false;
+        }
+
+        if (screen.rewind)
+        {
+            tzx.rewind();
+            screen.rewind = false;
+        }
+
+        if (screen.play)
+        {
+            if (tzx.playing == false) tzx.start();
+            else tzx.stop();
+            screen.play = false;
+
         }
     }
 }
