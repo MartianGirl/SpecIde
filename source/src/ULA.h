@@ -61,6 +61,7 @@ class ULA
         // Port 0xFE
         uint_fast8_t ioPortIn;
         uint_fast8_t ioPortOut;
+        int_fast32_t capacitor;
 
         // Keyboard half rows
         uint_fast8_t keys[8];

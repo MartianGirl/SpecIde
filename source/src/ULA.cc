@@ -25,12 +25,13 @@ ULA::ULA() :
     pixelStart(0x000), pixelEnd(0x0FF),
     hBorderStart(0x100), hBorderEnd(0x1BF),
     hBlankStart(0x140), hBlankEnd(0x19F),
-    hSyncStart(0x158), hSyncEnd(0x177),
+    // hSyncStart(0x150), hSyncEnd(0x16F),     // ULA 5C (Issue 2)
+    hSyncStart(0x158), hSyncEnd(0x177),     // ULA 6C (Issue 3)
     scanStart(0x000), scanEnd(0x0BF),
     vBorderStart(0x0C0), vBorderEnd(0x137),
     vBlankStart(0x0F8), vBlankEnd(0x0FF),
     vSyncStart(0x0F8), vSyncEnd(0x0FB),
-    ioPortIn(0xFF), ioPortOut(0x00),
+    ioPortIn(0xFF), ioPortOut(0x00), capacitor(0),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF)
 {
@@ -158,7 +159,7 @@ void ULA::clock()
         {
             if ((z80_c & SIGNAL_RD_) == 0x0000)
             {
-                ioPortIn |= 0x1F;
+                ioPortIn |= 0xBF;
                 if ((z80_a & 0x8000) == 0x0000) ioPortIn &= keys[0];
                 if ((z80_a & 0x4000) == 0x0000) ioPortIn &= keys[1];
                 if ((z80_a & 0x2000) == 0x0000) ioPortIn &= keys[2];
@@ -177,6 +178,16 @@ void ULA::clock()
         }
         z80_c_delayed = z80_c;
     }
+
+    // First attempt at MIC/EAR feedback loop.
+    // Let's keep this here for the moment.
+    capacitor += ((ioPortOut & 0x10) == 0x00) ? -1 : 11; // Issue 3
+    // capacitor += ((ioPortOut & 0x18) == 0x00) ? -1 : 11; // Issue 2
+    if (capacitor < 0) capacitor = 0;
+    if (capacitor > 5600) capacitor = 5600;
+                
+    ioPortIn &= 0xBF;
+    ioPortIn |= (capacitor == 0) ? 0x00 : 0x40;
 
     // 4. Generate video signal.
     if (!(hBlank || vBlank))

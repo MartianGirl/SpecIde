@@ -66,11 +66,14 @@ int main(int argc, char* argv[])
         // Update Spectrum hardware.
         spectrum.clock();
 
-        tapeUpdate = !tapeUpdate;
-        if (tapeUpdate)
+        if (tzx.playing)
         {
-            spectrum.ula.ioPortIn &= 0xBF;
-            spectrum.ula.ioPortIn |= (tzx.play() & 0x40);
+            tapeUpdate = !tapeUpdate;
+            if (tapeUpdate)
+            {
+                spectrum.ula.ioPortIn &= 0xBF;
+                spectrum.ula.ioPortIn |= (tzx.play() & 0x40);
+            }
         }
 
         // Sample sound outputs.
