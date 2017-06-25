@@ -18,10 +18,6 @@ Z80Register::Z80Register() :
 {
 }
 
-Z80Register::~Z80Register()
-{
-}
-
 void Z80Register::setw(uint_fast16_t value)
 {
     reg = value;

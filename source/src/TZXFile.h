@@ -24,6 +24,7 @@ enum class Stages
     PILOT,
     SYNC_ONE,
     SYNC_TWO,
+    PULSES,
     DATA,
     PAUSE,
     DONE
@@ -32,6 +33,7 @@ enum class Stages
 class TZXBlock
 {
     public:
+        string type;
         size_t id;
         size_t pilotPulseLength;
         size_t syncOnePulseLength;
@@ -51,6 +53,7 @@ class TZXFile
 {
     public:
         uint8_t magic[8];
+        bool isTap;
 
         vector<uint8_t> data;
         uint8_t major, minor;
@@ -83,6 +86,7 @@ class TZXFile
         bool isLastBlock();
         bool getBlock();
         void dumpBlockInfo();
+        size_t dumpArchiveInfo();
 };
 
 // vim: et:sw=4:ts=4:

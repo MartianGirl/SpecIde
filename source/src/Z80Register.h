@@ -14,7 +14,6 @@ class Z80Register
 {
     public:
         Z80Register();
-        virtual ~Z80Register();
 
         void setw(uint_fast16_t value);
         uint_fast16_t getw(void);

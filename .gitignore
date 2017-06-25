@@ -41,5 +41,8 @@ SpecIde
 *.pdb
 *.manifest
 
-# Ignore .scr files which are used in the ULA tests.
+# Ignore Spectrum files for testing.
+*.rom
 *.scr
+*.tap
+*.tzx
