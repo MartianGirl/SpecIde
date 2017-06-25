@@ -139,12 +139,12 @@ bool TZXFile::getBlock()
         block.syncTwoPulseLength = 735;
         block.zeroPulseLength = 855;
         block.onePulseLength = 1710;
-        block.pause = 1000;
         blockDataLength = data[pointer + 1] * 0x100 + data[pointer];
         block.data.assign(
                 &data[pointer + 2],
                 &data[pointer + 2 + blockDataLength]);
         block.pilotLength = (block.data[0] & 0x80) ? 3223 : 8063;
+        block.pause = (block.data[0] & 0x80) ? 10000 : 1000;
 
         nextBlock += blockDataLength + 2;   // Tag(1) + Pause(2) + Length(2) + BDL
         stage = Stages::PILOT;
@@ -348,7 +348,7 @@ size_t TZXFile::dumpArchiveInfo()
     size_t index = 4;
 
     cout << "--- Archive info block ---" << endl;
-    for (size_t i = 0; i < numStrings; ++i)
+    for (size_t ii = 0; ii < numStrings; ++ii)
     {
         switch (data[pointer + index])
         {
@@ -366,8 +366,8 @@ size_t TZXFile::dumpArchiveInfo()
 
         len = data[pointer + index + 1];
         text.clear();
-        for (size_t i = 0; i < len; ++i)
-            text.push_back(static_cast<char>(data[pointer + index + 2 + i]));
+        for (size_t jj = 0; jj < len; ++jj)
+            text.push_back(static_cast<char>(data[pointer + index + 2 + jj]));
 
         cout << tag << text << endl;
         index += len + 2;
