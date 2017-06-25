@@ -31,7 +31,7 @@ ULA::ULA() :
     vBorderStart(0x0C0), vBorderEnd(0x137),
     vBlankStart(0x0F8), vBlankEnd(0x0FF),
     vSyncStart(0x0F8), vSyncEnd(0x0FB),
-    ioPortIn(0xFF), ioPortOut(0x00), capacitor(0),
+    ioPortIn(0xFF), ioPortOut(0x00), capacitor(0), tapeIn(0),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF)
 {
@@ -151,6 +151,16 @@ void ULA::clock()
     else
         c |= SIGNAL_INT_;
 
+    // First attempt at MIC/EAR feedback loop.
+    // Let's keep this here for the moment.
+    capacitor += ((ioPortOut & 0x10) == 0x00) ? -1 : 11; // Issue 3
+    // capacitor += ((ioPortOut & 0x18) == 0x00) ? -1 : 11; // Issue 2
+    if ((tapeIn & 0xC0) == 0x80) capacitor = 0;
+    if ((tapeIn & 0xC0) == 0xC0) capacitor = 220;
+    if (capacitor < 0) capacitor = 0;
+    if (capacitor > 5600) capacitor = 5600;
+    ioPortIn &= 0xBF;
+    ioPortIn |= (capacitor == 0) ? 0x00 : 0x40;
     if (cpuClock)
     {
         // We read keyboard if we're reading the ULA port, during TW.
@@ -179,15 +189,6 @@ void ULA::clock()
         z80_c_delayed = z80_c;
     }
 
-    // First attempt at MIC/EAR feedback loop.
-    // Let's keep this here for the moment.
-    capacitor += ((ioPortOut & 0x10) == 0x00) ? -1 : 11; // Issue 3
-    // capacitor += ((ioPortOut & 0x18) == 0x00) ? -1 : 11; // Issue 2
-    if (capacitor < 0) capacitor = 0;
-    if (capacitor > 5600) capacitor = 5600;
-                
-    ioPortIn &= 0xBF;
-    ioPortIn |= (capacitor == 0) ? 0x00 : 0x40;
 
     // 4. Generate video signal.
     if (!(hBlank || vBlank))

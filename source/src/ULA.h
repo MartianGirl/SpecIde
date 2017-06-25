@@ -62,6 +62,7 @@ class ULA
         uint_fast8_t ioPortIn;
         uint_fast8_t ioPortOut;
         int_fast32_t capacitor;
+        uint_fast8_t tapeIn;
 
         // Keyboard half rows
         uint_fast8_t keys[8];

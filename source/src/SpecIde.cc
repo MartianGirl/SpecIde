@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     cout << "Opening sound at " << SAMPLE_RATE << " kHz." << endl;
     cout << "Sampling each " << SAMPLE_SKIP << " cycles." << endl;
     Buzzer buzzer;
-    buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.ioPortIn, SAMPLE_RATE);
+    buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
 
     size_t sampleCounter = 0;
 
@@ -70,11 +70,10 @@ int main(int argc, char* argv[])
         {
             tapeUpdate = !tapeUpdate;
             if (tapeUpdate)
-            {
-                spectrum.ula.ioPortIn &= 0xBF;
-                spectrum.ula.ioPortIn |= (tzx.play() & 0x40);
-            }
+                spectrum.ula.tapeIn = (tzx.play() & 0x40) | 0x80;
         }
+        else
+            spectrum.ula.tapeIn = 0x00;
 
         // Sample sound outputs.
         if (sampleCounter == 0)

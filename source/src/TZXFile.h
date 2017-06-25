@@ -87,6 +87,7 @@ class TZXFile
         bool getBlock();
         void dumpBlockInfo();
         size_t dumpArchiveInfo();
+        size_t dumpComment();
 };
 
 // vim: et:sw=4:ts=4:

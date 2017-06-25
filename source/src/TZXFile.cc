@@ -280,6 +280,18 @@ bool TZXFile::getBlock()
                 ++nextBlock;
                 break;
 
+            case 0x2A:  // Stop the tape if in 48K mode.
+                block.type = "Stop the tape if in 48K mode.";
+                playing = false;
+                stage = Stages::STOPPED;
+                nextBlock += 5;
+                break;
+
+            case 0x30:  // Text description.
+                block.type = "Text description.";
+                nextBlock += dumpComment() + 2;
+                break;
+
             case 0x32:  // Archive info.
                 block.type = "Archive info.";
                 nextBlock += dumpArchiveInfo() + 3;
@@ -363,6 +375,18 @@ size_t TZXFile::dumpArchiveInfo()
 
     cout << pointer + index << endl;
     cout << nextBlock + length << endl;
+    return length;
+}
+
+size_t TZXFile::dumpComment()
+{
+    string text;
+    size_t length = data[pointer + 1];
+
+    for (size_t i = 0; i < length; ++i)
+        text.push_back(static_cast<char>(data[pointer + 2 + i]));
+    cout << "Comment: " << text << endl;
+
     return length;
 }
 
