@@ -396,12 +396,10 @@ void TZXFile::getNextSample()
     if (numSamples % pulseLength == 0)
     {
         sample = ~sample;
+        if (numSamples == 0)
+            getNextPulse();
     }
     
-    if (numSamples == 0)
-    {
-        getNextPulse();
-    }
 }
 
 void TZXFile::getNextPulse()
@@ -480,15 +478,21 @@ void TZXFile::getNextPulse()
                 }
                 // Another possibility is that we have finished with the *used*
                 // bits in the last byte.
-                else if ((numByte == (block.data.size() - 1))
-                        && (numBit == block.usedBitsInLastByte))
-                {
-                    stage = Stages::PAUSE;
-                }
+                //else if ((numByte == (block.data.size() - 1))
+                //        && (numBit == block.usedBitsInLastByte))
+                //{
+                //    stage = Stages::PAUSE;
+                //}
                 break;
 
             case Stages::PAUSE:
-                cout << "Pause." << endl;
+                cout << "Last edge." << endl;
+                pulseLength = 35000;
+                numPulses = 1;
+                stage = Stages::PAUSE_ZERO;
+
+            case Stages::PAUSE_ZERO:
+                cout << "Silence." << endl;
                 sample = 0x00;
                 if (block.pause)
                 {

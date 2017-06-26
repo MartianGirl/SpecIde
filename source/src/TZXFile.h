@@ -27,6 +27,7 @@ enum class Stages
     PULSES,
     DATA,
     PAUSE,
+    PAUSE_ZERO,
     DONE
 };
 
