@@ -431,7 +431,7 @@ void TZXFile::getNextPulse()
                 cout << "Sync 1." << endl;
                 pulseLength = block.syncOnePulseLength;
                 numPulses = 1;
-                sample = 0x00;
+                //sample = 0x00;
                 stage = Stages::SYNC_TWO;
                 break;
 
@@ -439,7 +439,7 @@ void TZXFile::getNextPulse()
                 cout << "Sync 2." << endl;
                 pulseLength = block.syncTwoPulseLength;
                 numPulses = 1;
-                sample = 0xFF;
+                //sample = 0xFF;
                 stage = Stages::DATA;
                 break;
 
@@ -476,33 +476,28 @@ void TZXFile::getNextPulse()
                     else
                         stage = Stages::PAUSE;
                 }
-                // Another possibility is that we have finished with the *used*
-                // bits in the last byte.
-                //else if ((numByte == (block.data.size() - 1))
-                //        && (numBit == block.usedBitsInLastByte))
-                //{
-                //    stage = Stages::PAUSE;
-                //}
                 break;
 
             case Stages::PAUSE:
                 cout << "Last edge." << endl;
-                pulseLength = 35000;
-                numPulses = 1;
-                stage = Stages::PAUSE_ZERO;
-
-            case Stages::PAUSE_ZERO:
-                cout << "Silence." << endl;
-                sample = 0x00;
                 if (block.pause)
                 {
-                    pulseLength = 3500 * block.pause; // 1 millisecond = 3500 T-States.
+                    pulseLength = 3500; // 1 millisecond = 3500 T-States.
                     numPulses = 1;
+                    stage = Stages::PAUSE_ZERO;
                 }
                 else
                 {
+                    stage = Stages::STOPPED;
                     again = true;
                 }
+                break;
+
+            case Stages::PAUSE_ZERO:
+                cout << "Silence." << endl;
+                pulseLength = 3500 * (block.pause - 1);
+                numPulses = 1;
+                sample = 0x00;
                 stage = Stages::STOPPED;
                 break;
 

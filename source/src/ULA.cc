@@ -146,17 +146,17 @@ void ULA::clock()
 
     // 3. ULA port & Interrupt.
     c = z80_c;
-    if ((scan == vSyncStart) && (pixel < 64))
+    if ((scan == vSyncStart) && (pixel > 415))
         c &= ~SIGNAL_INT_;
     else
         c |= SIGNAL_INT_;
 
     // First attempt at MIC/EAR feedback loop.
     // Let's keep this here for the moment.
-    capacitor += ((ioPortOut & 0x10) == 0x00) ? -1 : 11; // Issue 3
-    // capacitor += ((ioPortOut & 0x18) == 0x00) ? -1 : 11; // Issue 2
+    capacitor += ((ioPortOut & 0x10) == 0x00) ? -1 : 1; // Issue 3
+    // capacitor += ((ioPortOut & 0x18) == 0x00) ? -1 : 1; // Issue 2
     if ((tapeIn & 0xC0) == 0x80) capacitor = 0;
-    if ((tapeIn & 0xC0) == 0xC0) capacitor = 220;
+    if ((tapeIn & 0xC0) == 0xC0) capacitor = 1;
     if (capacitor < 0) capacitor = 0;
     if (capacitor > 5600) capacitor = 5600;
     ioPortIn &= 0xBF;
