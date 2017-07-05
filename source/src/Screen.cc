@@ -3,11 +3,11 @@
 using namespace sf;
 
 Screen::Screen(size_t scale) :
-    GraphicWindow(352 * scale, 300 * scale, "SpecIde"),
+    GraphicWindow(328 * scale, 264 * scale, "SpecIde"),
     done(false), reset(false),
     rewind(false), play(false),
     scale(scale),
-    xSize(352), ySize(304),
+    xSize(328), ySize(264),
     xPos(0), yPos(0),
     vSyncDelayed(false),
     hSyncDelayed(false),
@@ -32,8 +32,8 @@ bool Screen::update()
     // If not blanking, draw.
     if (!(*hBlankInput || *vBlankInput))
     {
-        if (yPos > 3 && yPos < 304)
-            pixels[(yPos - 4) * xSize + xPos] = *rgbaInput;
+        if ((yPos > 23 && yPos < 288) && (xPos > 23 && xPos < 352))
+            pixels[(yPos - 24) * xSize + (xPos - 24)] = *rgbaInput;
         ++xPos;
     }
 

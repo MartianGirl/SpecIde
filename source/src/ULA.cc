@@ -68,7 +68,7 @@ void ULA::clock()
 
     vBlank = ((scan & 0x0F8) == 0x0F8);
     hBlank = ((pixel >= hBlankStart) && (pixel <= hBlankEnd));
-    display = (pixel < 0x100) && (scan < 0x0C0);
+    display = (pixel < hBorderStart) && (scan < vBorderStart);
 
     // 2. Generate video data.
     if (display)
@@ -146,7 +146,7 @@ void ULA::clock()
 
     // 3. ULA port & Interrupt.
     c = z80_c;
-    if ((scan == vSyncStart) && (pixel > 415))
+    if ((scan == 0xF8) && (pixel > 1 && pixel < 0x042)) 
         c &= ~SIGNAL_INT_;
     else
         c |= SIGNAL_INT_;
@@ -191,7 +191,7 @@ void ULA::clock()
 
 
     // 4. Generate video signal.
-    if (!(hBlank || vBlank))
+    // if (!(hBlank || vBlank))
     {
         // 4.a. Generate colours.
         rgba = colourTable[((data & 0x80) ^ (attr & flash)) | (attr & 0x7F)];
@@ -216,7 +216,7 @@ void ULA::clock()
 
     // 5. Update counters
     pixel = (pixel + 1) % maxPixel;
-    if (pixel == hSyncStart)
+    if (pixel == 0)
     {
         scan = (scan + 1) % maxScan;
         if (scan == vBlankEnd)
