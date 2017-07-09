@@ -25,16 +25,16 @@ ULA::ULA() :
     pixelStart(0x000), pixelEnd(0x0FF),
     hBorderStart(0x100), hBorderEnd(0x1BF),
     hBlankStart(0x140), hBlankEnd(0x19F),
-    // hSyncStart(0x150), hSyncEnd(0x16F),     // ULA 5C (Issue 2)
-    hSyncStart(0x158), hSyncEnd(0x177),     // ULA 6C (Issue 3)
+    hSyncStart(0x150), hSyncEnd(0x16F),     // ULA 5C (Issue 2)
+    //hSyncStart(0x158), hSyncEnd(0x177),     // ULA 6C (Issue 3)
     scanStart(0x000), scanEnd(0x0BF),
     vBorderStart(0x0C0), vBorderEnd(0x137),
     vBlankStart(0x0F8), vBlankEnd(0x0FF),
     vSyncStart(0x0F8), vSyncEnd(0x0FB),
     ioPortIn(0xFF), ioPortOut(0x00), capacitor(0), tapeIn(0),
-    c00(993), c01(972), c10(972), c11(972),
-    //tensions{391, 728, 3653, 3790}, // ULA 5C (Issue 2)
-    tensions{342, 652, 3591, 3753}, // ULA 6C (Issue 3)
+    c00(993), c01(972), c10(492), c11(492),
+    tensions{391, 728, 3653, 3790}, // ULA 5C (Issue 2)
+    //tensions{342, 652, 3591, 3753}, // ULA 6C (Issue 3)
     outputCurr(0), outputLast(0), vStart(0), vEnd(0), vDiff(0),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF)
@@ -69,6 +69,10 @@ ULA::ULA() :
         constants[i + 1024] = v01 * 1024 / 1000;
         constants[i + 2048] = v10 * 1024 / 1000;
         constants[i + 3072] = v11 * 1024 / 1000;
+        // cout << constants[i + 0] << " ";
+        // cout << constants[i + 1024] << " ";
+        // cout << constants[i + 2048] << " ";
+        // cout << constants[i + 3072] << " " << endl;
         v00 *= c00; v00 /= 1000;
         v01 *= c01; v01 /= 1000;
         v10 *= c10; v10 /= 1000;
@@ -90,6 +94,13 @@ void ULA::clock()
     hBlank = ((pixel >= hBlankStart) && (pixel <= hBlankEnd));
     display = (pixel < hBorderStart) && (scan < vBorderStart);
 
+    // This is the "dead cockroach modification".
+    //if ((z80_c & SIGNAL_IORQ_) == 0x0000)
+    //{
+        //z80_a &= 0xBFFF;
+        //z80_a |= 0x4000;
+    //}
+
     // 2. Generate video data.
     if (display)
     {
@@ -97,8 +108,8 @@ void ULA::clock()
         // T1 of a memory cycle can be detected by a falling edge on MREQ.
         // T2 of an I/O cycle can be detected by a falling edge on IORQ.
         memContention = ((z80_a & 0xC000) == 0x4000)
-            && ((~z80_c & z80_c_delayed & SIGNAL_MREQ_) == SIGNAL_MREQ_);
-        ioContention = ((z80_a & 0x0001) == 0x0000) 
+            && (((~z80_c & z80_c_delayed & SIGNAL_MREQ_) == SIGNAL_MREQ_));
+        ioContention = ((z80_a & 0x0001) == 0x0000)
             && ((~z80_c & z80_c_delayed & SIGNAL_IORQ_) == SIGNAL_IORQ_);
 
         // 2.b. Read from memory.
@@ -162,7 +173,7 @@ void ULA::clock()
         cpuWait = false;
     }
     
-    cpuClock = !cpuWait && ((pixel & 0x0001) == 0x0000);
+    cpuClock = !cpuWait && ((pixel & 0x0001) == 0x0001);
 
     // 3. ULA port & Interrupt.
     c = z80_c;

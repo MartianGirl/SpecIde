@@ -108,8 +108,7 @@ void TZXFile::parse(
                 }
 
                 // Pause. Add index always.
-                if (pause != 0)
-                    pulseData.push_back(3500 * pause);
+                pulseData.push_back(pause ? 3500 * pause : 3500);
                 indexData.insert(pulseData.size());
 
                 pointer += dataLength + 5;
@@ -161,10 +160,7 @@ void TZXFile::parse(
                 }
 
                 // Pause. Add index always.
-                if (pause != 0)
-                {
-                    pulseData.push_back(3500 * pause);
-                }
+                pulseData.push_back(pause ? 3500 * pause : 3500);
                 indexData.insert(pulseData.size());
 
                 pointer += dataLength + 19;
@@ -176,7 +172,7 @@ void TZXFile::parse(
                     + fileData[pointer + 1];
                 pilotLength = fileData[pointer + 4] * 0x100
                     + fileData[pointer + 3];
-                pilotLength += (pilotLength % 2) ? 0 : 1;   // Pilot should be odd
+                // pilotLength += (pilotLength % 2) ? 0 : 1;   // Pilot should be odd
 
                 // Pilot tone
                 pulseData.insert(pulseData.end(), pilotLength, pilotPulse);
@@ -270,31 +266,18 @@ void TZXFile::parse(
             case 0x20:
                 blockName = "Pause/Stop The Tape";
                 pause = fileData[pointer + 2] * 0x100 + fileData[pointer + 1];
+
+                // Pause = 0 means Stop The Tape. However, we'll insert
+                // one second pause to properly end the block.
+                {
+                    size_t delay = (pause != 0) ? pause : 1000;
+                    pulseData.push_back(3500 * delay);
+                }
+
+                indexData.insert(pulseData.size());
                 if (pause == 0)
-                {
                     stopData.insert(pulseData.size());
-                }
-                else
-                {
-                    // A pause block consists of a low pulse level of some
-                    // duration. To ensure that the last edge produced is
-                    // properly finished there should be at least 1 ms. pause
-                    // of the opposite level and only after that the pulse
-                    // should go low.
-                    // So, if we have an odd number of pulses, we end in high,
-                    // and we add a single pulse of the pause duration.
-                    // If we have an even number of pulses so far, we end in
-                    // low, and we need a pulse of the opposite level to form
-                    // the edge.
-                    if ((pulseData.size() % 2) == 0)
-                    {
-                        pulseData.push_back(3500);
-                        pulseData.push_back(3500 * (pause - 1));
-                    }
-                    else
-                        pulseData.push_back(3500 * pause);
-                    indexData.insert(pulseData.size());
-                }
+
                 pointer += 3;
                 break;
 
@@ -308,6 +291,23 @@ void TZXFile::parse(
             case 0x22:
                 blockName = "Group End";
                 ++pointer;
+                break;
+
+            case 0x24:
+                blockName = "Loop Start";
+                loopCounter = fileData[pointer + 2] * 0x100
+                    + fileData[pointer + 1];
+                pointer += 3;
+                loopStart = pointer;
+                break;
+
+            case 0x25:
+                blockName = "Loop End";
+                --loopCounter;
+                if (loopCounter)
+                    pointer = loopStart;
+                else
+                    pointer += 1;
                 break;
 
             case 0x2A:
@@ -329,6 +329,15 @@ void TZXFile::parse(
             case 0x33:
                 blockName = "Hardware Type";
                 pointer += 3 * fileData[pointer + 1] + 2;
+                break;
+
+            case 0x35:
+                blockName = "Custom Info";
+                dataLength = fileData[pointer + 20] * 0x1000000
+                    + fileData[pointer + 19] * 0x10000
+                    + fileData[pointer + 18] * 0x100
+                    + fileData[pointer + 17];
+                pointer += dataLength + 21;
                 break;
 
             case 0x5A:

@@ -50,6 +50,13 @@ void Tape::advance()
                 sample = pulseData[pointer];
                 ++pointer;
 
+                // If we reach an index, we mark it.
+                if (indexData.find(pointer) != indexData.end())
+                {
+                    cout << "Reached index: " << pointer << endl;
+                    index = pointer;
+                }
+
                 // If we find a stop point, stop and reset level.
                 if (stopData.find(pointer) != stopData.end())
                 {
@@ -58,12 +65,6 @@ void Tape::advance()
                     level = 0;
                 }
 
-                // If we reach an index, we mark it.
-                if (indexData.find(pointer) != indexData.end())
-                {
-                    cout << "Reached index: " << pointer << endl;
-                    index = pointer;
-                }
             }
             else
             // If we reach the end of the tape, stop, rewind

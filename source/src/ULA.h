@@ -7,6 +7,7 @@
  */
 
 #include <cstdint>
+#include <iostream>
 
 #include "Z80Defs.h"
 
@@ -61,7 +62,7 @@ class ULA
         // Port 0xFE
         uint_fast8_t ioPortIn;
         uint_fast8_t ioPortOut;
-        size_t capacitor;
+        int_fast32_t capacitor;
         uint_fast8_t tapeIn;
 
         // Values in EAR/MIC ULA pin (millivolts)
@@ -69,7 +70,7 @@ class ULA
         size_t tensions[4];
         size_t constants[4096];
         size_t outputCurr, outputLast;
-        size_t vStart, vEnd, vDiff;
+        int_fast32_t vStart, vEnd, vDiff;
 
         // Keyboard half rows
         uint_fast8_t keys[8];

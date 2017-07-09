@@ -26,7 +26,7 @@ class TZXFile
             magic { 'Z', 'X', 'T', 'a', 'p', 'e', '!', 0x1A },
                   magicIsOk(false),
                   majorVersion(0), minorVersion(0),
-                  pointer(0) {}
+                  pointer(0), loopStart(0), loopCounter(0) {}
 
         uint8_t magic[8];
         bool magicIsOk;
@@ -35,6 +35,8 @@ class TZXFile
         vector<uint8_t> fileData;
 
         size_t pointer;
+        size_t loopStart;
+        size_t loopCounter;
 
         void load(string const& fileName);
         void parse(

@@ -95,7 +95,8 @@ void Spectrum::clock()
         if (rd_ == false)
         {
             if (io_ == false)
-                z80.d = (z80.a & 0x0001) ? 0xFF : ula.d;
+                z80.d = ((ula.hiz == false) || ((z80.a & 0x0001) == 0x0000)) ?
+                    ula.d : 0xFF;
             else if (as_ == false)
                 z80.d = map[(z80.a & 0xC000) >> 14]->d;
         }
