@@ -18,7 +18,7 @@ add_executable(SpecIde SpecIde.cc
         CPU.cc Z80.cc ULA.cc
         Computer.cc Spectrum.cc
         Memory.cc Z80Register.cc Z80RegisterSet.cc Z80Decoder.cc
-        TZXFile.cc)
+        Tape.cc TAPFile.cc TZXFile.cc)
 target_link_libraries(SpecIde ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
 
 # Set version information in a config.h file.

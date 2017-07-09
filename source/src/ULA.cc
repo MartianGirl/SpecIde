@@ -146,7 +146,7 @@ void ULA::clock()
 
     // 3. ULA port & Interrupt.
     c = z80_c;
-    if ((scan == 0xF8) && (pixel > 1 && pixel < 0x042)) 
+    if ((scan == 0xF8) && (pixel < 64)) 
         c &= ~SIGNAL_INT_;
     else
         c |= SIGNAL_INT_;
@@ -164,26 +164,28 @@ void ULA::clock()
     if (cpuClock)
     {
         // We read keyboard if we're reading the ULA port, during TW.
-        if (((z80_a & 0x0001) == 0x0000)
-                && ((~z80_c & ~z80_c_delayed & SIGNAL_IORQ_) == SIGNAL_IORQ_))
+        if ((~z80_c & ~z80_c_delayed & SIGNAL_IORQ_) == SIGNAL_IORQ_)
         {
-            if ((z80_c & SIGNAL_RD_) == 0x0000)
+            if ((z80_a & 0x0001) == 0x0000)
             {
-                ioPortIn |= 0xBF;
-                if ((z80_a & 0x8000) == 0x0000) ioPortIn &= keys[0];
-                if ((z80_a & 0x4000) == 0x0000) ioPortIn &= keys[1];
-                if ((z80_a & 0x2000) == 0x0000) ioPortIn &= keys[2];
-                if ((z80_a & 0x1000) == 0x0000) ioPortIn &= keys[3];
-                if ((z80_a & 0x0800) == 0x0000) ioPortIn &= keys[4];
-                if ((z80_a & 0x0400) == 0x0000) ioPortIn &= keys[5];
-                if ((z80_a & 0x0200) == 0x0000) ioPortIn &= keys[6];
-                if ((z80_a & 0x0100) == 0x0000) ioPortIn &= keys[7];
-                d = ioPortIn;
-            }
+                if ((z80_c & SIGNAL_RD_) == 0x0000)
+                {
+                    ioPortIn |= 0xBF;
+                    if ((z80_a & 0x8000) == 0x0000) ioPortIn &= keys[0];
+                    if ((z80_a & 0x4000) == 0x0000) ioPortIn &= keys[1];
+                    if ((z80_a & 0x2000) == 0x0000) ioPortIn &= keys[2];
+                    if ((z80_a & 0x1000) == 0x0000) ioPortIn &= keys[3];
+                    if ((z80_a & 0x0800) == 0x0000) ioPortIn &= keys[4];
+                    if ((z80_a & 0x0400) == 0x0000) ioPortIn &= keys[5];
+                    if ((z80_a & 0x0200) == 0x0000) ioPortIn &= keys[6];
+                    if ((z80_a & 0x0100) == 0x0000) ioPortIn &= keys[7];
+                    d = ioPortIn;
+                }
 
-            if ((z80_c & SIGNAL_WR_) == 0x0000)
-            {
-                ioPortOut = d;
+                if ((z80_c & SIGNAL_WR_) == 0x0000)
+                {
+                    ioPortOut = d;
+                }
             }
         }
         z80_c_delayed = z80_c;

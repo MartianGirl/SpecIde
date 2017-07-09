@@ -10,7 +10,7 @@
 #include "Spectrum.h"
 #include "Screen.h"
 #include "Buzzer.h"
-#include "TZXFile.h"
+#include "Tape.h"
 
 #include "config.h"
 
@@ -28,10 +28,12 @@ int main(int argc, char* argv[])
     cout << "SpecIde Version " << SPECIDE_VERSION_MAJOR;
     cout << "." << SPECIDE_VERSION_MINOR << endl;
 
-    TZXFile tzx;
+    Tape tape;
     bool tapeUpdate = false;
     if (argc == 2)
-        tzx.load(argv[1]);
+    {
+        tape.load(argv[1]);
+    }
 
     // Create a Spectrum
     Spectrum spectrum;
@@ -66,14 +68,15 @@ int main(int argc, char* argv[])
         // Update Spectrum hardware.
         spectrum.clock();
 
-        if (tzx.playing)
+        if (tape.playing)
         {
             tapeUpdate = !tapeUpdate;
             if (tapeUpdate)
-                spectrum.ula.tapeIn = (tzx.play() & 0x40) | 0x80;
+            {
+                tape.advance();
+                spectrum.ula.tapeIn = (tape.level & 0x40) | 0x80;
+            }
         }
-        else
-            spectrum.ula.tapeIn = 0x00;
 
         // Sample sound outputs.
         if (sampleCounter == 0)
@@ -106,14 +109,13 @@ int main(int argc, char* argv[])
 
         if (screen.rewind)
         {
-            tzx.rewind();
+            tape.rewind();
             screen.rewind = false;
         }
 
         if (screen.play)
         {
-            if (tzx.playing == false) tzx.start();
-            else tzx.stop();
+            tape.play();
             screen.play = false;
 
         }

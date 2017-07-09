@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -18,75 +19,29 @@ using namespace std;
  * Spectrum EAR port.
  */
 
-enum class Stages
-{
-    STOPPED,
-    PILOT,
-    SYNC_ONE,
-    SYNC_TWO,
-    PULSES,
-    DATA,
-    PAUSE,
-    PAUSE_ZERO,
-    DONE
-};
-
-class TZXBlock
-{
-    public:
-        string type;
-        size_t id;
-        size_t pilotPulseLength;
-        size_t syncOnePulseLength;
-        size_t syncTwoPulseLength;
-        size_t zeroPulseLength;
-        size_t onePulseLength;
-        
-        size_t pilotLength;
-
-        size_t usedBitsInLastByte;
-        size_t pause;
-
-        vector<uint8_t> data;
-};
-
 class TZXFile
 {
     public:
-        uint8_t magic[8];
-        bool isTap;
+        TZXFile() :
+            magic { 'Z', 'X', 'T', 'a', 'p', 'e', '!', 0x1A },
+                  magicIsOk(false),
+                  majorVersion(0), minorVersion(0),
+                  pointer(0) {}
 
-        vector<uint8_t> data;
-        uint8_t major, minor;
+        uint8_t magic[8];
+        bool magicIsOk;
+        uint8_t majorVersion, minorVersion;
+
+        vector<uint8_t> fileData;
 
         size_t pointer;
-        size_t nextBlock;
 
-        TZXBlock block;
-        size_t pulseLength;
-        size_t numPulses;
-        size_t numSamples;
-        size_t numBit;
-        size_t numByte;
+        void load(string const& fileName);
+        void parse(
+                vector<size_t> &pulseData,
+                set<size_t> &indexData,
+                set<size_t> &stopData);
 
-        uint8_t byte;
-        uint8_t sample;
-        Stages stage;
-        bool playing;
-
-        TZXFile();
-        bool load(string const& fileName);
-        void getNextSample();
-        void getNextPulse();
-
-        void start();
-        void stop();
-        uint8_t play();
-        bool rewind();
-        bool advance();
-        bool isLastBlock();
-        bool getBlock();
-        void dumpBlockInfo();
         size_t dumpArchiveInfo();
         size_t dumpComment();
 };

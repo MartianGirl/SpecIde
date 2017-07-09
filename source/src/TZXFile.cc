@@ -1,49 +1,19 @@
 #include "TZXFile.h"
 
-TZXFile::TZXFile() :
-    magic { 'Z', 'X', 'T', 'a', 'p', 'e', '!', 0x1A },
-    isTap(false),
-    pointer(0), nextBlock(0),
-    pulseLength(0), numPulses(0), numSamples(0),
-    numBit(0), numByte(0),
-    byte(0x00), sample(0x00),
-    stage(Stages::STOPPED), playing(false)
-{
-}
-
 // This one opens a TZX file, loads its contents, tries to put nextBlock
 // to the beginning of the first block.
-bool TZXFile::load(string const& fileName)
+void TZXFile::load(string const& fileName)
 {
     char c;
 
-    // In case of object reuse (really?) don't drop previous data unless the
-    // new file actually exists and can be opened.
+    magicIsOk = false;
+
     ifstream ifs(fileName.c_str(), ifstream::binary);
     if (ifs.good())
     {
-        data.clear();
+        fileData.clear();
         while (ifs.get(c))
-            data.push_back(c);
-    }
-
-    size_t lastDot = fileName.find_last_of('.');
-    if (lastDot != string::npos)
-    {
-        string extension = fileName.substr(lastDot);
-        cout << "Extension: " << extension << endl;
-        for (size_t i = 0; i < extension.size(); ++i)
-        {
-            if (extension[i] >= 'A' && extension[i] <= 'Z')
-                extension[i] += ('a' - 'A');
-        }
-
-        cout << "Extension: " << extension << endl;
-        if (extension == ".tap")
-        {
-            cout << "TAP file." << endl;
-            isTap = true;
-        }
+            fileData.push_back(c);
     }
 
     // TZX header is:
@@ -53,288 +23,326 @@ bool TZXFile::load(string const& fileName)
     // 9   - Minor version number
     //
     // If the magic checks, store the version numbers.
-    if (isTap == false && equal(&magic[0x00], &magic[0x08], data.begin()))
+    if (equal(&magic[0x00], &magic[0x08], fileData.begin()))
     {
-        major = data[0x08];
-        minor = data[0x09];
-        nextBlock = 0x0A;
-        return true;
-    }
-
-    nextBlock = 0x00;   // 0x00 means no valid blocks.
-    return isTap;
-}
-
-void TZXFile::start()
-{
-    playing = true;
-    cout << "Starting tape." << endl;
-
-    if (stage == Stages::STOPPED)
-    {
-        getNextPulse();
+        majorVersion = fileData[0x08];
+        minorVersion = fileData[0x09];
+        magicIsOk = true;
     }
 }
 
-void TZXFile::stop()
+void TZXFile::parse(
+        vector<size_t> &pulseData,
+        set<size_t> &indexData,
+        set<size_t> &stopData)
 {
-    playing = false;
-    cout << "Stopping tape." << endl;
-}
 
-bool TZXFile::rewind()
-{
-    if (nextBlock)
+    size_t dataLength;
+    uint8_t flagByte;
+    uint8_t byte;
+    uint8_t blockId;
+
+    size_t pilotPulse;
+    size_t syncPulse1;
+    size_t syncPulse2;
+    size_t dataPulse0;
+    size_t dataPulse1;
+    size_t pilotLength;
+    size_t pause;
+    size_t bitsInLastByte;
+    size_t bitsInByte;
+
+    string blockName;
+
+    if (magicIsOk)
     {
-        cout << "Rewinding to the start." << endl;
-        nextBlock = isTap ? 0x00 : 0x0A;
-        sample = 0x00;
-        playing = false;
-        return true;
-    }
+        pointer = 0x0A;
+        pulseData.clear();
+        indexData.clear();
+        stopData.clear();
 
-    return false;
-}
-
-uint8_t TZXFile::play()
-{
-    uint8_t s;
-    if (playing)
-    {
-        s = sample;
-        getNextSample();
+        // We'll add a "Pause 1000ms" block, just in case.
+        fileData.push_back(0x20);
+        fileData.push_back(0xE8);
+        fileData.push_back(0x03);
     }
     else
-        s = 0;
+        return;
 
-    return s;
-}
-
-bool TZXFile::advance()
-{
-    if (nextBlock)
+    while (pointer < fileData.size())
     {
-        if (isLastBlock() == false)
-            pointer = nextBlock;
-        return true;
-    }
-
-    return false;
-}
-
-bool TZXFile::isLastBlock()
-{
-    return (nextBlock == data.size());
-}
-
-bool TZXFile::getBlock()
-{
-    size_t blockDataLength;
-
-    if (isTap)
-    {
-        block.type = "Standard Speed Data Block.";
-        block.pilotPulseLength = 2168;
-        block.syncOnePulseLength = 667;
-        block.syncTwoPulseLength = 735;
-        block.zeroPulseLength = 855;
-        block.onePulseLength = 1710;
-        blockDataLength = data[pointer + 1] * 0x100 + data[pointer];
-        block.data.assign(
-                &data[pointer + 2],
-                &data[pointer + 2 + blockDataLength]);
-        block.pilotLength = (block.data[0] & 0x80) ? 3223 : 8063;
-        block.pause = (block.data[0] & 0x80) ? 10000 : 1000;
-
-        nextBlock += blockDataLength + 2;   // Tag(1) + Pause(2) + Length(2) + BDL
-        stage = Stages::PILOT;
-    }
-    else
-    {
-        block.id = data[pointer];
-        block.pilotPulseLength = 0;
-        block.syncOnePulseLength = 0;
-        block.syncTwoPulseLength = 0;
-        block.zeroPulseLength = 0;
-        block.onePulseLength = 0;
-        block.pause = 0;
-        blockDataLength = 0;
-        block.pilotLength = 0;
-        block.usedBitsInLastByte = 8;
-        block.data.clear();
-
-        switch (block.id)
+        blockId = fileData[pointer];
+        switch (blockId)
         {
-            case 0x10:  // Standard Speed Data Block
-                block.type = "Standard Speed Data Block.";
-                block.pilotPulseLength = 2168;
-                block.syncOnePulseLength = 667;
-                block.syncTwoPulseLength = 735;
-                block.zeroPulseLength = 855;
-                block.onePulseLength = 1710;
-                block.pause =
-                    data[pointer + 2] * 0x100 + data[pointer + 1];
-                blockDataLength =
-                    data[pointer + 4] * 0x100 + data[pointer + 3];
-                block.data.assign(
-                        &data[pointer + 5],
-                        &data[pointer + 5 + blockDataLength]);
-                block.pilotLength = (block.data[0] & 0x80) ? 3223 : 8063;
+            case 0x10:
+                blockName = "Standard Speed Data";
+                pilotPulse = 2168;
+                syncPulse1 = 667;
+                syncPulse2 = 735;
+                dataPulse0 = 855;
+                dataPulse1 = 1710;
+                pause = fileData[pointer + 2] * 0x100
+                    + fileData[pointer + 1];
+                dataLength = fileData[pointer + 4] * 0x100
+                    + fileData[pointer + 3];
+                flagByte = fileData[pointer + 5];
+                pilotLength = (flagByte & 0x80) ? 3223 : 8063;
 
-                nextBlock += blockDataLength + 5;   // Tag(1) + Pause(2) + Length(2) + BDL
-                stage = Stages::PILOT;
-                break;
+                // Pilot tone
+                pulseData.insert(pulseData.end(), pilotLength, pilotPulse);
 
-            case 0x11:  // Turbo Speed Data Block
-                block.type = "Turbo Speed Data Block.";
-                block.pilotPulseLength =
-                    data[pointer + 2] * 0x100 + data[pointer + 1];
-                block.syncOnePulseLength =
-                    data[pointer + 4] * 0x100 + data[pointer + 3];
-                block.syncTwoPulseLength =
-                    data[pointer + 6] * 0x100 + data[pointer + 5];
-                block.zeroPulseLength =
-                    data[pointer + 8] * 0x100 + data[pointer + 7];
-                block.onePulseLength =
-                    data[pointer + 10] * 0x100 + data[pointer + 9];
-                block.pilotLength =
-                    data[pointer + 12] * 0x100 + data[pointer + 11];
-                block.usedBitsInLastByte = data[pointer + 13];
-                block.pause =
-                    data[pointer + 15] * 0x100 + data[pointer + 14];
-                blockDataLength =
-                    data[pointer + 18] * 0x10000 
-                    + data[pointer + 17] * 0x100
-                    + data[pointer + 16];
-                block.data.assign(
-                        &data[pointer + 19],
-                        &data[pointer + 19 + blockDataLength]);
+                // Sync pulses
+                pulseData.push_back(syncPulse1);
+                pulseData.push_back(syncPulse2);
 
-                nextBlock += blockDataLength + 19;
-                stage = Stages::PILOT;
-                break;
-
-            case 0x12:  // Pure Tone Block
-                block.type = "Pure Tone Block.";
-                block.pilotPulseLength =
-                    data[pointer + 2] * 0x100 + data[pointer + 1];
-                block.pilotLength =
-                    data[pointer + 4] * 0x100 + data[pointer + 3];
-
-                nextBlock += 5;
-                stage = Stages::PILOT;
-                break;
-
-            case 0x13:  // Pulse Sequence
-                block.type = "Pulse Sequence.";
-                block.pilotLength = data[pointer + 1];
-                blockDataLength = 2 * block.pilotLength;
-                block.data.assign(
-                        &data[pointer + 2],
-                        &data[pointer + 2 + blockDataLength]);
-                nextBlock += blockDataLength + 2;
-                stage = Stages::PULSES;
-                break;
-
-            case 0x14:  // Pure Data Block
-                block.type = "Pure Data Block.";
-                block.zeroPulseLength = data[pointer + 2] * 0x100 + data[pointer + 1];
-                block.onePulseLength = data[pointer + 4] * 0x100 + data[pointer + 3];
-                block.usedBitsInLastByte = data[pointer + 5];
-                block.pause = data[pointer + 7] * 0x100 + data[pointer + 6];
-                blockDataLength = 
-                    data[pointer + 10] * 0x10000
-                    + data[pointer + 9] * 0x100 
-                    + data[pointer + 8];
-                block.data.assign(
-                        &data[pointer + 11],
-                        &data[pointer + 11 + blockDataLength]);
-
-                nextBlock += blockDataLength + 11;
-                stage = Stages::DATA;
-                break;
-
-            case 0x20:  // Pause/Stop the tape.
-                block.type = "Pause/Stop the tape.";
-                block.pause = data[pointer + 2] * 0x100 + data[pointer + 1];
-                if (block.pause == 0)
+                // Data
+                for (size_t ii = 0; ii < dataLength; ++ii)
                 {
-                    playing = false;
-                    stage = Stages::STOPPED;
+                    byte = fileData[pointer + 5 + ii];
+                    for (size_t jj = 0; jj < 8; ++jj)
+                    {
+                        pulseData.insert(pulseData.end(),
+                                2, (byte & 0x80) ? dataPulse1 : dataPulse0);
+                        byte <<= 1;
+                    }
+                }
+
+                // Pause. Add index always.
+                if (pause != 0)
+                    pulseData.push_back(3500 * pause);
+                indexData.insert(pulseData.size());
+
+                pointer += dataLength + 5;
+                break;
+
+            case 0x11:
+                blockName = "Turbo Speed Data";
+                pilotPulse = fileData[pointer + 2] * 0x100
+                    + fileData[pointer + 1];
+                syncPulse1 = fileData[pointer + 4] * 0x100
+                    + fileData[pointer + 3];
+                syncPulse2 = fileData[pointer + 6] * 0x100
+                    + fileData[pointer + 5];
+                dataPulse0 = fileData[pointer + 8] * 0x100
+                    + fileData[pointer + 7];
+                dataPulse1 = fileData[pointer + 10] * 0x100
+                    + fileData[pointer + 9];
+                pilotLength = fileData[pointer + 12] * 0x100
+                    + fileData[pointer + 11];
+                pilotLength += (pilotLength % 2) ? 0 : 1;   // Pilot should be odd
+                bitsInLastByte = fileData[pointer + 13];
+                pause = fileData[pointer + 15] * 0x100
+                    + fileData[pointer + 14];
+                dataLength = fileData[pointer + 18] * 0x10000
+                    + fileData[pointer + 17] * 0x100
+                    + fileData[pointer + 16];
+                flagByte = fileData[pointer + 19];
+
+                // Pilot tone
+                pulseData.insert(pulseData.end(), pilotLength, pilotPulse);
+
+                // Sync pulses
+                pulseData.push_back(syncPulse1);
+                pulseData.push_back(syncPulse2);
+
+                // Data
+                for (size_t ii = 0; ii < dataLength; ++ii)
+                {
+                    byte = fileData[pointer + 19 + ii];
+
+                    bitsInByte = (ii == (dataLength - 1)) ? bitsInLastByte : 8;
+                    byte &= (0xFF << ((ii == (dataLength - 1)) ? (8 - bitsInLastByte) : 0));
+                    for (size_t jj = 0; jj < bitsInByte; ++jj)
+                    {
+                        pulseData.insert(pulseData.end(),
+                                2, (byte & 0x80) ? dataPulse1 : dataPulse0);
+                        byte <<= 1;
+                    }
+                }
+
+                // Pause. Add index always.
+                if (pause != 0)
+                {
+                    pulseData.push_back(3500 * pause);
+                }
+                indexData.insert(pulseData.size());
+
+                pointer += dataLength + 19;
+                break;
+
+            case 0x12:
+                blockName = "Pure Tone";
+                pilotPulse = fileData[pointer + 2] * 0x100
+                    + fileData[pointer + 1];
+                pilotLength = fileData[pointer + 4] * 0x100
+                    + fileData[pointer + 3];
+
+                // Pilot tone
+                pulseData.insert(pulseData.end(), pilotLength, pilotPulse);
+                pointer += 5;
+                break;
+
+            case 0x13:
+                blockName = "Sequence Of Pulses";
+                dataLength = fileData[pointer + 1];
+                for (size_t ii = 0; ii < dataLength; ++ii)
+                {
+                    size_t pulse =
+                        fileData[pointer + (2 * ii) + 3] * 0x100 +
+                        fileData[pointer + (2 * ii) + 2];
+                    pulseData.push_back(pulse);
+                }
+                pointer += (dataLength * 2) + 2;
+                break;
+
+            case 0x14:
+                blockName = "Pure Data";
+                dataPulse0 = fileData[pointer + 2] * 0x100
+                    + fileData[pointer + 1];
+                dataPulse1 = fileData[pointer + 4] * 0x100
+                    + fileData[pointer + 3];
+                bitsInLastByte = fileData[pointer + 5];
+                pause = fileData[pointer + 7] * 0x100
+                    + fileData[pointer + 6];
+                dataLength = fileData[pointer + 10] * 0x10000
+                    + fileData[pointer + 9] * 0x100
+                    + fileData[pointer + 8];
+                flagByte = fileData[pointer + 11];
+
+                // Data
+                for (size_t ii = 0; ii < dataLength; ++ii)
+                {
+                    byte = fileData[pointer + 11 + ii];
+
+                    bitsInByte = (ii == (dataLength - 1)) ? bitsInLastByte : 8;
+                    byte &= (0xFF << ((ii == (dataLength - 1)) ? (8 - bitsInLastByte) : 0));
+                    for (size_t jj = 0; jj < bitsInByte; ++jj)
+                    {
+                        pulseData.insert(pulseData.end(),
+                                2, (byte & 0x80) ? dataPulse1 : dataPulse0);
+                        byte <<= 1;
+                    }
+                }
+
+                // Pause. Add index only if there is a pause.
+                // (You usually don't want to start in the middle of 
+                // a SpeedLock block...)
+                if (pause != 0)
+                {
+                    pulseData.push_back(3500 * pause);
+                    indexData.insert(pulseData.size());
+                }
+
+                pointer += dataLength + 11;
+                break;
+
+            case 0x15:
+                blockName = "Direct Recording";
+                // Skipped for the moment.
+                dataLength = fileData[pointer + 8] * 0x10000
+                    + fileData[pointer + 7] * 0x100
+                    + fileData[pointer + 6];
+                pointer += dataLength + 9;
+                break;
+
+            case 0x16:
+            case 0x17:
+                blockName = "C64 Data";
+                // Skipped for the moment.
+                dataLength = fileData[pointer + 4] * 0x1000000
+                    + fileData[pointer + 3] * 0x10000
+                    + fileData[pointer + 2] * 0x100
+                    + fileData[pointer + 1];
+                pointer += dataLength + 1;
+                break;
+
+            case 0x18:
+            case 0x19:
+                blockName = "CSW/Generalized Data";
+                dataLength = fileData[pointer + 4] * 0x1000000
+                    + fileData[pointer + 3] * 0x10000
+                    + fileData[pointer + 2] * 0x100
+                    + fileData[pointer + 1];
+                pointer += dataLength + 5;
+                break;
+
+            case 0x20:
+                blockName = "Pause/Stop The Tape";
+                pause = fileData[pointer + 2] * 0x100 + fileData[pointer + 1];
+                if (pause == 0)
+                {
+                    stopData.insert(pulseData.size());
                 }
                 else
                 {
-                    stage = Stages::PAUSE;
+                    // A pause block consists of a low pulse level of some
+                    // duration. To ensure that the last edge produced is
+                    // properly finished there should be at least 1 ms. pause
+                    // of the opposite level and only after that the pulse
+                    // should go low.
+                    // So, if we have an odd number of pulses, we end in high,
+                    // and we add a single pulse of the pause duration.
+                    // If we have an even number of pulses so far, we end in
+                    // low, and we need a pulse of the opposite level to form
+                    // the edge.
+                    if ((pulseData.size() % 2) == 0)
+                    {
+                        pulseData.push_back(3500);
+                        pulseData.push_back(3500 * (pause - 1));
+                    }
+                    else
+                        pulseData.push_back(3500 * pause);
+                    indexData.insert(pulseData.size());
                 }
-                nextBlock += 3;
+                pointer += 3;
                 break;
 
-            case 0x21:  // Group start.
-                block.type = "Group start.";
-                blockDataLength = data[pointer + 1];
-                nextBlock += blockDataLength + 2;
+            case 0x21:
+                blockName = "Group Start";
+                dataLength = fileData[pointer + 1];
+                indexData.insert(pulseData.size());
+                pointer += dataLength + 2;
                 break;
 
-            case 0x22:  // Group end.
-                block.type = "Group end.";
-                ++nextBlock;
+            case 0x22:
+                blockName = "Group End";
+                ++pointer;
                 break;
 
-            case 0x2A:  // Stop the tape if in 48K mode.
-                block.type = "Stop the tape if in 48K mode.";
-                playing = false;
-                stage = Stages::STOPPED;
-                nextBlock += 5;
+            case 0x2A:
+                blockName = "Stop The Tape If In 48K Mode";
+                stopData.insert(pulseData.size());
+                pointer += 5;
                 break;
 
-            case 0x30:  // Text description.
-                block.type = "Text description.";
-                nextBlock += dumpComment() + 2;
+            case 0x30:
+                blockName = "Text Description";
+                pointer += dumpComment() + 2;
                 break;
 
-            case 0x32:  // Archive info.
-                block.type = "Archive info.";
-                nextBlock += dumpArchiveInfo() + 3;
-                stage = Stages::STOPPED;
+            case 0x32:
+                blockName = "Archive Info";
+                pointer += dumpArchiveInfo() + 3;
                 break;
 
-            case 0x33:  // Hardware type.
-                block.type = "Hardware type.";
-                nextBlock += 3 * data[pointer + 1] + 2;
-                stage = Stages::STOPPED;
+            case 0x33:
+                blockName = "Hardware Type";
+                pointer += 3 * fileData[pointer + 1] + 2;
                 break;
 
-            case 0x5A:  // Glue Block. (Skip)
-                block.type = "Glue block.";
-                nextBlock += 10;
-                stage = Stages::STOPPED;
+            case 0x5A:
+                blockName = "Glue";
+                pointer += 10;
                 break;
 
             default:
                 break;
         }
+        
+        cout << "Found " << blockName << " block." << endl;
     }
 
-    // Update first data byte
-    byte = (block.data.empty()) ? 0x00 : block.data[0];
-    // Sanity check.
-    return (nextBlock <= data.size());
-}
-
-void TZXFile::dumpBlockInfo()
-{
-    cout << "--- Begin block ---" << endl;
-    cout << "Block type: " << block.type << endl;
-    cout << "Pilot Pulse Length: " << block.pilotPulseLength << endl;
-    cout << "First Sync Pulse Length: " << block.syncOnePulseLength << endl;
-    cout << "Second Sync Pulse Length: " << block.syncTwoPulseLength << endl;
-    cout << "Zero Pulse Length: " << block.zeroPulseLength << endl;
-    cout << "One Pulse Length: " << block.onePulseLength << endl;
-    cout << "Pilot length: " << block.pilotLength << endl;
-    cout << "Used bits in last byte: " << block.usedBitsInLastByte << endl;
-    cout << "Pause: " << block.pause << endl;
-    cout << "Data Length: " << block.data.size() << endl;
-    cout << "--- End block ---" << endl;
+    cout << "Got " << pulseData.size() << " pulses." << endl;
 }
 
 size_t TZXFile::dumpArchiveInfo()
@@ -343,14 +351,14 @@ size_t TZXFile::dumpArchiveInfo()
     string text;
     size_t len;
 
-    size_t length = data[pointer + 2] * 0x100 + data[pointer + 1];
-    size_t numStrings = data[pointer + 3];
+    size_t length = fileData[pointer + 2] * 0x100 + fileData[pointer + 1];
+    size_t numStrings = fileData[pointer + 3];
     size_t index = 4;
 
     cout << "--- Archive info block ---" << endl;
     for (size_t ii = 0; ii < numStrings; ++ii)
     {
-        switch (data[pointer + index])
+        switch (fileData[pointer + index])
         {
             case 0x00: tag = "Full Title: "; break;
             case 0x01: tag = "Software house/publisher: "; break;
@@ -364,171 +372,27 @@ size_t TZXFile::dumpArchiveInfo()
             default: tag = "Comment(s): "; break;
         }
 
-        len = data[pointer + index + 1];
+        len = fileData[pointer + index + 1];
         text.clear();
         for (size_t jj = 0; jj < len; ++jj)
-            text.push_back(static_cast<char>(data[pointer + index + 2 + jj]));
+            text.push_back(static_cast<char>(fileData[pointer + index + 2 + jj]));
 
         cout << tag << text << endl;
         index += len + 2;
     }
-
-    cout << pointer + index << endl;
-    cout << nextBlock + length << endl;
     return length;
 }
 
 size_t TZXFile::dumpComment()
 {
     string text;
-    size_t length = data[pointer + 1];
+    size_t length = fileData[pointer + 1];
 
     for (size_t i = 0; i < length; ++i)
-        text.push_back(static_cast<char>(data[pointer + 2 + i]));
+        text.push_back(static_cast<char>(fileData[pointer + 2 + i]));
     cout << "Comment: " << text << endl;
 
     return length;
-}
-
-void TZXFile::getNextSample()
-{
-    --numSamples;
-    if (numSamples % pulseLength == 0)
-    {
-        sample = ~sample;
-        if (numSamples == 0)
-            getNextPulse();
-    }
-    
-}
-
-void TZXFile::getNextPulse()
-{
-    bool again = false;
-
-    do
-    {
-        again = false;
-        switch (stage)
-        {
-            case Stages::PILOT:
-                cout << "Pilot." << endl;
-                // First pulse is high.
-                pulseLength = block.pilotPulseLength;
-                numPulses = block.pilotLength;
-                // We need to end high, so if we've got an odd number of
-                // pulses we start on 0xFF, and if we've got an even number,
-                // we start on 0x00.
-                sample = (numPulses % 2) ? 0xFF : 0x00;
-
-                if (block.syncOnePulseLength)
-                    stage = Stages::SYNC_ONE;
-                else
-                    stage = Stages::STOPPED;
-                break;
-
-            case Stages::SYNC_ONE:
-                cout << "Sync 1." << endl;
-                pulseLength = block.syncOnePulseLength;
-                numPulses = 1;
-                //sample = 0x00;
-                stage = Stages::SYNC_TWO;
-                break;
-
-            case Stages::SYNC_TWO:
-                cout << "Sync 2." << endl;
-                pulseLength = block.syncTwoPulseLength;
-                numPulses = 1;
-                //sample = 0xFF;
-                stage = Stages::DATA;
-                break;
-
-            case Stages::PULSES:
-                cout << "Pulse." << endl;
-                if (numByte < block.data.size())
-                {
-                    numPulses = 1;
-                    pulseLength =
-                        block.data[numByte + 1] * 0x100 + block.data[numByte];
-                    numByte += 2;
-                    break;
-                }
-                stage = Stages::STOPPED;
-                again = true;
-                break;
-
-            case Stages::DATA:
-                pulseLength = (byte & 0x80) ? 
-                    block.onePulseLength : block.zeroPulseLength;
-                numPulses = 2;
-
-                byte <<= 1;
-                numBit = (numBit + 1) % 8;
-                // If we've finished with this byte...
-                if (numBit == 0)
-                {
-                    ++numByte;
-                    // If this is not the last byte, get the next one.
-                    if (numByte < block.data.size())
-                        byte = block.data[numByte];
-                    // If it is, start the pause.
-                    // (again = false, because we need to output the last bit.)
-                    else
-                        stage = Stages::PAUSE;
-                }
-                break;
-
-            case Stages::PAUSE:
-                cout << "Last edge." << endl;
-                if (block.pause)
-                {
-                    pulseLength = 3500; // 1 millisecond = 3500 T-States.
-                    numPulses = 1;
-                    stage = Stages::PAUSE_ZERO;
-                }
-                else
-                {
-                    stage = Stages::STOPPED;
-                    again = true;
-                }
-                break;
-
-            case Stages::PAUSE_ZERO:
-                cout << "Silence." << endl;
-                pulseLength = 3500 * (block.pause - 1);
-                numPulses = 1;
-                sample = 0x00;
-                stage = Stages::STOPPED;
-                break;
-
-            case Stages::STOPPED:
-                cout << "Stopped." << endl;
-                numByte = 0;
-                numBit = 0;
-                numPulses = 0;
-                pulseLength = 0;
-                // If there is another block, continue. If not, stop.
-                if ((isLastBlock() == false) && (playing == true))
-                {
-                    pointer = nextBlock;
-                    getBlock(); // Here we set the starting stage.
-                    dumpBlockInfo();
-                    advance();
-                    again = true;
-                    break;
-                }
-                playing = false;
-                stage = Stages::STOPPED;
-                break;
-
-            default:
-                playing = false;
-                stage = Stages::STOPPED;
-                break;
-        }
-    } while (again);
-
-    numSamples = numPulses * pulseLength;
 }
 
 // vim: et:sw=4:ts=4
