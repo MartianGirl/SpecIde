@@ -77,6 +77,10 @@ int main(int argc, char* argv[])
                 spectrum.ula.tapeIn = (tape.level & 0x40) | 0x80;
             }
         }
+        else
+        {
+            spectrum.ula.tapeIn = 0x00;
+        }
 
         // Sample sound outputs.
         if (sampleCounter == 0)

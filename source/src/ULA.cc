@@ -32,6 +32,10 @@ ULA::ULA() :
     vBlankStart(0x0F8), vBlankEnd(0x0FF),
     vSyncStart(0x0F8), vSyncEnd(0x0FB),
     ioPortIn(0xFF), ioPortOut(0x00), capacitor(0), tapeIn(0),
+    c00(993), c01(972), c10(972), c11(972),
+    //tensions{391, 728, 3653, 3790}, // ULA 5C (Issue 2)
+    tensions{342, 652, 3591, 3753}, // ULA 6C (Issue 3)
+    outputCurr(0), outputLast(0), vStart(0), vEnd(0), vDiff(0),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF)
 {
@@ -56,10 +60,26 @@ ULA::ULA() :
 #endif
         colourTable[i] = colour;
     }
+
+    size_t v00, v01, v10, v11;
+    v00 = v01 = v10 = v11 = 1000;
+    for (size_t i = 0; i < 1024; ++i)
+    {
+        constants[i + 0] = v00 * 1024 / 1000;
+        constants[i + 1024] = v01 * 1024 / 1000;
+        constants[i + 2048] = v10 * 1024 / 1000;
+        constants[i + 3072] = v11 * 1024 / 1000;
+        v00 *= c00; v00 /= 1000;
+        v01 *= c01; v01 /= 1000;
+        v10 *= c10; v10 /= 1000;
+        v11 *= c11; v11 /= 1000;
+    }
 }
 
 void ULA::clock()
 {
+    static size_t cIndex = 0;
+
     // Here we:
     // 1. Generate video control signals.
     hSync = (pixel >= hSyncStart) && (pixel <= hSyncEnd);
@@ -153,14 +173,29 @@ void ULA::clock()
 
     // First attempt at MIC/EAR feedback loop.
     // Let's keep this here for the moment.
-    capacitor += ((ioPortOut & 0x10) == 0x00) ? -1 : 1; // Issue 3
-    // capacitor += ((ioPortOut & 0x18) == 0x00) ? -1 : 1; // Issue 2
-    if ((tapeIn & 0xC0) == 0x80) capacitor = 0;
-    if ((tapeIn & 0xC0) == 0xC0) capacitor = 1;
-    if (capacitor < 0) capacitor = 0;
-    if (capacitor > 5600) capacitor = 5600;
+    outputLast = outputCurr;
+    outputCurr = (ioPortOut & 0x18) >> 3;
+    
+    if (outputLast != outputCurr)
+    {
+        cIndex = 0;
+        vStart = capacitor;
+        vEnd = tensions[outputCurr];
+        vDiff = vStart - vEnd;
+    }
+    else
+    {
+        capacitor = vEnd + 
+            ((vDiff * constants[cIndex + 1024 * outputCurr]) >> 10);
+        ++cIndex;
+        if (cIndex > 1023) cIndex = 1023;
+    }
+
+    if (capacitor > 3700) capacitor = 3700;
+    if ((tapeIn & 0xC0) == 0x80) capacitor = 650;
+    if ((tapeIn & 0xC0) == 0xC0) capacitor = 3000;
     ioPortIn &= 0xBF;
-    ioPortIn |= (capacitor == 0) ? 0x00 : 0x40;
+    ioPortIn |= (capacitor < 700) ? 0x00 : 0x40;
     if (cpuClock)
     {
         // We read keyboard if we're reading the ULA port, during TW.

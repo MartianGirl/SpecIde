@@ -151,7 +151,7 @@ void TZXFile::parse(
                     byte = fileData[pointer + 19 + ii];
 
                     bitsInByte = (ii == (dataLength - 1)) ? bitsInLastByte : 8;
-                    byte &= (0xFF << ((ii == (dataLength - 1)) ? (8 - bitsInLastByte) : 0));
+                    // byte &= (0xFF << (8 - bitsInByte));
                     for (size_t jj = 0; jj < bitsInByte; ++jj)
                     {
                         pulseData.insert(pulseData.end(),
@@ -176,6 +176,7 @@ void TZXFile::parse(
                     + fileData[pointer + 1];
                 pilotLength = fileData[pointer + 4] * 0x100
                     + fileData[pointer + 3];
+                pilotLength += (pilotLength % 2) ? 0 : 1;   // Pilot should be odd
 
                 // Pilot tone
                 pulseData.insert(pulseData.end(), pilotLength, pilotPulse);
@@ -215,7 +216,7 @@ void TZXFile::parse(
                     byte = fileData[pointer + 11 + ii];
 
                     bitsInByte = (ii == (dataLength - 1)) ? bitsInLastByte : 8;
-                    byte &= (0xFF << ((ii == (dataLength - 1)) ? (8 - bitsInLastByte) : 0));
+                    // byte &= (0xFF << (8 . bitsInByte));
                     for (size_t jj = 0; jj < bitsInByte; ++jj)
                     {
                         pulseData.insert(pulseData.end(),
