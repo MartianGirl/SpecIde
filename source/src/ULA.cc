@@ -61,7 +61,7 @@ ULA::ULA() :
         colourTable[i] = colour;
     }
 
-    size_t v00, v01, v10, v11;
+    int_fast32_t v00, v01, v10, v11;
     v00 = v01 = v10 = v11 = 1000;
     for (size_t i = 0; i < 1024; ++i)
     {

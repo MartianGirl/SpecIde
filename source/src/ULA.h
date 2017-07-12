@@ -66,9 +66,9 @@ class ULA
         uint_fast8_t tapeIn;
 
         // Values in EAR/MIC ULA pin (millivolts)
-        size_t c00, c01, c10, c11;
-        size_t tensions[4];
-        size_t constants[4096];
+        int_fast32_t c00, c01, c10, c11;
+        int_fast32_t tensions[4];
+        int_fast32_t constants[4096];
         size_t outputCurr, outputLast;
         int_fast32_t vStart, vEnd, vDiff;
 
