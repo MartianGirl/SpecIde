@@ -22,6 +22,9 @@ if(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU OR
         "${CMAKE_CXX_FLAGS} -g -DDEBUG")
     set(CMAKE_CXX_FLAGS_RELEASE
         "${CMAKE_CXX_FLAGS} -O3")
+    if(WIN32)
+        add_definitions(-DUSE_BOOST_THREADS)
+    endif()
 elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
     if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
         string(REGEX REPLACE "/W[0-4]" "/W4" 

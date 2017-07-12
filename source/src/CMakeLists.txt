@@ -10,10 +10,14 @@ elseif(APPLE)
     find_package(SFML COMPONENTS audio graphics window system)
 elseif(WIN32)
     find_package(SFML COMPONENTS audio graphics window system)
+    set(Boost_NO_BOOST_CMAKE TRUE)
 endif()
+
+find_package(Boost COMPONENTS chrono system thread unit_test_framework REQUIRED)
 
 include_directories(${SFML_INCLUDE_DIRS})
 include_directories(${SFML_INCLUDE_DIR})
+include_directories(${Boost_INCLUDE_DIR})
 
 add_executable(SpecIde SpecIde.cc
         GraphicWindow.cc Screen.cc
@@ -21,7 +25,7 @@ add_executable(SpecIde SpecIde.cc
         Computer.cc Spectrum.cc
         Memory.cc Z80Register.cc Z80RegisterSet.cc Z80Decoder.cc
         Tape.cc TAPFile.cc TZXFile.cc)
-target_link_libraries(SpecIde ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
+target_link_libraries(SpecIde ${Boost_LIBRARIES} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})
 
 # Set version information in a config.h file.
 set(SpecIde_VERSION_MAJOR 0)

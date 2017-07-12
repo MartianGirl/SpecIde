@@ -1,9 +1,7 @@
-#include <chrono>
 #include <iostream>
 #include <iomanip>
 #include <memory>
 #include <sstream>
-#include <thread>
 
 #include <SFML/Graphics.hpp>
 
@@ -14,6 +12,18 @@
 
 #include "config.h"
 
+#ifdef USE_BOOST_THREADS
+#include <boost/chrono/include.hpp>
+#include <boost/thread.hpp>
+using namespace boost::this_thread;
+using namespace boost::chrono;
+#else
+#include <chrono>
+#include <thread>
+using namespace std::this_thread;
+using namespace std::chrono;
+#endif
+
 using namespace std;
 
 constexpr size_t CLOCK_FREQ = 7000000;
@@ -22,8 +32,6 @@ constexpr size_t SAMPLE_SKIP = CLOCK_FREQ / SAMPLE_RATE;
 
 int main(int argc, char* argv[])
 {
-    using namespace std::this_thread;
-    using namespace std::chrono;
 
     cout << "SpecIde Version " << SPECIDE_VERSION_MAJOR;
     cout << "." << SPECIDE_VERSION_MINOR << endl;
