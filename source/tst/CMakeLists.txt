@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 
-if(UNIX)
+if(APPLE)
+    find_package(SFML COMPONENTS audio graphics system window)
+elseif(UNIX)
     find_package(PkgConfig REQUIRED)
     pkg_search_module(SFML REQUIRED sfml-all)
-elseif(APPLE)
-    find_package(SFML COMPONENTS audio graphics system window)
 elseif(WIN32)
     find_package(SFML COMPONENTS audio graphics system window)
     set(Boost_NO_BOOST_CMAKE TRUE)
