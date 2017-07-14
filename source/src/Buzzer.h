@@ -67,8 +67,7 @@ class Buzzer : public sf::SoundStream
 
         void sample()
         {
-            buffers[wrBuffer][wrSample] = 0x0000;
-            buffers[wrBuffer][wrSample] += (*source & 0x10) ? 0x1FFF : 0x0000;
+            buffers[wrBuffer][wrSample] = (*source & 0x10) ? 0x1FFF : 0x0000;
             buffers[wrBuffer][wrSample] += (*tapeIn & 0x40) ? 0x07FF : 0x0000;
             ++wrSample;
             if (wrSample == MAX_SAMPLES)

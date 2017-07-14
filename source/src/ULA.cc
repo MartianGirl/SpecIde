@@ -69,10 +69,6 @@ ULA::ULA() :
         constants[i + 1024] = v01 * 1024 / 1000;
         constants[i + 2048] = v10 * 1024 / 1000;
         constants[i + 3072] = v11 * 1024 / 1000;
-        // cout << constants[i + 0] << " ";
-        // cout << constants[i + 1024] << " ";
-        // cout << constants[i + 2048] << " ";
-        // cout << constants[i + 3072] << " " << endl;
         v00 *= c00; v00 /= 1000;
         v01 *= c01; v01 /= 1000;
         v10 *= c10; v10 /= 1000;
@@ -239,7 +235,6 @@ void ULA::clock()
 
 
     // 4. Generate video signal.
-    // if (!(hBlank || vBlank))
     {
         // 4.a. Generate colours.
         rgba = colourTable[((data & 0x80) ^ (attr & flash)) | (attr & 0x7F)];

@@ -6,6 +6,7 @@
  *
  */
 
+#include <cstddef>
 #include <cstdint>
 
 #include "Z80Register.h"
