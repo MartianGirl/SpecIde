@@ -6,7 +6,6 @@
  *
  */
 
-#include "Computer.h"
 #include "Memory.h"
 #include "ULA.h"
 #include "Z80.h"
@@ -16,12 +15,9 @@
 #include <iomanip>
 #include <iostream>
 
-// #include <SFML/Audio.hpp>
-
 using namespace std;
 
-class Spectrum :
-    public Computer
+class Spectrum
 {
     public:
         Spectrum();

@@ -69,8 +69,8 @@ int main(int argc, char* argv[])
     stringstream ss;
 
     size_t busyTime;
-    // This is faster than "while(true)".
     buzzer.play();
+    // This is faster than "while(true)".
     for(;;)
     {
         // Update Spectrum hardware.

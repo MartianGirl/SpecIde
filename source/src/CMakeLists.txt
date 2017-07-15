@@ -21,8 +21,8 @@ include_directories(${Boost_INCLUDE_DIR})
 
 add_executable(SpecIde SpecIde.cc
         GraphicWindow.cc Screen.cc
-        CPU.cc Z80.cc ULA.cc
-        Computer.cc Spectrum.cc
+        Z80.cc ULA.cc
+        Spectrum.cc
         Memory.cc Z80Register.cc Z80RegisterSet.cc Z80Decoder.cc
         Tape.cc TAPFile.cc TZXFile.cc)
 target_link_libraries(SpecIde ${Boost_LIBRARIES} ${SFML_LIBRARIES} ${SFML_DEPENDENCIES})

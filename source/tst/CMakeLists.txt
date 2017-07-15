@@ -55,41 +55,22 @@ target_link_libraries(ULATest
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
-add_executable(ComputerTest
-    ComputerTest.cc
-    ${PROJECT_SOURCE_DIR}/src/Computer.cc)
-target_link_libraries(ComputerTest
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-    ${SFML_LIBRARIES}
-    ${SFML_DEPENDENCIES})
-
 add_executable(SpectrumTest
     SpectrumTest.cc
-    ${PROJECT_SOURCE_DIR}/src/CPU.cc
     ${PROJECT_SOURCE_DIR}/src/ULA.cc
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc
     ${PROJECT_SOURCE_DIR}/src/Z80RegisterSet.cc
-    ${PROJECT_SOURCE_DIR}/src/Computer.cc
     ${PROJECT_SOURCE_DIR}/src/Spectrum.cc)
 target_link_libraries(SpectrumTest
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
-add_executable(CPUTest
-    CPUTest.cc
-    ${PROJECT_SOURCE_DIR}/src/CPU.cc)
-target_link_libraries(CPUTest
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-    ${SFML_LIBRARIES}
-    ${SFML_DEPENDENCIES})
-
 add_executable(Z80Test
     Z80Test.cc
-    ${PROJECT_SOURCE_DIR}/src/CPU.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc
@@ -102,7 +83,6 @@ target_link_libraries(Z80Test
 
 add_executable(Z80AluTest
     Z80AluTest.cc
-    ${PROJECT_SOURCE_DIR}/src/CPU.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc
@@ -115,7 +95,6 @@ target_link_libraries(Z80AluTest
 
 add_executable(Z80InterruptTest
     Z80InterruptTest.cc
-    ${PROJECT_SOURCE_DIR}/src/CPU.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc
@@ -128,7 +107,6 @@ target_link_libraries(Z80InterruptTest
 
 add_executable(Z80JumpTest
     Z80JumpTest.cc
-    ${PROJECT_SOURCE_DIR}/src/CPU.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc
@@ -141,7 +119,6 @@ target_link_libraries(Z80JumpTest
 
 add_executable(Z80BitTest
     Z80BitTest.cc
-    ${PROJECT_SOURCE_DIR}/src/CPU.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc
@@ -170,8 +147,8 @@ target_link_libraries(Z80RegisterTest
 
 install(TARGETS
     GraphicWindowTest ScreenTest
-    ComputerTest SpectrumTest ULATest
-    CPUTest Z80Test Z80AluTest Z80InterruptTest Z80JumpTest Z80BitTest
+    SpectrumTest ULATest
+    Z80Test Z80AluTest Z80InterruptTest Z80JumpTest Z80BitTest
     MemoryTest Z80RegisterTest
     TZXFileTest
     RUNTIME

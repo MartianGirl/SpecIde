@@ -9,24 +9,19 @@
 #include <cassert>
 #include <cstdint>
 
-#include "CPU.h"
 #include "Z80Defs.h"
 #include "Z80Decoder.h"
 #include "Z80Register.h"
 
 using namespace std;
 
-class Z80 :
-    public CPU
+class Z80
 {
     public:
-        Z80();
-        virtual ~Z80();
+        Z80() : state(Z80State::ST_RESET) {}
 
         void reset();
         void clock();
-
-        void updateNmi();
 
         void start();
         Z80State finishMachineCycle();

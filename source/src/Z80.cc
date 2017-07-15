@@ -1,22 +1,15 @@
 #include "Z80.h"
 
-Z80::Z80() :
-    CPU(),
-    state(Z80State::ST_RESET)
-{
-}
-
-Z80::~Z80()
-{
-}
-
 void Z80::reset()
 {
     c &= ~SIGNAL_RESET_;
 }
 
-void Z80::updateNmi()
+void Z80::clock()
 {
+    if (!(c & SIGNAL_RESET_))
+        state = Z80State::ST_RESET;
+
     // NMI is edge-triggered.
     if (!(c & SIGNAL_NMI_))
     {
@@ -33,14 +26,6 @@ void Z80::updateNmi()
     {
         nmiDelayed = false;
     }
-}
-
-void Z80::clock()
-{
-    if (!(c & SIGNAL_RESET_))
-        state = Z80State::ST_RESET;
-
-    updateNmi();
 
     iff = decoder.regs.iff;
 
