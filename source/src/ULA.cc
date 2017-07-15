@@ -2,26 +2,11 @@
 
 ULA::ULA() :
     hiz(true),
-    z80_a(0xFFFF), z80_c(0xFFFF), z80_c_delayed(0xFFFF),
-    contentionWindow(false),
-    memContention(false), ioContention(false),
-    cpuWait(false), cpuClock(false),
-    scan(0), maxScan(312),      // PAL values. Must make this configurable.
-    pixel(0), maxPixel(448),
-    flash(0),
-    dataReg(0), attrReg(0),
-#if SPECIDE_BYTE_ORDER == 1
-    data(*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint_fast32_t) - 3)),
-    attr(*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint_fast32_t) - 3)),
-    dataLatch(*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint_fast32_t) - 1)),
-    attrLatch(*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint_fast32_t) - 1)),
-#else
-    data(*(reinterpret_cast<uint8_t*>(&dataReg) + 2)),
-    attr(*(reinterpret_cast<uint8_t*>(&attrReg) + 2)),
-    dataLatch(*(reinterpret_cast<uint8_t*>(&dataReg) + 0)),
-    attrLatch(*(reinterpret_cast<uint8_t*>(&attrReg) + 0)),
-#endif
-    hBlank(false), vBlank(false), display(false),
+    z80_a(0xFFFF), z80_c(0xFFFF),
+    cpuClock(false),
+    maxScan(312),      // PAL values. Must make this configurable.
+    maxPixel(448),
+    hBlank(false), vBlank(false),
     pixelStart(0x000), pixelEnd(0x0FF),
     hBorderStart(0x100), hBorderEnd(0x1BF),
     hBlankStart(0x140), hBlankEnd(0x19F),
@@ -31,11 +16,10 @@ ULA::ULA() :
     vBorderStart(0x0C0), vBorderEnd(0x137),
     vBlankStart(0x0F8), vBlankEnd(0x0FF),
     vSyncStart(0x0F8), vSyncEnd(0x0FB),
-    ioPortIn(0xFF), ioPortOut(0x00), capacitor(0), tapeIn(0),
+    ioPortIn(0xFF), ioPortOut(0x00), tapeIn(0),
     c00(993), c01(972), c10(492), c11(492),
     tensions{391, 728, 3653, 3790}, // ULA 5C (Issue 2)
     //tensions{342, 652, 3591, 3753}, // ULA 6C (Issue 3)
-    outputCurr(0), outputLast(0), vStart(0), vEnd(0), vDiff(0),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF)
 {
@@ -79,6 +63,33 @@ ULA::ULA() :
 void ULA::clock()
 {
     static size_t cIndex = 0;
+    static size_t pixel = 0;
+    static size_t scan = 0;
+    static uint_fast8_t flash = 0;
+
+    static uint_fast16_t z80_c_d = 0xFFFF;
+    static uint_fast16_t dataAddr, attrAddr;
+
+    static uint_fast32_t dataReg, attrReg;
+#if SPECIDE_BYTE_ORDER == 1
+    uint8_t &data = (*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint_fast32_t) - 3));
+    uint8_t &attr = (*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint_fast32_t) - 3));
+    uint8_t &dataLatch = (*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint_fast32_t) - 1));
+    uint8_t &attrLatch = (*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint_fast32_t) - 1));
+#else
+    uint8_t &data = (*(reinterpret_cast<uint8_t*>(&dataReg) + 2));
+    uint8_t &attr = (*(reinterpret_cast<uint8_t*>(&attrReg) + 2));
+    uint8_t &dataLatch = (*(reinterpret_cast<uint8_t*>(&dataReg) + 0));
+    uint8_t &attrLatch = (*(reinterpret_cast<uint8_t*>(&attrReg) + 0));
+#endif
+
+    static uint_fast32_t capacitor = 0;
+    static size_t outputCurr = 0;
+    static size_t outputLast = 0;
+    static int_fast32_t vStart = 0;
+    static int_fast32_t vEnd = 0;
+    static int_fast32_t vDiff = 0;
+
 
     // Here we:
     // 1. Generate video control signals.
@@ -88,7 +99,8 @@ void ULA::clock()
 
     vBlank = ((scan & 0x0F8) == 0x0F8);
     hBlank = ((pixel >= hBlankStart) && (pixel <= hBlankEnd));
-    display = (pixel < hBorderStart) && (scan < vBorderStart);
+
+    bool display = (pixel < hBorderStart) && (scan < vBorderStart);
 
     // This is the "dead cockroach modification".
     //if ((z80_c & SIGNAL_IORQ_) == 0x0000)
@@ -98,15 +110,18 @@ void ULA::clock()
     //}
 
     // 2. Generate video data.
+    bool cpuWait;
     if (display)
     {
+        bool contentionWindow;
         // 2.a. Check for contended memory or I/O accesses.
         // T1 of a memory cycle can be detected by a falling edge on MREQ.
         // T2 of an I/O cycle can be detected by a falling edge on IORQ.
-        memContention = ((z80_a & 0xC000) == 0x4000)
-            && (((~z80_c & z80_c_delayed & SIGNAL_MREQ_) == SIGNAL_MREQ_));
-        ioContention = ((z80_a & 0x0001) == 0x0000)
-            && ((~z80_c & z80_c_delayed & SIGNAL_IORQ_) == SIGNAL_IORQ_);
+        bool memContention = ((z80_a & 0xC000) == 0x4000)
+            && (((~z80_c & z80_c_d & SIGNAL_MREQ_) == SIGNAL_MREQ_));
+        bool ioContention = ((z80_a & 0x0001) == 0x0000)
+            && ((~z80_c & z80_c_d & SIGNAL_IORQ_) == SIGNAL_IORQ_);
+
 
         // 2.b. Read from memory.
         switch (pixel & 0x0F)
@@ -206,7 +221,7 @@ void ULA::clock()
     if (cpuClock)
     {
         // We read keyboard if we're reading the ULA port, during TW.
-        if ((~z80_c & ~z80_c_delayed & SIGNAL_IORQ_) == SIGNAL_IORQ_)
+        if ((~z80_c & ~z80_c_d & SIGNAL_IORQ_) == SIGNAL_IORQ_)
         {
             if ((z80_a & 0x0001) == 0x0000)
             {
@@ -230,7 +245,7 @@ void ULA::clock()
                 }
             }
         }
-        z80_c_delayed = z80_c;
+        z80_c_d = z80_c;
     }
 
 
@@ -258,12 +273,14 @@ void ULA::clock()
     }
 
     // 5. Update counters
-    pixel = (pixel + 1) % maxPixel;
-    if (pixel == 0)
+    if (++pixel == maxPixel)
     {
-        scan = (scan + 1) % maxScan;
+        pixel = 0;
+        ++scan;
         if (scan == vBlankEnd)
             flash += 0x04;
+        else if (scan == maxScan)
+            scan = 0;
     }
 }
 // vim: et:sw=4:ts=4:

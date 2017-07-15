@@ -41,7 +41,6 @@ class Z80
 
         // NMI requested
         bool nmiAccept;
-        bool nmiDelayed;
         bool nmiProcess;
 
         // INT requested

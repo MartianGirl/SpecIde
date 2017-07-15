@@ -26,26 +26,16 @@ class ULA
         bool hiz;
         
         uint_fast16_t z80_a;
-        uint_fast16_t z80_c, z80_c_delayed;
-        bool contentionWindow;
-        bool memContention;
-        bool ioContention;
-        bool cpuWait, cpuClock;
+        uint_fast16_t z80_c;
+        bool cpuClock;
 
         // Video signals
-        size_t scan, maxScan;
-        size_t pixel, maxPixel;
-
-        uint_fast8_t flash;
-        uint_fast32_t dataReg, attrReg;
-        uint8_t &data, &attr;
-        uint8_t &dataLatch, &attrLatch;
-        uint_fast16_t dataAddr, attrAddr;
+        size_t maxScan;
+        size_t maxPixel;
 
         uint32_t rgba;
         bool hSync, vSync;
         bool hBlank, vBlank;
-        bool display;
 
         size_t pixelStart, pixelEnd;
         size_t hBorderStart, hBorderEnd;
@@ -62,15 +52,12 @@ class ULA
         // Port 0xFE
         uint_fast8_t ioPortIn;
         uint_fast8_t ioPortOut;
-        int_fast32_t capacitor;
         uint_fast8_t tapeIn;
 
         // Values in EAR/MIC ULA pin (millivolts)
         int_fast32_t c00, c01, c10, c11;
         int_fast32_t tensions[4];
         int_fast32_t constants[4096];
-        size_t outputCurr, outputLast;
-        int_fast32_t vStart, vEnd, vDiff;
 
         // Keyboard half rows
         uint_fast8_t keys[8];

@@ -24,7 +24,6 @@ class Buzzer : public sf::SoundStream
         std::vector<std::vector<sf::Int16>> buffers;
         std::queue<size_t> queuedBuffers;
         size_t rdBuffer, wrBuffer;
-        size_t wrSample;
 
         uint_fast8_t *source;
         uint_fast8_t *tapeIn;
@@ -33,8 +32,7 @@ class Buzzer : public sf::SoundStream
 
         Buzzer() :
             buffers(MAX_BUFFERS, (std::vector<sf::Int16>(MAX_SAMPLES, 0))),
-            rdBuffer(0), wrBuffer(1),
-            wrSample(0) {}
+            rdBuffer(0), wrBuffer(1) {}
 
         bool open(uint_fast8_t* src, uint_fast8_t* ear, size_t sampleRate)
         {
@@ -67,13 +65,16 @@ class Buzzer : public sf::SoundStream
 
         void sample()
         {
-            buffers[wrBuffer][wrSample] = (*source & 0x10) ? 0x1FFF : 0x0000;
-            buffers[wrBuffer][wrSample] += (*tapeIn & 0x40) ? 0x07FF : 0x0000;
+            static size_t wrSample = 0;
+            size_t buffer = wrBuffer;
+
+            buffers[buffer][wrSample] = (*source & 0x10) ? 0x1FFF : 0x0000;
+            buffers[buffer][wrSample] += (*tapeIn & 0x40) ? 0x07FF : 0x0000;
             ++wrSample;
             if (wrSample == MAX_SAMPLES)
             {
                 wrSample = 0;
-                queuedBuffers.push(wrBuffer);
+                queuedBuffers.push(buffer);
                 getNextWriteBuffer();
             }
         }

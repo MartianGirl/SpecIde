@@ -30,14 +30,8 @@ class Screen : public GraphicWindow
         size_t scale;
         size_t xSize, ySize;
 
-        size_t xPos, yPos;
-        bool vSyncDelayed;
-        bool hSyncDelayed;
-
-        size_t texSize;
         sf::Texture scrTexture;
         sf::Sprite scrSprite;
-        std::vector<sf::Uint32> pixels;
 
         bool update();
         void setRgbaInput(sf::Uint32* input) { rgbaInput = input; }

@@ -7,33 +7,22 @@ void Z80::reset()
 
 void Z80::clock()
 {
+    static uint_fast16_t c_d;
+
     if (!(c & SIGNAL_RESET_))
         state = Z80State::ST_RESET;
 
     // NMI is edge-triggered.
-    if (!(c & SIGNAL_NMI_))
+    // If a falling edge in NMI is detected, accept the NMI and clear
+    // the IFF1 flag.
+    if ((~c & c_d & SIGNAL_NMI_) == SIGNAL_NMI_)
     {
-        // If falling edge in NMI is detected, accept the NMI and clear
-        // the IFF1 flag.
-        if (nmiDelayed == false)
-        {
-            nmiAccept = true;
-            decoder.regs.iff &= ~(IFF1);
-        }
-        nmiDelayed = true;
+        nmiAccept = true;
+        decoder.regs.iff &= ~(IFF1);
     }
-    else
-    {
-        nmiDelayed = false;
-    }
-
+    c_d = c;
     iff = decoder.regs.iff;
 
-    if ((iff & HALT) == HALT)
-        c &= ~SIGNAL_HALT_;
-    else
-        c |= SIGNAL_HALT_;
-   
     if ((c & SIGNAL_BUSRQ_) == SIGNAL_BUSRQ_)
         c |= SIGNAL_BUSAK_;
 
@@ -303,6 +292,7 @@ Z80State Z80::finishMachineCycle()
         nmiAccept = false;
         nmiProcess = true;
         decoder.regs.iff &= ~HALT;
+        c |= SIGNAL_HALT_;
         return Z80State::ST_NMI_T1_ADDRWR;
     }
     // INT only happens if there is no NMI.
@@ -314,10 +304,18 @@ Z80State Z80::finishMachineCycle()
         decoder.regs.iff &= ~(IFF1 | IFF2);
         intProcess = true;
         decoder.regs.iff &= ~HALT;
+        c |= SIGNAL_HALT_;
         return Z80State::ST_INT_T1_ADDRWR;
     }
-    else
+    else if ((decoder.regs.iff & HALT) == HALT)
+    {
+        c &= ~SIGNAL_HALT_;
         return Z80State::ST_OCF_T1_ADDRWR;
+    }
+    else
+    {
+        return Z80State::ST_OCF_T1_ADDRWR;
+    }
 }
 
 bool Z80::execute()
@@ -362,7 +360,6 @@ void Z80::start()
     d = 0xFF;
 
     nmiAccept = false;
-    nmiDelayed = false;
     nmiProcess = false;
 
     intProcess = false;

@@ -26,9 +26,6 @@ class Spectrum
         Z80 z80;
         ULA ula;
 
-        // Buses
-        bool as_, io_, rd_, wr_; // Z80 memory control lines.
-
         // I'm going to exceed the original requirements, and then limit the
         // configuration to the required model.
         Memory ram[64]; // 1024KB

@@ -7,16 +7,7 @@ Screen::Screen(size_t scale) :
     done(false), reset(false),
     rewind(false), play(false),
     scale(scale),
-    xSize(328), ySize(264),
-    xPos(0), yPos(0),
-    vSyncDelayed(false),
-    hSyncDelayed(false),
-    texSize(xSize * ySize),
-#if SPECIDE_BYTE_ORDER == 1
-    pixels(texSize, 0xFF000000)
-#else
-    pixels(texSize, 0x000000FF)
-#endif
+    xSize(328), ySize(264)
 {
     if (!scrTexture.create(static_cast<Uint32>(xSize), static_cast<Uint32>(ySize)))
         assert(false);
@@ -28,6 +19,18 @@ Screen::Screen(size_t scale) :
 bool Screen::update()
 {
     bool tick = false;
+
+    static size_t xPos = 0;
+    static size_t yPos = 0;
+
+    static bool hSyncDelayed = false;
+    static bool vSyncDelayed = false;
+
+#if SPECIDE_BYTE_ORDER == 1
+    static std::vector<sf::Uint32> pixels(xSize * ySize, 0xFF000000);
+#else
+    static std::vector<sf::Uint32> pixels(xSize * ySize, 0x000000FF);
+#endif
 
     // If not blanking, draw.
     if (!(*hBlankInput || *vBlankInput))
