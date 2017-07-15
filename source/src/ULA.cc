@@ -72,15 +72,15 @@ void ULA::clock()
 
     static uint_fast32_t dataReg, attrReg;
 #if SPECIDE_BYTE_ORDER == 1
-    uint8_t &data = (*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint_fast32_t) - 3));
-    uint8_t &attr = (*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint_fast32_t) - 3));
-    uint8_t &dataLatch = (*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint_fast32_t) - 1));
-    uint8_t &attrLatch = (*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint_fast32_t) - 1));
+    static uint8_t &data = (*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint_fast32_t) - 3));
+    static uint8_t &attr = (*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint_fast32_t) - 3));
+    static uint8_t &dataLatch = (*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint_fast32_t) - 1));
+    static uint8_t &attrLatch = (*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint_fast32_t) - 1));
 #else
-    uint8_t &data = (*(reinterpret_cast<uint8_t*>(&dataReg) + 2));
-    uint8_t &attr = (*(reinterpret_cast<uint8_t*>(&attrReg) + 2));
-    uint8_t &dataLatch = (*(reinterpret_cast<uint8_t*>(&dataReg) + 0));
-    uint8_t &attrLatch = (*(reinterpret_cast<uint8_t*>(&attrReg) + 0));
+    static uint8_t &data = (*(reinterpret_cast<uint8_t*>(&dataReg) + 2));
+    static uint8_t &attr = (*(reinterpret_cast<uint8_t*>(&attrReg) + 2));
+    static uint8_t &dataLatch = (*(reinterpret_cast<uint8_t*>(&dataReg) + 0));
+    static uint8_t &attrLatch = (*(reinterpret_cast<uint8_t*>(&attrReg) + 0));
 #endif
 
     static uint_fast32_t capacitor = 0;
