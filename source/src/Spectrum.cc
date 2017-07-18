@@ -102,12 +102,7 @@ void Spectrum::clock()
         if (rd_ == false)
         {
             if (io_ == false)
-                if ((z80.a & 0x0001) == 0x0000) // Reading from ULA port
-                    z80.d = ula.d;
-                else if (ula.hiz == false)      // Floating bus
-                    z80.d = map[1]->d;
-                else                            // High impedance
-                    z80.d = 0xFF;
+                z80.d = ula.d;
             else if (as_ == false)
                 z80.d = map[(z80.a & 0xC000) >> 14]->d;
         }

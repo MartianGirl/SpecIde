@@ -17,7 +17,7 @@ ULA::ULA() :
     vBlankStart(0x0F8), vBlankEnd(0x0FF),
     vSyncStart(0x0F8), vSyncEnd(0x0FB),
     ioPortIn(0xFF), ioPortOut(0x00), tapeIn(0),
-    c00(993), c01(972), c10(492), c11(492),
+    c00(996), c01(996), c10(392), c11(392),
     tensions{391, 728, 3653, 3790}, // ULA 5C (Issue 2)
     //tensions{342, 652, 3591, 3753}, // ULA 6C (Issue 3)
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
@@ -90,6 +90,8 @@ void ULA::clock()
     static int_fast32_t vEnd = 0;
     static int_fast32_t vDiff = 0;
 
+    uint_fast8_t d_i = d;
+    uint_fast8_t d_o = d_i;
 
     // Here we:
     // 1. Generate video control signals.
@@ -113,15 +115,28 @@ void ULA::clock()
     bool cpuWait;
     if (display)
     {
-        bool contentionWindow;
+        bool delay;
         // 2.a. Check for contended memory or I/O accesses.
         // T1 of a memory cycle can be detected by a falling edge on MREQ.
         // T2 of an I/O cycle can be detected by a falling edge on IORQ.
-        bool memContention = ((z80_a & 0xC000) == 0x4000)
-            && (((~z80_c & z80_c_d & SIGNAL_MREQ_) == SIGNAL_MREQ_));
-        bool ioContention = ((z80_a & 0x0001) == 0x0000)
-            && ((~z80_c & z80_c_d & SIGNAL_IORQ_) == SIGNAL_IORQ_);
+        bool memAccess = ((z80_a & 0xC000) == 0x4000);
+        bool mreqLow_d = ((z80_c_d & SIGNAL_MREQ_) == 0x0000);  // T2 T3
+        bool memContention = memAccess && !mreqLow_d;           // T1 (T2 TW T3)
+        //bool mreqEdge = ((~z80_c & z80_c_d & SIGNAL_MREQ_) == SIGNAL_MREQ_);
+        //bool memContention = memAccess && mreqEdge; // Mem Access T1
 
+        bool ioAccess = ((z80_a & 0x0001) == 0x0000);
+        bool iorqLow = ((z80_c & SIGNAL_IORQ_) == 0x0000);      // T2 TW
+        bool iorqLow_d = ((z80_c_d & SIGNAL_IORQ_) == 0x0000);  // TW T3
+        bool ioContention = ioAccess && iorqLow;                // IO T2 TW
+        bool contentionOff = ioAccess && iorqLow_d;             // IO TW T3
+        bool contention = (memContention || ioContention) && !contentionOff;
+
+        // T               1  2  W  3
+        // ioContention1 : 0  1  0  0
+        // ioContention2 : 0  0  0  0 => A != 4000 - 7FFF
+        // ioContention2 : 1  1  0  0 => A0 = 0, A = 4000 - 7FFF
+        // ioContention2 : 1  1  1  1 => A0 = 1, A = 4000 - 7FFF
 
         // 2.b. Read from memory.
         switch (pixel & 0x0F)
@@ -130,11 +145,11 @@ void ULA::clock()
             case 0x01:
             case 0x02:
             case 0x03:
-                contentionWindow = false; hiz = true; break;
+                delay = false; hiz = true; break;
             case 0x04:
             case 0x05:
             case 0x06:
-                contentionWindow = true; hiz = true; break;
+                delay = true; hiz = true; break;
             case 0x07:
                 // Generate addresses (which must be pair).
                 dataAddr = ((pixel & 0xF0) >> 3)    // 000SSSSS SSSPPPP0
@@ -145,38 +160,42 @@ void ULA::clock()
                 attrAddr = ((pixel & 0xF0) >> 3)    // 000110SS SSSPPPP0
                     | ((scan & 0xF8) << 2)          // 00000076 54376540
                     | 0x1800;
-                contentionWindow = true; hiz = true; break;
+                delay = true; hiz = true; break;
             case 0x08:
                 a = dataAddr;
-                contentionWindow = true; hiz = false; break;
+                delay = true; hiz = false; break;
             case 0x09:
-                dataLatch = d;
-                contentionWindow = true; hiz = false; break;
+                dataLatch = d_i;
+                d_o = d_i;
+                delay = true; hiz = false; break;
             case 0x0A:
                 a = attrAddr;
-                contentionWindow = true; hiz = false; break;
+                delay = true; hiz = false; break;
             case 0x0B:
-                attrLatch = d;
-                contentionWindow = true; hiz = false; break;
+                attrLatch = d_i;
+                d_o = d_i;
+                delay = true; hiz = false; break;
             case 0x0C:
                 a = dataAddr + 1;
-                contentionWindow = true; hiz = false; break;
+                delay = true; hiz = false; break;
             case 0x0D:
-                dataLatch = d;
-                contentionWindow = true; hiz = false; break;
+                dataLatch = d_i;
+                d_o = d_i;
+                delay = true; hiz = false; break;
             case 0x0E:
                 a = attrAddr + 1;
-                contentionWindow = true; hiz = false; break;
+                delay = true; hiz = false; break;
             case 0x0F:
-                attrLatch = d;
-                contentionWindow = true; hiz = false; break;
+                attrLatch = d_i;
+                d_o = d_i;
+                delay = true; hiz = false; break;
             default:
                 a = 0xFFFF;
-                contentionWindow = false; hiz = true; break;
+                delay = false; hiz = true; break;
         }
 
         // 2.c. Resolve contention and generate CPU clock.
-        cpuWait = contentionWindow && (memContention || ioContention);
+        cpuWait = (contention && delay);
     }
     else
     {
@@ -213,9 +232,9 @@ void ULA::clock()
         if (cIndex > 1023) cIndex = 1023;
     }
 
-    if (capacitor > 3700) capacitor = 3700;
+    if (capacitor > 5000) capacitor = 5000;
     if ((tapeIn & 0xC0) == 0x80) capacitor = 650;
-    if ((tapeIn & 0xC0) == 0xC0) capacitor = 3000;
+    if ((tapeIn & 0xC0) == 0xC0) capacitor = 5000;
     ioPortIn &= 0xBF;
     ioPortIn |= (capacitor < 700) ? 0x00 : 0x40;
     if (cpuClock)
@@ -236,18 +255,19 @@ void ULA::clock()
                     if ((z80_a & 0x0400) == 0x0000) ioPortIn &= keys[5];
                     if ((z80_a & 0x0200) == 0x0000) ioPortIn &= keys[6];
                     if ((z80_a & 0x0100) == 0x0000) ioPortIn &= keys[7];
-                    d = ioPortIn;
+                    d_o = ioPortIn;
                 }
 
                 if ((z80_c & SIGNAL_WR_) == 0x0000)
                 {
-                    ioPortOut = d;
+                    ioPortOut = d_i;
                 }
             }
         }
         z80_c_d = z80_c;
     }
 
+    d = d_o;
 
     // 4. Generate video signal.
     {
