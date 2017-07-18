@@ -35,8 +35,8 @@ bool Screen::update()
     // If not blanking, draw.
     if (!(*hBlankInput || *vBlankInput))
     {
-        if ((yPos > 23 && yPos < 288) && (xPos > 23 && xPos < 352))
-            pixels[(yPos - 24) * xSize + (xPos - 24)] = *rgbaInput;
+        if ((yPos > 23 && yPos < 288) && (xPos > 15 && xPos < 344))
+            pixels[(yPos - 24) * xSize + (xPos - 16)] = *rgbaInput;
         ++xPos;
     }
 
