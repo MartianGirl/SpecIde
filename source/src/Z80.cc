@@ -61,14 +61,14 @@ void Z80::clock()
             decoder.regs.ir.l = (decoder.regs.ir.l & 0x80) 
                 | ((decoder.regs.ir.l + 1) & 0x7F);
 
-            c |= (SIGNAL_RD_ | SIGNAL_M1_ | SIGNAL_IORQ_ | SIGNAL_MREQ_);
-            // c &= ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
+            c |= (SIGNAL_RD_ | SIGNAL_M1_ | SIGNAL_IORQ_);
+            c &= ~(SIGNAL_MREQ_); // | SIGNAL_RFSH_);
 
             state = Z80State::ST_OCF_T4_RFSH2;
             break;
 
         case Z80State::ST_OCF_T4_RFSH2:
-            // c |= (SIGNAL_MREQ_);
+            c |= (SIGNAL_MREQ_);
             // c &= ~(SIGNAL_RFSH_);
 
             state = finishMachineCycle();
