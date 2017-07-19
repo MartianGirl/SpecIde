@@ -28,16 +28,15 @@ class Z80Rst : public Z80Instruction
                 case 0:
                     r->memWrCycles = 2;
                     r->memAddrMode = 0x000000AA;
+                    return false;
 
+                case 1:
                     r->oReg.l = r->pc.h;
                     r->oReg.h = r->pc.l;
                     return true;
 
-                case 1:
-                    return true;
-
                 case 2:
-                    return false;
+                    return true;
 
                 case 3:
                     r->pc.w = (r->y << 3);

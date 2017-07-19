@@ -104,39 +104,24 @@ void ULA::clock()
 
     bool display = (pixel < hBorderStart) && (scan < vBorderStart);
 
-    // This is the "dead cockroach modification".
-    //if ((z80_c & SIGNAL_IORQ_) == 0x0000)
-    //{
-        //z80_a &= 0xBFFF;
-        //z80_a |= 0x4000;
-    //}
-
     // 2. Generate video data.
     bool cpuWait;
     if (display)
     {
         bool delay;
         // 2.a. Check for contended memory or I/O accesses.
-        // T1 of a memory cycle can be detected by a falling edge on MREQ.
-        // T2 of an I/O cycle can be detected by a falling edge on IORQ.
+        // T1 of a memory cycle can be detected by delayed MREQ high.
         bool memAccess = ((z80_a & 0xC000) == 0x4000);
         bool mreqLow_d = ((z80_c_d & SIGNAL_MREQ_) == 0x0000);  // T2 T3
         bool memContention = memAccess && !mreqLow_d;           // T1 (T2 TW T3)
-        //bool mreqEdge = ((~z80_c & z80_c_d & SIGNAL_MREQ_) == SIGNAL_MREQ_);
-        //bool memContention = memAccess && mreqEdge; // Mem Access T1
 
+        // T2 of an I/O cycle can be detected by a falling edge on IORQ.
         bool ioAccess = ((z80_a & 0x0001) == 0x0000);
         bool iorqLow = ((z80_c & SIGNAL_IORQ_) == 0x0000);      // T2 TW
         bool iorqLow_d = ((z80_c_d & SIGNAL_IORQ_) == 0x0000);  // TW T3
         bool ioContention = ioAccess && iorqLow;                // IO T2 TW
         bool contentionOff = ioAccess && iorqLow_d;             // IO TW T3
         bool contention = (memContention || ioContention) && !contentionOff;
-
-        // T               1  2  W  3
-        // ioContention1 : 0  1  0  0
-        // ioContention2 : 0  0  0  0 => A != 4000 - 7FFF
-        // ioContention2 : 1  1  0  0 => A0 = 0, A = 4000 - 7FFF
-        // ioContention2 : 1  1  1  1 => A0 = 1, A = 4000 - 7FFF
 
         // 2.b. Read from memory.
         switch (pixel & 0x0F)
@@ -207,7 +192,7 @@ void ULA::clock()
 
     // 3. ULA port & Interrupt.
     c = z80_c;
-    if ((scan == 0xF8) && (pixel < 64)) 
+    if ((scan == vSyncStart) && (pixel < 64)) 
         c &= ~SIGNAL_INT_;
     else
         c |= SIGNAL_INT_;
@@ -293,9 +278,11 @@ void ULA::clock()
     }
 
     // 5. Update counters
-    if (++pixel == maxPixel)
-    {
+    ++pixel;
+    if (pixel == maxPixel)
         pixel = 0;
+    else if (pixel == hSyncStart)
+    {
         ++scan;
         if (scan == vBlankEnd)
             flash += 0x04;
