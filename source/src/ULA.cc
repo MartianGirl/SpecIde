@@ -31,7 +31,7 @@ ULA::ULA() :
     hiz(true),
     z80_a(0xFFFF), z80_c(0xFFFF),
     cpuClock(false), cpuLevel(true),
-    hBlank(false), vBlank(false), display(false),
+    hBlank(false), vBlank(false), idle(false),
     ioPortIn(0xFF), ioPortOut(0x00), tapeIn(0),
     c00(996), c01(996), c10(392), c11(392),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
@@ -111,7 +111,7 @@ void ULA::clock()
     // 1. Generate video control signals.
     hSync = (pixel >= hSyncStart) && (pixel <= hSyncEnd);
     hBlank = ((pixel >= hBlankStart) && (pixel <= hBlankEnd));
-    display = (pixel < hBorderStart) && (scan < vBorderStart);
+    bool display = (pixel < hBorderStart) && (scan < vBorderStart);
 
     // 2. Generate video data.
     if (display)
@@ -138,11 +138,11 @@ void ULA::clock()
             case 0x01:
             case 0x02:
             case 0x03:
-                delay = false; hiz = true; break;
+                idle = true; delay = false; hiz = true; break;
             case 0x04:
             case 0x05:
             case 0x06:
-                delay = true; hiz = true; break;
+                idle = true; delay = true; hiz = true; break;
             case 0x07:
                 // Generate addresses (which must be pair).
                 dataAddr = ((pixel & 0xF0) >> 3)    // 000SSSSS SSSPPPP0
@@ -153,34 +153,34 @@ void ULA::clock()
                 attrAddr = ((pixel & 0xF0) >> 3)    // 000110SS SSSPPPP0
                     | ((scan & 0xF8) << 2)          // 00000076 54376540
                     | 0x1800;
-                delay = true; hiz = true; break;
+                idle = true; delay = true; hiz = true; break;
             case 0x08:
                 a = dataAddr;
-                delay = true; hiz = false; break;
+                idle = false; delay = true; hiz = false; break;
             case 0x09:
                 dataLatch = d;
-                delay = true; hiz = false; break;
+                idle = false; delay = true; hiz = false; break;
             case 0x0A:
                 a = attrAddr;
-                delay = true; hiz = false; break;
+                idle = false; delay = true; hiz = false; break;
             case 0x0B:
                 attrLatch = d;
-                delay = true; hiz = false; break;
+                idle = false; delay = true; hiz = false; break;
             case 0x0C:
                 a = dataAddr + 1;
-                delay = true; hiz = false; break;
+                idle = false; delay = true; hiz = false; break;
             case 0x0D:
                 dataLatch = d;
-                delay = true; hiz = false; break;
+                idle = false; delay = true; hiz = false; break;
             case 0x0E:
                 a = attrAddr + 1;
-                delay = true; hiz = false; break;
+                idle = false; delay = true; hiz = false; break;
             case 0x0F:
                 attrLatch = d;
-                delay = true; hiz = false; break;
+                idle = false; delay = true; hiz = false; break;
             default:
                 a = 0xFFFF;
-                delay = false; hiz = true; break;
+                idle = false; delay = false; hiz = true; break;
         }
 
         // 2.c. Resolve contention and generate CPU clock.
@@ -190,6 +190,7 @@ void ULA::clock()
     {
         hiz = true;
         cpuClock = true;
+        idle = true;
     }
 
     // 3. ULA port & Interrupt.
@@ -289,10 +290,8 @@ void ULA::clock()
         vSync = (scan >= vSyncStart) && (scan <= vSyncEnd);
         vBlank = ((scan >= vBlankStart) && (scan <= vBlankEnd));
 
-        if (scan == vBlankEnd)
-            flash += 0x04;
-        else if (scan == maxScan)
-            scan = 0;
+        if (scan == vBlankEnd) flash += 0x04;
+        else if (scan == maxScan) scan = 0;
     }
 }
 
