@@ -42,6 +42,7 @@ class Z80InRegPtrC : public Z80Instruction
 
                 case 1:
                     r->acc.h = r->acc.l = r->iReg.h;
+                   
                     r->acc.h ^= r->acc.h >> 1;
                     r->acc.h ^= r->acc.h >> 2;
                     r->acc.h ^= r->acc.h >> 4;

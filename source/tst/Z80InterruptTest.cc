@@ -23,6 +23,7 @@ void runCycles(Z80& z80, Memory& m, size_t cycles)
     for (size_t i = 0; i != cycles; ++i)
     {
         z80.clock();
+        z80.clock();
         m.a = z80.a; m.d = z80.d;
         m.as_ = (z80.c & SIGNAL_MREQ_) == SIGNAL_MREQ_;
         m.rd_ = (z80.c & SIGNAL_RD_) == SIGNAL_RD_;
@@ -87,7 +88,6 @@ BOOST_AUTO_TEST_CASE(nmi_test)
     runCycles(z80, m, 11);  // Execute NMI jump.
     BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0066);
     BOOST_CHECK_EQUAL(z80.decoder.regs.iff, IFF2);
-    BOOST_CHECK_EQUAL(z80.nmiProcess, false);
     runCycles(z80, m, 7);   // Execute instruction at 66h.
     BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x0102);
     BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0xFFFF);

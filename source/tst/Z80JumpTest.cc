@@ -23,6 +23,7 @@ void runCycles(Z80& z80, Memory& m, size_t cycles)
     for (size_t i = 0; i != cycles; ++i)
     {
         z80.clock();
+        z80.clock();
         m.a = z80.a; m.d = z80.d;
         m.as_ = (z80.c & SIGNAL_MREQ_) == SIGNAL_MREQ_;
         m.rd_ = (z80.c & SIGNAL_RD_) == SIGNAL_RD_;

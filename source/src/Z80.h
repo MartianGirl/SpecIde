@@ -18,7 +18,7 @@ using namespace std;
 class Z80
 {
     public:
-        Z80() : state(Z80State::ST_RESET) {}
+        Z80() {}
 
         void reset();
         void clock();
@@ -33,19 +33,8 @@ class Z80
         uint_fast8_t d;
         uint_fast16_t c;
 
-        // States
-        Z80State state;
-
         // Internals
         Z80Decoder decoder;
-
-        // NMI requested
-        bool nmiAccept;
-        bool nmiProcess;
-
-        // INT requested
-        bool intProcess;
-        uint_fast8_t iff;
 };
 
 // vim: et:sw=4:ts=4

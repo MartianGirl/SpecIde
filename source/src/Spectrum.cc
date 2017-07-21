@@ -32,79 +32,76 @@ Spectrum::Spectrum() :
 
 void Spectrum::clock()
 {
+    // ULA is 'clocked' before Z80. This means:
+    //
+    // ULA   Z80
+    // ---------
+    //  0  | RST
+    //  1  |  H
+    //  2  |  L
+    //  3  |  H
+    //  4  |  L
+    //
+    // This is important, because when ULA is at 0 again Z80 clock will be
+    // LOW. Contention intervals work this way.
     bool as_ = ((z80.c & SIGNAL_MREQ_) == SIGNAL_MREQ_);
     bool io_ = ((z80.c & SIGNAL_IORQ_) == SIGNAL_IORQ_);
     bool rd_ = ((z80.c & SIGNAL_RD_) == SIGNAL_RD_);
     bool wr_ = ((z80.c & SIGNAL_WR_) == SIGNAL_WR_);
+    size_t memArea = (z80.a & 0xC000) >> 14;
 
     // First we clock the ULA. This generates video and contention signals.
     // We need to provide the ULA with the Z80 address and control buses.
     ula.z80_a = z80.a;
     ula.z80_c = z80.c;
-    
+
     // ULA gets the data from memory or Z80, or outputs data to Z80.
     if (ula.hiz == false)           // Is ULA mastering the bus?
+    {
+        // Bank 1: 4000h - Contended memory
+        map[1]->a = ula.a;
+        map[1]->as_ = false;
+        map[1]->rd_ = false;
+        map[1]->wr_ = true;
+        map[1]->clock();
         ula.d = map[1]->d;
-    else if ((io_ == false) && (wr_ == false)) // Is Z80 mastering and writing?
+    }
+    else if (io_ == false && wr_ == false) // Is Z80 mastering and writing?
         ula.d = z80.d;
 
     ula.clock();
     z80.c = ula.c;
 
+
     if (ula.cpuClock)
     {
-        // Bank 0: 0000h - ROM
-        map[0]->a = z80.a;
-        map[0]->d = z80.d;
-        map[0]->as_ = as_ || ((z80.a & 0xC000) != 0x0000);
-        map[0]->rd_ = rd_;
-        map[0]->wr_ = wr_;
-        map[0]->clock();
-
-        // Bank 2: 8000h - Extended memory
-        map[2]->a = z80.a;
-        map[2]->d = z80.d;
-        map[2]->as_ = as_ || ((z80.a & 0xC000) != 0x8000);
-        map[2]->rd_ = rd_;
-        map[2]->wr_ = wr_;
-        map[2]->clock();
-
-        // Bank 3: C000h - Extended memory
-        map[3]->a = z80.a;
-        map[3]->d = z80.d;
-        map[3]->as_ = as_ || ((z80.a & 0xC000) != 0xC000);
-        map[3]->rd_ = rd_;
-        map[3]->wr_ = wr_;
-        map[3]->clock();
-    }
-
-    // Bank 1: 4000h - Contended memory
-    if (ula.hiz == false) // Is ULA mastering the bus?
-    {
-        map[1]->a = ula.a;
-        map[1]->as_ = false;
-        map[1]->rd_ = false;
-        map[1]->wr_ = true;
-    }
-    else
-    {
-        map[1]->a = z80.a;
-        map[1]->d = z80.d;  // Only Z80 writes here.
-        map[1]->as_ = as_ || ((z80.a & 0xC000) != 0x4000);
-        map[1]->rd_ = rd_;
-        map[1]->wr_ = wr_;
-    }
-    map[1]->clock();
-
-    if (ula.cpuClock == true)
-    {
         // Z80 gets data from the ULA or memory, only when reading.
-        if (rd_ == false)
+        if (io_ == false && rd_ == false)
         {
-            if (io_ == false)
+            if ((z80.a & 0x0001) == 0x0000)
+            {
                 z80.d = ula.d;
-            else if (as_ == false)
-                z80.d = map[(z80.a & 0xC000) >> 14]->d;
+            }
+            // else if ((z80.a & 0x001F) == 0x001F)    // Kempston joystick.
+            // z80.d = map[1]->d;
+            else
+            {
+                z80.d = map[1]->d;  // Get the byte from the video memory.
+            }
+        }
+        else if (as_ == false)
+        {
+            // Bank 0: 0000h - ROM
+            // Bank 1: 4000h - Contended memory
+            // Bank 2: 8000h - Extended memory
+            // Bank 3: C000h - Extended memory
+            map[memArea]->a = z80.a;
+            map[memArea]->d = z80.d;
+            map[memArea]->as_ = as_;
+            map[memArea]->rd_ = rd_;
+            map[memArea]->wr_ = wr_;
+            map[memArea]->clock();
+            z80.d = map[memArea]->d;
         }
 
         z80.clock();
@@ -113,6 +110,7 @@ void Spectrum::clock()
 
 void Spectrum::reset()
 {
+    ula.reset();    // Synchronize clock level.
     z80.reset();
 }
 

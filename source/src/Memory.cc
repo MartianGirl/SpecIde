@@ -24,6 +24,8 @@ void Memory::clock()
         else if(rd_ == false)
             d = memory[a & mask];
     }
+    else
+        d = 0xFF;
 }
 
 // vim: et:sw=4:ts=4
