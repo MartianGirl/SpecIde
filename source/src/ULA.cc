@@ -31,7 +31,7 @@ ULA::ULA() :
     hiz(true),
     z80_a(0xFFFF), z80_c(0xFFFF),
     cpuClock(false), cpuLevel(true),
-    hBlank(false), vBlank(false),
+    hBlank(false), vBlank(false), display(false),
     ioPortIn(0xFF), ioPortOut(0x00), tapeIn(0),
     c00(996), c01(996), c10(392), c11(392),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
@@ -111,8 +111,7 @@ void ULA::clock()
     // 1. Generate video control signals.
     hSync = (pixel >= hSyncStart) && (pixel <= hSyncEnd);
     hBlank = ((pixel >= hBlankStart) && (pixel <= hBlankEnd));
-
-    bool display = (pixel < hBorderStart) && (scan < vBorderStart);
+    display = (pixel < hBorderStart) && (scan < vBorderStart);
 
     // 2. Generate video data.
     if (display)

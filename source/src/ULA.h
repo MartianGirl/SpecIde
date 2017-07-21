@@ -51,6 +51,7 @@ class ULA
         uint32_t rgba;
         bool hSync, vSync;
         bool hBlank, vBlank;
+        bool display;
 
         uint32_t colourTable[0x100];
 

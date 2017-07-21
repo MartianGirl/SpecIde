@@ -72,7 +72,7 @@ void Spectrum::clock()
     ula.clock();
     z80.c = ula.c;
 
-
+    // We clock the Z80 if the ULA allows.
     if (ula.cpuClock)
     {
         // Z80 gets data from the ULA or memory, only when reading.
@@ -84,9 +84,13 @@ void Spectrum::clock()
             }
             // else if ((z80.a & 0x001F) == 0x001F)    // Kempston joystick.
             // z80.d = map[1]->d;
-            else
+            else if (ula.display)
             {
                 z80.d = map[1]->d;  // Get the byte from the video memory.
+            }
+            else
+            {
+                z80.d = 0xFF;
             }
         }
         else if (as_ == false)
