@@ -54,16 +54,16 @@ bool Screen::update()
 
         pollEvents();
     }
-    vSyncDelayed = (*vSyncInput);
+    vSyncDelayed = *vSyncInput;
 
     // HSYNC falling edge restores the beam to the beginning of the next line.
-    if ((*hSyncInput == false) && (hSyncDelayed == true))
+    if (!*hSyncInput && hSyncDelayed)
     {
         xPos = 0;
         if (*vBlankInput == false)
             ++yPos;
     }
-    hSyncDelayed = (*hSyncInput);
+    hSyncDelayed = *hSyncInput;
 
     return tick;
 }

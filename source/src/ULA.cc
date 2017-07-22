@@ -138,12 +138,13 @@ void ULA::clock()
             case 0x01:
             case 0x02:
             case 0x03:
-                idle = true; delay = false; hiz = true; break;
+                idle = false; delay = false; hiz = true; break;
             case 0x04:
             case 0x05:
             case 0x06:
-                idle = true; delay = true; hiz = true; break;
             case 0x07:
+                idle = false; delay = true; hiz = true; break;
+            case 0x08:
                 // Generate addresses (which must be pair).
                 dataAddr = ((pixel & 0xF0) >> 3)    // 000SSSSS SSSPPPP0
                     | ((scan & 0x38) << 2)          // 00076210 54376540
@@ -153,8 +154,6 @@ void ULA::clock()
                 attrAddr = ((pixel & 0xF0) >> 3)    // 000110SS SSSPPPP0
                     | ((scan & 0xF8) << 2)          // 00000076 54376540
                     | 0x1800;
-                idle = true; delay = true; hiz = true; break;
-            case 0x08:
                 a = dataAddr;
                 idle = false; delay = true; hiz = false; break;
             case 0x09:
@@ -195,7 +194,8 @@ void ULA::clock()
 
     // 3. ULA port & Interrupt.
     c = z80_c;
-    if ((scan == vSyncStart) && (pixel < 64)) 
+    if ((scan == vSyncStart) && (pixel < 128)
+            && ((c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
         c &= ~SIGNAL_INT_;
     else
         c |= SIGNAL_INT_;
@@ -284,7 +284,7 @@ void ULA::clock()
     ++pixel;
     if (pixel == maxPixel)
         pixel = 0;
-    else if (pixel == hSyncStart)
+    else if (pixel == hBlankStart)
     {
         ++scan;
         vSync = (scan >= vSyncStart) && (scan <= vSyncEnd);
