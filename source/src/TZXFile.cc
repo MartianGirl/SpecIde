@@ -61,10 +61,14 @@ void TZXFile::parse(
         indexData.clear();
         stopData.clear();
 
-        // We'll add a "Pause 1000ms" block, just in case.
-        fileData.push_back(0x20);
-        fileData.push_back(0xE8);
-        fileData.push_back(0x03);
+        if (fileData[fileData.size() - 3] != 0x20)
+        {
+            // If there is no pause...
+            // We'll add a "Pause 1000ms" block, just in case.
+            fileData.push_back(0x20);
+            fileData.push_back(0xE8);
+            fileData.push_back(0x03);
+        }
     }
     else
         return;
@@ -160,7 +164,25 @@ void TZXFile::parse(
                 }
 
                 // Pause. Add index always.
-                pulseData.push_back(pause ? 3500 * pause : 3500);
+                if (pause)
+                {
+                    if ((pulseData.size() % 2) == 0)
+                    {
+                        pulseData.push_back(3500 * (pause - 1));
+                        pulseData.push_back(3500);
+                    }
+                    else
+                    {
+                        pulseData.push_back(3500 * pause);
+                    }
+                }
+                else
+                {
+                    if ((pulseData.size() % 2) == 0)
+                    {
+                        pulseData.push_back(3500);  // Maybe 1ms is too long.
+                    }
+                }
                 indexData.insert(pulseData.size());
 
                 pointer += dataLength + 19;
@@ -226,7 +248,15 @@ void TZXFile::parse(
                 // a SpeedLock block...)
                 if (pause != 0)
                 {
-                    pulseData.push_back(3500 * pause);
+                    if ((pulseData.size() % 2) == 0)
+                    {
+                        pulseData.push_back(3500 * (pause - 1));
+                        pulseData.push_back(3500);
+                    }
+                    else
+                    {
+                        pulseData.push_back(3500 * pause);
+                    }
                     indexData.insert(pulseData.size());
                 }
 
@@ -271,7 +301,15 @@ void TZXFile::parse(
                 // one second pause to properly end the block.
                 {
                     size_t delay = (pause != 0) ? pause : 1000;
-                    pulseData.push_back(3500 * delay);
+                    if ((pulseData.size() % 2) == 0)
+                    {
+                        pulseData.push_back(3500 * (delay - 1));
+                        pulseData.push_back(3500);
+                    }
+                    else
+                    {
+                        pulseData.push_back(3500 * delay);
+                    }
                 }
 
                 indexData.insert(pulseData.size());
