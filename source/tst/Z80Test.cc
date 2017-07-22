@@ -20,21 +20,24 @@ void startZ80(Z80& z80)
 
 void runCycles(Z80& z80, Memory& m, size_t cycles)
 {
-    for (size_t i = 0; i != cycles; ++i)
+    for (size_t i = 0; i < cycles; ++i)
     {
-        z80.clock();
-        m.a = z80.a; m.d = z80.d;
+        m.a = z80.a;
         m.as_ = (z80.c & SIGNAL_MREQ_) == SIGNAL_MREQ_;
         m.rd_ = (z80.c & SIGNAL_RD_) == SIGNAL_RD_;
         m.wr_ = (z80.c & SIGNAL_WR_) == SIGNAL_WR_;
-        z80.clock();
-        z80.d = m.d;
-        m.a = z80.a; m.d = z80.d;
-        m.as_ = (z80.c & SIGNAL_MREQ_) == SIGNAL_MREQ_;
-        m.rd_ = (z80.c & SIGNAL_RD_) == SIGNAL_RD_;
-        m.wr_ = (z80.c & SIGNAL_WR_) == SIGNAL_WR_;
+        m.d = z80.d;
         m.clock();
         z80.d = m.d;
+        z80.clock();
+        m.a = z80.a; m.d = z80.d;
+        m.as_ = (z80.c & SIGNAL_MREQ_) == SIGNAL_MREQ_;
+        m.rd_ = (z80.c & SIGNAL_RD_) == SIGNAL_RD_;
+        m.wr_ = (z80.c & SIGNAL_WR_) == SIGNAL_WR_;
+        m.d = z80.d;
+        m.clock();
+        z80.d = m.d;
+        z80.clock();
     }
 }
 
@@ -128,7 +131,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.decoder.regs.sp.w, 0xFFFF);
     BOOST_CHECK(z80.a == 0xFF7F);
     BOOST_CHECK(z80.d == 0xFF);
-    BOOST_CHECK(z80.c == (0xFFFF & ~SIGNAL_MREQ_));  // Removed refresh handling.
+    BOOST_CHECK(z80.c == 0xFFFF);   // Removed refresh handling.
 
     // Clock it once. We've run ST_OCF_T4_RFSH2
     z80.clock(); z80.clock();
@@ -158,8 +161,8 @@ BOOST_AUTO_TEST_CASE(states_ld_r_n_test)
     z80.clock();    // ST_RESET        -> ST_OCF_T1_ADDRWR
     BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0000);
     z80.clock();    // ST_OCF_T1_ADDRWR -> ST_OCF_T2_DATARD 
-    z80.clock();    // ST_OCF_T1_ADDRWR -> ST_OCF_T2_DATARD 
     BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0001);
+    z80.clock();    // ST_OCF_T1_ADDRWR -> ST_OCF_T2_DATARD 
     z80.clock();    // ST_OCF_T2_DATARD -> ST_OCF_T3_RFSH1
     z80.clock();    // ST_OCF_T2_DATARD -> ST_OCF_T3_RFSH1
     z80.d = 0x3E;   // LD A, n
@@ -182,8 +185,8 @@ BOOST_AUTO_TEST_CASE(states_ld_r_n_test)
     z80.clock();    // ST_RESET        -> ST_OCF_T1_ADDRWR
     BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0000);
     z80.clock();    // ST_OCF_T1_ADDRWR -> ST_OCF_T2_DATARD 
-    z80.clock();    // ST_OCF_T1_ADDRWR -> ST_OCF_T2_DATARD 
     BOOST_CHECK_EQUAL(z80.decoder.regs.pc.w, 0x0001);
+    z80.clock();    // ST_OCF_T1_ADDRWR -> ST_OCF_T2_DATARD 
     z80.clock();    // ST_OCF_T2_DATARD -> ST_OCF_T3_RFSH1
     z80.clock();    // ST_OCF_T2_DATARD -> ST_OCF_T3_RFSH1
     z80.d = 0x06;   // LD B, n

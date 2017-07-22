@@ -7,7 +7,7 @@ void Z80::reset()
 
 void Z80::clock()
 {
-    static uint_fast16_t c_d;
+    static uint_fast16_t c_d = 0xFFFF;
     static Z80State state = Z80State::ST_RESET;
     static bool nmiAccept = false;
     static bool nmiProcess = false;

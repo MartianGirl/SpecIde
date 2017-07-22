@@ -18,7 +18,7 @@ using namespace std;
 class Z80
 {
     public:
-        Z80() {}
+        Z80() : a(0xFFFF), d(0xFF), c(0xFFFF) {}
 
         void reset();
         void clock();

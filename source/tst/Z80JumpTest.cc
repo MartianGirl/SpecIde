@@ -20,16 +20,24 @@ void startZ80(Z80& z80)
 
 void runCycles(Z80& z80, Memory& m, size_t cycles)
 {
-    for (size_t i = 0; i != cycles; ++i)
+    for (size_t i = 0; i < cycles; ++i)
     {
-        z80.clock();
+        m.a = z80.a;
+        m.as_ = (z80.c & SIGNAL_MREQ_) == SIGNAL_MREQ_;
+        m.rd_ = (z80.c & SIGNAL_RD_) == SIGNAL_RD_;
+        m.wr_ = (z80.c & SIGNAL_WR_) == SIGNAL_WR_;
+        m.d = z80.d;
+        m.clock();
+        z80.d = m.d;
         z80.clock();
         m.a = z80.a; m.d = z80.d;
         m.as_ = (z80.c & SIGNAL_MREQ_) == SIGNAL_MREQ_;
         m.rd_ = (z80.c & SIGNAL_RD_) == SIGNAL_RD_;
         m.wr_ = (z80.c & SIGNAL_WR_) == SIGNAL_WR_;
+        m.d = z80.d;
         m.clock();
         z80.d = m.d;
+        z80.clock();
     }
 }
 
