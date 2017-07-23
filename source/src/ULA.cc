@@ -151,13 +151,8 @@ void ULA::clock()
             case 0x01:
             case 0x02:
             case 0x03:
-                idle = false; delay = false; hiz = true; break;
+                idle = true; delay = true; hiz = true; break;
             case 0x04:
-            case 0x05:
-            case 0x06:
-            case 0x07:
-                idle = false; delay = true; hiz = true; break;
-            case 0x08:
                 // Generate addresses (which must be pair).
                 dataAddr = ((pixel & 0xF0) >> 3)    // 000SSSSS SSSPPPP0
                     | ((scan & 0x38) << 2)          // 00076210 54376540
@@ -168,31 +163,37 @@ void ULA::clock()
                     | ((scan & 0xF8) << 2)          // 00000076 54376540
                     | 0x1800;
                 a = dataAddr;
+                idle = true; delay = true; hiz = false; break;
+            case 0x05:
+                dataLatch = d;
+                idle = true; delay = true; hiz = false; break;
+            case 0x06:
+                a = attrAddr;
+                idle = false; delay = true; hiz = false; break;
+            case 0x07:
+                attrLatch = d;
+                idle = false; delay = true; hiz = false; break;
+            case 0x08:
+                a = dataAddr + 1;
                 idle = false; delay = true; hiz = false; break;
             case 0x09:
                 dataLatch = d;
                 idle = false; delay = true; hiz = false; break;
             case 0x0A:
-                a = attrAddr;
+                a = attrAddr + 1;
                 idle = false; delay = true; hiz = false; break;
             case 0x0B:
                 attrLatch = d;
                 idle = false; delay = true; hiz = false; break;
             case 0x0C:
-                a = dataAddr + 1;
-                idle = false; delay = true; hiz = false; break;
             case 0x0D:
-                dataLatch = d;
-                idle = false; delay = true; hiz = false; break;
+                idle = false; delay = false; hiz = true; break;
             case 0x0E:
-                a = attrAddr + 1;
-                idle = false; delay = true; hiz = false; break;
             case 0x0F:
-                attrLatch = d;
-                idle = false; delay = true; hiz = false; break;
+                idle = true; delay = false; hiz = true; break;
             default:
                 a = 0xFFFF;
-                idle = false; delay = false; hiz = true; break;
+                idle = true; delay = false; hiz = true; break;
         }
 
         // 2.c. Resolve contention and generate CPU clock.
@@ -280,7 +281,7 @@ void ULA::clock()
     data <<= 1;
 
     // We start outputting data after just a data/attr pair has been fetched.
-    if ((pixel & 0x07) == 0x03)
+    if ((pixel & 0x07) == 0x00)
     {
         // This actually causes the following, due to the placement of the
         // aliases:
