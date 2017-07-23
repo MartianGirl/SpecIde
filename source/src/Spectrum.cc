@@ -66,7 +66,7 @@ void Spectrum::clock()
         map[1]->clock();
         ula.d = map[1]->d;
     }
-    else if (io_ == false && wr_ == false) // Is Z80 mastering and writing?
+    else    // If ULA is not mastering, Z80 is.
         ula.d = z80.d;
 
     ula.clock();

@@ -30,7 +30,7 @@ int_fast32_t ULA::constants[] = {0};
 ULA::ULA() :
     hiz(true),
     z80_a(0xFFFF), z80_c(0xFFFF),
-    cpuClock(false), cpuLevel(true),
+    cpuClock(false), ulaReset(true),
     hBlank(false), vBlank(false), idle(false),
     ioPortIn(0xFF), ioPortOut(0x00), tapeIn(0),
     c00(996), c01(996), c10(392), c11(392),
@@ -80,6 +80,7 @@ void ULA::clock()
     static size_t pixel = 0;
     static size_t scan = 0;
     static uint_fast8_t flash = 0;
+    static bool z80Clk = false;
 
     static uint_fast16_t z80_c_1 = 0xFFFF;
     static uint_fast16_t z80_c_2 = 0xFFFF;
@@ -118,18 +119,30 @@ void ULA::clock()
     {
         bool delay;
         // 2.a. Check for contended memory or I/O accesses.
-        // T1 of a memory cycle can be detected by delayed MREQ high.
-        bool memAccess = ((z80_a & 0xC000) == 0x4000);
-        bool mreqLow = ((z80_c & SIGNAL_MREQ_) == 0x0000);      // T2 on.
-        bool memContention = memAccess && !mreqLow;             // T1L contended.
 
-        // T2 of an I/O cycle can be detected by a falling edge on IORQ.
-        bool ioAccess = ((z80_a & 0x0001) == 0x0000);
-        bool iorqLow = ((z80_c & SIGNAL_IORQ_) == 0x0000);      // T2L TWH TWL T3H
-        bool iorqLow_d = ((z80_c_1 & SIGNAL_IORQ_) == 0x0000);  // TWH TWL T3H
-        bool ioContention = ioAccess && iorqLow;                // IO T2 TW
-        bool contentionOff = ioAccess && iorqLow_d;             // IO TW T3
-        bool contention = (memContention || ioContention) && !contentionOff && cpuLevel;
+        // Memory Contention
+        // We detect memory contended states whenever the address is in the
+        // contention range (0x4000-0x7FFF).
+        // We only delay T1H until the ULA has finished reading. The rest of
+        // states are not contended. We do this by checking MREQ is low.
+        // We contend T-States, which means we only consider high clock phase.
+        bool memContention = ((z80_a & 0xC000) == 0x4000) && z80Clk;
+        bool memContentionOff = ((z80_c & SIGNAL_MREQ_) == 0x0000);
+
+        // I/O Contention
+        // We detect I/O contended states whenever the address is even (A0 = 0)
+        // and IORQ is low.
+        // We only delay T2H. We do this by checking a delayed version of IORQ.
+        bool ioUlaPort = ((z80_a & 0x0001) == 0x0000);
+        bool iorqLow = ((z80_c & SIGNAL_IORQ_) == 0x0000);          // T2 TW T3
+        bool iorqLow_d = ((z80_c_2 & SIGNAL_IORQ_) == 0x0000);      // TW T3 T1
+        bool ioContention = ioUlaPort && iorqLow && z80Clk;         // T2 TW T3
+        bool ioContentionOff = iorqLow_d;              // TW T3 NN
+
+        // We use the same contention manager, and we consider contention when
+        // there is any contention, and when no contention is not disabled.
+        bool contention = (memContention || ioContention)   // Contention On?
+            && !(memContentionOff || ioContentionOff);      // Contention Off?
 
         // 2.b. Read from memory.
         switch (pixel & 0x0F)
@@ -138,13 +151,8 @@ void ULA::clock()
             case 0x01:
             case 0x02:
             case 0x03:
-                idle = false; delay = false; hiz = true; break;
-            case 0x04:
-            case 0x05:
-            case 0x06:
-            case 0x07:
                 idle = false; delay = true; hiz = true; break;
-            case 0x08:
+            case 0x04:
                 // Generate addresses (which must be pair).
                 dataAddr = ((pixel & 0xF0) >> 3)    // 000SSSSS SSSPPPP0
                     | ((scan & 0x38) << 2)          // 00076210 54376540
@@ -156,27 +164,32 @@ void ULA::clock()
                     | 0x1800;
                 a = dataAddr;
                 idle = false; delay = true; hiz = false; break;
+            case 0x05:
+                dataLatch = d;
+                idle = false; delay = true; hiz = false; break;
+            case 0x06:
+                a = attrAddr;
+                idle = false; delay = true; hiz = false; break;
+            case 0x07:
+                attrLatch = d;
+                idle = false; delay = true; hiz = false; break;
+            case 0x08:
+                a = dataAddr + 1;
+                idle = false; delay = true; hiz = false; break;
             case 0x09:
                 dataLatch = d;
                 idle = false; delay = true; hiz = false; break;
             case 0x0A:
-                a = attrAddr;
+                a = attrAddr + 1;
                 idle = false; delay = true; hiz = false; break;
             case 0x0B:
                 attrLatch = d;
                 idle = false; delay = true; hiz = false; break;
             case 0x0C:
-                a = dataAddr + 1;
-                idle = false; delay = true; hiz = false; break;
             case 0x0D:
-                dataLatch = d;
-                idle = false; delay = true; hiz = false; break;
             case 0x0E:
-                a = attrAddr + 1;
-                idle = false; delay = true; hiz = false; break;
             case 0x0F:
-                attrLatch = d;
-                idle = false; delay = true; hiz = false; break;
+                idle = false; delay = false; hiz = true; break;
             default:
                 a = 0xFFFF;
                 idle = false; delay = false; hiz = true; break;
@@ -194,8 +207,8 @@ void ULA::clock()
 
     // 3. ULA port & Interrupt.
     c = z80_c;
-    if ((scan == vSyncStart) && (pixel < 128)
-            && ((c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
+    if ((scan == vSyncStart) && (pixel > 320)
+            && ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
         c &= ~SIGNAL_INT_;
     else
         c |= SIGNAL_INT_;
@@ -226,12 +239,12 @@ void ULA::clock()
     ioPortIn &= 0xBF;
     ioPortIn |= (capacitor < 700) ? 0x00 : 0x40;
 
-    if (cpuClock)   // Port access is contended.
+    // We read keyboard if we're reading the ULA port, during TW.
+    if (cpuClock)   // Port read access is contended.
     {
-        // We read keyboard if we're reading the ULA port, during TW.
-        if ((z80_a & 0x0001) == 0x0000)
+        if (((z80_a & 0x0001) == 0x0000) && ((z80_c & SIGNAL_IORQ_) == 0x0000))
         {
-            if (((z80_c | z80_c_4) & (SIGNAL_IORQ_ | SIGNAL_RD_)) == 0x0000)
+            if (((z80_c | z80_c_4) & SIGNAL_RD_) == 0x0000)
             {
                 ioPortIn |= 0x1F;
                 if ((z80_a & 0x8000) == 0x0000) ioPortIn &= keys[0];
@@ -245,7 +258,7 @@ void ULA::clock()
                 d = ioPortIn;
             }
 
-            if (((z80_c | z80_c_4) & (SIGNAL_IORQ_ | SIGNAL_WR_)) == 0x0000)
+            if (((z80_c | z80_c_4) & SIGNAL_WR_) == 0x0000)
             {
                 ioPortOut = d;
             }
@@ -256,7 +269,7 @@ void ULA::clock()
         z80_c_2 = z80_c_1;
         z80_c_1 = z80_c;
 
-        cpuLevel = !cpuLevel;
+        z80Clk = !z80Clk;
     }
 
     // 4. Generate video signal.
@@ -267,7 +280,7 @@ void ULA::clock()
     data <<= 1;
 
     // We start outputting data after just a data/attr pair has been fetched.
-    if ((pixel & 0x07) == 0x03)
+    if ((pixel & 0x07) == 0x00)
     {
         // This actually causes the following, due to the placement of the
         // aliases:
@@ -283,7 +296,10 @@ void ULA::clock()
     // 5. Update counters
     ++pixel;
     if (pixel == maxPixel)
+    {
         pixel = 0;
+        ulaReset = false;
+    }
     else if (pixel == hBlankStart)
     {
         ++scan;
@@ -293,10 +309,21 @@ void ULA::clock()
         if (scan == vBlankEnd) flash += 0x04;
         else if (scan == maxScan) scan = 0;
     }
+
+    if (ulaReset)
+    {
+        pixel = 0;
+        scan = 0;
+        ulaReset = false;
+        cIndex = 0;
+        z80Clk = false;
+
+        z80_c_4 = z80_c_3 = z80_c_2 = z80_c_1 = 0xFFFF;
+    }
 }
 
 void ULA::reset()
 {
-    cpuLevel = true;
+    ulaReset = true;
 }
 // vim: et:sw=4:ts=4:

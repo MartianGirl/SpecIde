@@ -15,6 +15,8 @@ void Z80::clock()
 
     static uint_fast8_t iff = 0;
 
+    static uint_fast8_t dout = 0;
+
     // Process RESET signal
     if (!(c & SIGNAL_RESET_))
         state = Z80State::ST_RESET;
@@ -199,16 +201,18 @@ void Z80::clock()
             return;
 
         case Z80State::ST_MEMWR_T1L_ADDRWR:
-            d = decoder.writeMem();
+            d = dout = decoder.writeMem();
             c &= ~(SIGNAL_MREQ_);
             state = Z80State::ST_MEMWR_T2H_WAITST;
             return;
 
         case Z80State::ST_MEMWR_T2H_WAITST:
+            d = dout;
             state = Z80State::ST_MEMWR_T2L_WAITST;
             return;
 
         case Z80State::ST_MEMWR_T2L_WAITST:
+            d = dout;
             c &= ~(SIGNAL_WR_);
 
             if ((c & SIGNAL_WAIT_) == 0x0000)
@@ -218,10 +222,12 @@ void Z80::clock()
             return;
 
         case Z80State::ST_MEMWR_T3H_DATAWR:
+            d = dout;
             state = Z80State::ST_MEMWR_T3L_DATAWR;
             return;
 
         case Z80State::ST_MEMWR_T3L_DATAWR:
+            d = dout;
             c |= SIGNAL_MREQ_ | SIGNAL_WR_;
             break;
 
@@ -273,24 +279,28 @@ void Z80::clock()
             return;
 
         case Z80State::ST_IOWR_T1L_ADDRWR:
-            d = decoder.writeIo();
+            d = dout = decoder.writeIo();
             state = Z80State::ST_IOWR_T2H_IORQ;
             return;
 
         case Z80State::ST_IOWR_T2H_IORQ:
+            d = dout;
             c &= ~(SIGNAL_IORQ_ | SIGNAL_WR_);
             state = Z80State::ST_IOWR_T2L_IORQ;
             return;
 
         case Z80State::ST_IOWR_T2L_IORQ:
+            d = dout;
             state = Z80State::ST_IOWR_TWH_WAITST;
             return;
 
         case Z80State::ST_IOWR_TWH_WAITST:
+            d = dout;
             state = Z80State::ST_IOWR_TWL_WAITST;
             return;
 
         case Z80State::ST_IOWR_TWL_WAITST:
+            d = dout;
             if ((c & SIGNAL_WAIT_) == 0x0000)
                 state = Z80State::ST_IOWR_TWH_WAITST;
             else
@@ -298,10 +308,12 @@ void Z80::clock()
             return;
 
         case Z80State::ST_IOWR_T3H_DATAWR:
+            d = dout;
             state = Z80State::ST_IOWR_T3L_DATAWR;
             return;
 
         case Z80State::ST_IOWR_T3L_DATAWR:
+            d = dout;
             c |= SIGNAL_IORQ_ | SIGNAL_WR_;
             break;
 
