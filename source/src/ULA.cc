@@ -207,7 +207,7 @@ void ULA::clock()
 
     // 3. ULA port & Interrupt.
     c = z80_c;
-    if ((scan == vSyncStart) && (pixel > 320)
+    if ((scan == vSyncStart) && (pixel < 64)
             && ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
         c &= ~SIGNAL_INT_;
     else
@@ -280,7 +280,7 @@ void ULA::clock()
     data <<= 1;
 
     // We start outputting data after just a data/attr pair has been fetched.
-    if ((pixel & 0x07) == 0x00)
+    if ((pixel & 0x07) == 0x03)
     {
         // This actually causes the following, due to the placement of the
         // aliases:
