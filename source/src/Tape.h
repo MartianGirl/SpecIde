@@ -40,7 +40,11 @@ class Tape
             playing = !playing;
             cout << ((playing) ? "Playing" : "Stopped") << endl;
         }
-        void rewind() { playing = false; sample = 0; pointer = 0; }
+        void rewind()
+        {
+            playing = false; sample = 0; pointer = 0;
+            cout << "Rewind..." << endl;
+        }
         void advance();
         void next() {}
         void prev() {}

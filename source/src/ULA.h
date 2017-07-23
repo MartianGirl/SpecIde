@@ -7,6 +7,7 @@
  */
 
 #include <cstdint>
+#include <cstddef>
 
 #include "Z80Defs.h"
 
@@ -45,7 +46,7 @@ class ULA
         uint_fast16_t z80_a;
         uint_fast16_t z80_c;
         bool cpuClock;
-        bool cpuLevel;
+        bool ulaReset;
 
         // Video signals
         uint32_t rgba;

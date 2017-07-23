@@ -9,6 +9,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 
+#include <cstddef>
 #include <string>
 
 class GraphicWindow

@@ -16,6 +16,8 @@
 
 #include "GraphicWindow.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <cassert>
 #include <vector>
 

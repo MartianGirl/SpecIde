@@ -9,7 +9,7 @@
  */
 
 #include <cstdint>
-#include <iostream>
+#include <cstddef>
 #include <queue>
 #include <vector>
 
