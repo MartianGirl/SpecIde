@@ -151,7 +151,7 @@ void ULA::clock()
             case 0x01:
             case 0x02:
             case 0x03:
-                idle = true; delay = true; hiz = true; break;
+                idle = false; delay = true; hiz = true; break;
             case 0x04:
                 // Generate addresses (which must be pair).
                 dataAddr = ((pixel & 0xF0) >> 3)    // 000SSSSS SSSPPPP0
@@ -163,10 +163,10 @@ void ULA::clock()
                     | ((scan & 0xF8) << 2)          // 00000076 54376540
                     | 0x1800;
                 a = dataAddr;
-                idle = true; delay = true; hiz = false; break;
+                idle = false; delay = true; hiz = false; break;
             case 0x05:
                 dataLatch = d;
-                idle = true; delay = true; hiz = false; break;
+                idle = false; delay = true; hiz = false; break;
             case 0x06:
                 a = attrAddr;
                 idle = false; delay = true; hiz = false; break;
@@ -187,10 +187,9 @@ void ULA::clock()
                 idle = false; delay = true; hiz = false; break;
             case 0x0C:
             case 0x0D:
-                idle = false; delay = false; hiz = true; break;
             case 0x0E:
             case 0x0F:
-                idle = true; delay = false; hiz = true; break;
+                idle = false; delay = false; hiz = true; break;
             default:
                 a = 0xFFFF;
                 idle = true; delay = false; hiz = true; break;
