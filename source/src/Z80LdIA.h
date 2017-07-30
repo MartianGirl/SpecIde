@@ -10,33 +10,24 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80LdIA : public Z80Instruction
+bool z80LdIA()
 {
-    public:
-        Z80LdIA() {}
+    switch (executionStep)
+    {
+        case 0:
+            memAddrMode = 0x00000000;
+            return false;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memAddrMode = 0x00000000;
-                    return false;
+        case 1:
+            ir.h = af.h;
+            prefix = PREFIX_NO;
+            return true;
 
-                case 1:
-                    r->ir.h = r->af.h;
-                    r->prefix = PREFIX_NO;
-                    return true;
+        default:    // Should not happen
+            assert(false);
+            return true;
 
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-
-            }
-        }
-};
+    }
+}
 
 // vim: et:sw=4:ts=4

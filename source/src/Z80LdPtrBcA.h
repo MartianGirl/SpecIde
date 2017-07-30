@@ -10,34 +10,25 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80LdPtrBcA : public Z80Instruction
+bool z80LdPtrBcA()
 {
-    public:
-        Z80LdPtrBcA() {}
+    switch (executionStep)
+    {
+        case 0:
+            memWrCycles = 1;
+            memAddrMode = 0x00000003;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memWrCycles = 1;
-                    r->memAddrMode = 0x00000003;
+            oReg.l = af.h;
+            return true;
 
-                    r->oReg.l = r->af.h;
-                    return true;
+        case 1:
+            prefix = PREFIX_NO;
+            return true;
 
-                case 1:
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

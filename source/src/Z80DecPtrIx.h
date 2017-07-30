@@ -6,79 +6,70 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80DecPtrIx : public Z80Instruction
+bool z80DecPtrIx()
 {
-    public:
-        Z80DecPtrIx() {}
+    switch (executionStep)
+    {
+        case 0:
+            memRdCycles = 1;
+            memWrCycles = 0;
+            memAddrMode = 0x00000661;
+            return true;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memRdCycles = 1;
-                    r->memWrCycles = 0;
-                    r->memAddrMode = 0x00000661;
-                    return true;
+        case 1:
+            tmp.l = iReg.h;
+            return false;
 
-                case 1:
-                    r->tmp.l = r->iReg.h;
-                    return false;
+        case 2:
+            tmp.h = ((tmp.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            return false;
 
-                case 2:
-                    r->tmp.h = ((r->tmp.l & 0x80) == 0x80) ? 0xFF : 0x00;
-                    return false;
+        case 3:
+            tmp.w += ix.w;
+            return false;
 
-                case 3:
-                    r->tmp.w += r->ix.w;
-                    return false;
+        case 4:
+            return false;
 
-                case 4:
-                    return false;
+        case 5:
+            memRdCycles = 1;
+            return true;
 
-                case 5:
-                    r->memRdCycles = 1;
-                    return true;
+        case 6:
+            // Preserve carry bit.
+            af.l &= FLAG_C;
 
-                case 6:
-                    // Preserve carry bit.
-                    r->af.l &= FLAG_C;
+            // Calculate half-carry. This is done by doing a 4-bit
+            // subtraction. Half-carry will be in bit 4.
+            acc.w = (iReg.h & 0x0F) - 1;
+            af.l |= 
+                (acc.w & (FLAG_H | FLAG_3)) | FLAG_N;    // ...H3.1.  
 
-                    // Calculate half-carry. This is done by doing a 4-bit
-                    // subtraction. Half-carry will be in bit 4.
-                    r->acc.w = (r->iReg.h & 0x0F) - 1;
-                    r->af.l |= 
-                        (r->acc.w & (FLAG_H | FLAG_3)) | FLAG_N;    // ...H3.1.  
+            // Calculate carry in the bit 7. Overflow flag is
+            // (carry in bit 7) XOR (carry in bit 8).
+            acc.w = (iReg.h & 0x7F) - 1;
+            af.l |= (acc.w >> 5) & FLAG_PV;
 
-                    // Calculate carry in the bit 7. Overflow flag is
-                    // (carry in bit 7) XOR (carry in bit 8).
-                    r->acc.w = (r->iReg.h & 0x7F) - 1;
-                    r->af.l |= (r->acc.w >> 5) & FLAG_PV;
+            // Calculate the result.
+            acc.w = iReg.h - 1;
+            af.l |= acc.l & (FLAG_S | FLAG_5);        // S.5H3.1.
+            af.l ^= (acc.w >> 6) & FLAG_PV;           // S.5H3V1.
+            af.l |= (acc.l) ? 0x00 : FLAG_Z;          // SZ5H3V1.
+            return false;
 
-                    // Calculate the result.
-                    r->acc.w = r->iReg.h - 1;
-                    r->af.l |= r->acc.l & (FLAG_S | FLAG_5);        // S.5H3.1.
-                    r->af.l ^= (r->acc.w >> 6) & FLAG_PV;           // S.5H3V1.
-                    r->af.l |= (r->acc.l) ? 0x00 : FLAG_Z;          // SZ5H3V1.
-                    return false;
+        case 7:
+            oReg.l = acc.l;
+            memWrCycles = 1;
+            return true;
 
-                case 7:
-                    r->oReg.l = r->acc.l;
-                    r->memWrCycles = 1;
-                    return true;
+        case 8:
+            prefix = PREFIX_NO;
+            return true;
 
-                case 8:
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

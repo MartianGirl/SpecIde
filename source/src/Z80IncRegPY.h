@@ -6,38 +6,29 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80IncRegPY : public Z80Instruction
+bool z80IncRegPY()
 {
-    public:
-        Z80IncRegPY() {}
+    switch (executionStep)
+    {
+        case 0:
+            memRdCycles = 0;
+            memWrCycles = 0;
+            memAddrMode = 0x00000000;
+            return false;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memRdCycles = 0;
-                    r->memWrCycles = 0;
-                    r->memAddrMode = 0x00000000;
-                    return false;
+        case 1:
+            // Increment operand.
+            ++*regpy[p];
+            return false;
 
-                case 1:
-                    // Increment operand.
-                    ++*r->regpy[r->p];
-                    return false;
+        case 2:
+            prefix = PREFIX_NO;
+            return true;
 
-                case 2:
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

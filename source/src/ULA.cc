@@ -137,7 +137,7 @@ void ULA::clock()
         bool iorqLow = ((z80_c & SIGNAL_IORQ_) == 0x0000);          // T2 TW T3
         bool iorqLow_d = ((z80_c_2 & SIGNAL_IORQ_) == 0x0000);      // TW T3 T1
         bool ioContention = ioUlaPort && iorqLow && z80Clk;         // T2 TW T3
-        bool ioContentionOff = iorqLow_d;              // TW T3 NN
+        bool ioContentionOff = iorqLow_d;                           // TW T3 NN
 
         // We use the same contention manager, and we consider contention when
         // there is any contention, and when no contention is not disabled.
@@ -207,8 +207,8 @@ void ULA::clock()
 
     // 3. ULA port & Interrupt.
     c = z80_c;
-    if ((scan == vSyncStart) && (pixel < 64)
-            && ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
+    if ((scan == vSyncStart) && (pixel < 64))
+            // && ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
         c &= ~SIGNAL_INT_;
     else
         c |= SIGNAL_INT_;

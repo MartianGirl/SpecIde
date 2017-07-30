@@ -21,65 +21,56 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80Ldir : public Z80Instruction
+bool z80Ldir()
 {
-    public:
-        Z80Ldir() {}
+    switch (executionStep)
+    {
+        case 0:
+            memRdCycles = 1;
+            memWrCycles = 1;
+            memAddrMode = 0x00000042;
+            return true;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memRdCycles = 1;
-                    r->memWrCycles = 1;
-                    r->memAddrMode = 0x00000042;
-                    return true;
+        case 1:
+            oReg.l = iReg.h;
+            return true;
 
-                case 1:
-                    r->oReg.l = r->iReg.h;
-                    return true;
+        case 2:
+            --bc.w;
+            ++de.w;
+            ++hl.w;
+            return false;
 
-                case 2:
-                    --r->bc.w;
-                    ++r->de.w;
-                    ++r->hl.w;
-                    return false;
+        case 3:
+            tmp.l = iReg.h + af.h;
+            af.l &= FLAG_S | FLAG_Z | FLAG_C;            // SZ00000C
+            af.l |= (tmp.l & FLAG_3);                 // SZ00300C
+            af.l |= (tmp.l << 4) & FLAG_5;            // SZ50300C
+            af.l |= (bc.w) ? FLAG_PV : 0x00;          // SZ503P0C
+            return false;
 
-                case 3:
-                    r->tmp.l = r->iReg.h + r->af.h;
-                    r->af.l &= FLAG_S | FLAG_Z | FLAG_C;            // SZ00000C
-                    r->af.l |= (r->tmp.l & FLAG_3);                 // SZ00300C
-                    r->af.l |= (r->tmp.l << 4) & FLAG_5;            // SZ50300C
-                    r->af.l |= (r->bc.w) ? FLAG_PV : 0x00;          // SZ503P0C
-                    return false;
+        case 4:
+            if (bc.w != 0x0000)
+                cpuProcCycles = 1;
+            else
+                prefix = PREFIX_NO;
+            return true;
 
-                case 4:
-                    if (r->bc.w != 0x0000)
-                        r->cpuProcCycles = 1;
-                    else
-                        r->prefix = PREFIX_NO;
-                    return true;
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+            return false;
 
-                case 5:
-                case 6:
-                case 7:
-                case 8:
-                    return false;
+        case 9:
+            pc.w -= 0x0002;
+            prefix = PREFIX_NO;
+            return true;
 
-                case 9:
-                    r->pc.w -= 0x0002;
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

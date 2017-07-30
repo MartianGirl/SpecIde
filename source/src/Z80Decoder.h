@@ -29,22 +29,6 @@ class Z80Decoder
     public:
         Z80Decoder();
 
-        void decode(uint_fast8_t byte);
-        void startInstruction();
-
-        uint_fast16_t getAddress();
-
-        void readMem(uint_fast8_t byte);
-        uint_fast8_t writeMem();
-
-        void readIo(uint_fast8_t byte);
-        uint_fast8_t writeIo();
-
-        void cpuProcCycle();
-
-        bool execute();
-        bool executeNmi();
-        bool executeInt();
 
         void reset();
 

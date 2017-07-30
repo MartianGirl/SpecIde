@@ -60,9 +60,7 @@ add_executable(SpectrumTest
     ${PROJECT_SOURCE_DIR}/src/ULA.cc
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80RegisterSet.cc
     ${PROJECT_SOURCE_DIR}/src/Spectrum.cc)
 target_link_libraries(SpectrumTest
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
@@ -73,8 +71,6 @@ add_executable(Z80Test
     Z80Test.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80RegisterSet.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
 target_link_libraries(Z80Test
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
@@ -85,8 +81,6 @@ add_executable(Z80AluTest
     Z80AluTest.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80RegisterSet.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
 target_link_libraries(Z80AluTest
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
@@ -97,8 +91,6 @@ add_executable(Z80InterruptTest
     Z80InterruptTest.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80RegisterSet.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
 target_link_libraries(Z80InterruptTest
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
@@ -109,8 +101,6 @@ add_executable(Z80JumpTest
     Z80JumpTest.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80RegisterSet.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
 target_link_libraries(Z80JumpTest
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
@@ -121,8 +111,6 @@ add_executable(Z80BitTest
     Z80BitTest.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80Decoder.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80RegisterSet.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
 target_link_libraries(Z80BitTest
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}

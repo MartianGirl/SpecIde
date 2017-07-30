@@ -10,43 +10,34 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80LdPtrWordIx : public Z80Instruction
+bool z80LdPtrWordIx()
 {
-    public:
-        Z80LdPtrWordIx() {}
+    switch (executionStep)
+    {
+        case 0:
+            memRdCycles = 2;
+            memAddrMode = 0x00009811;
+            return true;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memRdCycles = 2;
-                    r->memAddrMode = 0x00009811;
-                    return true;
+        case 1:
+            return true;
 
-                case 1:
-                    return true;
+        case 2:
+            memWrCycles = 2;
+            oReg.w = ix.w;
+            return true;
 
-                case 2:
-                    r->memWrCycles = 2;
-                    r->oReg.w = r->ix.w;
-                    return true;
+        case 3:
+            return true;
 
-                case 3:
-                    return true;
+        case 4:
+            prefix = PREFIX_NO;
+            return true;
 
-                case 4:
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

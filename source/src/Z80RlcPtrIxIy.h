@@ -28,45 +28,36 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80RlcPtrIxIy : public Z80Instruction
+bool z80RlcPtrIxIy()
 {
-    public:
-        Z80RlcPtrIxIy() {}
+    switch (executionStep)
+    {
+        // Previous steps are executed by the prefix.
+        case 5:
+            acc.w = iReg.h << 1;
+            acc.h = acc.l = acc.l | acc.h;
+            acc.h ^= acc.h >> 1;
+            acc.h ^= acc.h >> 2;
+            acc.h ^= acc.h >> 4;
+            af.l = acc.l & (FLAG_S | FLAG_5 | FLAG_3 | FLAG_C);
+            af.l |= (acc.l) ? 0x00 : FLAG_Z;
+            af.l |= (acc.h & 0x01) ? 0x00 : FLAG_PV;
+            return false;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                // Previous steps are executed by the prefix.
-                case 5:
-                    r->acc.w = r->iReg.h << 1;
-                    r->acc.h = r->acc.l = r->acc.l | r->acc.h;
-                    r->acc.h ^= r->acc.h >> 1;
-                    r->acc.h ^= r->acc.h >> 2;
-                    r->acc.h ^= r->acc.h >> 4;
-                    r->af.l = r->acc.l & (FLAG_S | FLAG_5 | FLAG_3 | FLAG_C);
-                    r->af.l |= (r->acc.l) ? 0x00 : FLAG_Z;
-                    r->af.l |= (r->acc.h & 0x01) ? 0x00 : FLAG_PV;
-                    return false;
+        case 6:
+            if (z != 6)
+                *reg8[z] = acc.l;
+            oReg.l = acc.l;
+            return true;
 
-                case 6:
-                    if (r->z != 6)
-                        *r->reg8[r->z] = r->acc.l;
-                    r->oReg.l = r->acc.l;
-                    return true;
+        case 7:
+            prefix = PREFIX_NO;
+            return true;
 
-                case 7:
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

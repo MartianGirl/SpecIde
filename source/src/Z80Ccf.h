@@ -6,35 +6,26 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80Ccf : public Z80Instruction
+bool z80Ccf()
 {
-    public:
-        Z80Ccf() {}
+    switch (executionStep)
+    {
+        case 0:
+            memRdCycles = 0;
+            memWrCycles = 0;
+            memAddrMode = 0x00000000;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memRdCycles = 0;
-                    r->memWrCycles = 0;
-                    r->memAddrMode = 0x00000000;
+            af.l &= (FLAG_S | FLAG_Z | FLAG_PV | FLAG_C);
+            af.l |= af.h & (FLAG_5 | FLAG_3);
+            af.l |= ((af.l & FLAG_C) << 4) & FLAG_H;
+            af.l ^= FLAG_C;
+            prefix = PREFIX_NO;
+            return true;
 
-                    r->af.l &= (FLAG_S | FLAG_Z | FLAG_PV | FLAG_C);
-                    r->af.l |= r->af.h & (FLAG_5 | FLAG_3);
-                    r->af.l |= ((r->af.l & FLAG_C) << 4) & FLAG_H;
-                    r->af.l ^= FLAG_C;
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

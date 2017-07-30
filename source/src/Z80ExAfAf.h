@@ -10,32 +10,23 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80ExAfAf : public Z80Instruction
+bool z80ExAfAf()
 {
-    public:
-        Z80ExAfAf() {}
+    switch (executionStep)
+    {
+        case 0:
+            memAddrMode = 0x00000000;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memAddrMode = 0x00000000;
+            acc.w = af.w;
+            af.w = af_.w;
+            af_.w = acc.w;
+            prefix = PREFIX_NO;
+            return true;
 
-                    r->acc.w = r->af.w;
-                    r->af.w = r->af_.w;
-                    r->af_.w = r->acc.w;
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

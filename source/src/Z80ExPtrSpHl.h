@@ -10,53 +10,44 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80ExPtrSpHl : public Z80Instruction
+bool z80ExPtrSpHl()
 {
-    public:
-        Z80ExPtrSpHl() {}
+    switch (executionStep)
+    {
+        case 0:
+            memRdCycles = 2;
+            memWrCycles = 2;
+            memAddrMode = 0x0000AABB;
+            return true;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memRdCycles = 2;
-                    r->memWrCycles = 2;
-                    r->memAddrMode = 0x0000AABB;
-                    return true;
+        case 1:
+            return true;
 
-                case 1:
-                    return true;
+        case 2:
+            oReg.l = hl.h;
+            oReg.h = hl.l;
+            return false;
 
-                case 2:
-                    r->oReg.l = r->hl.h;
-                    r->oReg.h = r->hl.l;
-                    return false;
+        case 3:
+            return true;
 
-                case 3:
-                    return true;
+        case 4:
+            return true;
 
-                case 4:
-                    return true;
+        case 5:
+            return false;
 
-                case 5:
-                    return false;
+        case 6:
+            hl.w = iReg.w;
+            return false;
 
-                case 6:
-                    r->hl.w = r->iReg.w;
-                    return false;
+        case 7:
+            prefix = PREFIX_NO;
+            return true;
 
-                case 7:
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 // vim: et:sw=4:ts=4

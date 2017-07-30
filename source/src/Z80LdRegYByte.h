@@ -20,33 +20,24 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80LdRegYByte : public Z80Instruction
+bool z80LdRegYByte()
 {
-    public:
-        Z80LdRegYByte() {}
+    switch (executionStep)
+    {
+        case 0:
+            memRdCycles = 1;
+            memAddrMode = 0x00000001;
+            return true;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memRdCycles = 1;
-                    r->memAddrMode = 0x00000001;
-                    return true;
+        case 1:
+            *(regy8[y]) = iReg.h;
+            prefix = PREFIX_NO;
+            return true;
 
-                case 1:
-                    *(r->regy8[r->y]) = r->iReg.h;
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

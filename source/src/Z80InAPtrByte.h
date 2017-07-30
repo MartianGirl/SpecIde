@@ -10,37 +10,28 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80InAPtrByte : public Z80Instruction
+bool z80InAPtrByte()
 {
-    public:
-        Z80InAPtrByte() {}
+    switch (executionStep)
+    {
+        case 0:
+            memRdCycles = 1;
+            ioRdCycles = 1;
+            memAddrMode = 0x000000D1;
+            return true;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memRdCycles = 1;
-                    r->ioRdCycles = 1;
-                    r->memAddrMode = 0x000000D1;
-                    return true;
+        case 1:
+            return true;
 
-                case 1:
-                    return true;
+        case 2:
+            af.h = iReg.h;
+            prefix = PREFIX_NO;
+            return true;
 
-                case 2:
-                    r->af.h = r->iReg.h;
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

@@ -23,40 +23,31 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80RrcReg : public Z80Instruction
+bool z80RrcReg()
 {
-    public:
-        Z80RrcReg() {}
+    switch (executionStep)
+    {
+        case 0:
+            memAddrMode = 0x00000000;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memAddrMode = 0x00000000;
+            acc.l = *reg8[z];
+            acc.h = acc.l & 0x01;
+            af.l = acc.h & FLAG_C;
+            acc.w >>= 1;
+            *reg8[z] = acc.h = acc.l;
+            acc.h ^= acc.h >> 1;
+            acc.h ^= acc.h >> 2;
+            acc.h ^= acc.h >> 4;
+            af.l |= acc.l & (FLAG_S | FLAG_5 | FLAG_3);
+            af.l |= (acc.l) ? 0x00 : FLAG_Z;
+            af.l |= (acc.h & 0x01) ? 0x00 : FLAG_PV;
+            prefix = PREFIX_NO;
+            return true;
 
-                    r->acc.l = *r->reg8[r->z];
-                    r->acc.h = r->acc.l & 0x01;
-                    r->af.l = r->acc.h & FLAG_C;
-                    r->acc.w >>= 1;
-                    *r->reg8[r->z] = r->acc.h = r->acc.l;
-                    r->acc.h ^= r->acc.h >> 1;
-                    r->acc.h ^= r->acc.h >> 2;
-                    r->acc.h ^= r->acc.h >> 4;
-                    r->af.l |= r->acc.l & (FLAG_S | FLAG_5 | FLAG_3);
-                    r->af.l |= (r->acc.l) ? 0x00 : FLAG_Z;
-                    r->af.l |= (r->acc.h & 0x01) ? 0x00 : FLAG_PV;
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

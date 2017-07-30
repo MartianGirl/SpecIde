@@ -13,34 +13,25 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80Rla : public Z80Instruction
+bool z80Rla()
 {
-    public:
-        Z80Rla() {}
+    switch (executionStep)
+    {
+        case 0:
+            memAddrMode = 0x00000000;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memAddrMode = 0x00000000;
+            acc.w = af.h << 1;
+            af.h = acc.l | (af.l & FLAG_C);
+            af.l &= FLAG_S | FLAG_Z | FLAG_PV;
+            af.l |= af.h & (FLAG_5 | FLAG_3);
+            af.l |= acc.h & FLAG_C;
+            prefix = PREFIX_NO;
+            return true;
 
-                    r->acc.w = r->af.h << 1;
-                    r->af.h = r->acc.l | (r->af.l & FLAG_C);
-                    r->af.l &= FLAG_S | FLAG_Z | FLAG_PV;
-                    r->af.l |= r->af.h & (FLAG_5 | FLAG_3);
-                    r->af.l |= r->acc.h & FLAG_C;
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

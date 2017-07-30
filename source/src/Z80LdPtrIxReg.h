@@ -20,56 +20,47 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80LdPtrIxReg : public Z80Instruction
+bool z80LdPtrIxReg()
 {
-    public:
-        Z80LdPtrIxReg() {}
+    switch (executionStep)
+    {
+        case 0:
+            memRdCycles = 1;
+            memAddrMode = 0x00000061;
+            return true;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memRdCycles = 1;
-                    r->memAddrMode = 0x00000061;
-                    return true;
+        case 1: // Memory read byte cycle
+            cpuProcCycles = 1;
+            return true;
 
-                case 1: // Memory read byte cycle
-                    r->cpuProcCycles = 1;
-                    return true;
+        case 2:
+            tmp.l = iReg.h;
+            return false;
 
-                case 2:
-                    r->tmp.l = r->iReg.h;
-                    return false;
+        case 3:
+            tmp.h = ((tmp.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            return false;
 
-                case 3:
-                    r->tmp.h = ((r->tmp.l & 0x80) == 0x80) ? 0xFF : 0x00;
-                    return false;
+        case 4:
+            tmp.w += ix.w;
+            return false;
 
-                case 4:
-                    r->tmp.w += r->ix.w;
-                    return false;
+        case 5:
+            return false;
 
-                case 5:
-                    return false;
+        case 6:
+            memWrCycles = 1;
+            oReg.l = *(reg8[z]);
+            return true;
 
-                case 6:
-                    r->memWrCycles = 1;
-                    r->oReg.l = *(r->reg8[r->z]);
-                    return true;
+        case 7:
+            prefix = PREFIX_NO;
+            return true;
 
-                case 7:
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

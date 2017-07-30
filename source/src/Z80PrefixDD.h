@@ -6,28 +6,19 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80PrefixDD : public Z80Instruction
+bool z80PrefixDD()
 {
-    public:
-        Z80PrefixDD() {}
+    switch (executionStep)
+    {
+        case 0:
+            memAddrMode = 0x00000000;
+            prefix = PREFIX_DD;
+            return true;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memAddrMode = 0x00000000;
-                    r->prefix = PREFIX_DD;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

@@ -6,68 +6,59 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80SbcPtrIx : public Z80Instruction
+bool z80SbcPtrIx()
 {
-    public:
-        Z80SbcPtrIx() {}
+    switch (executionStep)
+    {
+        case 0:
+            memRdCycles = 1;
+            memAddrMode = 0x00000061;
+            return true;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memRdCycles = 1;
-                    r->memAddrMode = 0x00000061;
-                    return true;
+        case 1:
+            cpuProcCycles = 1;
+            return true;
 
-                case 1:
-                    r->cpuProcCycles = 1;
-                    return true;
+        case 2:
+            tmp.l = iReg.h;
+            return false;
 
-                case 2:
-                    r->tmp.l = r->iReg.h;
-                    return false;
+        case 3:
+            tmp.h = ((tmp.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            return false;
 
-                case 3:
-                    r->tmp.h = ((r->tmp.l & 0x80) == 0x80) ? 0xFF : 0x00;
-                    return false;
+        case 4:
+            tmp.w += ix.w;
+            return false;
 
-                case 4:
-                    r->tmp.w += r->ix.w;
-                    return false;
+        case 5:
+            return false;
 
-                case 5:
-                    return false;
+        case 6:
+            memRdCycles = 1;
+            return true;
 
-                case 6:
-                    r->memRdCycles = 1;
-                    return true;
+        case 7:
+            tmp.l = iReg.h;
+            acc.w = af.h - tmp.l;
+            acc.w -= af.l & FLAG_C;
 
-                case 7:
-                    r->tmp.l = r->iReg.h;
-                    r->acc.w = r->af.h - r->tmp.l;
-                    r->acc.w -= r->af.l & FLAG_C;
-
-                    r->af.l = r->acc.l & (FLAG_S | FLAG_5 | FLAG_3);
-                    r->af.l |= FLAG_N;
-                    r->af.l |= (r->acc.l ^ r->tmp.l ^ r->af.h) & FLAG_H;
-                    r->af.l |= (((r->acc.l ^ r->tmp.l ^ r->af.h) >> 5) 
-                            ^ (r->acc.h << 2)) & FLAG_PV;
-                    r->af.l |= r->acc.h & FLAG_C;                   // S.5H3V0C
-                    r->af.l |= (r->acc.l) ? 0x00 : FLAG_Z;          // SZ5H3V0C
-                    r->af.h = r->acc.l;
-                    r->prefix = PREFIX_NO;
-                    return true;
+            af.l = acc.l & (FLAG_S | FLAG_5 | FLAG_3);
+            af.l |= FLAG_N;
+            af.l |= (acc.l ^ tmp.l ^ af.h) & FLAG_H;
+            af.l |= (((acc.l ^ tmp.l ^ af.h) >> 5) 
+                    ^ (acc.h << 2)) & FLAG_PV;
+            af.l |= acc.h & FLAG_C;                   // S.5H3V0C
+            af.l |= (acc.l) ? 0x00 : FLAG_Z;          // SZ5H3V0C
+            af.h = acc.l;
+            prefix = PREFIX_NO;
+            return true;
 
 
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

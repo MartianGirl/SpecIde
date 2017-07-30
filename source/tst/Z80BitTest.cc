@@ -75,27 +75,27 @@ BOOST_AUTO_TEST_CASE(rlca_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0100);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0100);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0200);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0200);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0400);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0400);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0808);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0808);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x1000);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x1000);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2020);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x2020);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x4000);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x4000);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8000);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x8000);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0101);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0101);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0200);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0200);
 }
 
 BOOST_AUTO_TEST_CASE(rla_test)
@@ -117,27 +117,27 @@ BOOST_AUTO_TEST_CASE(rla_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0100);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0100);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0200);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0200);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0400);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0400);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0808);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0808);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x1000);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x1000);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2020);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x2020);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x4000);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x4000);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8000);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x8000);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0001);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0001);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0100);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0100);
 }
 
 BOOST_AUTO_TEST_CASE(rrca_test)
@@ -159,27 +159,27 @@ BOOST_AUTO_TEST_CASE(rrca_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0100);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0100);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8001);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x8001);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x4000);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x4000);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2020);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x2020);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x1000);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x1000);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0808);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0808);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0400);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0400);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0200);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0200);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0100);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0100);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8001);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x8001);
 }
 
 BOOST_AUTO_TEST_CASE(rra_test)
@@ -201,27 +201,27 @@ BOOST_AUTO_TEST_CASE(rra_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0100);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0100);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0001);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0001);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x8000);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x8000);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x4000);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x4000);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x2020);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x2020);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x1000);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x1000);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0808);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0808);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0400);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0400);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0200);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0200);
     runCycles(z80, m, 4);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x0100);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x0100);
 }
 
 BOOST_AUTO_TEST_CASE(rlc_r_test)
@@ -243,37 +243,37 @@ BOOST_AUTO_TEST_CASE(rlc_r_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x01);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x02);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x02);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x04);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x04);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x08);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x08);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x08);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x08);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x10);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x10);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x20);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x20);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x20);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x40);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x40);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x80);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x80);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x80);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x80);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x01);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x01);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x01);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x02);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x02);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
 }
 
 BOOST_AUTO_TEST_CASE(rl_r_test)
@@ -295,37 +295,37 @@ BOOST_AUTO_TEST_CASE(rl_r_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x01);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x02);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x02);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x04);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x04);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x08);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x08);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x08);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x08);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x10);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x10);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x20);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x20);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x20);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x40);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x40);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x80);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x80);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x80);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x80);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x00);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x45);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x45);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x01);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
 }
 
 BOOST_AUTO_TEST_CASE(rrc_r_test)
@@ -347,37 +347,37 @@ BOOST_AUTO_TEST_CASE(rrc_r_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x01);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x80);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x81);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x80);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x81);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x40);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x40);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x20);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x20);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x20);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x10);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x10);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x08);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x08);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x08);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x08);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x04);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x04);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x02);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x02);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x01);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x80);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x81);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x80);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x81);
 }
 
 BOOST_AUTO_TEST_CASE(rr_r_test)
@@ -399,37 +399,37 @@ BOOST_AUTO_TEST_CASE(rr_r_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x01);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x00);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x45);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x45);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x80);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x80);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x80);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x80);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x40);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x40);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x20);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x20);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x20);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x10);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x10);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x08);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x08);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x08);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x08);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x04);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x04);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x02);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x02);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x01);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
 }
 
 BOOST_AUTO_TEST_CASE(sla_r_test)
@@ -451,37 +451,37 @@ BOOST_AUTO_TEST_CASE(sla_r_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xFF);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xFE);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA9);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xFE);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA9);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xFC);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xAD);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xFC);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xAD);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xF8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA9);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xF8);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA9);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xF0);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA5);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xF0);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA5);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xE0);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA1);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xE0);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA1);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xC0);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x85);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xC0);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x85);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x80);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x81);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x80);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x81);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x00);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x45);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x45);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x00);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x44);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x44);
 }
 
 BOOST_AUTO_TEST_CASE(sll_r_test)
@@ -503,37 +503,37 @@ BOOST_AUTO_TEST_CASE(sll_r_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x00);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x01);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x03);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x04);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x03);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x04);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x07);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x07);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x0F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x0C);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x0F);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x0C);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x1F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x08);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x1F);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x08);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x3F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x2C);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x3F);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x2C);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x7F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x28);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x7F);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x28);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xAC);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xFF);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xAC);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xAD);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xFF);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xAD);
 }
 
 BOOST_AUTO_TEST_CASE(sra_r_test)
@@ -555,37 +555,37 @@ BOOST_AUTO_TEST_CASE(sra_r_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x80);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x80);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xC0);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x84);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xC0);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x84);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xE0);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA0);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xE0);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA0);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xF0);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA4);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xF0);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA4);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xF8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA8);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xF8);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA8);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xFC);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xAC);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xFC);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xAC);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xFE);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA8);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xFE);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA8);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xAC);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xFF);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xAC);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xAD);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xFF);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xAD);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xAD);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xFF);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xAD);
 }
 
 BOOST_AUTO_TEST_CASE(srl_r_test)
@@ -607,37 +607,37 @@ BOOST_AUTO_TEST_CASE(srl_r_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0xFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0xFF);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x7F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x29);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x7F);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x29);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x3F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x2D);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x3F);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x2D);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x1F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x09);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x1F);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x09);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x0F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x0D);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x0F);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x0D);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x07);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x01);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x07);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x01);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x03);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x05);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x03);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x05);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x01);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x01);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x01);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x00);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x45);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x45);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.h, 0x00);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x44);
+    BOOST_CHECK_EQUAL(z80.bc.h, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x44);
 }
 
 BOOST_AUTO_TEST_CASE(rlc_ptrhl_test)
@@ -660,37 +660,37 @@ BOOST_AUTO_TEST_CASE(rlc_ptrhl_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 20);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x02);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x04);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x08);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x08);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x08);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x10);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x20);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x20);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x40);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x80);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x80);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x80);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x01);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x01);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x02);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
 }
 
 BOOST_AUTO_TEST_CASE(rl_ptrhl_test)
@@ -713,37 +713,37 @@ BOOST_AUTO_TEST_CASE(rl_ptrhl_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 20);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x02);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x04);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x08);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x08);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x08);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x10);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x20);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x20);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x40);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x80);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x80);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x80);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x00);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x45);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x45);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
 }
 
 BOOST_AUTO_TEST_CASE(rrc_ptrhl_test)
@@ -766,37 +766,37 @@ BOOST_AUTO_TEST_CASE(rrc_ptrhl_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 20);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x80);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x81);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x81);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x40);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x20);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x20);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x10);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x08);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x08);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x08);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x04);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x02);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x80);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x81);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x81);
 }
 
 BOOST_AUTO_TEST_CASE(rr_ptrhl_test)
@@ -819,37 +819,37 @@ BOOST_AUTO_TEST_CASE(rr_ptrhl_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 20);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x00);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x45);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x45);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x80);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x80);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x80);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x40);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x20);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x20);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x10);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x08);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x08);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x08);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x04);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x02);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
 }
 
 BOOST_AUTO_TEST_CASE(sla_ptrhl_test)
@@ -872,37 +872,37 @@ BOOST_AUTO_TEST_CASE(sla_ptrhl_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 20);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xFE);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA9);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA9);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xFC);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xAD);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xAD);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xF8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA9);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA9);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xF0);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA5);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA5);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xE0);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA1);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA1);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xC0);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x85);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x85);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x80);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x81);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x81);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x00);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x45);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x45);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x00);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x44);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x44);
 }
 
 BOOST_AUTO_TEST_CASE(sll_ptrhl_test)
@@ -925,37 +925,37 @@ BOOST_AUTO_TEST_CASE(sll_ptrhl_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 20);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x00);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x03);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x04);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x04);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x07);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x0F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x0C);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x0C);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x1F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x08);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x08);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x3F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x2C);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x2C);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x7F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x28);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x28);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xAC);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xAC);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xAD);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xAD);
 }
 
 BOOST_AUTO_TEST_CASE(sra_ptrhl_test)
@@ -978,37 +978,37 @@ BOOST_AUTO_TEST_CASE(sra_ptrhl_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 20);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x80);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xC0);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x84);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x84);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xE0);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA0);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA0);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xF0);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA4);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA4);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xF8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA8);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA8);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xFC);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xAC);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xAC);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xFE);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xA8);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xA8);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xAC);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xAC);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xAD);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xAD);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xAD);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xAD);
 }
 
 BOOST_AUTO_TEST_CASE(srl_ptrhl_test)
@@ -1031,37 +1031,37 @@ BOOST_AUTO_TEST_CASE(srl_ptrhl_test)
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 20);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xFF);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x7F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x29);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x29);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x3F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x2D);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x2D);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x1F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x09);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x09);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x0F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x0D);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x0D);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x07);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x01);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x01);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x03);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x05);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x05);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x01);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x01);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x00);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x45);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x45);
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x00);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x44);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x44);
 }
 
 BOOST_AUTO_TEST_CASE(shift_rotation_ptrix_test)
@@ -1085,12 +1085,12 @@ BOOST_AUTO_TEST_CASE(shift_rotation_ptrix_test)
     loadBinary(code, m, 0x0000);
     loadBinary(data, m, 0x0100);
     startZ80(z80);
-    z80.decoder.regs.af.l = 0x00;
+    z80.af.l = 0x00;
     runCycles(z80, m, 198);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x0E83);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.de.w, 0x1F01);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.hl.w, 0x3E3F);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x03AD);
+    BOOST_CHECK_EQUAL(z80.bc.w, 0x0E83);
+    BOOST_CHECK_EQUAL(z80.de.w, 0x1F01);
+    BOOST_CHECK_EQUAL(z80.hl.w, 0x3E3F);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x03AD);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0x0E);
     BOOST_CHECK_EQUAL(m.memory[0x0101], 0x83);
     BOOST_CHECK_EQUAL(m.memory[0x0102], 0x1F);
@@ -1128,19 +1128,19 @@ BOOST_AUTO_TEST_CASE(bit_manipulation_reg_test)
     loadBinary(code, m, 0x0000);
     startZ80(z80);
     runCycles(z80, m, 76);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x5544);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0x5005);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x5544);
+    BOOST_CHECK_EQUAL(z80.bc.w, 0x5005);
     runCycles(z80, m, 16);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.w, 0x550C);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.bc.w, 0xA00A);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x550C);
+    BOOST_CHECK_EQUAL(z80.bc.w, 0xA00A);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x30);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x30);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x18);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x18);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x54);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x54);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x54);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x54);
 }
 
 BOOST_AUTO_TEST_CASE(bit_manipulation_ptrhl_test)
@@ -1193,21 +1193,21 @@ BOOST_AUTO_TEST_CASE(bit_manipulation_ptrhl_test)
     runCycles(z80, m, 15);
     BOOST_CHECK_EQUAL(m.memory[0x0100], 0xAA);
     runCycles(z80, m, 12);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x7C);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x7C);
     runCycles(z80, m, 12);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x38);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x38);
     runCycles(z80, m, 12);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x7C);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x7C);
     runCycles(z80, m, 12);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x38);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x38);
     runCycles(z80, m, 12);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x7C);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x7C);
     runCycles(z80, m, 12);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x38);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x38);
     runCycles(z80, m, 12);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x7C);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x7C);
     runCycles(z80, m, 12);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0xB8);
+    BOOST_CHECK_EQUAL(z80.af.l, 0xB8);
 }
 
 BOOST_AUTO_TEST_CASE(bit_manipulation_ptriy)
@@ -1260,21 +1260,21 @@ BOOST_AUTO_TEST_CASE(bit_manipulation_ptriy)
     runCycles(z80, m, 23);
     BOOST_CHECK_EQUAL(m.memory[0x0800], 0xAA);
     runCycles(z80, m, 20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x5C);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x5C);
     runCycles(z80, m, 20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x18);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x18);
     runCycles(z80, m, 20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x5C);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x5C);
     runCycles(z80, m, 20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x18);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x18);
     runCycles(z80, m, 20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x5C);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x5C);
     runCycles(z80, m, 20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x18);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x18);
     runCycles(z80, m, 20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x5C);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x5C);
     runCycles(z80, m, 20);
-    BOOST_CHECK_EQUAL(z80.decoder.regs.af.l, 0x98);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x98);
 }
 // EOF
 // vim: et:sw=4:ts=4

@@ -20,31 +20,22 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80SetNReg : public Z80Instruction
+bool z80SetNReg()
 {
-    public:
-        Z80SetNReg() {}
+    switch (executionStep)
+    {
+        case 0:
+            memAddrMode = 0x00000000;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memAddrMode = 0x00000000;
+            *reg8[z] |= (1 << y);
 
-                    *r->reg8[r->z] |= (1 << r->y);
+            prefix = PREFIX_NO;
+            return true;
 
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

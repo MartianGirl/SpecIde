@@ -17,36 +17,27 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80PopReg : public Z80Instruction
+bool z80PopReg()
 {
-    public:
-        Z80PopReg() {}
+    switch (executionStep)
+    {
+        case 0:
+            memRdCycles = 2;
+            memAddrMode = 0x000000BB;
+            return true;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->memRdCycles = 2;
-                    r->memAddrMode = 0x000000BB;
-                    return true;
+        case 1:
+            return true;
 
-                case 1:
-                    return true;
+        case 2:
+            *(regp2[p]) = iReg.w;
+            prefix = PREFIX_NO;
+            return true;
 
-                case 2:
-                    *(r->regp2[r->p]) = r->iReg.w;
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

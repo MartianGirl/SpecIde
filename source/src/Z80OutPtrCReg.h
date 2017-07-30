@@ -21,33 +21,24 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80OutPtrCReg : public Z80Instruction
+bool z80OutPtrCReg()
 {
-    public:
-        Z80OutPtrCReg() {}
+    switch (executionStep)
+    {
+        case 0:
+            ioWrCycles = 1;
+            memAddrMode = 0x0000000E;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 0:
-                    r->ioWrCycles = 1;
-                    r->memAddrMode = 0x0000000E;
+            oReg.l = (y == 6) ? 0x00 : *reg8[y];
+            return true;
+        case 1:
+            prefix = PREFIX_NO;
+            return true;
 
-                    r->oReg.l = (r->y == 6) ? 0x00 : *r->reg8[r->y];
-                    return true;
-                case 1:
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4

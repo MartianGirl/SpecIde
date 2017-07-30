@@ -25,38 +25,29 @@
  *
  */
 
-#include "Z80Instruction.h"
-#include "Z80RegisterSet.h"
-
-class Z80SetNPtrIxIy : public Z80Instruction
+bool z80SetNPtrIxIy()
 {
-    public:
-        Z80SetNPtrIxIy() {}
+    switch (executionStep)
+    {
+        case 5:
+            acc.l = iReg.h;
+            acc.l |= (1 << y);
+            if (z != 6)
+                *reg8[z] = acc.l;
+            return false;
 
-        bool operator()(Z80RegisterSet* r)
-        {
-            switch (r->executionStep)
-            {
-                case 5:
-                    r->acc.l = r->iReg.h;
-                    r->acc.l |= (1 << r->y);
-                    if (r->z != 6)
-                        *r->reg8[r->z] = r->acc.l;
-                    return false;
+        case 6:
+            oReg.l = acc.l;
+            return true;
 
-                case 6:
-                    r->oReg.l = r->acc.l;
-                    return true;
+        case 7:
+            prefix = PREFIX_NO;
+            return true;
 
-                case 7:
-                    r->prefix = PREFIX_NO;
-                    return true;
-
-                default:    // Should not happen
-                    assert(false);
-                    return true;
-            }
-        }
-};
+        default:    // Should not happen
+            assert(false);
+            return true;
+    }
+}
 
 // vim: et:sw=4:ts=4
