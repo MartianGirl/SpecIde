@@ -33,6 +33,7 @@
 #include "Z80SetNReg.h"
 #include "Z80SetNPtrHl.h"
 
+/*
 bool z80CBPrefixed(uint_fast8_t opcode)
 {
     switch (opcode)
@@ -296,5 +297,6 @@ bool z80CBPrefixed(uint_fast8_t opcode)
         default: assert(false); return true;   // Should not happen
     }
 }
+*/
 
 // vim: et:sw=4:ts=4

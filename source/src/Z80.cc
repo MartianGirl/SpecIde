@@ -588,23 +588,23 @@ bool Z80::execute()
     switch (prefix)
     {
         case PREFIX_ED:
-            finished = z80EDPrefixed(opcode);
+            finished = (this->*(edprefixed[opcode]))();
             break;
         case PREFIX_CB:
-            finished = z80CBPrefixed(opcode);
+            finished = (this->*(cbprefixed[opcode]))();
             break;
         case PREFIX_DD:
-            finished = z80DDPrefixed(opcode);
+            finished = (this->*(ddprefixed[opcode]))();
             break;
         case PREFIX_FD:
-            finished = z80FDPrefixed(opcode);
+            finished = (this->*(fdprefixed[opcode]))();
             break;
         case PREFIX_DD | PREFIX_CB:
         case PREFIX_FD | PREFIX_CB:
-            finished = z80XXCBPrefixed(opcode);
+            finished = (this->*(xxcbprefixed[opcode]))();
             break;
         case PREFIX_NO:
-            finished = z80Unprefixed(opcode);
+            finished = (this->*(unprefixed[opcode]))();
             break;
         default:
             assert(false);

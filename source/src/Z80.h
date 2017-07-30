@@ -17,7 +17,14 @@ using namespace std;
 class Z80
 {
     public:
-        Z80() : a(0xFFFF), d(0xFF), c(0xFFFF),
+        Z80() :
+#include "Z80UnprefixedTable.h"
+#include "Z80CBPrefixedTable.h"
+#include "Z80DDPrefixedTable.h"
+#include "Z80EDPrefixedTable.h"
+#include "Z80FDPrefixedTable.h"
+#include "Z80XXCBPrefixedTable.h"
+        a(0xFFFF), d(0xFF), c(0xFFFF),
         state(Z80State::ST_RESET),
         reg8{&bc.h, &bc.l, &de.h, &de.l, &hl.h, &hl.l, nullptr, &af.h},
         regx8{&bc.h, &bc.l, &de.h, &de.l, &ix.h, &ix.l, nullptr, &af.h},
@@ -54,6 +61,14 @@ class Z80
         bool execute();
         bool executeNmi();
         bool executeInt();
+
+        typedef bool (Z80::*Z80Instruction)();
+        Z80Instruction unprefixed[0x100];
+        Z80Instruction cbprefixed[0x100];
+        Z80Instruction ddprefixed[0x100];
+        Z80Instruction edprefixed[0x100];
+        Z80Instruction fdprefixed[0x100];
+        Z80Instruction xxcbprefixed[0x100];
 
 #include "Z80Unprefixed.h"
 #include "Z80CBPrefixed.h"

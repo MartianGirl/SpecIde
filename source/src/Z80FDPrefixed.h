@@ -106,6 +106,7 @@
 #include "Z80PrefixED.h"
 #include "Z80PrefixFD.h"
 
+/*
 bool z80FDPrefixed(uint_fast8_t opcode)
 {
     switch (opcode)
@@ -369,5 +370,6 @@ bool z80FDPrefixed(uint_fast8_t opcode)
         default: assert(false); return true;   // Should not happen
     }
 }
+*/
 
 // vim: et:sw=4:ts=4

@@ -48,6 +48,7 @@
 #include "Z80Rrd.h"
 
 
+/*
 bool z80EDPrefixed(uint_fast8_t opcode)
 {
     switch (opcode)
@@ -311,5 +312,6 @@ bool z80EDPrefixed(uint_fast8_t opcode)
         default: assert(false); return true;   // Should not happen
     }
 }
+*/
 
 // vim: et:sw=4:ts=4

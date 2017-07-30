@@ -22,6 +22,7 @@
 #include "Z80ResNPtrIxIy.h"
 #include "Z80SetNPtrIxIy.h"
 
+/*
 bool z80XXCBPrefixed(uint_fast8_t opcode)
 {
     switch (opcode)
@@ -285,5 +286,6 @@ bool z80XXCBPrefixed(uint_fast8_t opcode)
         default: assert(false); return true;   // Should not happen
     }
 }
+*/
 
 // vim: et:sw=4:ts=4
