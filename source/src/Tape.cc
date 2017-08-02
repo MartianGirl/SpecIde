@@ -33,7 +33,7 @@ void Tape::load(string const& fileName)
     }
 }
 
-void Tape::advance()
+uint_fast8_t Tape::advance()
 {
     if (playing)
     {
@@ -43,11 +43,11 @@ void Tape::advance()
         }
         else
         {
-            level = ~level;
+            level ^= 0x7F;
             
             if (pointer < pulseData.size())
             {
-                sample = pulseData[pointer];
+                sample = 2 * pulseData[pointer]; // Clocking at 7MHz
                 ++pointer;
 
                 // If we reach an index, we mark it.
@@ -62,7 +62,7 @@ void Tape::advance()
                 {
                     cout << "Stopped." << endl;
                     playing = false;
-                    level = 0;
+                    level = 0x00;
                 }
 
             }
@@ -74,8 +74,10 @@ void Tape::advance()
                 pointer = 0;
                 sample = 0;
                 playing = false;
-                level = 0;
+                level = 0x00;
             }
         }
     }
+
+    return level;
 }

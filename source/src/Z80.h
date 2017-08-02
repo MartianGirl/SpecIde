@@ -38,7 +38,10 @@ class Z80
         executionStep(0),
         memRdCycles(0), memWrCycles(0),
         ioRdCycles(0), ioWrCycles(0),
-        cpuProcCycles(0) {}
+        cpuProcCycles(0),
+        nmiAccept(false), nmiProcess(false),
+        intProcess(false),
+        c_d(0xFFFF), iff_d(0x00) {}
 
         void reset();
         void clock();
@@ -126,6 +129,13 @@ class Z80
         size_t ioRdCycles, ioWrCycles;
         size_t cpuProcCycles;
         uint_fast32_t memAddrMode;
+
+        bool nmiAccept;
+        bool nmiProcess;
+        bool intProcess;
+
+        uint_fast16_t c_d;
+        uint_fast8_t iff_d;
 };
 
 // vim: et:sw=4:ts=4

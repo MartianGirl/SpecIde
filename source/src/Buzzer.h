@@ -17,6 +17,7 @@
 
 constexpr size_t MAX_SAMPLES = 2048;
 constexpr size_t MAX_BUFFERS = 128;
+constexpr size_t ULA_CLOCK = 7000000;
 
 class Buzzer : public sf::SoundStream
 {
@@ -29,6 +30,7 @@ class Buzzer : public sf::SoundStream
         uint_fast8_t *tapeIn;
 
         size_t millis;  // Dummy
+        size_t skip;
 
         Buzzer() :
             buffers(MAX_BUFFERS, (std::vector<sf::Int16>(MAX_SAMPLES, 0))),
@@ -43,6 +45,7 @@ class Buzzer : public sf::SoundStream
             setVolume(100);
             queuedBuffers.push(126);
             queuedBuffers.push(127);
+            skip = ULA_CLOCK / sampleRate;
             return true;
         }
 
@@ -65,17 +68,21 @@ class Buzzer : public sf::SoundStream
 
         void sample()
         {
+            static size_t count = 0;
             static size_t wrSample = 0;
-            size_t buffer = wrBuffer;
 
-            buffers[buffer][wrSample] = (*source & 0x10) ? 0x1FFF : 0x0000;
-            buffers[buffer][wrSample] += (*tapeIn & 0x40) ? 0x07FF : 0x0000;
-            ++wrSample;
-            if (wrSample == MAX_SAMPLES)
+            if (++count == skip)
             {
-                wrSample = 0;
-                queuedBuffers.push(buffer);
-                getNextWriteBuffer();
+                count = 0;
+                buffers[wrBuffer][wrSample] = (*source & 0x10) ? 0x1FFF : 0x0000;
+                buffers[wrBuffer][wrSample] += (*tapeIn & 0x40) ? 0x07FF : 0x0000;
+                ++wrSample;
+                if (wrSample == MAX_SAMPLES)
+                {
+                    wrSample = 0;
+                    queuedBuffers.push(wrBuffer);
+                    getNextWriteBuffer();
+                }
             }
         }
 

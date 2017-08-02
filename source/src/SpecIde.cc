@@ -37,7 +37,6 @@ int main(int argc, char* argv[])
     cout << "." << SPECIDE_VERSION_MINOR << endl;
 
     Tape tape;
-    bool tapeUpdate = false;
     if (argc == 2)
     {
         tape.load(argv[1]);
@@ -59,8 +58,6 @@ int main(int argc, char* argv[])
     Buzzer buzzer;
     buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
 
-    size_t sampleCounter = 0;
-
     // Connect the keyboard.
     screen.setKeyboardPort(&spectrum.ula.z80_a, spectrum.ula.keys);
 
@@ -76,24 +73,10 @@ int main(int argc, char* argv[])
         // Update Spectrum hardware.
         spectrum.clock();
 
-        if (tape.playing)
-        {
-            tapeUpdate = !tapeUpdate;
-            if (tapeUpdate)
-            {
-                tape.advance();
-                spectrum.ula.tapeIn = (tape.level & 0x40) | 0x80;
-            }
-        }
-        else
-        {
-            spectrum.ula.tapeIn = 0x00;
-        }
+        spectrum.ula.tapeIn = tape.advance();
 
         // Sample sound outputs.
-        if (sampleCounter == 0)
-            buzzer.sample();
-        sampleCounter = (sampleCounter + 1) % SAMPLE_SKIP;
+        buzzer.sample();
 
         // Update screen.
         if (screen.update())
