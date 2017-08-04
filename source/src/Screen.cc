@@ -12,6 +12,7 @@ Screen::Screen(size_t scale) :
     if (!scrTexture.create(static_cast<Uint32>(xSize), static_cast<Uint32>(ySize)))
         assert(false);
     scrTexture.setRepeated(false);
+    scrTexture.setSmooth(false);
     scrSprite.setTexture(scrTexture);
     scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
 }
@@ -68,6 +69,44 @@ bool Screen::update()
     return tick;
 }
 
+void Screen::setFullScreen(bool fs)
+{
+    if (fs)
+    {
+        sf::VideoMode mode = modes[0];  // Best mode
+        window.create(mode, "SpecIDE", sf::Style::Fullscreen);
+        float xScale = mode.width / static_cast<float>(xSize);
+        float yScale = mode.height / static_cast<float>(ySize);
+        float sScale = yScale;
+        if (xScale < yScale)
+        {
+            sScale = xScale;
+            size_t pos = (mode.height - (ySize * sScale)) / 2;
+            scrSprite.setPosition(0, pos);
+        }
+        else
+        {
+            size_t pos = (mode.width - (xSize * sScale)) / 2;
+            scrSprite.setPosition(pos, 0);
+        }
+        scrSprite.setScale(Vector2f(sScale, sScale));
+    }
+    else
+    {
+        window.create(
+                sf::VideoMode(static_cast<sf::Uint32>(w), static_cast<sf::Uint32>(h)),
+                "SpecIDE");
+        xPos = yPos = 0;
+        scrSprite.setPosition(xPos, yPos);
+        scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
+    }
+
+    window.setKeyRepeatEnabled(false);
+    window.setFramerateLimit(50);
+    window.setVerticalSyncEnabled(true);
+    window.setMouseCursorVisible(false);
+}
+
 void Screen::pollEvents()
 {
     // Poll events.
@@ -86,6 +125,7 @@ void Screen::pollEvents()
                 if ((Keyboard::isKeyPressed(Keyboard::F5))) reset = true;
                 if ((Keyboard::isKeyPressed(Keyboard::F11))) play = true;
                 if ((Keyboard::isKeyPressed(Keyboard::F12))) rewind = true;
+                if ((Keyboard::isKeyPressed(Keyboard::F2))) fullscreen = true;
 
                 keyboardDataOut[0] = 0xFF &
                     ((Keyboard::isKeyPressed(Keyboard::B)) ? 0xEF : 0xFF) &

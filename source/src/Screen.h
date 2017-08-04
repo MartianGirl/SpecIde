@@ -28,14 +28,17 @@ class Screen : public GraphicWindow
 
         bool done, reset;
         bool rewind, play;
+        bool fullscreen;
 
         size_t scale;
         size_t xSize, ySize;
+        size_t xPos, yPos;
 
         sf::Texture scrTexture;
         sf::Sprite scrSprite;
 
         bool update();
+        void setFullScreen(bool fs);
         void setRgbaInput(sf::Uint32* input) { rgbaInput = input; }
         void setVSyncInput(bool* input) { vSyncInput = input; }
         void setHSyncInput(bool* input) { hSyncInput = input; }

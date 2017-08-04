@@ -10,7 +10,9 @@
 #include <SFML/System.hpp>
 
 #include <cstddef>
+#include <iostream>
 #include <string>
+#include <vector>
 
 class GraphicWindow
 {
@@ -21,9 +23,11 @@ class GraphicWindow
 
         void open();
         void close();
-        void update();
+        void update() {}
 
+        size_t w, h;
         sf::RenderWindow window;
+        std::vector<sf::VideoMode> modes;
 };
 
 // vim: et:sw=4:ts=4

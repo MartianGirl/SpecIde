@@ -12,18 +12,6 @@
 
 #include "config.h"
 
-#ifdef USE_BOOST_THREADS
-#include <boost/chrono/include.hpp>
-#include <boost/thread.hpp>
-using namespace boost::this_thread;
-using namespace boost::chrono;
-#else
-#include <chrono>
-#include <thread>
-using namespace std::this_thread;
-using namespace std::chrono;
-#endif
-
 using namespace std;
 
 constexpr size_t CLOCK_FREQ = 7000000;
@@ -32,6 +20,7 @@ constexpr size_t SAMPLE_SKIP = CLOCK_FREQ / SAMPLE_RATE;
 
 int main(int argc, char* argv[])
 {
+    bool fullscreen = false;
 
     cout << "SpecIde Version " << SPECIDE_VERSION_MAJOR;
     cout << "." << SPECIDE_VERSION_MINOR << endl;
@@ -52,43 +41,22 @@ int main(int argc, char* argv[])
     screen.setVSyncInput(&spectrum.ula.vSync);
     screen.setHBlankInput(&spectrum.ula.hBlank);
     screen.setVBlankInput(&spectrum.ula.vBlank);
+    screen.setKeyboardPort(&spectrum.ula.z80_a, spectrum.ula.keys);
 
     cout << "Opening sound at " << SAMPLE_RATE << " kHz." << endl;
     cout << "Sampling each " << SAMPLE_SKIP << " cycles." << endl;
+
     Buzzer buzzer;
     buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
-
-    // Connect the keyboard.
-    screen.setKeyboardPort(&spectrum.ula.z80_a, spectrum.ula.keys);
-
-    high_resolution_clock::time_point tick = high_resolution_clock::now();
-    high_resolution_clock::time_point tock = high_resolution_clock::now();
-    stringstream ss;
-
-    size_t busyTime;
     buzzer.play();
     // This is faster than "while(true)".
     for(;;)
     {
         // Update Spectrum hardware.
         spectrum.clock();
-
         spectrum.ula.tapeIn = tape.advance();
-
-        // Sample sound outputs.
         buzzer.sample();
-
-        // Update screen.
-        if (screen.update())
-        {
-            tock = high_resolution_clock::now();
-            sleep_until(tick + milliseconds(20));
-            busyTime = duration_cast<microseconds>(tock - tick).count() / 200;
-            ss << "SpecIDE - " << busyTime << "%";
-            screen.window.setTitle(ss.str());
-            ss.str("");
-            tick = high_resolution_clock::now();
-        }
+        screen.update();
 
         if (screen.done)
         {
@@ -112,7 +80,13 @@ int main(int argc, char* argv[])
         {
             tape.play();
             screen.play = false;
+        }
 
+        if (screen.fullscreen)
+        {
+            fullscreen = !fullscreen;
+            screen.setFullScreen(fullscreen);
+            screen.fullscreen = false;
         }
     }
 }
