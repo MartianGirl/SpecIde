@@ -89,6 +89,7 @@ void ULA::clock()
 
     static uint_fast16_t dataAddr, attrAddr;
     static uint_fast32_t dataReg, attrReg;
+    static uint8_t borderAttr;
 #if SPECIDE_BYTE_ORDER == 1
     static uint8_t &data = (*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint_fast32_t) - 3));
     static uint8_t &attr = (*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint_fast32_t) - 3));
@@ -261,6 +262,7 @@ void ULA::clock()
             if (((z80_c | z80_c_4) & SIGNAL_WR_) == 0x0000)
             {
                 ioPortOut = d;
+                borderAttr = ioPortOut & 0x07;
             }
         }
 
@@ -290,7 +292,7 @@ void ULA::clock()
         dataReg <<= 8;
         attrReg <<= 8;
         dataLatch = 0xFF;
-        attrLatch = ioPortOut & 0x07;
+        attrLatch = borderAttr;
     }
 
     // 5. Update counters

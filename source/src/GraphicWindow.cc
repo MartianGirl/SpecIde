@@ -17,13 +17,13 @@ GraphicWindow::GraphicWindow(size_t x, size_t y, std::string const& title) :
     window.display();
 
     // List video modes
-    for (size_t i = 0; i < modes.size(); ++i)
-    {
-        sf::VideoMode mode = modes[i];
-        cout << "Mode #" << i << ": "
-            << mode.width << "x" << mode.height << " - "
-            << mode.bitsPerPixel << "bpp" << endl;
-    }
+    //for (size_t i = 0; i < modes.size(); ++i)
+    //{
+        //sf::VideoMode mode = modes[i];
+        //cout << "Mode #" << i << ": "
+            //<< mode.width << "x" << mode.height << " - "
+            //<< mode.bitsPerPixel << "bpp" << endl;
+    //}
 }
 
 void GraphicWindow::open()

@@ -90,6 +90,7 @@ void Screen::setFullScreen(bool fs)
             scrSprite.setPosition(pos, 0);
         }
         scrSprite.setScale(Vector2f(sScale, sScale));
+        scrTexture.setSmooth(true);
     }
     else
     {
@@ -99,6 +100,7 @@ void Screen::setFullScreen(bool fs)
         xPos = yPos = 0;
         scrSprite.setPosition(xPos, yPos);
         scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
+        scrTexture.setSmooth(false);
     }
 
     window.setKeyRepeatEnabled(false);

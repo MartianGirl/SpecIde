@@ -44,6 +44,7 @@ class Screen : public GraphicWindow
         void setHSyncInput(bool* input) { hSyncInput = input; }
         void setHBlankInput(bool* input) { hBlankInput = input; }
         void setVBlankInput(bool* input) { vBlankInput = input; }
+
         void setKeyboardPort(uint_fast16_t* in, uint_fast8_t* out)
         {
             keyboardAddressIn = in;
