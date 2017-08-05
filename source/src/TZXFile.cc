@@ -112,7 +112,25 @@ void TZXFile::parse(
                 }
 
                 // Pause. Add index always.
-                pulseData.push_back(pause ? 3500 * pause : 3500);
+                if (pause)
+                {
+                    if ((pulseData.size() % 2) == 0)
+                    {
+                        pulseData.push_back(3500 * (pause - 1));
+                        pulseData.push_back(3500);
+                    }
+                    else
+                    {
+                        pulseData.push_back(3500 * pause);
+                    }
+                }
+                else
+                {
+                    if ((pulseData.size() % 2) == 0)
+                    {
+                        pulseData.push_back(3500);  // Maybe 1ms is too long.
+                    }
+                }
                 indexData.insert(pulseData.size());
 
                 pointer += dataLength + 5;

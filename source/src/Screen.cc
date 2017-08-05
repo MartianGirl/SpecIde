@@ -93,7 +93,7 @@ void Screen::setFullScreen(bool fs)
         }
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(sScale, sScale));
-        scrTexture.setSmooth(true);
+        scrTexture.setSmooth(false);
     }
     else
     {

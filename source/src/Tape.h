@@ -41,9 +41,10 @@ class Tape
             level ^= 0x80;
             cout << ((playing) ? "Playing" : "Stopped") << endl;
         }
+
         void rewind()
         {
-            playing = false; sample = 0; pointer = 0;
+            playing = false; sample = 0; pointer = 0; level = 0x00;
             cout << "Rewind..." << endl;
         }
         uint_fast8_t advance();
