@@ -32,7 +32,7 @@ class Screen : public GraphicWindow
 
         size_t scale;
         size_t xSize, ySize;
-        size_t xPos, yPos;
+        float xOffset, yOffset;
 
         sf::Texture scrTexture;
         sf::Sprite scrSprite;

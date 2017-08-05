@@ -12,6 +12,18 @@
 
 #include "config.h"
 
+#ifdef USE_BOOST_THREADS
+#include <boost/chrono/include.hpp>
+#include <boost/thread.hpp>
+using namespace boost::this_thread;
+using namespace boost::chrono;
+#else
+#include <chrono>
+#include <thread>
+using namespace std::this_thread;
+using namespace std::chrono;
+#endif
+
 using namespace std;
 
 constexpr size_t CLOCK_FREQ = 7000000;
@@ -49,6 +61,8 @@ int main(int argc, char* argv[])
     Buzzer buzzer;
     buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
     buzzer.play();
+
+    high_resolution_clock::time_point tick = high_resolution_clock::now();
     // This is faster than "while(true)".
     for(;;)
     {
@@ -56,7 +70,13 @@ int main(int argc, char* argv[])
         spectrum.clock();
         spectrum.ula.tapeIn = tape.advance();
         buzzer.sample();
-        screen.update();
+
+        if (screen.update())
+        {
+            sleep_until(tick + milliseconds(20));
+            tick = high_resolution_clock::now();
+        }
+        // screen.update();
 
         if (screen.done)
         {

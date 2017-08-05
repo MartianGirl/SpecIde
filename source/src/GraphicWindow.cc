@@ -10,8 +10,6 @@ GraphicWindow::GraphicWindow(size_t x, size_t y, std::string const& title) :
     modes(sf::VideoMode::getFullscreenModes())
 {
     window.setKeyRepeatEnabled(false);
-    window.setFramerateLimit(50);
-    window.setVerticalSyncEnabled(true);
     window.setMouseCursorVisible(false);
     window.clear();
     window.display();

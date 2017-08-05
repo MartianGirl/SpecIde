@@ -15,6 +15,7 @@ Screen::Screen(size_t scale) :
     scrTexture.setSmooth(false);
     scrSprite.setTexture(scrTexture);
     scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
+    scrSprite.setPosition(0, 0);
 }
 
 bool Screen::update()
@@ -77,18 +78,20 @@ void Screen::setFullScreen(bool fs)
         window.create(mode, "SpecIDE", sf::Style::Fullscreen);
         float xScale = mode.width / static_cast<float>(xSize);
         float yScale = mode.height / static_cast<float>(ySize);
-        float sScale = yScale;
+        float sScale;
         if (xScale < yScale)
         {
             sScale = xScale;
-            size_t pos = (mode.height - (ySize * sScale)) / 2;
-            scrSprite.setPosition(0, pos);
+            xOffset = 0;
+            yOffset = (mode.height - (ySize * sScale)) / 2;
         }
         else
         {
-            size_t pos = (mode.width - (xSize * sScale)) / 2;
-            scrSprite.setPosition(pos, 0);
+            sScale = yScale;
+            xOffset = (mode.width - (xSize * sScale)) / 2;
+            yOffset = 0;
         }
+        scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(sScale, sScale));
         scrTexture.setSmooth(true);
     }
@@ -97,15 +100,13 @@ void Screen::setFullScreen(bool fs)
         window.create(
                 sf::VideoMode(static_cast<sf::Uint32>(w), static_cast<sf::Uint32>(h)),
                 "SpecIDE");
-        xPos = yPos = 0;
-        scrSprite.setPosition(xPos, yPos);
+        xOffset = yOffset = 0;
+        scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
         scrTexture.setSmooth(false);
     }
 
     window.setKeyRepeatEnabled(false);
-    window.setFramerateLimit(50);
-    window.setVerticalSyncEnabled(true);
     window.setMouseCursorVisible(false);
 }
 
