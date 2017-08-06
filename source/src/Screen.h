@@ -45,13 +45,10 @@ class Screen : public GraphicWindow
         void setHBlankInput(bool* input) { hBlankInput = input; }
         void setVBlankInput(bool* input) { vBlankInput = input; }
 
-        void setKeyboardPort(uint_fast16_t* in, uint_fast8_t* out)
-        {
-            keyboardAddressIn = in;
-            keyboardDataOut = out;
-        }
+        void setKeyboardPort(uint_fast8_t* out) { keyboardDataOut = out; }
 
         void pollEvents();
+        void scanKeys(sf::Event const& event);
 
         sf::Uint32 *rgbaInput;
         bool *hSyncInput;
@@ -59,8 +56,8 @@ class Screen : public GraphicWindow
         bool *hBlankInput;
         bool *vBlankInput;
 
-        uint_fast16_t *keyboardAddressIn;
         uint_fast8_t *keyboardDataOut;
+        uint_fast8_t keyboardMask[8];
 };
 
 // vim: et:sw=4:ts=4

@@ -6,7 +6,7 @@ GraphicWindow::GraphicWindow(size_t x, size_t y, std::string const& title) :
     w(x), h(y),
     window(
         sf::VideoMode(static_cast<sf::Uint32>(x), static_cast<sf::Uint32>(y)),
-        title),
+        title, sf::Style::Close | sf::Style::Titlebar),
     modes(sf::VideoMode::getFullscreenModes())
 {
     window.setKeyRepeatEnabled(false);

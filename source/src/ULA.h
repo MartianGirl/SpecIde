@@ -52,6 +52,7 @@ class ULA
         uint32_t rgba;
         bool hSync, vSync;
         bool hBlank, vBlank;
+        bool display;
         bool idle;
 
         uint32_t colourTable[0x100];
@@ -59,6 +60,7 @@ class ULA
         // Port 0xFE
         uint_fast8_t ioPortIn;
         uint_fast8_t ioPortOut;
+        uint_fast8_t borderAttr;
         uint_fast8_t tapeIn;
 
         // Values in EAR/MIC ULA pin (millivolts)

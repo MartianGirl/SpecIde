@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
     screen.setVSyncInput(&spectrum.ula.vSync);
     screen.setHBlankInput(&spectrum.ula.hBlank);
     screen.setVBlankInput(&spectrum.ula.vBlank);
-    screen.setKeyboardPort(&spectrum.ula.z80_a, spectrum.ula.keys);
+    screen.setKeyboardPort(spectrum.ula.keys);
 
     cout << "Opening sound at " << SAMPLE_RATE << " kHz." << endl;
     cout << "Sampling each " << SAMPLE_SKIP << " cycles." << endl;
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
     buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
     buzzer.play();
 
-    high_resolution_clock::time_point tick = high_resolution_clock::now();
+    steady_clock::time_point tick = steady_clock::now();
     // This is faster than "while(true)".
     for(;;)
     {
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
         if (screen.update())
         {
             sleep_until(tick + milliseconds(20));
-            tick = high_resolution_clock::now();
+            tick = steady_clock::now();
         }
         // screen.update();
 

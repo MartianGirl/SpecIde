@@ -7,6 +7,7 @@ void TZXFile::load(string const& fileName)
     char c;
 
     magicIsOk = false;
+    firstLeadTone = false;
 
     ifstream ifs(fileName.c_str(), ifstream::binary);
     if (ifs.good())
@@ -124,11 +125,16 @@ void TZXFile::parse(
                         pulseData.push_back(3500 * pause);
                     }
                 }
-                else
+                else    // Insert 1 or 2 ms pause, to form the last edge.
                 {
                     if ((pulseData.size() % 2) == 0)
                     {
-                        pulseData.push_back(3500);  // Maybe 1ms is too long.
+                        pulseData.push_back(3500);
+                        pulseData.push_back(3500);
+                    }
+                    else
+                    {
+                        pulseData.push_back(3500);
                     }
                 }
                 indexData.insert(pulseData.size());
@@ -194,11 +200,16 @@ void TZXFile::parse(
                         pulseData.push_back(3500 * pause);
                     }
                 }
-                else
+                else    // Insert 1 or 2 ms pause, to form the last edge.
                 {
                     if ((pulseData.size() % 2) == 0)
                     {
-                        pulseData.push_back(3500);  // Maybe 1ms is too long.
+                        pulseData.push_back(3500);
+                        pulseData.push_back(3500);
+                    }
+                    else
+                    {
+                        pulseData.push_back(3500);
                     }
                 }
                 indexData.insert(pulseData.size());
@@ -212,11 +223,16 @@ void TZXFile::parse(
                     + fileData[pointer + 1];
                 pilotLength = fileData[pointer + 4] * 0x100
                     + fileData[pointer + 3];
-                // pilotLength += (pilotLength % 2) ? 0 : 1;   // Pilot should be odd
+
+                // If this is the first segment of lead tone in a custom loader,
+                // then it should contain an odd number of pulses.
+                if (firstLeadTone)
+                    pilotLength += (pilotLength % 2) ? 1 : 0;   // Pilot should be even
 
                 // Pilot tone
                 pulseData.insert(pulseData.end(), pilotLength, pilotPulse);
                 pointer += 5;
+                firstLeadTone = false;
                 break;
 
             case 0x13:
@@ -342,6 +358,7 @@ void TZXFile::parse(
                 dataLength = fileData[pointer + 1];
                 indexData.insert(pulseData.size());
                 pointer += dataLength + 2;
+                firstLeadTone = true;
                 break;
 
             case 0x22:
@@ -355,6 +372,7 @@ void TZXFile::parse(
                     + fileData[pointer + 1];
                 pointer += 3;
                 loopStart = pointer;
+                firstLeadTone = true;
                 break;
 
             case 0x25:

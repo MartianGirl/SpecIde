@@ -31,7 +31,7 @@ ULA::ULA() :
     hiz(true),
     z80_a(0xFFFF), z80_c(0xFFFF),
     cpuClock(false), ulaReset(true),
-    hBlank(false), vBlank(false), idle(false),
+    hBlank(false), vBlank(false), display(true), idle(false), 
     ioPortIn(0xFF), ioPortOut(0x00), tapeIn(0),
     c00(996), c01(996), c10(392), c11(392),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
@@ -89,7 +89,6 @@ void ULA::clock()
 
     static uint_fast16_t dataAddr, attrAddr;
     static uint_fast32_t dataReg, attrReg;
-    static uint8_t borderAttr;
 #if SPECIDE_BYTE_ORDER == 1
     static uint8_t &data = (*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint_fast32_t) - 3));
     static uint8_t &attr = (*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint_fast32_t) - 3));
@@ -113,7 +112,7 @@ void ULA::clock()
     // 1. Generate video control signals.
     hSync = (pixel >= hSyncStart) && (pixel <= hSyncEnd);
     hBlank = ((pixel >= hBlankStart) && (pixel <= hBlankEnd));
-    bool display = (pixel < hBorderStart) && (scan < vBorderStart);
+    // bool display = (pixel < hBorderStart) && (scan < vBorderStart);
 
     // 2. Generate video data.
     if (display)
@@ -300,6 +299,7 @@ void ULA::clock()
     if (pixel == maxPixel)
     {
         pixel = 0;
+        display = (scan < vBorderStart);
         ulaReset = false;
     }
     else if (pixel == hBlankStart)
@@ -311,6 +311,10 @@ void ULA::clock()
         if (scan == vBlankEnd) flash += 0x04;
         else if (scan == maxScan) scan = 0;
     }
+    else if (pixel == hBorderStart)
+    {
+        display = false;
+    }
 
     if (ulaReset)
     {
@@ -319,6 +323,7 @@ void ULA::clock()
         ulaReset = false;
         cIndex = 0;
         z80Clk = false;
+        display = true;
 
         z80_c_4 = z80_c_3 = z80_c_2 = z80_c_1 = 0xFFFF;
     }

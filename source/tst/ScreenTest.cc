@@ -9,7 +9,6 @@ BOOST_AUTO_TEST_CASE(constructors_test)
 {
     Screen sc0;
     uint32_t rgba = 0xC0C0C0FF;
-    uint_fast16_t a = 0x0000;
     uint_fast8_t k[8];
     bool vSync, hSync, vBlank, hBlank;
     sc0.setRgbaInput(&rgba);
@@ -17,7 +16,7 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     sc0.setHSyncInput(&hSync);
     sc0.setHBlankInput(&hBlank);
     sc0.setVBlankInput(&vBlank);
-    sc0.setKeyboardPort(&a, k);
+    sc0.setKeyboardPort(k);
     sc0.open();
     sc0.update();
     sc0.close();
@@ -28,7 +27,7 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     sc1.setHSyncInput(&hSync);
     sc1.setHBlankInput(&hBlank);
     sc1.setVBlankInput(&vBlank);
-    sc1.setKeyboardPort(&a, k);
+    sc1.setKeyboardPort(k);
     sc1.open();
     sc1.update();
     sc1.close();
