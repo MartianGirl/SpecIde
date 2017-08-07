@@ -48,7 +48,9 @@ in the build process.
   a. set BOOST_ROOT=<Path to Boost root directory>
   b. set SFML_ROOT=<Path to SFML binaries>
 5. Run: RunCMake <GNU|MS|NINJAGNU|NINJAMS> RELEASE
-  ---or---
+---
+or
+---
 4. Set some environment variables:
   a. set BOOST_ROOT=<Path to Boost root directory>
   b. set Boost_NO_BOOST_CMAKE=TRUE
