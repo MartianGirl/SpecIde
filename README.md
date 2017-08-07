@@ -22,7 +22,7 @@ GNU/Linux:
 8. To run it: Copy the file 48.rom from the spectrum-roms package (or find it online) to the 'source' directory.
 9. Run: bin/SpecIde <TZXFile.tzx|TAPFile.tap>
 
-MacOS:
+MacOS: (Thanks to David Garijo for taking the time of making this work and for providing the information!)
 1. Install brew: /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 2. Install cmake: brew install cmake
 3. Install boost: brew install boost
