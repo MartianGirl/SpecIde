@@ -52,7 +52,11 @@ bool z80Indr()
             acc.l ^= acc.l >> 2;
             acc.l ^= acc.l >> 4;
             af.l = (acc.l & 0x01) ? 0x00 : FLAG_PV;   // SZ5H3PNC
-            prefix = PREFIX_NO;
+
+            if (bc.h != 0x00)
+                cpuProcCycles = 1;
+            else
+                prefix = PREFIX_NO;
             return true;
 
         case 4:
