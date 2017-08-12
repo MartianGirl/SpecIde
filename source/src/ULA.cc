@@ -137,7 +137,7 @@ void ULA::clock()
         bool iorqLow = ((z80_c & SIGNAL_IORQ_) == 0x0000);          // T2 TW T3
         bool iorqLow_d = ((z80_c_2 & SIGNAL_IORQ_) == 0x0000);      // TW T3 T1
         bool ioContention = ioUlaPort && iorqLow && z80Clk;         // T2 TW T3
-        bool ioContentionOff = iorqLow_d;                           // TW T3 NN
+        bool ioContentionOff = ioUlaPort && iorqLow_d;              // TW T3 NN
 
         // We use the same contention manager, and we consider contention when
         // there is any contention, and when no contention is not disabled.
@@ -151,7 +151,7 @@ void ULA::clock()
             case 0x01:
             case 0x02:
             case 0x03:
-                idle = false; delay = true; hiz = true; break;
+                idle = true; delay = true; hiz = true; break;
             case 0x04:
                 // Generate addresses (which must be pair).
                 dataAddr = ((pixel & 0xF0) >> 3)    // 000SSSSS SSSPPPP0
@@ -163,10 +163,10 @@ void ULA::clock()
                     | ((scan & 0xF8) << 2)          // 00000076 54376540
                     | 0x1800;
                 a = dataAddr;
-                idle = false; delay = true; hiz = false; break;
+                idle = true; delay = true; hiz = false; break;
             case 0x05:
                 dataLatch = d;
-                idle = false; delay = true; hiz = false; break;
+                idle = true; delay = true; hiz = false; break;
             case 0x06:
                 a = attrAddr;
                 idle = false; delay = true; hiz = false; break;
@@ -187,9 +187,10 @@ void ULA::clock()
                 idle = false; delay = true; hiz = false; break;
             case 0x0C:
             case 0x0D:
+                idle = false; delay = false; hiz = true; break;
             case 0x0E:
             case 0x0F:
-                idle = false; delay = false; hiz = true; break;
+                idle = true; delay = false; hiz = true; break;
             default:
                 a = 0xFFFF;
                 idle = true; delay = false; hiz = true; break;
