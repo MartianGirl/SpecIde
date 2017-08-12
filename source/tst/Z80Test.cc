@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.ix.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.iy.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.sp.w, 0xFFFF);
-    BOOST_CHECK(z80.a == 0xFF7F);
+    BOOST_CHECK(z80.a == 0xFFFF);
     BOOST_CHECK(z80.d == 0xFF);
     BOOST_CHECK(z80.c == 0xFFFF);   // Removed refresh handling.
 
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.ix.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.iy.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.sp.w, 0xFFFF);
-    BOOST_CHECK(z80.a == 0xFF7F);
+    BOOST_CHECK(z80.a == 0xFFFF);
     BOOST_CHECK(z80.d == 0xFF);
     BOOST_CHECK(z80.c == 0xFFFF);  // Removed refresh handling.
 }
