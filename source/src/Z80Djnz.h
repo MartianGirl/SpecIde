@@ -12,16 +12,16 @@ bool z80Djnz()
     {
         case 0:
             memRdCycles = 1;
-            memWrCycles = 0;
             memAddrMode = 0x00000001;
-            return true;
+            return false;
 
         case 1:
             --bc.h;
-            return false;
+            return true;
 
         case 2:
-            return (bc.h == 0x00);
+            cpuProcCycles = (bc.h != 0x00) ? 1 : 0;
+            return true;
 
         case 3:
             tmp.l = iReg.h;

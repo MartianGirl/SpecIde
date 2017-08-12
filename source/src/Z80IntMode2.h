@@ -14,16 +14,16 @@ bool z80IntMode2()
             memRdCycles = 2;
             memWrCycles = 2;
             memAddrMode = 0x0000AA9C;
-            return true;
+            return false;
 
         case 1:
             return true;
 
         case 2:
-            acc.w = pc.w;
-            return false;
+            return true;
 
         case 3:
+            acc.w = pc.w;
             oReg.l = acc.h;
             oReg.h = acc.l;
             return true;

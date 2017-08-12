@@ -19,7 +19,6 @@ bool z80CallCc()
     {
         case 0:
             memRdCycles = 2;
-            memWrCycles = 0;
             memAddrMode = 0x0000AA11;
             return true;
 
