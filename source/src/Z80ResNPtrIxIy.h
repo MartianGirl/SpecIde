@@ -9,7 +9,7 @@
  *
  * Encoding: 11 011 101  11 001 011  dd ddd ddd  10 bbb rrr
  * Encoding: 11 111 101  11 001 011  dd ddd ddd  10 bbb rrr
- * M Cycles: 6 (OCF, OCF, MRB(5), MRB, MRB(4), MWB)
+ * M Cycles: 6 (OCF, OCF, MRB, MRB(5), MRB(4), MWB)
  * T States: 23
  *
  *  r  rrr
