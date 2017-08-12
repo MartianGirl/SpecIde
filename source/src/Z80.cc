@@ -508,7 +508,7 @@ uint_fast16_t Z80::getAddress()
             ++sp.w;
             break;
         case 0x0C:  // Interrupt Mode 2
-            addr.w = ((ir.h << 8) | opcode);
+            addr.w = ((ir.h << 8) | d);
             break;
         case 0x0D:  // I/O Indirect n:      IN A, (n)
             addr.w = (af.h << 8) | iReg.h;
