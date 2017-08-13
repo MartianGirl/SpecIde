@@ -1,5 +1,6 @@
 #include "ULA.h"
 
+/*
 size_t ULA::pixelStart = 0;
 size_t ULA::pixelEnd = 0xFF;
 size_t ULA::hBorderStart = 0x100;
@@ -21,6 +22,7 @@ size_t ULA::vSyncEnd = 0x0FB;
 
 size_t ULA::maxScan = 312;
 size_t ULA::maxPixel = 448;
+*/
 
 int_fast32_t ULA::tensions[] = {391, 728, 3653, 3790};
 int_fast32_t ULA::constants[] = {0};
@@ -110,9 +112,45 @@ void ULA::clock()
 
     // Here we:
     // 1. Generate video control signals.
-    hSync = (pixel >= hSyncStart) && (pixel <= hSyncEnd);
-    hBlank = ((pixel >= hBlankStart) && (pixel <= hBlankEnd));
-    // bool display = (pixel < hBorderStart) && (scan < vBorderStart);
+    switch (pixel)
+    {
+        case maxPixel:
+            pixel = 0;
+            display = (scan < vBorderStart);
+            ulaReset = false;
+            break;
+
+        case hBorderStart:
+            display = false;
+            break;
+
+        case hBlankStart:
+            hBlank = true;
+            ++scan;
+            vSync = (scan >= vSyncStart) && (scan <= vSyncEnd);
+            vBlank = ((scan >= vBlankStart) && (scan <= vBlankEnd));
+
+            if (scan == vBlankEnd)
+                flash += 0x04;
+            else if (scan == maxScan)
+                scan = 0;
+            break;
+
+        case hSyncStart:
+            hSync = true;
+            break;
+
+        case hSyncEnd:
+            hSync = false;
+            break;
+
+        case hBlankEnd:
+            hBlank = false;
+            break;
+
+        default:
+            break;
+    }
 
     // 2. Generate video data.
     if (display)
@@ -297,25 +335,6 @@ void ULA::clock()
 
     // 5. Update counters
     ++pixel;
-    if (pixel == maxPixel)
-    {
-        pixel = 0;
-        display = (scan < vBorderStart);
-        ulaReset = false;
-    }
-    else if (pixel == hBlankStart)
-    {
-        ++scan;
-        vSync = (scan >= vSyncStart) && (scan <= vSyncEnd);
-        vBlank = ((scan >= vBlankStart) && (scan <= vBlankEnd));
-
-        if (scan == vBlankEnd) flash += 0x04;
-        else if (scan == maxScan) scan = 0;
-    }
-    else if (pixel == hBorderStart)
-    {
-        display = false;
-    }
 
     if (ulaReset)
     {

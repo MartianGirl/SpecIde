@@ -22,21 +22,29 @@ class ULA
         void reset();
 
         // Constant-ish statics.
-        static size_t pixelStart, pixelEnd;
-        static size_t hBorderStart, hBorderEnd;
-        static size_t hBlankStart, hBlankEnd;
-        static size_t hSyncStart, hSyncEnd;
+        static constexpr size_t pixelStart = 0x000;
+        static constexpr size_t pixelEnd = 0x0FF;
+        static constexpr size_t hBorderStart = 0x100;
+        static constexpr size_t hBorderEnd = 0x1BF;
+        static constexpr size_t hBlankStart = 0x140;
+        static constexpr size_t hBlankEnd = 0x19F;
+        static constexpr size_t hSyncStart = 0x150;
+        static constexpr size_t hSyncEnd = 0x16F;
 
-        static size_t scanStart, scanEnd;
-        static size_t vBorderStart, vBorderEnd;
-        static size_t vBlankStart, vBlankEnd;
-        static size_t vSyncStart, vSyncEnd;
+        static constexpr size_t scanStart = 0x000;
+        static constexpr size_t scanEnd = 0x0BF;
+        static constexpr size_t vBorderStart = 0x0C0;
+        static constexpr size_t vBorderEnd = 0x137;
+        static constexpr size_t vBlankStart = 0x0F8;
+        static constexpr size_t vBlankEnd = 0x0FF;
+        static constexpr size_t vSyncStart = 0x0F8;
+        static constexpr size_t vSyncEnd = 0x0FB;
 
         static int_fast32_t tensions[4];
         static int_fast32_t constants[4096];
 
-        static size_t maxScan;
-        static size_t maxPixel;
+        static constexpr size_t maxScan = 312;
+        static constexpr size_t maxPixel = 448;
 
         // Memory signals
         uint_fast16_t a;
