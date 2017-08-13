@@ -208,8 +208,8 @@ void ULA::clock()
 
     // 3. ULA port & Interrupt.
     c = z80_c;
-    if ((scan == vSyncStart) && (pixel < 64))
-            // && ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
+    if ((scan == vSyncStart) && (pixel < 64)
+            && ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
         c &= ~SIGNAL_INT_;
     else
         c |= SIGNAL_INT_;
