@@ -46,6 +46,7 @@ class Screen : public GraphicWindow
         void setVBlankInput(bool* input) { vBlankInput = input; }
 
         void setKeyboardPort(uint_fast8_t* out) { keyboardDataOut = out; }
+        void setJoystickPort(uint_fast8_t* out) { joystickDataOut = out; }
 
         void pollEvents();
         void scanKeys(sf::Event const& event);
@@ -58,6 +59,8 @@ class Screen : public GraphicWindow
 
         uint_fast8_t *keyboardDataOut;
         uint_fast8_t keyboardMask[8];
+
+        uint_fast8_t *joystickDataOut;
 };
 
 // vim: et:sw=4:ts=4

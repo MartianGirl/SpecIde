@@ -82,8 +82,8 @@ void Spectrum::clock()
             {
                 z80.d = ula.d;
             }
-            // else if ((z80.a & 0x001F) == 0x001F)    // Kempston joystick.
-            // z80.d = map[1]->d;
+            else if ((z80.a & 0x00E0) == 0x0000)       // Kempston joystick.
+                z80.d = joystick;
             else if (!ula.idle)
             {
                 z80.d = map[1]->d;  // Get the byte from the video memory.

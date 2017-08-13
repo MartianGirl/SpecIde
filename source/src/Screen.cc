@@ -20,6 +20,8 @@ Screen::Screen(size_t scale) :
     scrSprite.setTexture(scrTexture);
     scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
     scrSprite.setPosition(0, 0);
+
+    window.setJoystickThreshold(0.5);
 }
 
 bool Screen::update()
@@ -112,6 +114,7 @@ void Screen::setFullScreen(bool fs)
 
     window.setKeyRepeatEnabled(false);
     window.setMouseCursorVisible(false);
+    window.setJoystickThreshold(0.5);
 }
 
 void Screen::pollEvents()
@@ -171,6 +174,42 @@ void Screen::pollEvents()
                 keyboardDataOut[5] |= ~keyboardMask[5];
                 keyboardDataOut[6] |= ~keyboardMask[6];
                 keyboardDataOut[7] |= ~keyboardMask[7];
+                break;
+
+            case Event::JoystickMoved:
+                switch (event.joystickMove.axis)
+                {
+                    case Joystick::X:
+                    case Joystick::U:
+                    case Joystick::PovX:
+                        *joystickDataOut &= 0xFC;
+                        if (event.joystickMove.position < -50.0)
+                            *joystickDataOut |= 0x02;
+                        else if (event.joystickMove.position > 50.0)
+                            *joystickDataOut |= 0x01;
+                        break;
+
+                    case Joystick::Y:
+                    case Joystick::V:
+                    case Joystick::PovY:
+                        *joystickDataOut &= 0xF3;
+                        if (event.joystickMove.position < -50.0)
+                            *joystickDataOut |= 0x08;
+                        else if (event.joystickMove.position > 50.0)
+                            *joystickDataOut |= 0x04;
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+
+            case Event::JoystickButtonPressed:
+                *joystickDataOut |= 0x10;
+                break;
+
+            case Event::JoystickButtonReleased:
+                *joystickDataOut &= 0xEF;
                 break;
 
             default:

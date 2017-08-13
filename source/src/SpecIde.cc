@@ -54,6 +54,7 @@ int main(int argc, char* argv[])
     screen.setHBlankInput(&spectrum.ula.hBlank);
     screen.setVBlankInput(&spectrum.ula.vBlank);
     screen.setKeyboardPort(spectrum.ula.keys);
+    screen.setJoystickPort(&spectrum.joystick);
 
     cout << "Opening sound at " << SAMPLE_RATE << " kHz." << endl;
     cout << "Sampling each " << SAMPLE_SKIP << " cycles." << endl;

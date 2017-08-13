@@ -26,6 +26,9 @@ class Spectrum
         Z80 z80;
         ULA ula;
 
+        // Kempston Joystick.
+        uint_fast8_t joystick;
+
         // I'm going to exceed the original requirements, and then limit the
         // configuration to the required model.
         Memory ram[64]; // 1024KB
