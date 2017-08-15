@@ -183,9 +183,9 @@ void Screen::pollEvents()
                     case Joystick::U:
                     case Joystick::PovX:
                         *joystickDataOut &= 0xFC;
-                        if (event.joystickMove.position < -50.0)
+                        if (event.joystickMove.position < -34.0)
                             *joystickDataOut |= 0x02;
-                        else if (event.joystickMove.position > 50.0)
+                        else if (event.joystickMove.position > 34.0)
                             *joystickDataOut |= 0x01;
                         break;
 
@@ -193,9 +193,9 @@ void Screen::pollEvents()
                     case Joystick::V:
                     case Joystick::PovY:
                         *joystickDataOut &= 0xF3;
-                        if (event.joystickMove.position < -50.0)
+                        if (event.joystickMove.position < -34.0)
                             *joystickDataOut |= 0x08;
-                        else if (event.joystickMove.position > 50.0)
+                        else if (event.joystickMove.position > 34.0)
                             *joystickDataOut |= 0x04;
                         break;
 
