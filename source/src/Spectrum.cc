@@ -1,6 +1,7 @@
 #include "Spectrum.h"
 
 Spectrum::Spectrum() :
+    joystick(0),
     ram{Memory(14), Memory(14), Memory(14), Memory(14),     // 64K
         Memory(14), Memory(14), Memory(14), Memory(14),     // 128K
         Memory(14), Memory(14), Memory(14), Memory(14),
