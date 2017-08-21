@@ -29,6 +29,7 @@ class Screen : public GraphicWindow
         bool done, reset;
         bool rewind, play;
         bool fullscreen;
+        bool smooth;
 
         size_t scale;
         size_t xSize, ySize;
@@ -39,6 +40,7 @@ class Screen : public GraphicWindow
 
         bool update();
         void setFullScreen(bool fs);
+        void setSmooth(bool sm);
         void setRgbaInput(sf::Uint32* input) { rgbaInput = input; }
         void setVSyncInput(bool* input) { vSyncInput = input; }
         void setHSyncInput(bool* input) { hSyncInput = input; }

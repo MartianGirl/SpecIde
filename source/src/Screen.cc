@@ -99,7 +99,6 @@ void Screen::setFullScreen(bool fs)
         }
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(sScale, sScale));
-        scrTexture.setSmooth(false);
     }
     else
     {
@@ -109,12 +108,16 @@ void Screen::setFullScreen(bool fs)
         xOffset = yOffset = 0;
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
-        scrTexture.setSmooth(false);
     }
 
     window.setKeyRepeatEnabled(false);
     window.setMouseCursorVisible(false);
     window.setJoystickThreshold(0.5);
+}
+
+void Screen::setSmooth(bool sm)
+{
+    scrTexture.setSmooth(sm);
 }
 
 void Screen::pollEvents()
@@ -134,7 +137,10 @@ void Screen::pollEvents()
                 {
                     // Scan function keys
                     case Keyboard::F2:
-                        fullscreen = true;
+                        if (event.key.system)
+                            smooth = true;
+                        else
+                            fullscreen = true;
                         break;
                     case Keyboard::F5:
                         reset = true;
