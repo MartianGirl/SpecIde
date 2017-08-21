@@ -24,12 +24,16 @@ size_t ULA::maxScan = 312;
 size_t ULA::maxPixel = 448;
 */
 
-int_fast32_t ULA::tensions[] = {391, 728, 3653, 3790};
+int_fast32_t ULA::tensions[2][4] = {
+    {391, 728, 3653, 3790}, // ULA 5C (Issue 2)
+    {342, 652, 3591, 3753}  // ULA 6C (Issue 3)
+};
 int_fast32_t ULA::constants[] = {0};
 
-//tensions{342, 652, 3591, 3753}, // ULA 6C (Issue 3)
 
 ULA::ULA() :
+    ulaVersion(0),
+    maxPixel(448), maxScan(312),
     hiz(true),
     z80_a(0xFFFF), z80_c(0xFFFF),
     cpuClock(false), ulaReset(true),
@@ -112,44 +116,39 @@ void ULA::clock()
 
     // Here we:
     // 1. Generate video control signals.
-    switch (pixel)
+    if (pixel == hBorderStart)
     {
-        case maxPixel:
-            pixel = 0;
-            display = (scan < vBorderStart);
-            ulaReset = false;
-            break;
+        display = false;
+    }
+    else if (pixel == hBlankStart)
+    {
+        hBlank = true;
+        ++scan;
+        vSync = (scan >= vSyncStart) && (scan <= vSyncEnd);
+        vBlank = ((scan >= vBlankStart) && (scan <= vBlankEnd));
 
-        case hBorderStart:
-            display = false;
-            break;
-
-        case hBlankStart:
-            hBlank = true;
-            ++scan;
-            vSync = (scan >= vSyncStart) && (scan <= vSyncEnd);
-            vBlank = ((scan >= vBlankStart) && (scan <= vBlankEnd));
-
-            if (scan == vBlankEnd)
-                flash += 0x04;
-            else if (scan == maxScan)
-                scan = 0;
-            break;
-
-        case hSyncStart:
-            hSync = true;
-            break;
-
-        case hSyncEnd:
-            hSync = false;
-            break;
-
-        case hBlankEnd:
-            hBlank = false;
-            break;
-
-        default:
-            break;
+        if (scan == vBlankEnd)
+            flash += 0x04;
+        else if (scan == maxScan)
+            scan = 0;
+    }
+    else if (pixel == hSyncStart)
+    {
+        hSync = true;
+    }
+    else if (pixel == hSyncEnd)
+    {
+        hSync = false;
+    }
+    else if (pixel == hBlankEnd)
+    {
+        hBlank = false;
+    }
+    else if (pixel == maxPixel)
+    {
+        pixel = 0;
+        display = (scan < vBorderStart);
+        ulaReset = false;
     }
 
     // 2. Generate video data.
@@ -261,7 +260,7 @@ void ULA::clock()
     {
         cIndex = 0;
         vStart = capacitor;
-        vEnd = tensions[outputCurr];
+        vEnd = tensions[ulaVersion][outputCurr];
         vDiff = vStart - vEnd;
     }
     else

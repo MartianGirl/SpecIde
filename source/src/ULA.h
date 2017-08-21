@@ -40,11 +40,13 @@ class ULA
         static constexpr size_t vSyncStart = 0x0F8;
         static constexpr size_t vSyncEnd = 0x0FB;
 
-        static int_fast32_t tensions[4];
+        static int_fast32_t tensions[2][4];
         static int_fast32_t constants[4096];
 
-        static constexpr size_t maxScan = 312;
-        static constexpr size_t maxPixel = 448;
+        // These values depend on the model
+        size_t ulaVersion;
+        size_t maxPixel;
+        size_t maxScan;
 
         // Memory signals
         uint_fast16_t a;
