@@ -33,6 +33,7 @@ constexpr size_t SAMPLE_SKIP = CLOCK_FREQ / SAMPLE_RATE;
 int main(int argc, char* argv[])
 {
     bool fullscreen = false;
+    bool smooth = false;
 
     cout << "SpecIde Version " << SPECIDE_VERSION_MAJOR;
     cout << "." << SPECIDE_VERSION_MINOR << endl;
@@ -108,6 +109,13 @@ int main(int argc, char* argv[])
             fullscreen = !fullscreen;
             screen.setFullScreen(fullscreen);
             screen.fullscreen = false;
+        }
+
+        if (screen.smooth)
+        {
+            smooth = !smooth;
+            screen.setSmooth(smooth);
+            screen.smooth = false;
         }
     }
 }
