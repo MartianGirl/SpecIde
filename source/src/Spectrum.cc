@@ -77,21 +77,24 @@ void Spectrum::clock()
     if (ula.cpuClock)
     {
         // Z80 gets data from the ULA or memory, only when reading.
-        if (io_ == false && rd_ == false)
+        if (io_ == false)
         {
-            if ((z80.a & 0x0001) == 0x0000)
+            if (rd_ == false)
             {
-                z80.d = ula.d;
-            }
-            else if ((z80.a & 0x00E0) == 0x0000)       // Kempston joystick.
-                z80.d = joystick;
-            else if (!ula.idle)
-            {
-                z80.d = map[1]->d;  // Get the byte from the video memory.
-            }
-            else
-            {
-                z80.d = 0xFF;
+                if ((z80.a & 0x0001) == 0x0000)
+                {
+                    z80.d = ula.d;
+                }
+                else if ((z80.a & 0x00E0) == 0x0000)    // Kempston joystick.
+                    z80.d = joystick;
+                else if (ula.idle == false)
+                {
+                    z80.d = map[1]->d;  // Get the byte from the video memory.
+                }
+                else
+                {
+                    z80.d = 0xFF;
+                }
             }
         }
         else if (as_ == false)
@@ -107,6 +110,10 @@ void Spectrum::clock()
             map[memArea]->wr_ = wr_;
             map[memArea]->clock();
             z80.d = map[memArea]->d;
+        }
+        else
+        {
+            z80.d = 0xFF;
         }
 
         z80.clock();

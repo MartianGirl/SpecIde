@@ -41,7 +41,7 @@ class Z80
         cpuProcCycles(0),
         nmiAccept(false), nmiProcess(false),
         intProcess(false),
-        c_d(0xFFFF), iff_d(0x00) {}
+        c_d(0xFFFF), iff_d(0x00), dout(0xFF) {}
 
         void reset();
         void clock();
@@ -136,6 +136,7 @@ class Z80
 
         uint_fast16_t c_d;
         uint_fast8_t iff_d;
+        uint_fast8_t dout;
 };
 
 // vim: et:sw=4:ts=4
