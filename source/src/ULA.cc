@@ -30,6 +30,8 @@ int_fast32_t ULA::tensions[2][4] = {
 };
 int_fast32_t ULA::constants[] = {0};
 
+size_t ULA::hSyncStart[2] = {0x150, 0x158};
+size_t ULA::hSyncEnd[2] = {0x16F, 0x177};
 
 ULA::ULA() :
     ulaVersion(0),
@@ -132,11 +134,11 @@ void ULA::clock()
         else if (scan == maxScan)
             scan = 0;
     }
-    else if (pixel == hSyncStart)
+    else if (pixel == hSyncStart[ulaVersion])
     {
         hSync = true;
     }
-    else if (pixel == hSyncEnd)
+    else if (pixel == hSyncEnd[ulaVersion])
     {
         hSync = false;
     }

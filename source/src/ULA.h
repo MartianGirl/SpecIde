@@ -28,8 +28,10 @@ class ULA
         static constexpr size_t hBorderEnd = 0x1BF;
         static constexpr size_t hBlankStart = 0x140;
         static constexpr size_t hBlankEnd = 0x19F;
-        static constexpr size_t hSyncStart = 0x150;
-        static constexpr size_t hSyncEnd = 0x16F;
+        // static constexpr size_t hSyncStart = 0x150;
+        // static constexpr size_t hSyncEnd = 0x16F;
+        static size_t hSyncStart[2];
+        static size_t hSyncEnd[2];
 
         static constexpr size_t scanStart = 0x000;
         static constexpr size_t scanEnd = 0x0BF;
