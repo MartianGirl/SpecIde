@@ -28,6 +28,7 @@ class Screen : public GraphicWindow
 
         bool done, reset;
         bool rewind, play;
+        bool resetCounter, rewindToCounter;
         bool fullscreen;
         bool smooth;
 

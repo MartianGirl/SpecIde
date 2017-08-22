@@ -137,7 +137,7 @@ void Screen::pollEvents()
                 {
                     // Scan function keys
                     case Keyboard::F2:
-                        if (event.key.system)
+                        if (event.key.shift)
                             smooth = true;
                         else
                             fullscreen = true;
@@ -149,10 +149,16 @@ void Screen::pollEvents()
                         done = true;
                         break;
                     case Keyboard::F11:
-                        play = true;
+                        if (event.key.shift)
+                            resetCounter = true;
+                        else
+                            play = true;
                         break;
                     case Keyboard::F12:
-                        rewind = true;
+                        if (event.key.shift)
+                            rewindToCounter = true;
+                        else
+                            rewind = true;
                         break;
 
                         // Scan Spectrum keyboard

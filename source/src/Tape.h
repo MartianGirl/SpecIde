@@ -29,6 +29,7 @@ class Tape
         size_t sample;          // Sample counter.
         bool playing;
         uint8_t level;          // Tape output level.
+        size_t counter;         // Cassette counter :-)
 
         Tape() :
             pointer(0), index(0), sample(0), playing(false), level(0x00) {}
@@ -42,11 +43,18 @@ class Tape
             cout << ((playing) ? "Playing" : "Stopped") << endl;
         }
 
-        void rewind()
+        void rewind(size_t position = 0)
         {
-            playing = false; sample = 0; pointer = 0; level = 0x00;
-            cout << "Rewind..." << endl;
+            playing = false; sample = 0; pointer = position; level = 0x00;
+            cout << "Rewind to " << position << "..." << endl;
         }
+
+        void resetCounter()
+        {
+            counter = pointer;
+            cout << "Set counter at " << pointer << endl;
+        }
+
         uint_fast8_t advance();
         void next() {}
         void prev() {}

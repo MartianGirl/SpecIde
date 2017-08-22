@@ -98,6 +98,18 @@ int main(int argc, char* argv[])
             screen.rewind = false;
         }
 
+        if (screen.resetCounter)
+        {
+            tape.resetCounter();
+            screen.resetCounter = false;
+        }
+
+        if (screen.rewindToCounter)
+        {
+            tape.rewind(tape.counter);
+            screen.rewindToCounter = false;
+        }
+
         if (screen.play)
         {
             tape.play();
