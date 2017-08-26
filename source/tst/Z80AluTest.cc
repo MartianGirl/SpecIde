@@ -2830,6 +2830,13 @@ BOOST_AUTO_TEST_CASE(daa_test)
     runCycles(z80, m, 4);
     BOOST_CHECK_EQUAL(z80.af.w, 0x5411);
 
+    // H:9-F L:A-F CF:0 HF:0 -> 66 CF':1 HF':1 (Subtraction)
+    // From Phillip Kendall FUSE regression tests.
+    startZ80(z80);
+    z80.af.w = 0x9A02;
+    runCycles(z80, m, 4);
+    BOOST_CHECK_EQUAL(z80.af.w, 0x3423);
+
     // H:A-F L:0-9 CF:0 HF:1 -> 66 CF':1 HF':0
     startZ80(z80);
     z80.af.w = 0xE310;

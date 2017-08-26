@@ -36,7 +36,7 @@ bool z80Daa()
 
             // Adjust the upper nybble then.
             acc.w += (af.h & 0xF0);
-            if ((af.h > 0x9A) || ((af.l & FLAG_C) == FLAG_C))
+            if ((af.h > 0x99) || ((af.l & FLAG_C) == FLAG_C))
             {
                 if ((af.l & FLAG_N) == FLAG_N)   // Subtraction
                 {
