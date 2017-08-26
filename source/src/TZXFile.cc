@@ -324,7 +324,7 @@ void TZXFile::parse(
 
                 indexData.insert(pulseData.size());
                 if (pause == 0)
-                    stopData.insert(pulseData.size() + 1);
+                    stopData.insert(pulseData.size());
 
                 pointer += 3;
                 break;
@@ -362,7 +362,7 @@ void TZXFile::parse(
 
             case 0x2A:
                 blockName = "Stop The Tape If In 48K Mode";
-                stopData.insert(pulseData.size() + 1);
+                stopData.insert(pulseData.size());
                 pointer += 5;
                 break;
 

@@ -34,14 +34,14 @@ size_t ULA::hSyncStart[2] = {0x150, 0x158};
 size_t ULA::hSyncEnd[2] = {0x16F, 0x177};
 
 ULA::ULA() :
-    ulaVersion(0),
+    ulaVersion(1),
     maxPixel(448), maxScan(312),
     hiz(true),
     z80_a(0xFFFF), z80_c(0xFFFF),
     cpuClock(false), ulaReset(true),
     hBlank(false), vBlank(false), display(true), idle(false), 
     ioPortIn(0xFF), ioPortOut(0x00), tapeIn(0),
-    c00(996), c01(996), c10(392), c11(392),
+    c00(996), c01(996), c10(0), c11(0),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF)
 {

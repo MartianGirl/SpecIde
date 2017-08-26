@@ -51,7 +51,7 @@ class Tape
 
         void resetCounter()
         {
-            counter = pointer;
+            counter = pointer + 1;
             cout << "Set counter at " << pointer << endl;
         }
 
