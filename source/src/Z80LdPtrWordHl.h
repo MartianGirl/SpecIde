@@ -24,6 +24,7 @@ bool z80LdPtrWordHl()
 
         case 2:
             memWrCycles = 2;
+            tmp.w = iReg.w;
             oReg.w = hl.w;
             return true;
 

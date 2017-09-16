@@ -1235,7 +1235,8 @@ BOOST_AUTO_TEST_CASE(bit_manipulation_ptriy)
         "FDCB0066"  // BIT 4, (IY + 00h)
         "FDCB006E"  // BIT 5, (IY + 00h)
         "FDCB0076"  // BIT 6, (IY + 00h)
-        "FDCB007E"; // BIT 7, (IY + 00h)
+        "FDCB007E"  // BIT 7, (IY + 00h)
+        "3E45";
 
     loadBinary(code, m, 0x0000);
     startZ80(z80);
@@ -1275,6 +1276,8 @@ BOOST_AUTO_TEST_CASE(bit_manipulation_ptriy)
     BOOST_CHECK_EQUAL(z80.af.l, 0x5C);
     runCycles(z80, m, 20);
     BOOST_CHECK_EQUAL(z80.af.l, 0x98);
+    BOOST_CHECK_EQUAL(z80.af.h, 0x00);
+    BOOST_CHECK_EQUAL(z80.pc.w, 0x4D);
 }
 // EOF
 // vim: et:sw=4:ts=4

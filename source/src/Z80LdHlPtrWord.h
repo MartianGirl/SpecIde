@@ -23,6 +23,7 @@ bool z80LdHlPtrWord()
             return true;
 
         case 2:
+            tmp.w = iReg.w;
             return true;
 
         case 3:

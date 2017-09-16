@@ -29,6 +29,7 @@ bool z80OutPtrCReg()
             ioWrCycles = 1;
             memAddrMode = 0x0000000E;
 
+            tmp.w = bc.w;
             oReg.l = (y == 6) ? 0x00 : *reg8[y];
             return true;
         case 1:

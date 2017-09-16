@@ -53,6 +53,7 @@ bool z80AddHlReg()
             return false;
 
         case 7:
+            ++tmp.w;
             prefix = PREFIX_NO;
             return true;
 

@@ -37,21 +37,24 @@ bool z80Otir()
 
         case 2:
             ++hl.w;
-            tmp.l = oReg.l = iReg.h;
+            tmp.w = bc.w;
+            oReg.l = iReg.h;
             return true;
 
         case 3:
             --bc.h;
             af.l = bc.h & (FLAG_S | FLAG_5 | FLAG_3); // S.5.3...
             af.l |= (bc.h) ? 0x00 : FLAG_Z;           // SZ5.3...
-            af.l |= (tmp.l & 0x80) >> 6;              // SZ5.3.N.
-            acc.w = tmp.l + hl.l;
+            af.l |= (iReg.h & 0x80) >> 6;              // SZ5.3.N.
+            acc.w = iReg.h + hl.l;
             af.l |= (acc.h) ? 0x00 : FLAG_H | FLAG_C; // SZ5H3.NC
             acc.w = (acc.w & 0x07) ^ bc.h;
             acc.l ^= acc.l >> 1;
             acc.l ^= acc.l >> 2;
             acc.l ^= acc.l >> 4;
-            af.l = (acc.l & 0x01) ? 0x00 : FLAG_PV;   // SZ5H3PNC
+            af.l |= (acc.l & 0x01) ? 0x00 : FLAG_PV;   // SZ5H3PNC
+
+            tmp.w -= 0x0100;
 
             if (bc.h != 0x00)
                 cpuProcCycles = 1;

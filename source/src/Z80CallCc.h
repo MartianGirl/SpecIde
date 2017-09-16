@@ -26,6 +26,7 @@ bool z80CallCc()
             return true;
 
         case 2:
+            tmp.w = iReg.w;
             switch (y)
             {
                 case 0: return ((af.l & FLAG_Z) == FLAG_Z);
@@ -49,7 +50,7 @@ bool z80CallCc()
             return true;
 
         case 5:
-            pc.w = iReg.w;
+            pc.w = tmp.w;
             prefix = PREFIX_NO;
             return true;
 

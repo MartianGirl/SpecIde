@@ -20,10 +20,11 @@ bool z80Rld()
             memRdCycles = 1;
             cpuProcCycles = 1;
             memWrCycles = 1;
-            memAddrMode = 0x00000022;
+            memAddrMode = 0x00000082;
             return true;
 
         case 1:
+            tmp.w = hl.w;
             acc.w = iReg.h;
             return true;
 

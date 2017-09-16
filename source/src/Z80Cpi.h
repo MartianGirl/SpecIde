@@ -39,12 +39,11 @@ bool z80Cpi()
             return false;
 
         case 3:
-            tmp.l = iReg.h;
-            acc.l = af.h - tmp.l;
+            acc.l = af.h - iReg.h;
             af.l &= FLAG_C;                              // 0000000C
             af.l |= FLAG_N;                              // 000000NC
             af.l |= 
-                (af.h ^ tmp.l ^ acc.l) & FLAG_H;   // 000H00NC
+                (af.h ^ iReg.h ^ acc.l) & FLAG_H;   // 000H00NC
             af.l |= acc.l & FLAG_S;                   // S00H00NC
             af.l |= (acc.l) ? 0x00 : FLAG_Z;          // SZ0H00NC
             return false;
@@ -60,6 +59,7 @@ bool z80Cpi()
             return false;
 
         case 6:
+            ++tmp.w;
             prefix = PREFIX_NO;
             return true;
 

@@ -62,6 +62,7 @@ bool z80AdcHlReg()
             return false;
 
         case 7:
+            ++tmp.w;
             prefix = PREFIX_NO;
             return true;
 

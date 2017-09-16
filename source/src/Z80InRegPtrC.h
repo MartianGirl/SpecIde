@@ -30,6 +30,7 @@ bool z80InRegPtrC()
         case 0:
             ioRdCycles = 1;
             memAddrMode = 0x0000000E;
+            tmp.w = bc.w;
             return true;
 
         case 1:

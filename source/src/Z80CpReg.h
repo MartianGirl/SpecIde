@@ -13,16 +13,15 @@ bool z80CpReg()
         case 0:
             memAddrMode = 0x00000000;
 
-            tmp.l = *reg8[z];
-            acc.w = af.h - tmp.l;
+            acc.w = af.h - *reg8[z];
 
             // Flags 5 & 3 are copied from the operand.
-            af.l = tmp.l & (FLAG_5 | FLAG_3);
+            af.l = *reg8[z] & (FLAG_5 | FLAG_3);
             af.l |= acc.l & FLAG_S;
             af.l |= acc.h & FLAG_C;
             af.l |= FLAG_N;
-            af.l |= (acc.l ^ af.h ^ tmp.l) & FLAG_H;
-            af.l |= (((acc.l ^ tmp.l ^ af.h) >> 5) 
+            af.l |= (acc.l ^ af.h ^ *reg8[z]) & FLAG_H;
+            af.l |= (((acc.l ^ *reg8[z] ^ af.h) >> 5) 
                     ^ (acc.h << 2)) & FLAG_PV;
             af.l |= acc.l ? 0x00 : FLAG_Z;            // SZ5H3VNC
             prefix = PREFIX_NO;

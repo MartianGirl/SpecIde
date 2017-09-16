@@ -1,6 +1,6 @@
 #pragma once
 
-/** Z80PrefixDDCB
+/** Z80PrefixDDCB.h
  *
  * Prefix DDCB.
  *

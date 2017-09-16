@@ -30,6 +30,7 @@ bool z80LdPtrWordReg()
             return true;
 
         case 2:
+            tmp.w = iReg.w;
             memWrCycles = 2;
             oReg.w = *(regp[p]);
             return true;

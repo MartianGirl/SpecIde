@@ -40,10 +40,10 @@ bool z80Ldd()
             return false;
 
         case 3:
-            tmp.l = iReg.h + af.h;
+            acc.l = iReg.h + af.h;
             af.l &= FLAG_S | FLAG_Z | FLAG_C;            // SZ00000C
-            af.l |= (tmp.l & FLAG_3);                 // SZ00300C
-            af.l |= (tmp.l << 4) & FLAG_5;            // SZ50300C
+            af.l |= (acc.l & FLAG_3);                 // SZ00300C
+            af.l |= (acc.l << 4) & FLAG_5;            // SZ50300C
             af.l |= (bc.w) ? FLAG_PV : 0x00;          // SZ503P0C
             return false;
 

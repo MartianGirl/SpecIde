@@ -497,17 +497,19 @@ uint_fast16_t Z80::getAddress()
         case 0x04:  // Indirect DE:         LD A, (DE)
             addr.w = de.w;
             break;
+        case 0x08:  // Indirect nn:         LD A, (nn)
+        case 0x0C:  // Interrupt Mode 2
+        case 0x0D:  // I/O Indirect n:      IN A, (n)
+        case 0x0E:  // I/O Indirect C:
+            addr.w = tmp.w;
+            ++tmp.w;
+            break;
         case 0x05:  // Indirect SP:
             break;
         case 0x06:  // Indexed IX+d, IY+d:  LD A, (IX+d), LD A, (IY+d)
         case 0x07:
-            addr.w = tmp.w;
-            break;
-        case 0x08:  // Indirect nn:         LD A, (nn)
-            addr.w = iReg.w;
-            break;
         case 0x09:  // Indirect extended    LD HL, (nn) - high byte read
-            ++addr.w;
+            addr.w = tmp.w;
             break;
         case 0x0A:  // Push                 PUSH AF
             --sp.w;
@@ -516,15 +518,6 @@ uint_fast16_t Z80::getAddress()
         case 0x0B:  // Pop                  POP AF
             addr.w = sp.w;
             ++sp.w;
-            break;
-        case 0x0C:  // Interrupt Mode 2
-            addr.w = (ir.h << 8) | d;
-            break;
-        case 0x0D:  // I/O Indirect n:      IN A, (n)
-            addr.w = (af.h << 8) | iReg.h;
-            break;
-        case 0x0E:  // I/O Indirect C:
-            addr.w = bc.w;
             break;
 
         default:

@@ -12,13 +12,13 @@ bool z80JrByte()
     {
         case 0:
             memRdCycles = 1;
-            memWrCycles = 0;
+            cpuProcCycles = 1;
             memAddrMode = 0x00000001;
             return true;
 
         case 1:
             tmp.l = iReg.h;
-            return false;
+            return true;
 
         case 2:
             tmp.h = ((tmp.l & 0x80) == 0x80) ? 0xFF : 0x00;

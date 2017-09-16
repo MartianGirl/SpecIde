@@ -38,7 +38,7 @@ bool z80ExPtrSpIx()
             return false;
 
         case 6:
-            ix.w = iReg.w;
+            ix.w = tmp.w = iReg.w;
             return false;
 
         case 7:

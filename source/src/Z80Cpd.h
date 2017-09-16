@@ -39,27 +39,27 @@ bool z80Cpd()
             return false;
 
         case 3:
-            tmp.l = iReg.h;
-            acc.l = af.h - tmp.l;
-            af.l &= FLAG_C;                              // 0000000C
-            af.l |= FLAG_N;                              // 000000NC
+            acc.l = af.h - iReg.h;
+            af.l &= FLAG_C;                             // 0000000C
+            af.l |= FLAG_N;                             // 000000NC
             af.l |= 
-                (af.h ^ tmp.l ^ acc.l) & FLAG_H;   // 000H00NC
-            af.l |= acc.l & FLAG_S;                   // S00H00NC
-            af.l |= (acc.l) ? 0x00 : FLAG_Z;          // SZ0H00NC
+                (af.h ^ iReg.h ^ acc.l) & FLAG_H;       // 000H00NC
+            af.l |= acc.l & FLAG_S;                     // S00H00NC
+            af.l |= (acc.l) ? 0x00 : FLAG_Z;            // SZ0H00NC
             return false;
 
         case 4:
             acc.l -= (af.l & FLAG_H) >> 4;
-            af.l |= (acc.l & FLAG_3);                 // SZ0H30NC
-            af.l |= (acc.l << 4) & FLAG_5;            // SZ5H30NC
+            af.l |= (acc.l & FLAG_3);                   // SZ0H30NC
+            af.l |= (acc.l << 4) & FLAG_5;              // SZ5H30NC
             return false;
 
         case 5:
-            af.l |= (bc.w) ? FLAG_PV : 0x00;          // SZ5H3PNC
+            af.l |= (bc.w) ? FLAG_PV : 0x00;            // SZ5H3PNC
             return false;
 
         case 6:
+            --tmp.w;
             prefix = PREFIX_NO;
             return true;
 

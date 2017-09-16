@@ -42,10 +42,10 @@ bool z80Lddr()
             return false;
 
         case 3:
-            tmp.l = iReg.h + af.h;
+            acc.l = iReg.h + af.h;
             af.l &= FLAG_S | FLAG_Z | FLAG_C;            // SZ00000C
-            af.l |= (tmp.l & FLAG_3);                 // SZ00300C
-            af.l |= (tmp.l << 4) & FLAG_5;            // SZ50300C
+            af.l |= (acc.l & FLAG_3);                 // SZ00300C
+            af.l |= (acc.l << 4) & FLAG_5;            // SZ50300C
             af.l |= (bc.w) ? FLAG_PV : 0x00;          // SZ503P0C
             return false;
 
@@ -63,7 +63,8 @@ bool z80Lddr()
             return false;
 
         case 9:
-            pc.w -= 0x0002;
+            tmp.w = pc.w - 1;
+            pc.w = tmp.w - 1;
             prefix = PREFIX_NO;
             return true;
 

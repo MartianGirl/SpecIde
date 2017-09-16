@@ -31,7 +31,7 @@ bool z80Call()
             return true;
 
         case 5:
-            pc.w = iReg.w;
+            pc.w = tmp.w = iReg.w;
             prefix = PREFIX_NO;
             return true;
 

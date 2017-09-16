@@ -17,12 +17,14 @@ bool z80IntMode2()
             return false;
 
         case 1:
+            tmp.w = (ir.h << 8) | d;
             return true;
 
         case 2:
             return true;
 
         case 3:
+            tmp.w = iReg.w;
             acc.w = pc.w;
             oReg.l = acc.h;
             oReg.h = acc.l;
@@ -32,7 +34,7 @@ bool z80IntMode2()
             return true;
 
         case 5:
-            pc.w = iReg.w;
+            pc.w = tmp.w;
             prefix = PREFIX_NO;
             return true;
 
