@@ -58,7 +58,7 @@ bool z80Cpir()
 
         case 5:
             af.l |= (bc.w) ? FLAG_PV : 0x00;          // SZ5H3PNC
-            ++tmp.w;
+            ++wz.w;
             return false;
 
         case 6:
@@ -75,8 +75,8 @@ bool z80Cpir()
             return false;
 
         case 11:
-            tmp.w = pc.w - 1;
-            pc.w = tmp.w - 1;
+            wz.w = pc.w - 1;
+            pc.w = wz.w - 1;
             prefix = PREFIX_NO;
             return true;
 

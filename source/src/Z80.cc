@@ -442,6 +442,7 @@ void Z80::start()
     bc.w = 0xFFFF; bc_.w = 0xFFFF;
     de.w = 0xFFFF; de_.w = 0xFFFF;
     hl.w = 0xFFFF; hl_.w = 0xFFFF;
+    wz.w = 0xFFFF; wz_.w = 0xFFFF;
 
     ir.w = 0xFFFF;
     sp.w = 0xFFFF;
@@ -451,7 +452,9 @@ void Z80::start()
     iReg.w = 0xFFFF;
     oReg.w = 0xFFFF;
     addr.w = 0xFFFF;
+    acc.w = 0xFFFF;
     tmp.w = 0xFFFF;
+    flg.w = 0xFFFF;
 
     iff = 0x00;
     im = 0x00;
@@ -501,15 +504,15 @@ uint_fast16_t Z80::getAddress()
         case 0x0C:  // Interrupt Mode 2
         case 0x0D:  // I/O Indirect n:      IN A, (n)
         case 0x0E:  // I/O Indirect C:
-            addr.w = tmp.w;
-            ++tmp.w;
+            addr.w = wz.w;
+            ++wz.w;
             break;
         case 0x05:  // Indirect SP:
             break;
         case 0x06:  // Indexed IX+d, IY+d:  LD A, (IX+d), LD A, (IY+d)
         case 0x07:
         case 0x09:  // Indirect extended    LD HL, (nn) - high byte read
-            addr.w = tmp.w;
+            addr.w = wz.w;
             break;
         case 0x0A:  // Push                 PUSH AF
             --sp.w;

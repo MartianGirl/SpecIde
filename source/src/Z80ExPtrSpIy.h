@@ -38,7 +38,7 @@ bool z80ExPtrSpIy()
             return false;
 
         case 6:
-            iy.w = tmp.w = iReg.w;
+            iy.w = wz.w = iReg.w;
             return false;
 
         case 7:

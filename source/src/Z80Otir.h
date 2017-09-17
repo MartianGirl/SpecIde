@@ -37,7 +37,7 @@ bool z80Otir()
 
         case 2:
             ++hl.w;
-            tmp.w = bc.w;
+            wz.w = bc.w;
             oReg.l = iReg.h;
             return true;
 
@@ -54,7 +54,7 @@ bool z80Otir()
             acc.l ^= acc.l >> 4;
             af.l |= (acc.l & 0x01) ? 0x00 : FLAG_PV;   // SZ5H3PNC
 
-            tmp.w -= 0x0100;
+            wz.w -= 0x0100;
 
             if (bc.h != 0x00)
                 cpuProcCycles = 1;

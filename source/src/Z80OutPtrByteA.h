@@ -21,12 +21,12 @@ bool z80OutPtrByteA()
             return true;
 
         case 1:
-            tmp.w = (af.h << 8) | iReg.h;
+            wz.w = (af.h << 8) | iReg.h;
             oReg.l = af.h;
             return true;
 
         case 2:
-            tmp.h = af.h;
+            wz.h = af.h;
             prefix = PREFIX_NO;
             return true;
 

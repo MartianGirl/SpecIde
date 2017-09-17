@@ -33,9 +33,9 @@ bool z80Inir()
             return false;
 
         case 1:
-            tmp.w = bc.w;
-            --tmp.h;
-            bc.w = tmp.w;
+            wz.w = bc.w;
+            --wz.h;
+            bc.w = wz.w;
             return true;
 
         case 2:
@@ -55,7 +55,7 @@ bool z80Inir()
             acc.l ^= acc.l >> 4;
             af.l |= (acc.l & 0x01) ? 0x00 : FLAG_PV;   // SZ5H3PNC
 
-            tmp.w += 0x0100;
+            wz.w += 0x0100;
 
             if (bc.h != 0x00)
                 cpuProcCycles = 1;

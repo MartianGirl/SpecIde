@@ -59,7 +59,7 @@ bool z80Cpd()
             return false;
 
         case 6:
-            --tmp.w;
+            --wz.w;
             prefix = PREFIX_NO;
             return true;
 

@@ -31,6 +31,7 @@ class Screen : public GraphicWindow
         bool resetCounter, rewindToCounter;
         bool fullscreen;
         bool smooth;
+        bool toggleLoadingSound;
 
         size_t scale;
         size_t xSize, ySize;

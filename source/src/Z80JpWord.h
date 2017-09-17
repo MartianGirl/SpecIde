@@ -20,7 +20,7 @@ bool z80JpWord()
             return true;
 
         case 2:
-            pc.w = tmp.w = iReg.w;
+            pc.w = wz.w = iReg.w;
             prefix = PREFIX_NO;
             return true;
 

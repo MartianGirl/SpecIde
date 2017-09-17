@@ -35,7 +35,7 @@ bool z80Outi()
 
         case 2:
             ++hl.w;
-            tmp.w = bc.w;
+            wz.w = bc.w;
             oReg.l = iReg.h;
             return true;
 
@@ -53,7 +53,7 @@ bool z80Outi()
             acc.l ^= acc.l >> 4;
             af.l |= (acc.l & 0x01) ? 0x00 : FLAG_PV;   // ...H.PNC
 
-            tmp.w -= 0x0100;
+            wz.w -= 0x0100;
             prefix = PREFIX_NO;
             return true;
 

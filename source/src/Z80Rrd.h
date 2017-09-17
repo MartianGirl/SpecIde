@@ -24,7 +24,7 @@ bool z80Rrd()
             return true;
 
         case 1:
-            tmp.w = hl.w;
+            wz.w = hl.w;
             acc.w = iReg.h;
             return true;
 

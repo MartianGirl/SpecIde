@@ -63,8 +63,8 @@ bool z80Lddr()
             return false;
 
         case 9:
-            tmp.w = pc.w - 1;
-            pc.w = tmp.w - 1;
+            wz.w = pc.w - 1;
+            pc.w = wz.w - 1;
             prefix = PREFIX_NO;
             return true;
 

@@ -16,18 +16,18 @@ bool z80PrefixDDCB()
             return true;
 
         case 1: // This is the displacement.
-            tmp.l = iReg.h;
+            wz.l = iReg.h;
             return true;
 
         case 2: // This is actually the opcode. Now we *decode* it,
             // as if we were starting a new instruction.
             // Also, during this cycle we calculate the operand
             // address.
-            tmp.h = ((tmp.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            wz.h = ((wz.l & 0x80) == 0x80) ? 0xFF : 0x00;
             return false;
 
         case 3:
-            tmp.w += ix.w;
+            wz.w += ix.w;
             return false;
 
         case 4:

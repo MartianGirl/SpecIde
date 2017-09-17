@@ -17,17 +17,21 @@ bool z80Exx()
         case 0:
             memAddrMode = 0x00000000;
 
-            acc.w = bc.w;
+            tmp.w = bc.w;
             bc.w = bc_.w;
-            bc_.w = acc.w;
+            bc_.w = tmp.w;
 
-            acc.w = de.w;
+            tmp.w = de.w;
             de.w = de_.w;
-            de_.w = acc.w;
+            de_.w = tmp.w;
 
-            acc.w = hl.w;
+            tmp.w = hl.w;
             hl.w = hl_.w;
-            hl_.w = acc.w;
+            hl_.w = tmp.w;
+
+            // tmp.w = wz.w;
+            // wz.w = wz_.w;
+            // wz_.w = tmp.w;
 
             prefix = PREFIX_NO;
             return true;

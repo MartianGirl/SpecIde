@@ -16,33 +16,33 @@ bool z80SbcHlReg()
 
         case 1:
             // Save HL and operand.
-            tmp.w = hl.w;
+            wz.w = hl.w;
             acc.w = *regp[p];
             return false;
 
         case 2:
             // First, do the low byte subtraction. Carry is in lowest
             // bit of H. Add carry here.
-            hl.w = tmp.l - acc.l - (af.l & FLAG_C);
+            hl.w = wz.l - acc.l - (af.l & FLAG_C);
             acc.w = acc.h;
             af.l = hl.h & FLAG_C;
 
             // Perform the subtraction in H, including low byte carry.
-            hl.h = tmp.h - acc.l - (af.l & FLAG_C);
+            hl.h = wz.h - acc.l - (af.l & FLAG_C);
             return false;
 
         case 3:
             // Now check flags:
             // Half carry
-            af.l |= (tmp.h ^ acc.l ^ hl.h) & FLAG_H;
+            af.l |= (wz.h ^ acc.l ^ hl.h) & FLAG_H;
 
             // Carry into bit 7
-            af.l |= ((tmp.h ^ acc.l ^ hl.h) >> 5) & FLAG_PV;
+            af.l |= ((wz.h ^ acc.l ^ hl.h) >> 5) & FLAG_PV;
             return false;
 
         case 4:
             // Carry out of bit 7
-            acc.w = tmp.h - acc.l - (af.l & FLAG_C);
+            acc.w = wz.h - acc.l - (af.l & FLAG_C);
             af.l ^= ((acc.h & FLAG_C) << 2) & FLAG_PV;
             af.l &= ~FLAG_C;
             af.l |= (acc.h & FLAG_C);
@@ -61,7 +61,7 @@ bool z80SbcHlReg()
             return false;
 
         case 7:
-            ++tmp.w;
+            ++wz.w;
             prefix = PREFIX_NO;
             return true;
 

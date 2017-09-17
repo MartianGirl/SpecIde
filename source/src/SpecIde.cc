@@ -129,6 +129,12 @@ int main(int argc, char* argv[])
             screen.setSmooth(smooth);
             screen.smooth = false;
         }
+
+        if (screen.toggleLoadingSound)
+        {
+            buzzer.playLoadingSound = !buzzer.playLoadingSound;
+            screen.toggleLoadingSound = false;
+        }
     }
 }
 

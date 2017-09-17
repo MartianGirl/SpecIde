@@ -17,15 +17,15 @@ bool z80JrByte()
             return true;
 
         case 1:
-            tmp.l = iReg.h;
+            wz.l = iReg.h;
             return true;
 
         case 2:
-            tmp.h = ((tmp.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            wz.h = ((wz.l & 0x80) == 0x80) ? 0xFF : 0x00;
             return false;
 
         case 3:
-            tmp.w += pc.w;
+            wz.w += pc.w;
             return false;
 
         case 4:
@@ -35,7 +35,7 @@ bool z80JrByte()
             return false;
 
         case 6:
-            pc.w = tmp.w;
+            pc.w = wz.w;
             prefix = PREFIX_NO;
             return true;
 

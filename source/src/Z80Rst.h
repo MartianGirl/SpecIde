@@ -31,7 +31,7 @@ bool z80Rst()
             return true;
 
         case 3:
-            pc.w = tmp.w = (y << 3);
+            pc.w = wz.w = (y << 3);
             prefix = PREFIX_NO;
             return true;
 

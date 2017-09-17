@@ -18,12 +18,12 @@ bool z80LdPtrBcA()
             memWrCycles = 1;
             memAddrMode = 0x00000003;
 
-            tmp.w = bc.w + 1;
+            wz.w = bc.w + 1;
             oReg.l = af.h;
             return true;
 
         case 1:
-            tmp.h = af.h;
+            wz.h = af.h;
             prefix = PREFIX_NO;
             return true;
 

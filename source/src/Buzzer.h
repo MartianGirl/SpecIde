@@ -32,9 +32,12 @@ class Buzzer : public sf::SoundStream
         size_t millis;  // Dummy
         size_t skip;
 
+        bool playLoadingSound;
+
         Buzzer() :
             buffers(MAX_BUFFERS, (std::vector<sf::Int16>(MAX_SAMPLES, 0))),
-            rdBuffer(0), wrBuffer(1) {}
+            rdBuffer(0), wrBuffer(1),
+            playLoadingSound(true) {}
 
         bool open(uint_fast8_t* src, uint_fast8_t* ear, size_t sampleRate)
         {
@@ -74,8 +77,9 @@ class Buzzer : public sf::SoundStream
             if (++count == skip)
             {
                 count = 0;
-                buffers[wrBuffer][wrSample] = (*source & 0x10) ? 0x1FFF : 0x0000;
-                buffers[wrBuffer][wrSample] += (*tapeIn & 0x40) ? 0x07FF : 0x0000;
+                buffers[wrBuffer][wrSample] = (*source & 0x10) ? 0x3FFF : 0x0000;
+                buffers[wrBuffer][wrSample] += 
+                    (playLoadingSound && (*tapeIn & 0x40)) ? 0x03FF : 0x0000;
                 ++wrSample;
                 if (wrSample == MAX_SAMPLES)
                 {

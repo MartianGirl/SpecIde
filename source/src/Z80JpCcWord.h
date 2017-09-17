@@ -26,40 +26,40 @@ bool z80JpCcWord()
             return true;
 
         case 2:
-            tmp.w = iReg.w;
+            wz.w = iReg.w;
             switch (y)
             {
                 case 0:
                     if ((af.l & FLAG_Z) == 0x00)
-                        pc.w = tmp.w;
+                        pc.w = wz.w;
                     break;
                 case 1:
                     if ((af.l & FLAG_Z) == FLAG_Z)
-                        pc.w = tmp.w;
+                        pc.w = wz.w;
                     break;
                 case 2:
                     if ((af.l & FLAG_C) == 0x00)
-                        pc.w = tmp.w;
+                        pc.w = wz.w;
                     break;
                 case 3:
                     if ((af.l & FLAG_C) == FLAG_C)
-                        pc.w = tmp.w;
+                        pc.w = wz.w;
                     break;
                 case 4:
                     if ((af.l & FLAG_PV) == 0x00)
-                        pc.w = tmp.w;
+                        pc.w = wz.w;
                     break;
                 case 5: 
                     if ((af.l & FLAG_PV) == FLAG_PV)
-                        pc.w = tmp.w;
+                        pc.w = wz.w;
                     break;
                 case 6:
                     if ((af.l & FLAG_S) == 0x00)
-                        pc.w = tmp.w;
+                        pc.w = wz.w;
                     break;
                 case 7:
                     if ((af.l & FLAG_S) == FLAG_S)
-                        pc.w = tmp.w;
+                        pc.w = wz.w;
                     break;
                 default: assert(false);
             }

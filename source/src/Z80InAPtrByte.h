@@ -21,7 +21,7 @@ bool z80InAPtrByte()
             return true;
 
         case 1:
-            tmp.w = (af.h << 8) | iReg.h;
+            wz.w = (af.h << 8) | iReg.h;
             return true;
 
         case 2:

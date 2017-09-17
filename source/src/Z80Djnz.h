@@ -24,22 +24,22 @@ bool z80Djnz()
             return true;
 
         case 3:
-            tmp.l = iReg.h;
+            wz.l = iReg.h;
             return false;
 
         case 4:
-            tmp.h = ((tmp.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            wz.h = ((wz.l & 0x80) == 0x80) ? 0xFF : 0x00;
             return false;
 
         case 5:
-            tmp.w += pc.w;
+            wz.w += pc.w;
             return false;
 
         case 6:
             return false;
 
         case 7:
-            pc.w = tmp.w;
+            pc.w = wz.w;
             prefix = PREFIX_NO;
             return true;
 

@@ -142,6 +142,9 @@ void Screen::pollEvents()
                         else
                             fullscreen = true;
                         break;
+                    case Keyboard::F9:
+                        toggleLoadingSound = true;
+                        break;
                     case Keyboard::F5:
                         reset = true;
                         break;

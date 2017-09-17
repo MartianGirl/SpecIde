@@ -17,15 +17,15 @@ bool z80DecPtrIx()
             return true;
 
         case 1:
-            tmp.l = iReg.h;
+            wz.l = iReg.h;
             return false;
 
         case 2:
-            tmp.h = ((tmp.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            wz.h = ((wz.l & 0x80) == 0x80) ? 0xFF : 0x00;
             return false;
 
         case 3:
-            tmp.w += ix.w;
+            wz.w += ix.w;
             return false;
 
         case 4:

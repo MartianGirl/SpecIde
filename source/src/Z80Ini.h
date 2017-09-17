@@ -31,9 +31,9 @@ bool z80Ini()
             return false;
 
         case 1:
-            tmp.w = bc.w;
-            --tmp.h;
-            bc.w = tmp.w;
+            wz.w = bc.w;
+            --wz.h;
+            bc.w = wz.w;
             return true;
 
         case 2:
@@ -53,7 +53,7 @@ bool z80Ini()
             acc.l ^= acc.l >> 4;
             af.l |= (acc.l & 0x01) ? 0x00 : FLAG_PV;   // SZ5H3PNC
 
-            tmp.w += 0x0100;
+            wz.w += 0x0100;
 
             prefix = PREFIX_NO;
             return true;

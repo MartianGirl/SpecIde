@@ -18,7 +18,7 @@ bool z80LdAPtrBc()
             memRdCycles = 1;
             memAddrMode = 0x00000003;
 
-            tmp.w = bc.w + 1;
+            wz.w = bc.w + 1;
             return true;
 
         case 1:

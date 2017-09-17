@@ -18,30 +18,30 @@ bool z80AddIyRegY()
 
         case 1:
             // Save HL and operand.
-            tmp.w = iy.w;
+            wz.w = iy.w;
             acc.w = *regpy[p];
             return false;
 
         case 2:
             // First, do the low byte addition. Carry is in lowest
             // bit of H. Add carry here.
-            iy.w = acc.l + tmp.l;
+            iy.w = acc.l + wz.l;
             acc.w = acc.h;
             af.l &= (FLAG_S | FLAG_Z | FLAG_PV);
             af.l |= iy.h & FLAG_C;
 
             // Perform the addition in H, including low byte carry.
-            iy.h = acc.l + tmp.h + (af.l & FLAG_C);
+            iy.h = acc.l + wz.h + (af.l & FLAG_C);
             return false;
 
         case 3:
             // Half carry
-            af.l |= (tmp.h ^ acc.l ^ iy.h) & FLAG_H;
+            af.l |= (wz.h ^ acc.l ^ iy.h) & FLAG_H;
             return false;
 
         case 4:
             // Carry
-            acc.w += tmp.h + (af.l & FLAG_C);
+            acc.w += wz.h + (af.l & FLAG_C);
             af.l &= ~FLAG_C;
             af.l |= (acc.h & FLAG_C);
             return false;
@@ -55,7 +55,7 @@ bool z80AddIyRegY()
             return false;
 
         case 7:
-            ++tmp.w;
+            ++wz.w;
             prefix = PREFIX_NO;
             return true;
 
