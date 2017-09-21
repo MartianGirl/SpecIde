@@ -45,14 +45,13 @@ in the build process.
 3. Install cmake.
 3b. (Optional) Install ninja-builds. It really helps building SpecIde.
 
--8<-
 4. Edit the RunCMake.bat script. You need to change the following lines:
   a. set BOOST_ROOT=<Path to Boost root directory>
   b. set SFML_ROOT=<Path to SFML binaries>
 5. Run: RunCMake <GNU|MS|NINJAGNU|NINJAMS> RELEASE
--8<-
-or
--8<-
+
+-or-
+
 4. Set some environment variables:
   a. set BOOST_ROOT=<Path to Boost root directory>
   b. set Boost_NO_BOOST_CMAKE=TRUE
@@ -63,7 +62,6 @@ or
   b. For VS2015: cmake -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 14 2015 Win64" .
   c. For Ninja + MinGW: cmake -DCMAKE_BUILD_TYPE=Release -G "Ninja" .
   d. For Ninja + VS2015: cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -G "Ninja" .
--8<-
 6. Use the chosen build system.
   a. MinGW: mingw32-make install
   b. VS2015: Use the IDE.
