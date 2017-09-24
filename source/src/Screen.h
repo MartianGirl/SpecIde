@@ -37,8 +37,14 @@ class Screen : public GraphicWindow
         size_t xSize, ySize;
         float xOffset, yOffset;
 
-        sf::Texture scrTexture;
+        size_t firstScan, lastScan;
+        size_t firstScanWnd, lastScanWnd;
+        size_t firstScanFsc, lastScanFsc;
+
+        sf::Texture scrTextureWnd, scrTextureFsc;
+        sf::Texture* scrTexture;
         sf::Sprite scrSprite;
+        std::vector<sf::Uint32> pixels;
 
         bool update();
         void setFullScreen(bool fs);

@@ -28,6 +28,8 @@ class GraphicWindow
         size_t w, h;
         sf::RenderWindow window;
         std::vector<sf::VideoMode> modes;
+        sf::VideoMode bestMode;
+        size_t suggestedScans;
 };
 
 // vim: et:sw=4:ts=4
