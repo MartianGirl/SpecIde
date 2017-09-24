@@ -6,43 +6,33 @@ using namespace std;
 using namespace sf;
 
 Screen::Screen(size_t scale) :
-    GraphicWindow(336 * scale, 270 * scale, "SpecIde"),
+    GraphicWindow(336 * scale, 288 * scale, "SpecIde"),
     done(false), reset(false),
     rewind(false), play(false),
     scale(scale),
-    xSize(336), ySize(270),
-    firstScan(20), lastScan(290),
-    firstScanWnd(20), lastScanWnd(290),
-    firstScanFsc((310 - suggestedScans) / 2), lastScanFsc(310 - firstScanFsc),
+    xSize(352), ySize(304),
     keyboardMask{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
 {
-    // We create two textures, one for windowed mode (xSize x ySize) and
-    // another one for fullscreen mode (xSize x suggestedLines)
-    if (!scrTextureWnd.create(static_cast<Uint32>(xSize), static_cast<Uint32>(ySize)))
+    // Create a texture. It'll be 352x304, which holds the entire Spectrum
+    // screen.
+    if (!scrTexture.create(static_cast<Uint32>(xSize), static_cast<Uint32>(ySize)))
         assert(false);
-    scrTextureWnd.setRepeated(false);
-    scrTextureWnd.setSmooth(false);
-
-    if (!scrTextureFsc.create(static_cast<Uint32>(xSize), static_cast<Uint32>(suggestedScans)))
-        assert(false);
-    scrTextureFsc.setRepeated(false);
-    scrTextureFsc.setSmooth(false);
-
-    // cout << "Fullscreen mode starts painting at " << firstScanFsc
-        // << " and stops at " << lastScanFsc << endl;
+    scrTexture.setRepeated(false);
+    scrTexture.setSmooth(false);
 
     // We select the windowed mode by default.
-    scrTexture = &scrTextureWnd;
-    scrSprite.setTexture(scrTextureWnd);
+    scrSprite.setTexture(scrTexture);
+    scrSprite.setTextureRect(sf::IntRect(8, 8, 336, 288));
     scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
     scrSprite.setPosition(0, 0);
 
     window.setJoystickThreshold(0.5);
 
+    size_t vectorSize = xSize * (ySize + 8);    // Count blanking lines.
 #if SPECIDE_BYTE_ORDER == 1
-    pixels.assign(352 * 304, 0xFF000000);
+    pixels.assign(vectorSize, 0xFF000000);
 #else
-    pixels.assign(352 * 304, 0x000000FF);
+    pixels.assign(vectorSize, 0x000000FF);
 #endif
 
 }
@@ -61,8 +51,7 @@ bool Screen::update()
     // If not blanking, draw.
     if (!(*hBlankInput || *vBlankInput))
     {
-        if ((yPos >= firstScan && yPos < lastScan) && (xPos > 15 && xPos < 352))
-            pixels[(yPos - firstScan) * xSize + (xPos - 16)] = *rgbaInput;
+        pixels[(yPos * xSize) + xPos] = *rgbaInput;
         ++xPos;
     }
 
@@ -72,7 +61,7 @@ bool Screen::update()
     {
         yPos = 0;
 
-        scrTexture->update(reinterpret_cast<Uint8*>(&pixels[0]));
+        scrTexture.update(reinterpret_cast<Uint8*>(&pixels[0]));
         window.clear(Color::Black);
         window.draw(scrSprite);
         window.display();
@@ -101,13 +90,13 @@ void Screen::setFullScreen(bool fs)
         // Use best mode available.
         window.create(bestMode, "SpecIDE", sf::Style::Fullscreen);
         float xScale = bestMode.width / static_cast<float>(xSize);
-        float yScale = bestMode.height / static_cast<float>(ySize);
+        float yScale = bestMode.height / static_cast<float>(suggestedScans);
         float sScale;
         if (xScale < yScale)
         {
             sScale = xScale;
             xOffset = 0;
-            yOffset = (bestMode.height - (ySize * sScale)) / 2;
+            yOffset = (bestMode.height - (suggestedScans * sScale)) / 2;
         }
         else
         {
@@ -115,12 +104,15 @@ void Screen::setFullScreen(bool fs)
             xOffset = (bestMode.width - (xSize * sScale)) / 2;
             yOffset = 0;
         }
-        scrTexture = &scrTextureFsc;
-        scrSprite.setTexture(scrTextureFsc);
+        cout << "XScale " << xScale << " YScale " << yScale << endl;
+        cout << "Using scale " << sScale << endl;
+
+        size_t start = (312 - suggestedScans) / 2;
+        size_t lines = bestMode.height;
+
+        scrSprite.setTextureRect(sf::IntRect(0, start, xSize, lines));
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(sScale, sScale));
-        firstScan = firstScanFsc;
-        lastScan = lastScanFsc;
     }
     else
     {
@@ -128,12 +120,9 @@ void Screen::setFullScreen(bool fs)
                 sf::VideoMode(static_cast<sf::Uint32>(w), static_cast<sf::Uint32>(h)),
                 "SpecIDE", sf::Style::Close | sf::Style::Titlebar);
         xOffset = yOffset = 0;
-        scrTexture = &scrTextureWnd;
-        scrSprite.setTexture(scrTextureWnd);
+        scrSprite.setTextureRect(sf::IntRect(8, 8, 336, 288));
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
-        firstScan = firstScanWnd;
-        lastScan = lastScanWnd;
     }
 
     window.setKeyRepeatEnabled(false);
@@ -143,8 +132,7 @@ void Screen::setFullScreen(bool fs)
 
 void Screen::setSmooth(bool sm)
 {
-    scrTextureWnd.setSmooth(sm);
-    scrTextureFsc.setSmooth(sm);
+    scrTexture.setSmooth(sm);
 }
 
 void Screen::pollEvents()

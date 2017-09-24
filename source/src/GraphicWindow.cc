@@ -33,7 +33,7 @@ GraphicWindow::GraphicWindow(size_t x, size_t y, std::string const& title) :
         ++divider;
         suggestedScans = bestMode.height / divider;
     } while (suggestedScans > 304); // 312 - 8 VBlank lines.
-    cout << "Using a texture " << suggestedScans << " lines high." << endl;
+    // cout << "Using a texture " << suggestedScans << " lines high." << endl;
 }
 
 
