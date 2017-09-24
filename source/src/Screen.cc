@@ -92,13 +92,13 @@ void Screen::setFullScreen(bool fs)
         float xScale = bestMode.width / static_cast<float>(xSize);
         float yScale = bestMode.height / static_cast<float>(suggestedScans);
         float sScale;
-        if (xScale < yScale)
-        {
-            sScale = xScale;
-            xOffset = 0;
-            yOffset = (bestMode.height - (suggestedScans * sScale)) / 2;
-        }
-        else
+        // if (xScale < yScale)
+        // {
+            // sScale = xScale;
+            // xOffset = 0;
+            // yOffset = (bestMode.height - (suggestedScans * sScale)) / 2;
+        // }
+        // else
         {
             sScale = yScale;
             xOffset = (bestMode.width - (xSize * sScale)) / 2;
