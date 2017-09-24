@@ -7,6 +7,7 @@ Currently, the emulator is functional and is quite accurate. Some of the support
 - Emulation of ZX Spectrum 48K.
 - Loading of tapes via .tap and .tzx tape images.
 - Full screen video mode.
+- Kempston joystick emulation from the PC joystick/gamepad.
 - Works in GNU/Linux, Windows, and MacOS.
 
 How to install it:
@@ -20,7 +21,7 @@ GNU/Linux:
 6. Run: make clean && make install
 7. The binaries are installed in 'source/bin'. The test binaries are installed in 'source/bin/tst'
 8. To run it: Copy the file 48.rom from the spectrum-roms package (or find it online) to the 'source' directory.
-9. Run: bin/SpecIde <TZXFile.tzx|TAPFile.tap>
+9. Run: bin/SpecIde \<TZXFile.tzx|TAPFile.tap\>
 
 MacOS: (Thanks to David Garijo for taking the time of making this work and for providing the information!)
 1. Install brew: /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
@@ -33,7 +34,7 @@ MacOS: (Thanks to David Garijo for taking the time of making this work and for p
 7. Run: cmake -DCMAKE_BUILD_TYPE=Release .
 8. Run: make clean && make install
 9. To run it: Copy the file 48.rom from the spectrum-roms package (or find it online) to the 'source' directory.
-10. Run: bin/SpecIde <TZXFile.tzx|TAPFile.tap>
+10. Run: bin/SpecIde \<TZXFile.tzx|TAPFile.tap\>
 
 Windows:
 I've successfully compiled SpecIde with MinGW32 and Visual Studio 2015. There is a script RunCMake.bat that helps
@@ -41,29 +42,30 @@ in the build process.
 
 1. Install boost.
 2. Install sfml.
-3. Install cmake.
-3b. (Optional) Install ninja-builds. It really helps building SpecIde.
----
-4. Edit the RunCMake.bat script. You need to change the following lines:
-  a. set BOOST_ROOT=<Path to Boost root directory>
-  b. set SFML_ROOT=<Path to SFML binaries>
-5. Run: RunCMake <GNU|MS|NINJAGNU|NINJAMS> RELEASE
----
-or
----
-4. Set some environment variables:
-  a. set BOOST_ROOT=<Path to Boost root directory>
-  b. set Boost_NO_BOOST_CMAKE=TRUE
-  c. set SFML_ROOT=<Path to SFML binaries>
-  d. If using MinGW, set MINGW_SYSROOT=<Path where MinGW is installed>
-5. Run CMake:
-  a. For MinGW: cmake -DCMAKE_BUILD_TYPE=RELEASE -G "MinGW Makefiles" .
-  b. For VS2015: cmake -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 14 2015 Win64" .
-  c. For Ninja + MinGW: cmake -DCMAKE_BUILD_TYPE=Release -G "Ninja" .
-  d. For Ninja + VS2015: cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -G "Ninja" .
----
-6. Use the chosen build system.
-  a. MinGW: mingw32-make install
-  b. VS2015: Use the IDE.
-  c. Ninja: ninja install
+3. Install cmake. Optionally, install ninja-builds. It really helps building SpecIde.
+
+4. Edit the RunCMake.bat script. You need to change the following lines:<br>
+   4.1. set BOOST_ROOT=\<Path_to_Boost_root_directory\><br>
+   4.2. set SFML_ROOT=\<Path_to_SFML_binaries\><br>
+5. Run: RunCMake \[GNU|MS|NINJAGNU|NINJAMS\] RELEASE
+
+-or-
+
+4. Set some environment variables:<br>
+   4.1. set BOOST_ROOT=\<Path to Boost root directory\><br>
+   4.2. set Boost_NO_BOOST_CMAKE=TRUE<br>
+   4.3. set SFML_ROOT=\<Path to SFML binaries\><br>
+   4.4. If using MinGW, set MINGW_SYSROOT=\<Path where MinGW is installed\><br>
+   
+5. Run CMake: (Do not miss the dots at the end of the commands!!!)<br>
+   5.1. For MinGW: cmake -DCMAKE_BUILD_TYPE=RELEASE -G "MinGW Makefiles" .<br>
+   5.2. For VS2015: cmake -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 14 2015 Win64" .<br>
+   5.3. For Ninja + MinGW: cmake -DCMAKE_BUILD_TYPE=Release -G "Ninja" .<br>
+   5.4. For Ninja + VS2015: cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -G "Ninja" .<br>
+  
+6. Use the chosen build system.<br>
+   6.1. MinGW: mingw32-make install<br>
+   6.2. VS2015: Use the IDE.<br>
+   6.3. Ninja: ninja install<br>
+  
 7. Run it. You'll need to add the path to the libraries (SFML and Boost) to the system path.
