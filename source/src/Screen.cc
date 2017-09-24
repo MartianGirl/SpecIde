@@ -110,7 +110,8 @@ void Screen::setFullScreen(bool fs)
         size_t start = (312 - suggestedScans) / 2;
         size_t lines = bestMode.height;
 
-        scrSprite.setTextureRect(sf::IntRect(0, start, xSize, lines));
+        scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
+                    static_cast<uint_fast32_t>(xSize), static_cast<uint_fast32_t>(lines)));
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(sScale, sScale));
     }
