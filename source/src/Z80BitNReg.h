@@ -33,7 +33,7 @@ bool z80BitNReg()
             af.l &= FLAG_C;
             af.l |= FLAG_H;
             af.l |= acc.l & (FLAG_S | FLAG_5 | FLAG_3);
-            af.l |= (acc.l) ? 0x00 : FLAG_Z | FLAG_PV;
+            af.l |= (acc.l) ? 0x00 : (FLAG_Z | FLAG_PV);
 
             prefix = PREFIX_NO;
             return true;

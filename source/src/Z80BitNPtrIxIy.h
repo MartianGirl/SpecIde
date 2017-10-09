@@ -24,7 +24,7 @@ bool z80BitNPtrIxIy()
             af.l |= FLAG_H;
             af.l |= acc.l & FLAG_S;
             af.l |= wz.h & (FLAG_5 | FLAG_3);
-            af.l |= (acc.l) ? 0x00 : FLAG_Z | FLAG_PV;
+            af.l |= (acc.l) ? 0x00 : (FLAG_Z | FLAG_PV);
             return false;
 
         case 6:
