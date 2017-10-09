@@ -48,7 +48,7 @@ bool z80Indr()
             af.l |= (bc.h) ? 0x00 : FLAG_Z;           // SZ5.3...
             af.l |= (iReg.h & 0x80) >> 6;              // SZ5.3.N.
             acc.w = iReg.h + ((bc.l - 1) & 0xFF);
-            af.l |= (acc.h) ? 0x00 : FLAG_H | FLAG_C; // SZ5H3.NC
+            af.l |= (acc.h) ? FLAG_H | FLAG_C : 0x00; // SZ5H3.NC
             acc.w = (acc.w & 0x07) ^ bc.h;
             acc.l ^= acc.l >> 1;
             acc.l ^= acc.l >> 2;
