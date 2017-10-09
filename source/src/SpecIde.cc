@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
 
         if (screen.toggleLoadingSound)
         {
-            buzzer.playLoadingSound = !buzzer.playLoadingSound;
+            buzzer.tapeSound = !buzzer.tapeSound;
             screen.toggleLoadingSound = false;
         }
     }
