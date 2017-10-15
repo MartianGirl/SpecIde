@@ -28,12 +28,14 @@ bool z80BitNReg()
             memAddrMode = 0x00000000;
 
             acc.l = *reg8[z];
-            acc.l &= (1 << y);
 
             af.l &= FLAG_C;
             af.l |= FLAG_H;
-            af.l |= acc.l & (FLAG_S | FLAG_5 | FLAG_3);
-            af.l |= (acc.l) ? 0x00 : (FLAG_Z | FLAG_PV);
+            af.l |= acc.l & (FLAG_5 | FLAG_3);
+
+            acc.l &= (1 << y);
+            af.l |= acc.l & FLAG_S;
+            af.l |= (acc.l != 0x00) ? 0x00 : (FLAG_Z | FLAG_PV);
 
             prefix = PREFIX_NO;
             return true;
