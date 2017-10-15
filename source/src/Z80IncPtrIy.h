@@ -11,13 +11,14 @@ bool z80IncPtrIy()
     switch (executionStep)
     {
         case 0:
-            memRdCycles = 2;
+            memRdCycles = 1;
+            cpuProcCycles = 1;
             memAddrMode = 0x00000771;
             return true;
 
         case 1:
             wz.l = iReg.h;
-            return false;
+            return true;
 
         case 2:
             wz.h = ((wz.l & 0x80) == 0x80) ? 0xFF : 0x00;
@@ -28,12 +29,14 @@ bool z80IncPtrIy()
             return false;
 
         case 4:
+        case 5:
             return false;
 
-        case 5:
+        case 6:
+            memRdCycles = 1;
             return true;
 
-        case 6:
+        case 7:
             acc.w = iReg.h + 1;
 
             // Preserve carry flag.
@@ -45,12 +48,12 @@ bool z80IncPtrIy()
             af.l |= (acc.l) ? 0x00 : FLAG_Z;          // SZ5H3V0.
             return false;
 
-        case 7:
+        case 8:
             oReg.l = acc.l;
             memWrCycles = 1;
             return true;
 
-        case 8:
+        case 9:
             prefix = PREFIX_NO;
             return true;
 
