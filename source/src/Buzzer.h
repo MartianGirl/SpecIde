@@ -77,7 +77,7 @@ class Buzzer : public sf::SoundStream
             if (++count == skip)
             {
                 count = 0;
-                buffers[wrBuffer][wrSample] = (*source & 0x10) ? 0x3FFF : 0;
+                buffers[wrBuffer][wrSample] = (*source & 0x10) ? 0x1FFF : 0;
                 buffers[wrBuffer][wrSample] +=
                     (tapeSound && (*source & 0x08)) ? 0x0FFF : 0;
                 buffers[wrBuffer][wrSample] +=

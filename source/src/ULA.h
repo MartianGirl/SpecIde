@@ -28,8 +28,6 @@ class ULA
         static constexpr size_t hBorderEnd = 0x1BF;
         static constexpr size_t hBlankStart = 0x140;
         static constexpr size_t hBlankEnd = 0x19F;
-        // static constexpr size_t hSyncStart = 0x150;
-        // static constexpr size_t hSyncEnd = 0x16F;
         static size_t hSyncStart[2];
         static size_t hSyncEnd[2];
 
@@ -42,8 +40,7 @@ class ULA
         static constexpr size_t vSyncStart = 0x0F8;
         static constexpr size_t vSyncEnd = 0x0FB;
 
-        static int_fast32_t tensions[2][4];
-        static int_fast32_t constants[4096];
+        static int_fast32_t voltages[2][4];
 
         // These values depend on the model
         size_t ulaVersion;
@@ -74,9 +71,6 @@ class ULA
         uint_fast8_t ioPortOut;
         uint_fast8_t borderAttr;
         uint_fast8_t tapeIn;
-
-        // Values in EAR/MIC ULA pin (millivolts)
-        int_fast32_t c00, c01, c10, c11;
 
         // Keyboard half rows
         uint_fast8_t keys[8];

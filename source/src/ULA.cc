@@ -1,34 +1,9 @@
 #include "ULA.h"
 
-/*
-size_t ULA::pixelStart = 0;
-size_t ULA::pixelEnd = 0xFF;
-size_t ULA::hBorderStart = 0x100;
-size_t ULA::hBorderEnd = 0x1BF;
-size_t ULA::hBlankStart = 0x140;
-size_t ULA::hBlankEnd = 0x19F;
-size_t ULA::hSyncStart = 0x150;
-size_t ULA::hSyncEnd = 0x16F;
-//hSyncStart(0x158), hSyncEnd(0x177),     // ULA 6C (Issue 3)
-
-size_t ULA::scanStart = 0;
-size_t ULA::scanEnd = 0x0BF;
-size_t ULA::vBorderStart = 0x0C0;
-size_t ULA::vBorderEnd = 0x137;
-size_t ULA::vBlankStart = 0x0F8;
-size_t ULA::vBlankEnd = 0x0FF;
-size_t ULA::vSyncStart = 0x0F8;
-size_t ULA::vSyncEnd = 0x0FB;
-
-size_t ULA::maxScan = 312;
-size_t ULA::maxPixel = 448;
-*/
-
-int_fast32_t ULA::tensions[2][4] = {
+int_fast32_t ULA::voltages[2][4] = {
     {391, 728, 3653, 3790}, // ULA 5C (Issue 2)
     {342, 652, 3591, 3753}  // ULA 6C (Issue 3)
 };
-int_fast32_t ULA::constants[] = {0};
 
 size_t ULA::hSyncStart[2] = {0x150, 0x158};
 size_t ULA::hSyncEnd[2] = {0x16F, 0x177};
@@ -41,7 +16,6 @@ ULA::ULA() :
     cpuClock(false), ulaReset(true),
     hBlank(false), vBlank(false), display(true), idle(false), 
     ioPortIn(0xFF), ioPortOut(0x00), tapeIn(0),
-    c00(996), c01(996), c10(0), c11(0),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF)
 {
@@ -66,25 +40,10 @@ ULA::ULA() :
 #endif
         colourTable[i] = colour;
     }
-
-    int_fast32_t v00, v01, v10, v11;
-    v00 = v01 = v10 = v11 = 1000;
-    for (size_t i = 0; i < 1024; ++i)
-    {
-        constants[i + 0] = v00 * 1024 / 1000;
-        constants[i + 1024] = v01 * 1024 / 1000;
-        constants[i + 2048] = v10 * 1024 / 1000;
-        constants[i + 3072] = v11 * 1024 / 1000;
-        v00 *= c00; v00 /= 1000;
-        v01 *= c01; v01 /= 1000;
-        v10 *= c10; v10 /= 1000;
-        v11 *= c11; v11 /= 1000;
-    }
 }
 
 void ULA::clock()
 {
-    static size_t cIndex = 0;
     static size_t pixel = 0;
     static size_t scan = 0;
     static uint_fast8_t flash = 0;
@@ -109,12 +68,9 @@ void ULA::clock()
     static uint8_t &attrLatch = (*(reinterpret_cast<uint8_t*>(&attrReg) + 0));
 #endif
 
-    static uint_fast32_t capacitor = 0;
-    static size_t outputCurr = 0;
-    static size_t outputLast = 0;
-    static int_fast32_t vStart = 0;
-    static int_fast32_t vEnd = 0;
-    static int_fast32_t vDiff = 0;
+    static size_t ear = 0;
+    static size_t chargeDelay = 0;
+    static size_t capacitor = 0;
 
     // Here we:
     // 1. Generate video control signals.
@@ -255,29 +211,30 @@ void ULA::clock()
 
     // First attempt at MIC/EAR feedback loop.
     // Let's keep this here for the moment.
-    outputLast = outputCurr;
-    outputCurr = (ioPortOut & 0x18) >> 3;
+    size_t voltage = voltages[ulaVersion][(ioPortOut & 0x18) >> 3];
 
-    if (outputLast != outputCurr)
+    if (voltage > 3000)
     {
-        cIndex = 0;
-        vStart = capacitor;
-        vEnd = tensions[ulaVersion][outputCurr];
-        vDiff = vStart - vEnd;
+        ear = voltage;
+        if (chargeDelay < 86400)
+            ++chargeDelay;
+        capacitor = 368 + (chargeDelay >> 4);
     }
     else
     {
-        capacitor = vEnd + 
-            ((vDiff * constants[cIndex + 1024 * outputCurr]) >> 10);
-        ++cIndex;
-        if (cIndex > 1023) cIndex = 1023;
+        chargeDelay = 0;
+        if (capacitor == 0)
+            ear = voltage;
+        else
+            --capacitor;
     }
 
-    if (capacitor > 5000) capacitor = 5000;
-    if ((tapeIn & 0xC0) == 0x80) capacitor = 650;
-    if ((tapeIn & 0xC0) == 0xC0) capacitor = 5000;
+    // Tape input forces values on EAR pin.
+    if ((tapeIn & 0xC0) == 0x80) ear = 342;
+    if ((tapeIn & 0xC0) == 0xC0) ear = 3790;
+
     ioPortIn &= 0xBF;
-    ioPortIn |= (capacitor < 700) ? 0x00 : 0x40;
+    ioPortIn |= (ear < 700) ? 0x00 : 0x40;
 
     // We read keyboard if we're reading the ULA port, during TW.
     if (cpuClock)   // Port read access is contended.
@@ -342,7 +299,7 @@ void ULA::clock()
         pixel = 0;
         scan = 0;
         ulaReset = false;
-        cIndex = 0;
+        // cIndex = 0;
         z80Clk = false;
         display = true;
 
