@@ -26,9 +26,27 @@ Spectrum::Spectrum() :
 {
     size_t pos = 0;
     char c;
-    ifstream ifs("48.rom", ifstream::binary);
+
+    ifstream ifs;
+    string romPath("/usr/share/spectrum-roms/");
+    string romName("48.rom");
+
+    // Try opening ROM in the current directory.
+    cout << "Trying ROM: " << romName << endl;
+    ifs.open(romName, ifstream::binary);
+
+    // If it fails, try the ROM in /usr/share/spectrum-roms
+    if (ifs.fail())
+    {
+        romName = romPath + romName;
+        cout << "Trying ROM: " << romName << endl;
+        ifs.open(romName, ifstream::binary);
+    }
+
     while (ifs.get(c))
         rom[0].memory[pos++] = c;
+
+    ifs.close();
 }
 
 void Spectrum::clock()
