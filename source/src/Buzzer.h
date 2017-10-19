@@ -18,6 +18,10 @@
 constexpr size_t MAX_SAMPLES = 2048;
 constexpr size_t MAX_BUFFERS = 128;
 constexpr size_t ULA_CLOCK = 7000000;
+constexpr size_t FILTER_SIZE = 384;
+constexpr sf::Int16 SOUND_VOLUME = 0x3FFF / FILTER_SIZE;
+constexpr sf::Int16 SAVE_VOLUME = SOUND_VOLUME / 2;
+constexpr sf::Int16 LOAD_VOLUME = SAVE_VOLUME / 4;
 
 class Buzzer : public sf::SoundStream
 {
@@ -25,6 +29,7 @@ class Buzzer : public sf::SoundStream
         std::vector<std::vector<sf::Int16>> buffers;
         std::queue<size_t> queuedBuffers;
         size_t rdBuffer, wrBuffer;
+        sf::Int16 filter[FILTER_SIZE];
 
         uint_fast8_t *source;
         uint_fast8_t *tapeIn;
@@ -73,15 +78,22 @@ class Buzzer : public sf::SoundStream
         {
             static size_t count = 0;
             static size_t wrSample = 0;
+            static size_t index = 0;
+
+            // Smooth the signal directly from the ULA.
+            filter[index] = ((*source & 0x10) ? SOUND_VOLUME : 0)
+                + ((tapeSound && (*source & 0x08)) ? SAVE_VOLUME : 0)
+                + ((tapeSound && (*tapeIn & 0x40)) ? LOAD_VOLUME : 0);
+            index = (index + 1) % FILTER_SIZE;
 
             if (++count == skip)
             {
                 count = 0;
-                buffers[wrBuffer][wrSample] = (*source & 0x10) ? 0x1FFF : 0;
-                buffers[wrBuffer][wrSample] +=
-                    (tapeSound && (*source & 0x08)) ? 0x0FFF : 0;
-                buffers[wrBuffer][wrSample] +=
-                    (tapeSound && (*tapeIn & 0x40)) ? 0x01FF : 0;
+
+                sf::Int16 s = 0;
+                for (size_t i = 0; i < FILTER_SIZE; ++i)
+                    s += filter[i];
+                buffers[wrBuffer][wrSample] = s;
                 ++wrSample;
                 if (wrSample == MAX_SAMPLES)
                 {
