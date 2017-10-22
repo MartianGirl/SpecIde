@@ -18,7 +18,7 @@
 constexpr size_t MAX_SAMPLES = 2048;
 constexpr size_t MAX_BUFFERS = 128;
 constexpr size_t ULA_CLOCK = 7000000;
-constexpr size_t FILTER_SIZE = 384;
+constexpr size_t FILTER_SIZE = 352;
 constexpr sf::Int16 SOUND_VOLUME = 0x3FFF / FILTER_SIZE;
 constexpr sf::Int16 SAVE_VOLUME = SOUND_VOLUME / 2;
 constexpr sf::Int16 LOAD_VOLUME = SAVE_VOLUME / 4;
@@ -42,6 +42,7 @@ class Buzzer : public sf::SoundStream
         Buzzer() :
             buffers(MAX_BUFFERS, (std::vector<sf::Int16>(MAX_SAMPLES, 0))),
             rdBuffer(0), wrBuffer(1),
+            filter{0},
             tapeSound(true) {}
 
         bool open(uint_fast8_t* src, uint_fast8_t* ear, size_t sampleRate)
@@ -89,7 +90,6 @@ class Buzzer : public sf::SoundStream
             if (++count == skip)
             {
                 count = 0;
-
                 sf::Int16 s = 0;
                 for (size_t i = 0; i < FILTER_SIZE; ++i)
                     s += filter[i];
