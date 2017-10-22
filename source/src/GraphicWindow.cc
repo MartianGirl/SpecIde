@@ -10,6 +10,7 @@ GraphicWindow::GraphicWindow(size_t x, size_t y, std::string const& title) :
     modes(sf::VideoMode::getFullscreenModes()),
     bestMode(sf::VideoMode::getDesktopMode())
 {
+    // window.setFrameRateLimit(50);
     window.setKeyRepeatEnabled(false);
     window.setMouseCursorVisible(false);
     window.clear();

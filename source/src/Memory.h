@@ -33,10 +33,11 @@ class Memory
         /** Issue a clock tick.
          */
         void clock();
+        uint_fast8_t read(uint_fast16_t addr);
+        void write(uint_fast16_t addr, uint_fast8_t data);
 
         uint_fast32_t size;
         uint_fast32_t mask;
-        uint_fast16_t addr;
 
         vector<uint_fast8_t> memory;
 

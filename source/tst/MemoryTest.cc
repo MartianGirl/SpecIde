@@ -32,7 +32,6 @@ BOOST_AUTO_TEST_CASE(constructors_test)
     // Read test.
     mem0.d = 0x12;
     mem0.a = 0x1234;
-    mem0.addr = 0x0000;
     mem0.as_ = false; mem0.wr_ = true; mem0.rd_ = true; mem0.clock();
     mem0.as_ = false; mem0.wr_ = true; mem0.rd_ = false; mem0.clock();
     BOOST_CHECK_EQUAL(mem0.memory[0x1234], 0xAA);

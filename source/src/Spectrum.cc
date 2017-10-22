@@ -78,15 +78,12 @@ void Spectrum::clock()
     if (ula.hiz == false)           // Is ULA mastering the bus?
     {
         // Bank 1: 4000h - Contended memory
-        map[1]->a = ula.a;
-        map[1]->as_ = false;
-        map[1]->rd_ = false;
-        map[1]->wr_ = true;
-        map[1]->clock();
-        ula.d = map[1]->d;
+        ula.d = map[1]->read(ula.a);
     }
     else    // If ULA is not mastering, Z80 is.
+    {
         ula.d = z80.d;
+    }
 
     ula.clock();
     z80.c = ula.c;
@@ -123,13 +120,10 @@ void Spectrum::clock()
             // Bank 1: 4000h - Contended memory
             // Bank 2: 8000h - Extended memory
             // Bank 3: C000h - Extended memory
-            map[memArea]->a = z80.a;
-            map[memArea]->d = z80.d;
-            map[memArea]->as_ = as_;
-            map[memArea]->rd_ = rd_;
-            map[memArea]->wr_ = wr_;
-            map[memArea]->clock();
-            z80.d = map[memArea]->d;
+            if (rd_ == false)
+                z80.d = map[memArea]->read(z80.a);
+            else if (wr_ == false)
+                map[memArea]->write(z80.a, z80.d);
         }
         else
         {

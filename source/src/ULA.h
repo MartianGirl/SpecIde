@@ -59,10 +59,14 @@ class ULA
 
         // Video signals
         uint32_t rgba;
-        bool hSync, vSync;
-        bool hBlank, vBlank;
         bool display;
         bool idle;
+
+        // Useful video signals
+        bool hSyncEdge;
+        bool vSyncEdge;
+        bool blanking;
+        bool retrace;
 
         uint32_t colourTable[0x100];
 

@@ -14,7 +14,8 @@ ULA::ULA() :
     hiz(true),
     z80_a(0xFFFF), z80_c(0xFFFF),
     cpuClock(false), ulaReset(true),
-    hBlank(false), vBlank(false), display(true), idle(false), 
+    display(true), idle(false), 
+    hSyncEdge(false), vSyncEdge(false), blanking(false), retrace(false),
     ioPortIn(0xFF), ioPortOut(0x00), tapeIn(0),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF)
@@ -80,33 +81,34 @@ void ULA::clock()
     }
     else if (pixel == hBlankStart)
     {
-        hBlank = true;
+        blanking = true;
         ++scan;
-        vSync = (scan >= vSyncStart) && (scan <= vSyncEnd);
-        vBlank = ((scan >= vBlankStart) && (scan <= vBlankEnd));
+        vSyncEdge = (scan == (vSyncEnd + 1));
+        retrace = (scan >= vSyncStart) && (scan <= vSyncEnd);
 
         if (scan == vBlankEnd)
             flash += 0x04;
         else if (scan == maxScan)
             scan = 0;
     }
-    else if (pixel == hSyncStart[ulaVersion])
+    else if (pixel == (hSyncEnd[ulaVersion] + 1))
     {
-        hSync = true;
-    }
-    else if (pixel == hSyncEnd[ulaVersion])
-    {
-        hSync = false;
+        hSyncEdge = true;
     }
     else if (pixel == hBlankEnd)
     {
-        hBlank = false;
+        blanking = (scan >= vBlankStart) && (scan <= vBlankEnd);
     }
     else if (pixel == maxPixel)
     {
         pixel = 0;
         display = (scan < vBorderStart);
         ulaReset = false;
+    }
+    else
+    {
+        hSyncEdge = false;
+        vSyncEdge = false;
     }
 
     // 2. Generate video data.
@@ -299,7 +301,6 @@ void ULA::clock()
         pixel = 0;
         scan = 0;
         ulaReset = false;
-        // cIndex = 0;
         z80Clk = false;
         display = true;
 

@@ -15,10 +15,14 @@
  */
 
 #include "GraphicWindow.h"
+#include "Spectrum.h"
+#include "Buzzer.h"
+#include "Tape.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cassert>
+#include <queue>
 #include <vector>
 
 class Screen : public GraphicWindow
@@ -26,12 +30,13 @@ class Screen : public GraphicWindow
     public:
         Screen(size_t scale = 1);
 
-        bool done, reset;
-        bool rewind, play;
-        bool resetCounter, rewindToCounter;
+        Spectrum spectrum;
+        Buzzer buzzer;
+        Tape tape;
+
+        bool done;
         bool fullscreen;
         bool smooth;
-        bool toggleLoadingSound;
 
         size_t scale;
         size_t xSize, ySize;
@@ -41,31 +46,15 @@ class Screen : public GraphicWindow
         sf::Sprite scrSprite;
         std::vector<sf::Uint32> pixels;
 
+        void clock();
         bool update();
         void setFullScreen(bool fs);
         void setSmooth(bool sm);
-        void setRgbaInput(sf::Uint32* input) { rgbaInput = input; }
-        void setVSyncInput(bool* input) { vSyncInput = input; }
-        void setHSyncInput(bool* input) { hSyncInput = input; }
-        void setHBlankInput(bool* input) { hBlankInput = input; }
-        void setVBlankInput(bool* input) { vBlankInput = input; }
-
-        void setKeyboardPort(uint_fast8_t* out) { keyboardDataOut = out; }
-        void setJoystickPort(uint_fast8_t* out) { joystickDataOut = out; }
 
         void pollEvents();
         void scanKeys(sf::Event const& event);
-
-        sf::Uint32 *rgbaInput;
-        bool *hSyncInput;
-        bool *vSyncInput;
-        bool *hBlankInput;
-        bool *vBlankInput;
-
-        uint_fast8_t *keyboardDataOut;
+        
         uint_fast8_t keyboardMask[8];
-
-        uint_fast8_t *joystickDataOut;
 };
 
 // vim: et:sw=4:ts=4

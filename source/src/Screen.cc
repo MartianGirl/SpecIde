@@ -5,13 +5,16 @@
 using namespace std;
 using namespace sf;
 
+constexpr size_t CLOCK_FREQ = 7000000;
+constexpr size_t SAMPLE_RATE = 44100;
+constexpr size_t SAMPLE_SKIP = CLOCK_FREQ / SAMPLE_RATE;
+
 Screen::Screen(size_t scale) :
     GraphicWindow(336 * scale, 288 * scale, "SpecIde"),
-    done(false), reset(false),
-    rewind(false), play(false),
+    done(false),
+    fullscreen(false), smooth(false),
     scale(scale),
-    xSize(352), ySize(304),
-    keyboardMask{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
+    xSize(352), ySize(304)
 {
     // Create a texture. It'll be 352x304, which holds the entire Spectrum
     // screen.
@@ -35,6 +38,18 @@ Screen::Screen(size_t scale) :
     pixels.assign(vectorSize, 0x000000FF);
 #endif
 
+    cout << "Opening sound at " << SAMPLE_RATE << " kHz." << endl;
+    cout << "Sampling each " << SAMPLE_SKIP << " cycles." << endl;
+    buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
+    buzzer.play();
+
+}
+
+void Screen::clock()
+{
+    spectrum.clock();
+    spectrum.ula.tapeIn = tape.advance();
+    buzzer.sample();
 }
 
 bool Screen::update()
@@ -44,20 +59,16 @@ bool Screen::update()
     static size_t xPos = 0;
     static size_t yPos = 0;
 
-    static bool hSyncDelayed = false;
-    static bool vSyncDelayed = false;
-
-
     // If not blanking, draw.
-    if (!(*hBlankInput || *vBlankInput))
+    if (spectrum.ula.blanking == false)
     {
-        pixels[(yPos * xSize) + xPos] = *rgbaInput;
+        pixels[(yPos * xSize) + xPos] = spectrum.ula.rgba;
         ++xPos;
     }
 
     // Act on sync pulses falling edges:
     // VSYNC falling edge restores the beam to the top of the screen.
-    if (!*vSyncInput && vSyncDelayed)
+    if (spectrum.ula.vSyncEdge)
     {
         yPos = 0;
 
@@ -69,22 +80,21 @@ bool Screen::update()
 
         pollEvents();
     }
-    vSyncDelayed = *vSyncInput;
 
     // HSYNC falling edge restores the beam to the beginning of the next line.
-    if (!*hSyncInput && hSyncDelayed)
+    if (spectrum.ula.hSyncEdge)
     {
         xPos = 0;
-        if (*vBlankInput == false)
+        if (spectrum.ula.retrace == false)
             ++yPos;
     }
-    hSyncDelayed = *hSyncInput;
 
     return tick;
 }
 
 void Screen::setFullScreen(bool fs)
 {
+    window.close();
     if (fs)
     {
         // Use best mode available.
@@ -92,18 +102,12 @@ void Screen::setFullScreen(bool fs)
         float xScale = bestMode.width / static_cast<float>(xSize);
         float yScale = bestMode.height / static_cast<float>(suggestedScans);
         float sScale;
-        // if (xScale < yScale)
-        // {
-            // sScale = xScale;
-            // xOffset = 0;
-            // yOffset = (bestMode.height - (suggestedScans * sScale)) / 2;
-        // }
-        // else
-        {
-            sScale = yScale;
-            xOffset = (bestMode.width - (xSize * sScale)) / 2;
-            yOffset = 0;
-        }
+
+        // Adjust depending on the vertical scale.
+        sScale = yScale;
+        xOffset = (bestMode.width - (xSize * sScale)) / 2;
+        yOffset = 0;
+
         cout << "XScale " << xScale << " YScale " << yScale << endl;
         cout << "Using scale " << sScale << endl;
 
@@ -126,6 +130,7 @@ void Screen::setFullScreen(bool fs)
         scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
     }
 
+    // window.setFramerateLimit(50);
     window.setKeyRepeatEnabled(false);
     window.setMouseCursorVisible(false);
     window.setJoystickThreshold(0.5);
@@ -145,6 +150,7 @@ void Screen::pollEvents()
         switch (event.type)
         {
             case Event::Closed:
+                buzzer.stop();
                 done = true;
                 break;
 
@@ -154,57 +160,63 @@ void Screen::pollEvents()
                     // Scan function keys
                     case Keyboard::F2:
                         if (event.key.shift)
-                            smooth = true;
+                        {
+                            smooth = !smooth;
+                            setSmooth(smooth);
+                        }
                         else
-                            fullscreen = true;
+                        {
+                            fullscreen = !fullscreen;
+                            setFullScreen(fullscreen);
+                        }
                         break;
                     case Keyboard::F9:
-                        toggleLoadingSound = true;
+                        buzzer.tapeSound = !buzzer.tapeSound;
                         break;
                     case Keyboard::F5:
-                        reset = true;
+                        spectrum.reset();
                         break;
                     case Keyboard::F10:
                         done = true;
                         break;
                     case Keyboard::F11:
                         if (event.key.shift)
-                            resetCounter = true;
+                            tape.resetCounter();
                         else
-                            play = true;
+                            tape.play();
                         break;
                     case Keyboard::F12:
                         if (event.key.shift)
-                            rewindToCounter = true;
+                            tape.rewind(tape.counter);
                         else
-                            rewind = true;
+                            tape.rewind();
                         break;
 
                         // Scan Spectrum keyboard
                     default:
                         scanKeys(event);
-                        keyboardDataOut[0] &= keyboardMask[0];
-                        keyboardDataOut[1] &= keyboardMask[1];
-                        keyboardDataOut[2] &= keyboardMask[2];
-                        keyboardDataOut[3] &= keyboardMask[3];
-                        keyboardDataOut[4] &= keyboardMask[4];
-                        keyboardDataOut[5] &= keyboardMask[5];
-                        keyboardDataOut[6] &= keyboardMask[6];
-                        keyboardDataOut[7] &= keyboardMask[7];
+                        spectrum.ula.keys[0] &= keyboardMask[0];
+                        spectrum.ula.keys[1] &= keyboardMask[1];
+                        spectrum.ula.keys[2] &= keyboardMask[2];
+                        spectrum.ula.keys[3] &= keyboardMask[3];
+                        spectrum.ula.keys[4] &= keyboardMask[4];
+                        spectrum.ula.keys[5] &= keyboardMask[5];
+                        spectrum.ula.keys[6] &= keyboardMask[6];
+                        spectrum.ula.keys[7] &= keyboardMask[7];
                         break;
                 }
                 break;
 
             case Event::KeyReleased:
                 scanKeys(event);
-                keyboardDataOut[0] |= ~keyboardMask[0];
-                keyboardDataOut[1] |= ~keyboardMask[1];
-                keyboardDataOut[2] |= ~keyboardMask[2];
-                keyboardDataOut[3] |= ~keyboardMask[3];
-                keyboardDataOut[4] |= ~keyboardMask[4];
-                keyboardDataOut[5] |= ~keyboardMask[5];
-                keyboardDataOut[6] |= ~keyboardMask[6];
-                keyboardDataOut[7] |= ~keyboardMask[7];
+                spectrum.ula.keys[0] |= ~keyboardMask[0];
+                spectrum.ula.keys[1] |= ~keyboardMask[1];
+                spectrum.ula.keys[2] |= ~keyboardMask[2];
+                spectrum.ula.keys[3] |= ~keyboardMask[3];
+                spectrum.ula.keys[4] |= ~keyboardMask[4];
+                spectrum.ula.keys[5] |= ~keyboardMask[5];
+                spectrum.ula.keys[6] |= ~keyboardMask[6];
+                spectrum.ula.keys[7] |= ~keyboardMask[7];
                 break;
 
             case Event::JoystickMoved:
@@ -213,21 +225,21 @@ void Screen::pollEvents()
                     case Joystick::X:
                     case Joystick::U:
                     case Joystick::PovX:
-                        *joystickDataOut &= 0xFC;
+                        spectrum.joystick &= 0xFC;
                         if (event.joystickMove.position < -34.0)
-                            *joystickDataOut |= 0x02;
+                            spectrum.joystick |= 0x02;
                         else if (event.joystickMove.position > 34.0)
-                            *joystickDataOut |= 0x01;
+                            spectrum.joystick |= 0x01;
                         break;
 
                     case Joystick::Y:
                     case Joystick::V:
                     case Joystick::PovY:
-                        *joystickDataOut &= 0xF3;
+                        spectrum.joystick &= 0xF3;
                         if (event.joystickMove.position < -34.0)
-                            *joystickDataOut |= 0x08;
+                            spectrum.joystick |= 0x08;
                         else if (event.joystickMove.position > 34.0)
-                            *joystickDataOut |= 0x04;
+                            spectrum.joystick |= 0x04;
                         break;
 
                     default:
@@ -236,11 +248,11 @@ void Screen::pollEvents()
                 break;
 
             case Event::JoystickButtonPressed:
-                *joystickDataOut |= 0x10;
+                spectrum.joystick |= 0x10;
                 break;
 
             case Event::JoystickButtonReleased:
-                *joystickDataOut &= 0xEF;
+                spectrum.joystick &= 0xEF;
                 break;
 
             default:

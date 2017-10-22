@@ -38,7 +38,16 @@ target_link_libraries(GraphicWindowTest
 add_executable(ScreenTest
     ScreenTest.cc
     ${PROJECT_SOURCE_DIR}/src/GraphicWindow.cc
-    ${PROJECT_SOURCE_DIR}/src/Screen.cc)
+    ${PROJECT_SOURCE_DIR}/src/Screen.cc
+    ${PROJECT_SOURCE_DIR}/src/Tape.cc
+    ${PROJECT_SOURCE_DIR}/src/TAPFile.cc
+    ${PROJECT_SOURCE_DIR}/src/TZXFile.cc
+    ${PROJECT_SOURCE_DIR}/src/Spectrum.cc
+    ${PROJECT_SOURCE_DIR}/src/ULA.cc
+    ${PROJECT_SOURCE_DIR}/src/Memory.cc
+    ${PROJECT_SOURCE_DIR}/src/Z80Register.cc
+    ${PROJECT_SOURCE_DIR}/src/Z80.cc)
+
 target_link_libraries(ScreenTest
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
     ${SFML_LIBRARIES}
@@ -47,9 +56,15 @@ target_link_libraries(ScreenTest
 add_executable(ULATest
     ULATest.cc
     ${PROJECT_SOURCE_DIR}/src/GraphicWindow.cc
-    ${PROJECT_SOURCE_DIR}/src/Memory.cc
     ${PROJECT_SOURCE_DIR}/src/Screen.cc
-    ${PROJECT_SOURCE_DIR}/src/ULA.cc)
+    ${PROJECT_SOURCE_DIR}/src/Tape.cc
+    ${PROJECT_SOURCE_DIR}/src/TAPFile.cc
+    ${PROJECT_SOURCE_DIR}/src/TZXFile.cc
+    ${PROJECT_SOURCE_DIR}/src/Spectrum.cc
+    ${PROJECT_SOURCE_DIR}/src/ULA.cc
+    ${PROJECT_SOURCE_DIR}/src/Memory.cc
+    ${PROJECT_SOURCE_DIR}/src/Z80Register.cc
+    ${PROJECT_SOURCE_DIR}/src/Z80.cc)
 target_link_libraries(ULATest
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
     ${SFML_LIBRARIES}
