@@ -83,7 +83,7 @@ class Buzzer : public sf::SoundStream
 
             // Smooth the signal directly from the ULA.
             filter[index] = ((*source & 0x10) ? SOUND_VOLUME : 0)
-                + ((tapeSound && (*source & 0x08)) ? SAVE_VOLUME : 0)
+                + ((tapeSound && ((*source & 0x18) == 0x18)) ? SAVE_VOLUME : 0)
                 + ((tapeSound && (*tapeIn & 0x40)) ? LOAD_VOLUME : 0);
             index = (index + 1) % FILTER_SIZE;
 
