@@ -53,7 +53,7 @@ Spectrum::Spectrum() :
     // This is just for the laughs. We initialize the whole RAM to random
     // values to see the random attributes that appeared in the Spectrum
     // at boot time.
-    srand(time(0));
+    srand(static_cast<unsigned int>(time(0)));
     for (size_t a = 0; a < 0x4000; ++a)
     {
         map[1]->memory[a] = rand() % 0x100;
