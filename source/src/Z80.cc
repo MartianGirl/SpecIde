@@ -444,7 +444,7 @@ void Z80::start()
     hl.w = 0xFFFF; hl_.w = 0xFFFF;
     wz.w = 0xFFFF; wz_.w = 0xFFFF;
 
-    ir.w = 0xFFFF;
+    ir.w = 0xFF00;
     sp.w = 0xFFFF;
     ix.w = 0xFFFF;
     iy.w = 0xFFFF;
