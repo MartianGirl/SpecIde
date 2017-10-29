@@ -27,32 +27,6 @@ target_link_libraries(TZXFileTest
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
-add_executable(GraphicWindowTest
-    GraphicWindowTest.cc
-    ${PROJECT_SOURCE_DIR}/src/GraphicWindow.cc)
-target_link_libraries(GraphicWindowTest
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-    ${SFML_LIBRARIES}
-    ${SFML_DEPENDENCIES})
-
-add_executable(ScreenTest
-    ScreenTest.cc
-    ${PROJECT_SOURCE_DIR}/src/GraphicWindow.cc
-    ${PROJECT_SOURCE_DIR}/src/Screen.cc
-    ${PROJECT_SOURCE_DIR}/src/Tape.cc
-    ${PROJECT_SOURCE_DIR}/src/TAPFile.cc
-    ${PROJECT_SOURCE_DIR}/src/TZXFile.cc
-    ${PROJECT_SOURCE_DIR}/src/Spectrum.cc
-    ${PROJECT_SOURCE_DIR}/src/ULA.cc
-    ${PROJECT_SOURCE_DIR}/src/Memory.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80Register.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80.cc)
-
-target_link_libraries(ScreenTest
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-    ${SFML_LIBRARIES}
-    ${SFML_DEPENDENCIES})
-
 add_executable(ULATest
     ULATest.cc
     ${PROJECT_SOURCE_DIR}/src/GraphicWindow.cc
@@ -149,7 +123,6 @@ target_link_libraries(Z80RegisterTest
     ${SFML_DEPENDENCIES})
 
 install(TARGETS
-    GraphicWindowTest ScreenTest
     SpectrumTest ULATest
     Z80Test Z80AluTest Z80InterruptTest Z80JumpTest Z80BitTest
     MemoryTest Z80RegisterTest

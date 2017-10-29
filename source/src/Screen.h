@@ -28,7 +28,8 @@
 class Screen : public GraphicWindow
 {
     public:
-        Screen(size_t scale = 1);
+        Screen(size_t scale);
+        Screen();
 
         Spectrum spectrum;
         Buzzer buzzer;

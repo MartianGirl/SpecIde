@@ -17,13 +17,12 @@
 class GraphicWindow
 {
     public:
-        GraphicWindow(size_t x = 320, size_t y = 240,
-                std::string const& title = "SpecIde");
+        GraphicWindow(size_t x, size_t y, std::string const& title);
+        GraphicWindow(size_t x, size_t y);
         virtual ~GraphicWindow();
 
-        void open();
-        void close();
-        void update() {}
+        void init();
+        void adjust();
 
         size_t w, h;
         sf::RenderWindow window;

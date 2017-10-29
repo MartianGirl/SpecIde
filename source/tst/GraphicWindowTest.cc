@@ -7,15 +7,9 @@
 
 BOOST_AUTO_TEST_CASE(constructors_test)
 {
-    GraphicWindow gw0;
-    gw0.open();
-    gw0.update();
-    gw0.close();
+    GraphicWindow gw0(640, 400);
 
     GraphicWindow gw1(640, 400, "SpecIde 2X");
-    gw1.open();
-    gw1.update();
-    gw1.close();
 }
 
 // EOF

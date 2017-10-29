@@ -10,11 +10,7 @@ GraphicWindow::GraphicWindow(size_t x, size_t y, std::string const& title) :
     modes(sf::VideoMode::getFullscreenModes()),
     bestMode(sf::VideoMode::getDesktopMode())
 {
-    // window.setFrameRateLimit(50);
-    window.setKeyRepeatEnabled(false);
-    window.setMouseCursorVisible(false);
-    window.clear();
-    window.display();
+    init();
 
     // List video modes
     // for (size_t i = 0; i < modes.size(); ++i)
@@ -29,24 +25,45 @@ GraphicWindow::GraphicWindow(size_t x, size_t y, std::string const& title) :
         << bestMode.width << "x" << bestMode.height << " - "
         << bestMode.bitsPerPixel << "bpp" << endl;
 
+    adjust();
+    // cout << "Using a texture " << suggestedScans << " lines high." << endl;
+}
+
+GraphicWindow::GraphicWindow(size_t x, size_t y) :
+    w(x), h(y),
+    window(
+            sf::VideoMode::getDesktopMode(),
+            "SpecIDE", sf::Style::Fullscreen),
+    modes(sf::VideoMode::getFullscreenModes()),
+    bestMode(sf::VideoMode::getDesktopMode())
+{
+    init();
+
+    cout << "Selecting Full Screen Mode: "
+        << bestMode.width << "x" << bestMode.height << " - "
+        << bestMode.bitsPerPixel << "bpp" << endl;
+
+    adjust();
+}
+
+
+void GraphicWindow::init()
+{
+    // window.setFramerateLimit(50);
+    window.setKeyRepeatEnabled(false);
+    window.setMouseCursorVisible(false);
+    window.clear();
+    window.display();
+}
+
+void GraphicWindow::adjust()
+{
     size_t divider = 0;
     do
     {
         ++divider;
         suggestedScans = bestMode.height / divider;
     } while (suggestedScans > 304); // 312 - 8 VBlank lines.
-    // cout << "Using a texture " << suggestedScans << " lines high." << endl;
-}
-
-
-void GraphicWindow::open()
-{
-    window.setVisible(true);
-}
-
-void GraphicWindow::close()
-{
-    window.setVisible(false);
 }
 
 GraphicWindow::~GraphicWindow()

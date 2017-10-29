@@ -8,20 +8,13 @@
 BOOST_AUTO_TEST_CASE(constructors_test)
 {
     Screen sc0;
-    sc0.open();
-    sc0.update();
-    sc0.close();
 
     Screen sc1(1);
-    sc1.open();
-    sc1.update();
-    sc1.close();
 }
 
 BOOST_AUTO_TEST_CASE(update_test)
 {
-    Screen sc0(2);
-    sc0.open();
+    Screen sc0(1);
 
     size_t c = 0;
     for (size_t f = 0; f < 2000; ++f)
@@ -58,8 +51,6 @@ BOOST_AUTO_TEST_CASE(update_test)
             }
         }
     }
-
-    sc0.close();
 }
 // EOF
 // vim: et:sw=4:ts=4

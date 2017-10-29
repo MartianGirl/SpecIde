@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 
     // The Screen class is now actually more of a "console".
     // We create the instance, and load the given tape (if any).
-    Screen screen(2);
+    Screen screen;
     if (argc == 2)
     {
         screen.tape.load(argv[1]);

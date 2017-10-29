@@ -42,8 +42,59 @@ Screen::Screen(size_t scale) :
     cout << "Sampling each " << SAMPLE_SKIP << " cycles." << endl;
     buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
     buzzer.play();
-
 }
+
+Screen::Screen() :
+    GraphicWindow(336 * 2, 288 * 2),
+    done(false),
+    fullscreen(true), smooth(false),
+    scale(2),
+    xSize(352), ySize(304)
+{
+    // Create a texture. It'll be 352x304, which holds the entire Spectrum
+    // screen.
+    if (!scrTexture.create(static_cast<Uint32>(xSize), static_cast<Uint32>(ySize)))
+        assert(false);
+    scrTexture.setRepeated(false);
+    scrTexture.setSmooth(false);
+
+    // Use best mode available.
+    float xScale = bestMode.width / static_cast<float>(xSize);
+    float yScale = bestMode.height / static_cast<float>(suggestedScans);
+    float sScale;
+
+    // Adjust depending on the vertical scale.
+    sScale = yScale;
+    xOffset = (bestMode.width - (xSize * sScale)) / 2;
+    yOffset = 0;
+
+    cout << "XScale " << xScale << " YScale " << yScale << endl;
+    cout << "Using scale " << sScale << endl;
+
+    size_t start = (312 - suggestedScans) / 2;
+    size_t lines = bestMode.height;
+
+    scrSprite.setTexture(scrTexture);
+    scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
+                static_cast<uint_fast32_t>(xSize), static_cast<uint_fast32_t>(lines)));
+    scrSprite.setPosition(xOffset, yOffset);
+    scrSprite.setScale(Vector2f(sScale, sScale));
+
+    window.setJoystickThreshold(0.5);
+
+    size_t vectorSize = xSize * (ySize + 8);    // Count blanking lines.
+#if SPECIDE_BYTE_ORDER == 1
+    pixels.assign(vectorSize, 0xFF000000);
+#else
+    pixels.assign(vectorSize, 0x000000FF);
+#endif
+
+    cout << "Opening sound at " << SAMPLE_RATE << " kHz." << endl;
+    cout << "Sampling each " << SAMPLE_SKIP << " cycles." << endl;
+    buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
+    buzzer.play();
+}
+
 
 void Screen::clock()
 {
