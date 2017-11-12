@@ -111,13 +111,13 @@ void Spectrum::clock()
         {
             if (rd_ == false)
             {
-                if ((z80.a & 0x0001) == 0x0000)
-                {
-                    z80.d = ula.d;
-                }
-                else if (kempston && ((z80.a & 0x00E0) == 0x0000))  // Kempston joystick.
+                if (kempston == true && ((z80.a & 0x00E0) == 0x0000))  // Kempston joystick.
                 {
                     z80.d = joystick;
+                }
+                else if ((z80.a & 0x0001) == 0x0000)
+                {
+                    z80.d = ula.d;
                 }
                 else if (ula.idle == false)
                 {

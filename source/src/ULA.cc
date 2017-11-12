@@ -56,18 +56,11 @@ void ULA::clock()
     static uint_fast16_t z80_c_4 = 0xFFFF;
 
     static uint_fast16_t dataAddr, attrAddr;
-    static uint_fast32_t dataReg, attrReg;
-#if SPECIDE_BYTE_ORDER == 1
-    static uint8_t &data = (*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint_fast32_t) - 3));
-    static uint8_t &attr = (*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint_fast32_t) - 3));
-    static uint8_t &dataLatch = (*(reinterpret_cast<uint8_t*>(&dataReg) + sizeof(uint_fast32_t) - 1));
-    static uint8_t &attrLatch = (*(reinterpret_cast<uint8_t*>(&attrReg) + sizeof(uint_fast32_t) - 1));
-#else
-    static uint8_t &data = (*(reinterpret_cast<uint8_t*>(&dataReg) + 2));
-    static uint8_t &attr = (*(reinterpret_cast<uint8_t*>(&attrReg) + 2));
-    static uint8_t &dataLatch = (*(reinterpret_cast<uint8_t*>(&dataReg) + 0));
-    static uint8_t &attrLatch = (*(reinterpret_cast<uint8_t*>(&attrReg) + 0));
-#endif
+
+    static uint_fast8_t data;
+    static uint_fast8_t attr;
+    static uint_fast8_t dataLatch;
+    static uint_fast8_t attrLatch;
 
     static size_t ear = 0;
     static size_t chargeDelay = 0;
@@ -169,6 +162,7 @@ void ULA::clock()
                 idle = false; delay = true; hiz = false; break;
             case 0x07:
                 attrLatch = d;
+                data = dataLatch; attr = attrLatch;
                 idle = false; delay = true; hiz = false; break;
             case 0x08:
                 a = dataAddr + 1;
@@ -186,7 +180,9 @@ void ULA::clock()
             case 0x0D:
                 idle = false; delay = false; hiz = true; break;
             case 0x0E:
+                idle = true; delay = false; hiz = true; break;
             case 0x0F:
+                data = dataLatch; attr = attrLatch;
                 idle = true; delay = false; hiz = true; break;
             default:
                 a = 0xFFFF;
@@ -201,12 +197,18 @@ void ULA::clock()
         hiz = true;
         cpuClock = true;
         idle = true;
+
+        if ((pixel & 0x07) == 0x07)
+        {
+            data = 0xFF;
+            attr = borderAttr;
+        }
     }
 
     // 3. ULA port & Interrupt.
     c = z80_c;
-    if ((scan == vSyncStart) && (pixel < 64)
-            && ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
+    if ((scan == vSyncStart) && (pixel < 64))
+            // && ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
         c &= ~SIGNAL_INT_;
     else
         c |= SIGNAL_INT_;
@@ -270,26 +272,11 @@ void ULA::clock()
         z80Clk = !z80Clk;
     }
 
-    // 4. Generate video signal.
-    // 4.a. Generate colours.
+    // 4. Generate video signal. Generate colours.
     rgba = colourTable[((data & 0x80) ^ (attr & flash)) | (attr & 0x7F)];
 
     // 4.b. Update data and attribute registers.
     data <<= 1;
-
-    // We start outputting data after just a data/attr pair has been fetched.
-    if ((pixel & 0x07) == 0x00)
-    {
-        // This actually causes the following, due to the placement of the
-        // aliases:
-        // data = dataOut; attr = attrOut;
-        // dataOut = dataLatch; attrOut = attrLatch;
-        // attrLatch = ioPortOut; dataLatch = 0xFF;
-        dataReg <<= 8;
-        attrReg <<= 8;
-        dataLatch = 0xFF;
-        attrLatch = borderAttr;
-    }
 
     // 5. Update counters
     ++pixel;

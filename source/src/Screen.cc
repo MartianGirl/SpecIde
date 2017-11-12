@@ -29,7 +29,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
 
         // Adjust depending on the vertical scale.
         sScale = yScale;
-        xOffset = (bestMode.width - (xSize * sScale)) / 2;
+        xOffset = (bestMode.width - ((xSize - 16) * sScale)) / 2;
         yOffset = 0;
 
         cout << "XScale " << xScale << " YScale " << yScale << endl;
@@ -40,7 +40,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
 
         scrSprite.setTexture(scrTexture);
         scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
-                    static_cast<uint_fast32_t>(xSize), static_cast<uint_fast32_t>(lines)));
+                    static_cast<uint_fast32_t>(xSize - 16), static_cast<uint_fast32_t>(lines)));
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(sScale, sScale));
     }
@@ -48,7 +48,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
     {
         // We select the windowed mode by default.
         scrSprite.setTexture(scrTexture);
-        scrSprite.setTextureRect(sf::IntRect(8, 8, 336, 288));
+        scrSprite.setTextureRect(sf::IntRect(0, 8, 336, 288));
         scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
         scrSprite.setPosition(0, 0);
     }
@@ -128,7 +128,7 @@ void Screen::setFullScreen(bool fs)
 
         // Adjust depending on the vertical scale.
         sScale = yScale;
-        xOffset = (bestMode.width - (xSize * sScale)) / 2;
+        xOffset = (bestMode.width - ((xSize - 16) * sScale)) / 2;
         yOffset = 0;
 
         cout << "XScale " << xScale << " YScale " << yScale << endl;
@@ -138,7 +138,7 @@ void Screen::setFullScreen(bool fs)
         size_t lines = bestMode.height;
 
         scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
-                    static_cast<uint_fast32_t>(xSize), static_cast<uint_fast32_t>(lines)));
+                    static_cast<uint_fast32_t>(xSize - 16), static_cast<uint_fast32_t>(lines)));
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(sScale, sScale));
     }
@@ -148,7 +148,7 @@ void Screen::setFullScreen(bool fs)
                 sf::VideoMode(static_cast<sf::Uint32>(w), static_cast<sf::Uint32>(h)),
                 "SpecIDE", sf::Style::Close | sf::Style::Titlebar);
         xOffset = yOffset = 0;
-        scrSprite.setTextureRect(sf::IntRect(8, 8, 336, 288));
+        scrSprite.setTextureRect(sf::IntRect(0, 8, 336, 288));
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
     }
