@@ -20,8 +20,8 @@ constexpr size_t MAX_BUFFERS = 128;
 constexpr size_t ULA_CLOCK = 7000000;
 constexpr size_t FILTER_SIZE = 352;
 constexpr sf::Int16 SOUND_VOLUME = 0x3FFF / FILTER_SIZE;
-constexpr sf::Int16 SAVE_VOLUME = SOUND_VOLUME / 2;
-constexpr sf::Int16 LOAD_VOLUME = SAVE_VOLUME / 4;
+constexpr sf::Int16 SAVE_VOLUME = SOUND_VOLUME / 4;
+constexpr sf::Int16 LOAD_VOLUME = SAVE_VOLUME / 2;
 
 class Buzzer : public sf::SoundStream
 {
