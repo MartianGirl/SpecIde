@@ -2,38 +2,18 @@
 
 using namespace std;
 
-GraphicWindow::GraphicWindow(size_t x, size_t y, std::string const& title) :
+GraphicWindow::GraphicWindow(size_t x, size_t y, 
+        std::string const& title,
+        bool fullscreen) :
     w(x), h(y),
     window(
+        fullscreen ?
+        sf::VideoMode::getDesktopMode() :
         sf::VideoMode(static_cast<sf::Uint32>(x), static_cast<sf::Uint32>(y)),
-        title, sf::Style::Close | sf::Style::Titlebar),
-    modes(sf::VideoMode::getFullscreenModes()),
-    bestMode(sf::VideoMode::getDesktopMode())
-{
-    init();
-
-    // List video modes
-    // for (size_t i = 0; i < modes.size(); ++i)
-    // {
-        // sf::VideoMode mode = modes[i];
-        // cout << "Mode #" << i << ": "
-            // << mode.width << "x" << mode.height << " - "
-            // << mode.bitsPerPixel << "bpp" << endl;
-    // }
-    // bestMode = modes[0];
-    cout << "Selecting Full Screen Mode: "
-        << bestMode.width << "x" << bestMode.height << " - "
-        << bestMode.bitsPerPixel << "bpp" << endl;
-
-    adjust();
-    // cout << "Using a texture " << suggestedScans << " lines high." << endl;
-}
-
-GraphicWindow::GraphicWindow(size_t x, size_t y) :
-    w(x), h(y),
-    window(
-            sf::VideoMode::getDesktopMode(),
-            "SpecIDE", sf::Style::Fullscreen),
+        title,
+        fullscreen ?
+        sf::Style::Fullscreen :
+        sf::Style::Close | sf::Style::Titlebar),
     modes(sf::VideoMode::getFullscreenModes()),
     bestMode(sf::VideoMode::getDesktopMode())
 {
@@ -45,7 +25,6 @@ GraphicWindow::GraphicWindow(size_t x, size_t y) :
 
     adjust();
 }
-
 
 void GraphicWindow::init()
 {

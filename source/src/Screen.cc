@@ -9,76 +9,49 @@ constexpr size_t CLOCK_FREQ = 7000000;
 constexpr size_t SAMPLE_RATE = 44100;
 constexpr size_t SAMPLE_SKIP = CLOCK_FREQ / SAMPLE_RATE;
 
-Screen::Screen(size_t scale) :
-    GraphicWindow(336 * scale, 288 * scale, "SpecIde"),
+Screen::Screen(size_t scale, bool fullscreen) :
+    GraphicWindow(336 * scale, 288 * scale, "SpecIde", fullscreen),
     done(false),
-    fullscreen(false), smooth(false),
+    fullscreen(fullscreen), smooth(false),
     scale(scale),
     xSize(352), ySize(304)
 {
     // Create a texture. It'll be 352x304, which holds the entire Spectrum
     // screen.
-    if (!scrTexture.create(static_cast<Uint32>(xSize), static_cast<Uint32>(ySize)))
-        assert(false);
-    scrTexture.setRepeated(false);
-    scrTexture.setSmooth(false);
+    texture(xSize, ySize);
 
-    // We select the windowed mode by default.
-    scrSprite.setTexture(scrTexture);
-    scrSprite.setTextureRect(sf::IntRect(8, 8, 336, 288));
-    scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
-    scrSprite.setPosition(0, 0);
+    if (fullscreen)
+    {
+        // Use best mode available.
+        float xScale = bestMode.width / static_cast<float>(xSize);
+        float yScale = bestMode.height / static_cast<float>(suggestedScans);
+        float sScale;
 
-    window.setJoystickThreshold(0.5);
+        // Adjust depending on the vertical scale.
+        sScale = yScale;
+        xOffset = (bestMode.width - (xSize * sScale)) / 2;
+        yOffset = 0;
 
-    size_t vectorSize = xSize * (ySize + 8);    // Count blanking lines.
-#if SPECIDE_BYTE_ORDER == 1
-    pixels.assign(vectorSize, 0xFF000000);
-#else
-    pixels.assign(vectorSize, 0x000000FF);
-#endif
+        cout << "XScale " << xScale << " YScale " << yScale << endl;
+        cout << "Using scale " << sScale << endl;
 
-    cout << "Opening sound at " << SAMPLE_RATE << " kHz." << endl;
-    cout << "Sampling each " << SAMPLE_SKIP << " cycles." << endl;
-    buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
-    buzzer.play();
-}
+        size_t start = (312 - suggestedScans) / 2;
+        size_t lines = bestMode.height;
 
-Screen::Screen() :
-    GraphicWindow(336 * 2, 288 * 2),
-    done(false),
-    fullscreen(true), smooth(false),
-    scale(2),
-    xSize(352), ySize(304)
-{
-    // Create a texture. It'll be 352x304, which holds the entire Spectrum
-    // screen.
-    if (!scrTexture.create(static_cast<Uint32>(xSize), static_cast<Uint32>(ySize)))
-        assert(false);
-    scrTexture.setRepeated(false);
-    scrTexture.setSmooth(false);
-
-    // Use best mode available.
-    float xScale = bestMode.width / static_cast<float>(xSize);
-    float yScale = bestMode.height / static_cast<float>(suggestedScans);
-    float sScale;
-
-    // Adjust depending on the vertical scale.
-    sScale = yScale;
-    xOffset = (bestMode.width - (xSize * sScale)) / 2;
-    yOffset = 0;
-
-    cout << "XScale " << xScale << " YScale " << yScale << endl;
-    cout << "Using scale " << sScale << endl;
-
-    size_t start = (312 - suggestedScans) / 2;
-    size_t lines = bestMode.height;
-
-    scrSprite.setTexture(scrTexture);
-    scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
-                static_cast<uint_fast32_t>(xSize), static_cast<uint_fast32_t>(lines)));
-    scrSprite.setPosition(xOffset, yOffset);
-    scrSprite.setScale(Vector2f(sScale, sScale));
+        scrSprite.setTexture(scrTexture);
+        scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
+                    static_cast<uint_fast32_t>(xSize), static_cast<uint_fast32_t>(lines)));
+        scrSprite.setPosition(xOffset, yOffset);
+        scrSprite.setScale(Vector2f(sScale, sScale));
+    }
+    else
+    {
+        // We select the windowed mode by default.
+        scrSprite.setTexture(scrTexture);
+        scrSprite.setTextureRect(sf::IntRect(8, 8, 336, 288));
+        scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
+        scrSprite.setPosition(0, 0);
+    }
 
     window.setJoystickThreshold(0.5);
 
@@ -94,7 +67,6 @@ Screen::Screen() :
     buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
     buzzer.play();
 }
-
 
 void Screen::clock()
 {
@@ -348,9 +320,9 @@ void Screen::scanKeys(Event const& event)
         case Keyboard::Period:  // Symbol Shift + M
             keyboardMask[0] = 0xF9;
             break;
-        case Keyboard::LAlt:    // Extend Mode = Caps Shift + Symbol Shift
-            keyboardMask[0] = 0xFD; keyboardMask[7] = 0xFE;
-            break;
+        // case Keyboard::LAlt:    // Extend Mode = Caps Shift + Symbol Shift
+            // keyboardMask[0] = 0xFD; keyboardMask[7] = 0xFE;
+            // break;
         case Keyboard::Escape:  // Break = Caps Shift + Space
             keyboardMask[0] = 0xFE; keyboardMask[7] = 0xFE;
             break;
@@ -442,15 +414,15 @@ void Screen::scanKeys(Event const& event)
         case Keyboard::Left:        // Caps Shift + 5
             keyboardMask[4] = 0xEF; keyboardMask[7] = 0xFE;
             break;
-        case Keyboard::Home:        // Inv Video: Caps Shift + 4
-            keyboardMask[4] = 0xF7; keyboardMask[7] = 0xFE;
-            break;
-        case Keyboard::End:         // True Video: Caps Shift + 3
-            keyboardMask[4] = 0xFB; keyboardMask[7] = 0xFE;
-            break;
-        case Keyboard::Tab:      // Caps Lock: Caps Shift + 2
-            keyboardMask[4] = 0xFD; keyboardMask[7] = 0xFE;
-            break;
+        // case Keyboard::Home:        // Inv Video: Caps Shift + 4
+            // keyboardMask[4] = 0xF7; keyboardMask[7] = 0xFE;
+            // break;
+        // case Keyboard::End:         // True Video: Caps Shift + 3
+            // keyboardMask[4] = 0xFB; keyboardMask[7] = 0xFE;
+            // break;
+        // case Keyboard::Tab:      // Caps Lock: Caps Shift + 2
+            // keyboardMask[4] = 0xFD; keyboardMask[7] = 0xFE;
+            // break;
         case Keyboard::Delete:   // Edit: Caps Shift + 1
             keyboardMask[4] = 0xFE; keyboardMask[7] = 0xFE;
             break;
@@ -507,6 +479,14 @@ void Screen::scanKeys(Event const& event)
         default:
             break;
     }
+}
+
+void Screen::texture(size_t x, size_t y)
+{
+    if (!scrTexture.create(static_cast<Uint32>(x), static_cast<Uint32>(y)))
+        assert(false);
+    scrTexture.setRepeated(false);
+    scrTexture.setSmooth(false);
 }
 
 // vim: et:sw=4:ts=4

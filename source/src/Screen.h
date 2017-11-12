@@ -28,8 +28,7 @@
 class Screen : public GraphicWindow
 {
     public:
-        Screen(size_t scale);
-        Screen();
+        Screen(size_t scale, bool fullscreen);
 
         Spectrum spectrum;
         Buzzer buzzer;
@@ -56,6 +55,8 @@ class Screen : public GraphicWindow
         void scanKeys(sf::Event const& event);
         
         uint_fast8_t keyboardMask[8];
+
+        void texture(size_t x, size_t y);
 };
 
 // vim: et:sw=4:ts=4

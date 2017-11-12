@@ -17,8 +17,8 @@
 class GraphicWindow
 {
     public:
-        GraphicWindow(size_t x, size_t y, std::string const& title);
-        GraphicWindow(size_t x, size_t y);
+        GraphicWindow(size_t x, size_t y,
+                std::string const& title, bool fullscreen);
         virtual ~GraphicWindow();
 
         void init();
