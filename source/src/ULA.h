@@ -73,6 +73,7 @@ class ULA
         // Port 0xFE
         uint_fast8_t ioPortIn;
         uint_fast8_t ioPortOut;
+        uint_fast8_t inMask;
         uint_fast8_t borderAttr;
         uint_fast8_t tapeIn;
 

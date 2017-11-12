@@ -2,6 +2,8 @@
 #include <iomanip>
 #include <memory>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include <SFML/Graphics.hpp>
 
@@ -30,10 +32,39 @@ int main(int argc, char* argv[])
 
     // The Screen class is now actually more of a "console".
     // We create the instance, and load the given tape (if any).
-    Screen screen;
-    if (argc == 2)
+    Screen screen(2, true);
+
+    vector<string> params(argv, argv + argc);
+    for (vector<string>::iterator it = params.begin(); it != params.end(); ++it)
     {
-        screen.tape.load(argv[1]);
+        if (*it == "--kempston")
+        {
+            screen.spectrum.kempston = true;
+        }
+
+        if (*it == "--issue2")
+        {
+            screen.spectrum.ula.ulaVersion = 0;
+        }
+
+        if (*it == "--noTapeSound")
+        {
+            screen.buzzer.tapeSound = false;
+        }
+
+        // SD1 was a protection device used in Camelot Warriors. It simply
+        // forced bit 5 low for any port read, if the device didn't force
+        // this bit high.
+        if (*it == "--sd1")
+        {
+            screen.spectrum.idle = 0xDF;
+            screen.spectrum.ula.inMask = 0x9F;
+        }
+
+        if (it->find('.') != string::npos)
+        {
+            screen.tape.load(*it);
+        }
     }
 
     steady_clock::time_point tick = steady_clock::now();

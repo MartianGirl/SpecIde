@@ -16,7 +16,7 @@ ULA::ULA() :
     cpuClock(false), ulaReset(true),
     display(true), idle(false), 
     hSyncEdge(false), vSyncEdge(false), blanking(false), retrace(false),
-    ioPortIn(0xFF), ioPortOut(0x00), tapeIn(0),
+    ioPortIn(0xFF), ioPortOut(0x00), inMask(0xBF), tapeIn(0),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF)
 {
@@ -235,9 +235,6 @@ void ULA::clock()
     if ((tapeIn & 0xC0) == 0x80) ear = 342;
     if ((tapeIn & 0xC0) == 0xC0) ear = 3790;
 
-    ioPortIn &= 0xBF;
-    ioPortIn |= (ear < 700) ? 0x00 : 0x40;
-
     // We read keyboard if we're reading the ULA port, during TW.
     if (cpuClock)   // Port read access is contended.
     {
@@ -245,7 +242,8 @@ void ULA::clock()
         {
             if (((z80_c | z80_c_4) & SIGNAL_RD_) == 0x0000)
             {
-                ioPortIn |= 0x1F;
+                ioPortIn = inMask;
+                ioPortIn |= (ear < 700) ? 0x00 : 0x40;
                 if ((z80_a & 0x8000) == 0x0000) ioPortIn &= keys[0];
                 if ((z80_a & 0x4000) == 0x0000) ioPortIn &= keys[1];
                 if ((z80_a & 0x2000) == 0x0000) ioPortIn &= keys[2];

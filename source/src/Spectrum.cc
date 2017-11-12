@@ -4,6 +4,8 @@
 
 Spectrum::Spectrum() :
     joystick(0),
+    kempston(false),
+    idle(0xFF),
     ram{Memory(14), Memory(14), Memory(14), Memory(14),     // 64K
         Memory(14), Memory(14), Memory(14), Memory(14),     // 128K
         Memory(14), Memory(14), Memory(14), Memory(14),
@@ -113,17 +115,17 @@ void Spectrum::clock()
                 {
                     z80.d = ula.d;
                 }
-                else if ((z80.a & 0x00E0) == 0x0000)    // Kempston joystick.
+                else if (kempston && ((z80.a & 0x00E0) == 0x0000))  // Kempston joystick.
                 {
                     z80.d = joystick;
                 }
                 else if (ula.idle == false)
                 {
-                    z80.d = map[1]->d;  // Get the byte from the video memory.
+                    z80.d = map[1]->d & idle;  // Get the byte from the video memory.
                 }
                 else
                 {
-                    z80.d = 0xFF;
+                    z80.d = idle;
                 }
             }
         }

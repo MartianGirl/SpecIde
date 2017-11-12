@@ -58,9 +58,14 @@ void TZXFile::parse(
     if (magicIsOk)
     {
         pointer = 0x0A;
-        pulseData.clear();
-        indexData.clear();
-        stopData.clear();
+        // pulseData.clear();
+        // indexData.clear();
+        // stopData.clear();
+        if (pulseData.size() != 0)
+        {
+            indexData.insert(pulseData.size());
+            stopData.insert(pulseData.size());
+        }
 
         if (fileData[fileData.size() - 3] != 0x20)
         {

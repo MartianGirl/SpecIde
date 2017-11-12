@@ -19,6 +19,8 @@ void Tape::load(string const& fileName)
 
     if (extension == ".tzx")
     {
+        counter = pulseData.size();
+
         // Create a .tzx object, load its contents in pulseData.
         TZXFile tzx;
         tzx.load(fileName);
@@ -26,6 +28,8 @@ void Tape::load(string const& fileName)
     }
     else if (extension == ".tap")
     {
+        counter = pulseData.size();
+
         // Create a .tap object, load its contents in pulseData.
         TAPFile tap;
         tap.load(fileName);

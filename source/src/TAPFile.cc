@@ -33,10 +33,14 @@ void TAPFile::parse(
 
     // Parse data from the beginning.
     pointer = 0;
-    pulseData.clear();
-    indexData.clear();
-    indexData.insert(0);
-    stopData.clear();
+    // pulseData.clear();
+    // indexData.clear();
+    // stopData.clear();
+    if (pulseData.size())
+    {
+        indexData.insert(pulseData.size());
+        stopData.insert(pulseData.size());
+    }
 
     while (pointer < fileData.size())
     {

@@ -29,6 +29,8 @@ class Spectrum
 
         // Kempston Joystick.
         uint_fast8_t joystick;
+        bool kempston;
+        uint_fast8_t idle;
 
         // I'm going to exceed the original requirements, and then limit the
         // configuration to the required model.

@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(constructors_test)
 
 BOOST_AUTO_TEST_CASE(display_position_test)
 {
-    Screen sc0(1);
+    Screen sc0(1, false);
 
     sc0.spectrum.ula.borderAttr = 0x05;
     sc0.spectrum.ula.d = 0x8D;
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(display_position_test)
 
 BOOST_AUTO_TEST_CASE(image_generation_test)
 {
-    Screen sc0(1);
+    Screen sc0(2, false);
 
     // Prepare some image in the memory.
     for (size_t i = 0; i < 1024; ++i)
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(image_generation_test)
 
 BOOST_AUTO_TEST_CASE(image_load_test)
 {
-    Screen sc0(1);
+    Screen sc0(2, true);
 
     // Prepare some image in the memory.
     size_t pos = 0;
