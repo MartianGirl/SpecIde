@@ -122,8 +122,8 @@ void TZXFile::parse(
                 {
                     if ((pulseData.size() % 2) == 0)
                     {
-                        pulseData.push_back(3500 * (pause - 1));
                         pulseData.push_back(3500);
+                        pulseData.push_back(3500 * (pause - 1));
                     }
                     else
                     {
@@ -185,8 +185,8 @@ void TZXFile::parse(
                 {
                     if ((pulseData.size() % 2) == 0)
                     {
-                        pulseData.push_back(3500 * (pause - 1));
                         pulseData.push_back(3500);
+                        pulseData.push_back(3500 * (pause - 1));
                     }
                     else
                     {
@@ -265,8 +265,8 @@ void TZXFile::parse(
                 {
                     if ((pulseData.size() % 2) == 0)
                     {
-                        pulseData.push_back(3500 * (pause - 1));
                         pulseData.push_back(3500);
+                        pulseData.push_back(3500 * (pause - 1));
                     }
                     else
                     {
@@ -318,8 +318,8 @@ void TZXFile::parse(
                     size_t delay = (pause != 0) ? pause : 1000;
                     if ((pulseData.size() % 2) == 0)
                     {
-                        pulseData.push_back(3500 * (delay - 1));
                         pulseData.push_back(3500);
+                        pulseData.push_back(3500 * (delay - 1));
                     }
                     else
                     {

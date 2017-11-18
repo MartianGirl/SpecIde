@@ -79,11 +79,10 @@ int main(int argc, char* argv[])
         {
             sleep_until(tick + milliseconds(20));
             tick = steady_clock::now();
-        }
-        // screen.update();
 
-        if (screen.done)
-            return 0;
+            if (screen.done)
+                return 0;
+        }
     }
 }
 

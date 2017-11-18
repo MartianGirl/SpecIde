@@ -257,7 +257,7 @@ void ULA::clock()
                 d = ioPortIn;
             }
 
-            if (((z80_c | z80_c_4) & SIGNAL_WR_) == 0x0000)
+            if ((z80_c & SIGNAL_WR_) == 0x0000)
             {
                 ioPortOut = d;
                 borderAttr = ioPortOut & 0x07;
