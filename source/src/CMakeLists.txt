@@ -29,7 +29,7 @@ target_link_libraries(SpecIde ${Boost_LIBRARIES} ${SFML_LIBRARIES} ${SFML_DEPEND
 
 # Set version information in a config.h file.
 set(SpecIde_VERSION_MAJOR 0)
-set(SpecIde_VERSION_MINOR 1)
+set(SpecIde_VERSION_MINOR 2)
 
 # Set endianness in config.h.
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
