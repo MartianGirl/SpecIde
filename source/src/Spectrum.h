@@ -31,6 +31,7 @@ class Spectrum
         uint_fast8_t joystick;
         bool kempston;
         bool spectrum128K;
+        bool spectrumPlus2;
         uint_fast8_t idle;
         uint_fast8_t paging;
 
@@ -59,7 +60,8 @@ class Spectrum
 
         void loadRoms(size_t model);
         void initMems(size_t model);
-        void set128K(bool is128K);
+        void set128K();
+        void setPlus2();
 };
 
 // vim: et:sw=4:ts=4

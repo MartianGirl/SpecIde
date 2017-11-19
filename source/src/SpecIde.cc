@@ -49,7 +49,6 @@ int main(int argc, char* argv[])
         {
             screen.buzzer.set128KTimings(false);
             screen.spectrum.loadRoms(0);
-            screen.spectrum.set128K(false);
             useDefaultModel = false;
 
         }
@@ -58,7 +57,7 @@ int main(int argc, char* argv[])
         {
             screen.buzzer.set128KTimings(true);
             screen.spectrum.loadRoms(1);
-            screen.spectrum.set128K(true);
+            screen.spectrum.set128K();
             useDefaultModel = false;
         }
 
@@ -66,7 +65,7 @@ int main(int argc, char* argv[])
         {
             screen.buzzer.set128KTimings(true);
             screen.spectrum.loadRoms(2);
-            screen.spectrum.set128K(true);
+            screen.spectrum.setPlus2();
             useDefaultModel = false;
         }
 
@@ -108,7 +107,6 @@ int main(int argc, char* argv[])
     {
         screen.buzzer.set128KTimings(false);
         screen.spectrum.loadRoms(0);
-        screen.spectrum.set128K(false);
     }
 
     steady_clock::time_point tick = steady_clock::now();

@@ -94,17 +94,18 @@ void Spectrum::loadRoms(size_t model)
     }
 }
 
-void Spectrum::set128K(bool is128K)
+void Spectrum::set128K()
 {
-    spectrum128K = is128K;
-
+    spectrum128K = true;
+    spectrumPlus2 = false;
     reset();
+}
 
-    // cout << "Paging: " << static_cast<size_t>(paging) << endl;
-    // cout << "Selected RAM: " << ramBank << endl;
-    // cout << "Selected ROM: " << romBank << endl;
-    // cout << "Selected SCR: " << scrBank << endl;
-    // cout << "ULA Contention mask: " << hex << ula.memContentionMask << endl;
+void Spectrum::setPlus2()
+{
+    spectrum128K = true;
+    spectrumPlus2 = true;
+    reset();
 }
 
 void Spectrum::clock()
@@ -176,7 +177,7 @@ void Spectrum::clock()
             }
 
             if (spectrum128K && ((z80.a & 0x8002) == 0x0000)
-                    && ((wr_ == false) || (rd_ == false)))   // Port 0x7FFD
+                    && ((wr_ == false) || (spectrumPlus2 == false && rd_ == false)))   // Port 0x7FFD
             {
                 if ((paging & 0x20) == 0x00)
                 {
@@ -192,12 +193,6 @@ void Spectrum::clock()
 
                     ula.memContentionMask = (ramBank & 0x01) ? 0x4000 : 0xC000;
                 }
-
-                // cout << "Paging: " << static_cast<size_t>(paging) << endl;
-                // cout << "Selected RAM: " << ramBank << endl;
-                // cout << "Selected ROM: " << romBank << endl;
-                // cout << "Selected SCR: " << scrBank << endl;
-                // cout << "Contention mask: " << hex << ula.memContentionMask << endl;
             }
         }
         else if (as_ == false)
