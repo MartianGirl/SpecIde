@@ -8,7 +8,7 @@ Spectrum::Spectrum() :
     spectrum128K(false),
     idle(0xFF),
     paging(0x00),
-    ramBank(3), romBank(0), scrBank(1),
+    ramBank(3), romBank(0), scrBank(5),
     ram{Memory(14), Memory(14), Memory(14), Memory(14),     // 64K
         Memory(14), Memory(14), Memory(14), Memory(14),     // 128K
         Memory(14), Memory(14), Memory(14), Memory(14),
@@ -98,29 +98,6 @@ void Spectrum::set128K(bool is128K)
 {
     spectrum128K = is128K;
 
-    if (is128K)
-    {
-        ramBank = 0;
-        romBank = 0;
-        scrBank = 5;
-
-        ula.maxPixel = 456;
-        ula.maxScan = 311;
-    }
-    else
-    {
-        ramBank = 3;
-        romBank = 0;
-        scrBank = 5;
-
-        ula.maxPixel = 448;
-        ula.maxScan = 312;
-    }
-
-    map[0] = &rom[romBank];
-    map[3] = &ram[ramBank];
-
-    ula.memContentionMask = 0xC000;
 
     // cout << "Paging: " << static_cast<size_t>(paging) << endl;
     // cout << "Selected RAM: " << ramBank << endl;
@@ -246,7 +223,34 @@ void Spectrum::reset()
 {
     ula.reset();    // Synchronize clock level.
     z80.reset();
-    set128K(spectrum128K);
+
+    if (spectrum128K)
+    {
+        ramBank = 0;
+        romBank = 0;
+        scrBank = 5;
+
+        ula.maxPixel = 456;
+        ula.maxScan = 311;
+        
+        paging = 0x00;
+    }
+    else
+    {
+        ramBank = 3;
+        romBank = 0;
+        scrBank = 5;
+
+        ula.maxPixel = 448;
+        ula.maxScan = 312;
+
+        paging = 0x20;
+    }
+
+    map[0] = &rom[romBank];
+    map[3] = &ram[ramBank];
+
+    ula.memContentionMask = 0xC000;
 }
 
 // vim: et:sw=4:ts=4
