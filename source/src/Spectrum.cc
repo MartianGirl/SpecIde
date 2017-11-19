@@ -5,7 +5,10 @@
 Spectrum::Spectrum() :
     joystick(0),
     kempston(false),
+    spectrum128K(false),
     idle(0xFF),
+    paging(0x00),
+    ramBank(3), romBank(0), scrBank(1),
     ram{Memory(14), Memory(14), Memory(14), Memory(14),     // 64K
         Memory(14), Memory(14), Memory(14), Memory(14),     // 128K
         Memory(14), Memory(14), Memory(14), Memory(14),
@@ -26,32 +29,8 @@ Spectrum::Spectrum() :
         Memory(14, true), Memory(14, true), Memory(14, true), Memory(14, true),
         Memory(14, true), Memory(14, true), Memory(14, true), Memory(14, true),
         Memory(14, true), Memory(14, true), Memory(14, true), Memory(14, true)},
-    map{&rom[0], &ram[0], &ram[1], &ram[2]}
+    map{&rom[0], &ram[5], &ram[2], &ram[3]}
 {
-    size_t pos = 0;
-    char c;
-
-    ifstream ifs;
-    string romPath("/usr/share/spectrum-roms/");
-    string romName("48.rom");
-
-    // Try opening ROM in the current directory.
-    cout << "Trying ROM: " << romName << endl;
-    ifs.open(romName, ifstream::binary);
-
-    // If it fails, try the ROM in /usr/share/spectrum-roms
-    if (ifs.fail())
-    {
-        romName = romPath + romName;
-        cout << "Trying ROM: " << romName << endl;
-        ifs.open(romName, ifstream::binary);
-    }
-
-    while (ifs.get(c))
-        rom[0].memory[pos++] = c;
-
-    ifs.close();
-
     // This is just for the laughs. We initialize the whole RAM to random
     // values to see the random attributes that appeared in the Spectrum
     // at boot time.
@@ -62,6 +41,92 @@ Spectrum::Spectrum() :
         map[2]->memory[a] = rand() % 0x100;
         map[3]->memory[a] = rand() % 0x100;
     }
+}
+
+void Spectrum::loadRoms(size_t model)
+{
+    size_t pos = 0;
+    char c;
+
+    ifstream ifs;
+    string romPath("/usr/share/spectrum-roms/");
+    vector<string> romNames;
+    string romName;
+
+    switch (model)
+    {
+        case 0:
+            romNames.push_back("48.rom");
+            break;
+
+        case 1:
+            romNames.push_back("128-0.rom");
+            romNames.push_back("128-1.rom");
+            break;
+
+        case 2:
+            romNames.push_back("plus2-0.rom");
+            romNames.push_back("plus2-1.rom");
+            break;
+    }
+
+    for (size_t i = 0; i < romNames.size(); ++i)
+    {
+        romName = romNames[i];
+        pos = 0;
+
+        // Try opening ROM in the current directory.
+        cout << "Trying ROM: " << romName << endl;
+        ifs.open(romName, ifstream::binary);
+
+        // If it fails, try the ROM in /usr/share/spectrum-roms
+        if (ifs.fail())
+        {
+            romName = romPath + romName;
+            cout << "Trying ROM: " << romName << endl;
+            ifs.open(romName, ifstream::binary);
+        }
+
+        while (ifs.get(c))
+            rom[i].memory[pos++] = c;
+
+        ifs.close();
+    }
+}
+
+void Spectrum::set128K(bool is128K)
+{
+    spectrum128K = is128K;
+
+    if (is128K)
+    {
+        ramBank = 0;
+        romBank = 0;
+        scrBank = 5;
+
+        ula.maxPixel = 456;
+        ula.maxScan = 311;
+    }
+    else
+    {
+        ramBank = 3;
+        romBank = 0;
+        scrBank = 5;
+
+        ula.maxPixel = 448;
+        ula.maxScan = 312;
+    }
+
+    map[0] = &rom[romBank];
+    map[3] = &ram[ramBank];
+
+    ula.memContentionMask = 0xC000;
+
+    // cout << "Paging: " << static_cast<size_t>(paging) << endl;
+    // cout << "Selected RAM: " << ramBank << endl;
+    // cout << "Selected ROM: " << romBank << endl;
+    // cout << "Selected SCR: " << scrBank << endl;
+    // cout << "ULA Contention mask: " << hex << ula.memContentionMask << endl;
 }
 
 void Spectrum::clock()
@@ -92,8 +157,11 @@ void Spectrum::clock()
     // ULA gets the data from memory or Z80, or outputs data to Z80.
     if (ula.hiz == false)           // Is ULA mastering the bus?
     {
-        // Bank 1: 4000h - Contended memory
-        ula.d = map[1]->read(ula.a);
+        
+        // ULA renders the selected memory bank for video.
+        // In 48K models, this one is fixed.
+        // In 128K models, this one can be RAM5 or RAM7.
+        ula.d = ram[scrBank].read(ula.a);
     }
     else    // If ULA is not mastering, Z80 is.
     {
@@ -121,12 +189,37 @@ void Spectrum::clock()
                 }
                 else if (ula.idle == false)
                 {
-                    z80.d = map[1]->d & idle;  // Get the byte from the video memory.
+                    z80.d = ram[scrBank].d & idle;  // Get the byte from the video memory.
                 }
                 else
                 {
                     z80.d = idle;
                 }
+            }
+
+            if (spectrum128K && ((z80.a & 0x8002) == 0x0000)
+                    && ((wr_ == false) || (rd_ == false)))   // Port 0x7FFD
+            {
+                if ((paging & 0x20) == 0x00)
+                {
+                    paging &= 0x20; // Keep bit 5.
+                    paging |= z80.d;
+
+                    ramBank = paging & 0x07;
+                    romBank = ((paging & 0x10) == 0x00) ? 0 : 1;
+                    scrBank = ((paging & 0x08) == 0x00) ? 5 : 7;
+
+                    map[0] = &rom[romBank];
+                    map[3] = &ram[ramBank];
+
+                    ula.memContentionMask = (ramBank & 0x01) ? 0x4000 : 0xC000;
+                }
+
+                // cout << "Paging: " << static_cast<size_t>(paging) << endl;
+                // cout << "Selected RAM: " << ramBank << endl;
+                // cout << "Selected ROM: " << romBank << endl;
+                // cout << "Selected SCR: " << scrBank << endl;
+                // cout << "Contention mask: " << hex << ula.memContentionMask << endl;
             }
         }
         else if (as_ == false)
@@ -134,7 +227,7 @@ void Spectrum::clock()
             // Bank 0: 0000h - ROM
             // Bank 1: 4000h - Contended memory
             // Bank 2: 8000h - Extended memory
-            // Bank 3: C000h - Extended memory
+            // Bank 3: C000h - Extended memory (can be contended)
             if (rd_ == false)
                 z80.d = map[memArea]->read(z80.a);
             else if (wr_ == false)
@@ -153,6 +246,7 @@ void Spectrum::reset()
 {
     ula.reset();    // Synchronize clock level.
     z80.reset();
+    set128K(spectrum128K);
 }
 
 // vim: et:sw=4:ts=4

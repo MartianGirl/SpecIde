@@ -12,6 +12,7 @@ ULA::ULA() :
     ulaVersion(1),
     maxPixel(448), maxScan(312),
     hiz(true),
+    memContentionMask(0xC000),
     z80_a(0xFFFF), z80_c(0xFFFF),
     cpuClock(false), ulaReset(true),
     display(true), idle(false), 
@@ -116,7 +117,7 @@ void ULA::clock()
         // We only delay T1H until the ULA has finished reading. The rest of
         // states are not contended. We do this by checking MREQ is low.
         // We contend T-States, which means we only consider high clock phase.
-        bool memContention = ((z80_a & 0xC000) == 0x4000) && z80Clk;
+        bool memContention = ((z80_a & memContentionMask) == 0x4000) && z80Clk;
         bool memContentionOff = ((z80_c & SIGNAL_MREQ_) == 0x0000);
 
         // I/O Contention
@@ -240,7 +241,7 @@ void ULA::clock()
     // We read keyboard if we're reading the ULA port, during TW.
     if (cpuClock)   // Port read access is contended.
     {
-        if (((z80_a & 0x0001) == 0x0000) && ((z80_c & SIGNAL_IORQ_) == 0x0000))
+        if (((z80_c & SIGNAL_IORQ_) == 0x0000) && ((z80_a & 0x0001) == 0x0000))
         {
             if (((z80_c | z80_c_4) & SIGNAL_RD_) == 0x0000)
             {

@@ -30,7 +30,13 @@ class Spectrum
         // Kempston Joystick.
         uint_fast8_t joystick;
         bool kempston;
+        bool spectrum128K;
         uint_fast8_t idle;
+        uint_fast8_t paging;
+
+        size_t ramBank;
+        size_t romBank;
+        size_t scrBank;
 
         // I'm going to exceed the original requirements, and then limit the
         // configuration to the required model.
@@ -50,6 +56,10 @@ class Spectrum
 
         // sf::SoundBuffer ear;
         // sf::SoundBuffer mic;
+
+        void loadRoms(size_t model);
+        void initMems(size_t model);
+        void set128K(bool is128K);
 };
 
 // vim: et:sw=4:ts=4

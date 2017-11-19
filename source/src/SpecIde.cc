@@ -33,24 +33,63 @@ int main(int argc, char* argv[])
     // The Screen class is now actually more of a "console".
     // We create the instance, and load the given tape (if any).
     Screen screen(2, true);
+    bool useDefaultModel = true;
 
     vector<string> params(argv, argv + argc);
     for (vector<string>::iterator it = params.begin(); it != params.end(); ++it)
     {
-        if (*it == "--kempston")
-        {
-            screen.spectrum.kempston = true;
-        }
-
+        // Model selection.
         if (*it == "--issue2")
-        {
             screen.spectrum.ula.ulaVersion = 0;
+
+        if (*it == "--issue3")
+            screen.spectrum.ula.ulaVersion = 1;
+
+        if (*it == "--48")
+        {
+            screen.buzzer.set128KTimings(false);
+            screen.spectrum.loadRoms(0);
+            screen.spectrum.set128K(false);
+            useDefaultModel = false;
+
         }
 
-        if (*it == "--noTapeSound")
+        if (*it == "--128")
         {
-            screen.buzzer.tapeSound = false;
+            screen.buzzer.set128KTimings(true);
+            screen.spectrum.loadRoms(1);
+            screen.spectrum.set128K(true);
+            useDefaultModel = false;
         }
+
+        if (*it == "--plus2")
+        {
+            screen.buzzer.set128KTimings(true);
+            screen.spectrum.loadRoms(2);
+            screen.spectrum.set128K(true);
+            useDefaultModel = false;
+        }
+
+        // I'm putting both set and unset flags in case I implement loading
+        // default parameters from a config file, which would override the
+        // emulator's defaults.
+        if (*it == "--kempston")
+            screen.spectrum.kempston = true;
+
+        if (*it == "--nokempston")
+            screen.spectrum.kempston = false;
+
+        if (*it == "--notapesound")
+            screen.buzzer.tapeSound = false;
+
+        if (*it == "--tapesound")
+            screen.buzzer.tapeSound = true;
+
+        if (*it == "--nosound")
+            screen.buzzer.playSound = false;
+
+        if (*it == "--sound")
+            screen.buzzer.playSound = true;
 
         // SD1 was a protection device used in Camelot Warriors. It simply
         // forced bit 5 low for any port read, if the device didn't force
@@ -62,9 +101,14 @@ int main(int argc, char* argv[])
         }
 
         if (it->find('.') != string::npos)
-        {
             screen.tape.load(*it);
-        }
+    }
+
+    if (useDefaultModel)
+    {
+        screen.buzzer.set128KTimings(false);
+        screen.spectrum.loadRoms(0);
+        screen.spectrum.set128K(false);
     }
 
     steady_clock::time_point tick = steady_clock::now();

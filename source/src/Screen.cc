@@ -5,12 +5,10 @@
 using namespace std;
 using namespace sf;
 
-constexpr size_t CLOCK_FREQ = 7000000;
 constexpr size_t SAMPLE_RATE = 44100;
-constexpr size_t SAMPLE_SKIP = CLOCK_FREQ / SAMPLE_RATE;
 
 Screen::Screen(size_t scale, bool fullscreen) :
-    GraphicWindow(336 * scale, 288 * scale, "SpecIde", fullscreen),
+    GraphicWindow(344 * scale, 288 * scale, "SpecIde", fullscreen),
     done(false),
     fullscreen(fullscreen), smooth(false),
     scale(scale),
@@ -29,7 +27,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
 
         // Adjust depending on the vertical scale.
         sScale = yScale;
-        xOffset = (bestMode.width - ((xSize - 16) * sScale)) / 2;
+        xOffset = (bestMode.width - ((xSize - 8) * sScale)) / 2;
         yOffset = 0;
 
         cout << "XScale " << xScale << " YScale " << yScale << endl;
@@ -40,7 +38,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
 
         scrSprite.setTexture(scrTexture);
         scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
-                    static_cast<uint_fast32_t>(xSize - 16), static_cast<uint_fast32_t>(lines)));
+                    static_cast<uint_fast32_t>(xSize - 8), static_cast<uint_fast32_t>(lines)));
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(sScale, sScale));
     }
@@ -48,7 +46,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
     {
         // We select the windowed mode by default.
         scrSprite.setTexture(scrTexture);
-        scrSprite.setTextureRect(sf::IntRect(0, 8, 336, 288));
+        scrSprite.setTextureRect(sf::IntRect(0, 8, 344, 288));
         scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
         scrSprite.setPosition(0, 0);
     }
@@ -62,8 +60,6 @@ Screen::Screen(size_t scale, bool fullscreen) :
     pixels.assign(vectorSize, 0x000000FF);
 #endif
 
-    cout << "Opening sound at " << SAMPLE_RATE << " kHz." << endl;
-    cout << "Sampling each " << SAMPLE_SKIP << " cycles." << endl;
     buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
     buzzer.play();
 }
@@ -128,7 +124,7 @@ void Screen::setFullScreen(bool fs)
 
         // Adjust depending on the vertical scale.
         sScale = yScale;
-        xOffset = (bestMode.width - ((xSize - 16) * sScale)) / 2;
+        xOffset = (bestMode.width - ((xSize - 8) * sScale)) / 2;
         yOffset = 0;
 
         cout << "XScale " << xScale << " YScale " << yScale << endl;
@@ -138,7 +134,7 @@ void Screen::setFullScreen(bool fs)
         size_t lines = bestMode.height;
 
         scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
-                    static_cast<uint_fast32_t>(xSize - 16), static_cast<uint_fast32_t>(lines)));
+                    static_cast<uint_fast32_t>(xSize - 8), static_cast<uint_fast32_t>(lines)));
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(sScale, sScale));
     }
@@ -148,7 +144,7 @@ void Screen::setFullScreen(bool fs)
                 sf::VideoMode(static_cast<sf::Uint32>(w), static_cast<sf::Uint32>(h)),
                 "SpecIDE", sf::Style::Close | sf::Style::Titlebar);
         xOffset = yOffset = 0;
-        scrSprite.setTextureRect(sf::IntRect(0, 8, 336, 288));
+        scrSprite.setTextureRect(sf::IntRect(0, 8, 344, 288));
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
     }
@@ -194,7 +190,14 @@ void Screen::pollEvents()
                         }
                         break;
                     case Keyboard::F9:
-                        buzzer.tapeSound = !buzzer.tapeSound;
+                        if (event.key.shift)
+                        {
+                            buzzer.tapeSound = !buzzer.tapeSound;
+                        }
+                        else
+                        {
+                            buzzer.playSound = !buzzer.playSound;
+                        }
                         break;
                     case Keyboard::F5:
                         spectrum.reset();

@@ -51,6 +51,8 @@ class ULA
         uint_fast16_t a;
         uint_fast8_t d;
         bool hiz;
+
+        uint_fast16_t memContentionMask;
         
         uint_fast16_t z80_a;
         uint_fast16_t z80_c;

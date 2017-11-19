@@ -17,8 +17,11 @@
 
 constexpr size_t MAX_SAMPLES = 2048;
 constexpr size_t MAX_BUFFERS = 128;
-constexpr size_t ULA_CLOCK = 7000000;
 constexpr size_t FILTER_SIZE = 352;
+
+constexpr size_t ULA_CLOCK_48 = 7000000;
+constexpr size_t ULA_CLOCK_128 = 7093800;
+
 constexpr sf::Int16 SOUND_VOLUME = 0x3FFF / FILTER_SIZE;
 constexpr sf::Int16 SAVE_VOLUME = SOUND_VOLUME / 4;
 constexpr sf::Int16 LOAD_VOLUME = SAVE_VOLUME / 2;
@@ -36,14 +39,16 @@ class Buzzer : public sf::SoundStream
 
         size_t millis;  // Dummy
         size_t skip;
+        size_t rate;
 
+        bool playSound;
         bool tapeSound;
 
         Buzzer() :
             buffers(MAX_BUFFERS, (std::vector<sf::Int16>(MAX_SAMPLES, 0))),
             rdBuffer(0), wrBuffer(1),
             filter{0},
-            tapeSound(true) {}
+            playSound(true), tapeSound(true) {}
 
         bool open(uint_fast8_t* src, uint_fast8_t* ear, size_t sampleRate)
         {
@@ -54,8 +59,14 @@ class Buzzer : public sf::SoundStream
             setVolume(100);
             queuedBuffers.push(126);
             queuedBuffers.push(127);
-            skip = ULA_CLOCK / sampleRate;
+            rate = sampleRate;
+            skip = ULA_CLOCK_48 / rate;
             return true;
+        }
+
+        void set128KTimings(bool select128)
+        {
+            skip = (select128 ? ULA_CLOCK_128 : ULA_CLOCK_48) / rate;
         }
 
         void getNextReadBuffer()
@@ -82,9 +93,20 @@ class Buzzer : public sf::SoundStream
             static size_t index = 0;
 
             // Smooth the signal directly from the ULA.
-            filter[index] = ((*source & 0x10) ? SOUND_VOLUME : 0)
-                + ((tapeSound && ((*source & 0x18) == 0x18)) ? SAVE_VOLUME : 0)
-                + ((tapeSound && (*tapeIn & 0x40)) ? LOAD_VOLUME : 0);
+            if (playSound)
+            {
+                filter[index] = (*source & 0x10) ? SOUND_VOLUME : 0;
+                if (tapeSound)
+                {
+                    filter[index] += 
+                        ((*source & 0x18) ? SAVE_VOLUME : 0)
+                        + ((*tapeIn & 0x40) ? LOAD_VOLUME : 0);
+                }
+            }
+            else
+            {
+                filter[index] = 0x00;
+            }
             index = (index + 1) % FILTER_SIZE;
 
             if (++count == skip)
