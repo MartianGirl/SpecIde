@@ -98,6 +98,7 @@ void Spectrum::set128K(bool is128K)
 {
     spectrum128K = is128K;
 
+    reset();
 
     // cout << "Paging: " << static_cast<size_t>(paging) << endl;
     // cout << "Selected RAM: " << ramBank << endl;
