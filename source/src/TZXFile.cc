@@ -35,7 +35,8 @@ void TZXFile::load(string const& fileName)
 void TZXFile::parse(
         vector<size_t> &pulseData,
         set<size_t> &indexData,
-        set<size_t> &stopData)
+        set<size_t> &stopData,
+        set<size_t> &stopIf48K)
 {
 
     size_t dataLength;
@@ -367,7 +368,7 @@ void TZXFile::parse(
 
             case 0x2A:
                 blockName = "Stop The Tape If In 48K Mode";
-                stopData.insert(pulseData.size());
+                stopIf48K.insert(pulseData.size());
                 pointer += 5;
                 break;
 

@@ -44,7 +44,8 @@ class TZXFile
         void parse(
                 vector<size_t> &pulseData,
                 set<size_t> &indexData,
-                set<size_t> &stopData);
+                set<size_t> &stopData,
+                set<size_t> &stopIf48K);
 
         size_t dumpArchiveInfo();
         size_t dumpComment();

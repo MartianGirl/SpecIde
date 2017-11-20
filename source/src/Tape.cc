@@ -24,7 +24,7 @@ void Tape::load(string const& fileName)
         // Create a .tzx object, load its contents in pulseData.
         TZXFile tzx;
         tzx.load(fileName);
-        tzx.parse(pulseData, indexData, stopData);
+        tzx.parse(pulseData, indexData, stopData, stopIf48K);
     }
     else if (extension == ".tap")
     {
@@ -65,6 +65,13 @@ uint_fast8_t Tape::advance()
                 if (stopData.find(pointer) != stopData.end())
                 {
                     cout << "Stopped." << endl;
+                    playing = false;
+                    level = 0x00;
+                }
+
+                if (is48K && stopIf48K.find(pointer) != stopIf48K.end())
+                {
+                    cout << "Stopped in 48K mode." << endl;
                     playing = false;
                     level = 0x00;
                 }

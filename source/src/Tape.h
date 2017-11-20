@@ -23,6 +23,7 @@ class Tape
         vector<size_t> pulseData;   // Pulse data, in samples per pulse.
         set<size_t> indexData;      // Indexes relative to pulse data.
         set<size_t> stopData;       // Stop points, relative to pulse data.
+        set<size_t> stopIf48K;      // Stop points only for 48K mode.
 
         size_t pointer;         // Index to pulse data.
         size_t index;           // Last reached index in the tape.
@@ -31,8 +32,11 @@ class Tape
         uint8_t level;          // Tape output level.
         size_t counter;         // Cassette counter :-)
 
+        bool is48K;             // For deciding if we stop or not :)
+
         Tape() :
-            pointer(0), index(0), sample(0), playing(false), level(0x00) {}
+            pointer(0), index(0), sample(0),
+            playing(false), level(0x00), is48K(true) {}
 
         void load(string const& fileName);
 

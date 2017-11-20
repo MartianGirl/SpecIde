@@ -98,6 +98,8 @@ bool Screen::update()
         tick = true;
 
         pollEvents();
+
+        tape.is48K = (spectrum.paging & 0x20) ? true : false;
     }
 
     // HSYNC falling edge restores the beam to the beginning of the next line.

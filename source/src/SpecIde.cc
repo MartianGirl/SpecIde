@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
     bool useDefaultModel = true;
 
     vector<string> params(argv, argv + argc);
+    vector<string> tapes;
     for (vector<string>::iterator it = params.begin(); it != params.end(); ++it)
     {
         // Model selection.
@@ -100,7 +101,7 @@ int main(int argc, char* argv[])
         }
 
         if (it->find('.') != string::npos)
-            screen.tape.load(*it);
+            tapes.push_back(*it);
     }
 
     if (useDefaultModel)
@@ -108,6 +109,9 @@ int main(int argc, char* argv[])
         screen.buzzer.set128KTimings(false);
         screen.spectrum.loadRoms(0);
     }
+
+    for (vector<string>::iterator it = tapes.begin(); it != tapes.end(); ++it)
+        screen.tape.load(*it);
 
     steady_clock::time_point tick = steady_clock::now();
     // This is faster than "while(true)".

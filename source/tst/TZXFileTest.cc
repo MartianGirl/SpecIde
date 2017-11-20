@@ -30,10 +30,11 @@ BOOST_AUTO_TEST_CASE(block_parsing_test)
     vector<size_t> pulseData;
     set<size_t> indexData;
     set<size_t> stopData;
+    set<size_t> stopIf48K;
 
     TZXFile tzx;
     tzx.load("ThreeWeeksInParadise.tzx");
-    tzx.parse(pulseData, indexData, stopData);
+    tzx.parse(pulseData, indexData, stopData, stopIf48K);
 }
 
 // EOF

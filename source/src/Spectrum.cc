@@ -7,7 +7,7 @@ Spectrum::Spectrum() :
     kempston(false),
     spectrum128K(false),
     idle(0xFF),
-    paging(0x00),
+    paging(0x20),
     ramBank(3), romBank(0), scrBank(5),
     ram{Memory(14), Memory(14), Memory(14), Memory(14),     // 64K
         Memory(14), Memory(14), Memory(14), Memory(14),     // 128K
@@ -176,8 +176,8 @@ void Spectrum::clock()
                 }
             }
 
-            if (spectrum128K && ((z80.a & 0x8002) == 0x0000)
-                    && ((wr_ == false) || (spectrumPlus2 == false && rd_ == false)))   // Port 0x7FFD
+            if (spectrum128K && ((z80.a & 0x8002) == 0x0000)       // Port 0x7FFD
+                    && ((wr_ == false) || (spectrumPlus2 == false && rd_ == false)))
             {
                 if ((paging & 0x20) == 0x00)
                 {
