@@ -9,6 +9,7 @@ Spectrum::Spectrum() :
     idle(0xFF),
     paging(0x20),
     ramBank(3), romBank(0), scrBank(5),
+    contendedRam(false), contendedRom(false),
     ram{Memory(14), Memory(14), Memory(14), Memory(14),     // 64K
         Memory(14), Memory(14), Memory(14), Memory(14),     // 128K
         Memory(14), Memory(14), Memory(14), Memory(14),
@@ -29,7 +30,7 @@ Spectrum::Spectrum() :
         Memory(14, true), Memory(14, true), Memory(14, true), Memory(14, true),
         Memory(14, true), Memory(14, true), Memory(14, true), Memory(14, true),
         Memory(14, true), Memory(14, true), Memory(14, true), Memory(14, true)},
-    map{&rom[0], &ram[5], &ram[2], &ram[3]}
+    map{&rom[0], &ram[5], &ram[2], &ram[0]}
 {
     // This is just for the laughs. We initialize the whole RAM to random
     // values to see the random attributes that appeared in the Spectrum
@@ -133,10 +134,19 @@ void Spectrum::clock()
     ula.z80_a = z80.a;
     ula.z80_c = z80.c;
 
+    // If a contended RAM page is selected, we'll have memory contention:
+    // - If the address is in the C000h-FFFFh range, and ROM0 is selected.
+    // - If the address is in the C000h-FFFFh range, and it is odd.
+    if ((contendedRam == true) && ((z80.a & 0xC000) == 0xC000)
+            && ((contendedRom == true) || ((z80.a & 0xC001) == 0xC001)))
+        ula.z80_mask = 0x7FFF;
+    else
+        ula.z80_mask = 0xFFFF;
+
     // ULA gets the data from memory or Z80, or outputs data to Z80.
     if (ula.hiz == false)           // Is ULA mastering the bus?
     {
-        
+
         // ULA renders the selected memory bank for video.
         // In 48K models, this one is fixed.
         // In 128K models, this one can be RAM5 or RAM7.
@@ -176,23 +186,10 @@ void Spectrum::clock()
                 }
             }
 
-            if (spectrum128K && ((z80.a & 0x8002) == 0x0000)       // Port 0x7FFD
-                    && ((wr_ == false) || (spectrumPlus2 == false && rd_ == false)))
+            if (spectrum128K && ((z80.a & 0x8002) == 0x0000)
+                    && (wr_ == false || rd_ == false))   // Port 0x7FFD
             {
-                if ((paging & 0x20) == 0x00)
-                {
-                    paging &= 0x20; // Keep bit 5.
-                    paging |= z80.d;
-
-                    ramBank = paging & 0x07;
-                    romBank = ((paging & 0x10) == 0x00) ? 0 : 1;
-                    scrBank = ((paging & 0x08) == 0x00) ? 5 : 7;
-
-                    map[0] = &rom[romBank];
-                    map[3] = &ram[ramBank];
-
-                    ula.memContentionMask = (ramBank & 0x01) ? 0x4000 : 0xC000;
-                }
+                updatePage();
             }
         }
         else if (as_ == false)
@@ -215,6 +212,31 @@ void Spectrum::clock()
     }
 }
 
+void Spectrum::updatePage()
+{
+    static size_t wrWait = 0;
+
+    ++wrWait;
+    if (wrWait == 5)
+    {
+        wrWait = 0;
+        if ((paging & 0x20) == 0x00)
+        {
+            paging = z80.d;
+
+            ramBank = paging & 0x07;
+            romBank = ((paging & 0x10) == 0x00) ? 0 : 1;
+            scrBank = ((paging & 0x08) == 0x00) ? 5 : 7;
+
+            map[0] = &rom[romBank];
+            map[3] = &ram[ramBank];
+
+            contendedRam = ((paging & 0x01) == 0x01);   // RAM 1-3-5-7
+            contendedRom = ((paging & 0x11) == 0x01);   // ROM 0, RAM 1-3-5-7
+        }
+    }
+}
+
 void Spectrum::reset()
 {
     ula.reset();    // Synchronize clock level.
@@ -233,7 +255,7 @@ void Spectrum::reset()
     }
     else
     {
-        ramBank = 3;
+        ramBank = 0;
         romBank = 0;
         scrBank = 5;
 
@@ -245,8 +267,6 @@ void Spectrum::reset()
 
     map[0] = &rom[romBank];
     map[3] = &ram[ramBank];
-
-    ula.memContentionMask = 0xC000;
 }
 
 // vim: et:sw=4:ts=4

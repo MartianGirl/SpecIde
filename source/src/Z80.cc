@@ -71,7 +71,7 @@ void Z80::clock()
             return;
 
         case Z80State::ST_OCF_T3L_RFSH1:
-            // c &= ~(SIGNAL_MREQ_); // | SIGNAL_RFSH_);
+            c &= ~(SIGNAL_MREQ_); // | SIGNAL_RFSH_);
             state = Z80State::ST_OCF_T4H_RFSH2;
             return;
 
@@ -80,7 +80,7 @@ void Z80::clock()
             return;
 
         case Z80State::ST_OCF_T4L_RFSH2:
-            // c |= (SIGNAL_MREQ_);
+            c |= (SIGNAL_MREQ_);
             break;
 
             // NMI. Machine cycle after NMI.

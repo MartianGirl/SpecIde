@@ -38,6 +38,8 @@ class Spectrum
         size_t ramBank;
         size_t romBank;
         size_t scrBank;
+        bool contendedRam;
+        bool contendedRom;
 
         // I'm going to exceed the original requirements, and then limit the
         // configuration to the required model.
@@ -62,6 +64,7 @@ class Spectrum
         void initMems(size_t model);
         void set128K();
         void setPlus2();
+        void updatePage();
 };
 
 // vim: et:sw=4:ts=4

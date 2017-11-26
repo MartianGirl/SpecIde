@@ -12,8 +12,7 @@ ULA::ULA() :
     ulaVersion(1),
     maxPixel(448), maxScan(312),
     hiz(true),
-    memContentionMask(0xC000),
-    z80_a(0xFFFF), z80_c(0xFFFF),
+    z80_a(0xFFFF), z80_c(0xFFFF), z80_mask(0xFFFF),
     cpuClock(false), ulaReset(true),
     display(true), idle(false), 
     hSyncEdge(false), vSyncEdge(false), blanking(false), retrace(false),
@@ -51,10 +50,9 @@ void ULA::clock()
     static uint_fast8_t flash = 0;
     static bool z80Clk = false;
 
+    static size_t rdWait = 0;
     static uint_fast16_t z80_c_1 = 0xFFFF;
     static uint_fast16_t z80_c_2 = 0xFFFF;
-    static uint_fast16_t z80_c_3 = 0xFFFF;
-    static uint_fast16_t z80_c_4 = 0xFFFF;
 
     static uint_fast16_t dataAddr, attrAddr;
 
@@ -117,7 +115,7 @@ void ULA::clock()
         // We only delay T1H until the ULA has finished reading. The rest of
         // states are not contended. We do this by checking MREQ is low.
         // We contend T-States, which means we only consider high clock phase.
-        bool memContention = ((z80_a & memContentionMask) == 0x4000) && z80Clk;
+        bool memContention = (((z80_a & z80_mask) & 0xC000) == 0x4000) && z80Clk;
         bool memContentionOff = ((z80_c & SIGNAL_MREQ_) == 0x0000);
 
         // I/O Contention
@@ -133,7 +131,7 @@ void ULA::clock()
         // We use the same contention manager, and we consider contention when
         // there is any contention, and when no contention is not disabled.
         bool contention = (memContention || ioContention)   // Contention On?
-            && !(memContentionOff || ioContentionOff);      // Contention Off?
+                && !(memContentionOff || ioContentionOff);  // Contention Off?
 
         // 2.b. Read from memory.
         switch (pixel & 0x0F)
@@ -209,7 +207,7 @@ void ULA::clock()
     // 3. ULA port & Interrupt.
     c = z80_c;
     if ((scan == vSyncStart) && (pixel < 64))
-            // && ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
+        //&& ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
         c &= ~SIGNAL_INT_;
     else
         c |= SIGNAL_INT_;
@@ -243,19 +241,25 @@ void ULA::clock()
     {
         if (((z80_c & SIGNAL_IORQ_) == 0x0000) && ((z80_a & 0x0001) == 0x0000))
         {
-            if (((z80_c | z80_c_4) & SIGNAL_RD_) == 0x0000)
+            if ((z80_c & SIGNAL_RD_) == 0x0000)
             {
-                ioPortIn = inMask;
-                ioPortIn |= (ear < 700) ? 0x00 : 0x40;
-                if ((z80_a & 0x8000) == 0x0000) ioPortIn &= keys[0];
-                if ((z80_a & 0x4000) == 0x0000) ioPortIn &= keys[1];
-                if ((z80_a & 0x2000) == 0x0000) ioPortIn &= keys[2];
-                if ((z80_a & 0x1000) == 0x0000) ioPortIn &= keys[3];
-                if ((z80_a & 0x0800) == 0x0000) ioPortIn &= keys[4];
-                if ((z80_a & 0x0400) == 0x0000) ioPortIn &= keys[5];
-                if ((z80_a & 0x0200) == 0x0000) ioPortIn &= keys[6];
-                if ((z80_a & 0x0100) == 0x0000) ioPortIn &= keys[7];
-                d = ioPortIn;
+                ++rdWait;
+
+                if (rdWait == 5)
+                {
+                    rdWait = 0;
+                    ioPortIn = inMask;
+                    ioPortIn |= (ear < 700) ? 0x00 : 0x40;
+                    if ((z80_a & 0x8000) == 0x0000) ioPortIn &= keys[0];
+                    if ((z80_a & 0x4000) == 0x0000) ioPortIn &= keys[1];
+                    if ((z80_a & 0x2000) == 0x0000) ioPortIn &= keys[2];
+                    if ((z80_a & 0x1000) == 0x0000) ioPortIn &= keys[3];
+                    if ((z80_a & 0x0800) == 0x0000) ioPortIn &= keys[4];
+                    if ((z80_a & 0x0400) == 0x0000) ioPortIn &= keys[5];
+                    if ((z80_a & 0x0200) == 0x0000) ioPortIn &= keys[6];
+                    if ((z80_a & 0x0100) == 0x0000) ioPortIn &= keys[7];
+                    d = ioPortIn;
+                }
             }
 
             if ((z80_c & SIGNAL_WR_) == 0x0000)
@@ -265,8 +269,6 @@ void ULA::clock()
             }
         }
 
-        z80_c_4 = z80_c_3;
-        z80_c_3 = z80_c_2;
         z80_c_2 = z80_c_1;
         z80_c_1 = z80_c;
 
@@ -290,7 +292,7 @@ void ULA::clock()
         z80Clk = false;
         display = true;
 
-        z80_c_4 = z80_c_3 = z80_c_2 = z80_c_1 = 0xFFFF;
+        z80_c_2 = z80_c_1 = 0xFFFF;
     }
 }
 
