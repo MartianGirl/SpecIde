@@ -10,6 +10,7 @@
 #include "ULA.h"
 #include "Z80.h"
 #include "Z80Defs.h"
+#include "PSG.h"
 
 #include <fstream>
 #include <iomanip>
@@ -26,6 +27,7 @@ class Spectrum
         // Required hardware.
         Z80 z80;
         ULA ula;
+        PSG psg;
 
         // Kempston Joystick.
         uint_fast8_t joystick;

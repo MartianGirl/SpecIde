@@ -137,7 +137,7 @@ void Spectrum::clock()
     // If a contended RAM page is selected, we'll have memory contention:
     // - If the address is in the C000h-FFFFh range, and ROM0 is selected.
     // - If the address is in the C000h-FFFFh range, and it is odd.
-    if ((contendedRam == true) // && ((z80.a & 0xC000) == 0xC000) // Not sure about this.
+    if ((contendedRam == true)
             && ((contendedRom == true) || ((z80.a & 0xC001) == 0xC001)))
         ula.z80_mask = 0x7FFF;
     else
@@ -159,6 +159,11 @@ void Spectrum::clock()
 
     ula.clock();
     z80.c = ula.c;
+
+    if (spectrum128K)
+    {
+        psg.clock();
+    }
 
     // We clock the Z80 if the ULA allows.
     if (ula.cpuClock)
@@ -186,10 +191,32 @@ void Spectrum::clock()
                 }
             }
 
-            if (spectrum128K && ((z80.a & 0x8002) == 0x0000)
-                    && (wr_ == false || rd_ == false))   // Port 0x7FFD
+            if (spectrum128K)
             {
-                updatePage();
+                uint_fast16_t portDecode128K = z80.a & 0xC002;
+                if ((portDecode128K & 0x8002) == 0x0000)
+                {
+                    if (wr_ == false || rd_ == false)
+                        updatePage();
+                }
+                else if (portDecode128K == 0x8000)  // 0xBFFD: AY Data.
+                {
+                    if (wr_ == false)
+                    {
+                        psg.write(z80.d);
+                    }
+                }
+                else if (portDecode128K == 0xC000)  // 0xFFFD: AY Register.
+                {
+                    if (wr_ == false)
+                    {
+                        psg.addr(z80.d);
+                    }
+                    else if (rd_ == false)
+                    {
+                        z80.d = psg.read();
+                    }
+                }
             }
         }
         else if (as_ == false)
