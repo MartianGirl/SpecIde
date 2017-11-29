@@ -46,7 +46,6 @@ class Buzzer : public sf::SoundStream
 
         bool playSound;
         bool tapeSound;
-
         bool hasPsg;
 
         Buzzer() :
@@ -74,10 +73,10 @@ class Buzzer : public sf::SoundStream
             psg_a = a; psg_b = b; psg_c = c;
         }
 
-        void set128KTimings(bool select128)
+        void set128K(bool select128)
         {
             skip = (select128 ? ULA_CLOCK_128 : ULA_CLOCK_48) / rate;
-            hasPsg = select128;
+            hasPsg = false; // For the moment
         }
 
         void getNextReadBuffer()

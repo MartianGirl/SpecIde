@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
         if (*it == "--48")
         {
-            screen.buzzer.set128KTimings(false);
+            screen.buzzer.set128K(false);
             screen.spectrum.loadRoms(0);
             useDefaultModel = false;
 
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 
         if (*it == "--128")
         {
-            screen.buzzer.set128KTimings(true);
+            screen.buzzer.set128K(true);
             screen.spectrum.loadRoms(1);
             screen.spectrum.set128K();
             useDefaultModel = false;
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 
         if (*it == "--plus2")
         {
-            screen.buzzer.set128KTimings(true);
+            screen.buzzer.set128K(true);
             screen.spectrum.loadRoms(2);
             screen.spectrum.setPlus2();
             useDefaultModel = false;
@@ -91,6 +91,12 @@ int main(int argc, char* argv[])
         if (*it == "--sound")
             screen.buzzer.playSound = true;
 
+        if (*it == "--psg")
+            screen.buzzer.hasPsg = true;
+
+        if (*it == "--nopsg")
+            screen.buzzer.hasPsg = false;
+
         // SD1 was a protection device used in Camelot Warriors. It simply
         // forced bit 5 low for any port read, if the device didn't force
         // this bit high.
@@ -106,7 +112,7 @@ int main(int argc, char* argv[])
 
     if (useDefaultModel)
     {
-        screen.buzzer.set128KTimings(false);
+        screen.buzzer.set128K(false);
         screen.spectrum.loadRoms(0);
     }
 

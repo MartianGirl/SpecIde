@@ -29,10 +29,10 @@ class PSG
 
         sf::Int16 channelA, channelB, channelC;
         sf::Int16 volumeA, volumeB, volumeC;
+        sf::Int16 waveA, waveB, waveC;
 
         size_t counterA, counterB, counterC;
         size_t periodA, periodB, periodC;
-        size_t waveA, waveB, waveC;
 
         size_t masterCounter;
 
@@ -40,9 +40,9 @@ class PSG
             wr(false),
             channelA(0), channelB(0), channelC(0),
             volumeA(0x10), volumeB(0x10), volumeC(0x10),
+            waveA(0), waveB(0), waveC(0),
             counterA(0), counterB(0), counterC(0),
             periodA(0), periodB(0), periodC(0),
-            waveA(0), waveB(0), waveC(0),
             masterCounter(0) {}
 
 
