@@ -4,7 +4,8 @@ This is an attempt at writing a ZX Spectrum emulator using SFML for video, audio
 
 Currently, the emulator is functional and is quite accurate. Some of the supported features are:
 
-- Emulation of ZX Spectrum 48K.
+- Emulation of ZX Spectrum 48K, 128K and +2.
+- AY-3-8912 sound emulation.
 - Loading of tapes via .tap and .tzx tape images.
 - Full screen video mode.
 - Kempston joystick emulation from the PC joystick/gamepad.
