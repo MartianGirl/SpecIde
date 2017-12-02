@@ -221,7 +221,6 @@ class PSG
                     if ((r[7] & 0x08) == 0) channelA += channelN;
                     if ((r[7] & 0x10) == 0) channelB += channelN;
                     if ((r[7] & 0x20) == 0) channelC += channelN;
-
                     channelA *= volumeA;
                     channelB *= volumeB;
                     channelC *= volumeC;
