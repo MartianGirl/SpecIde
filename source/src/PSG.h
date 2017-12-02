@@ -213,7 +213,7 @@ class PSG
 
                     if (periodN && (++counterN == periodN))
                     {
-                        channelN = uniform(gen);
+                        channelN = static_cast<sf::Int16>(uniform(gen));
                         counterN = 0;
                     }
 
