@@ -135,10 +135,8 @@ void Spectrum::clock()
     ula.z80_c = z80.c;
 
     // If a contended RAM page is selected, we'll have memory contention:
-    // - If the address is in the C000h-FFFFh range, and ROM0 is selected.
     // - If the address is in the C000h-FFFFh range, and it is odd.
-    if ((contendedRam == true)
-            && ((contendedRom == true) || ((z80.a & 0xC001) == 0xC001)))
+    if ((contendedRam == true) && ((z80.a & 0xC001) == 0xC001))
         ula.z80_mask = 0x7FFF;
     else
         ula.z80_mask = 0xFFFF;
