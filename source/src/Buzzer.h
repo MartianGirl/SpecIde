@@ -76,7 +76,7 @@ class Buzzer : public sf::SoundStream
         void set128K(bool select128)
         {
             skip = (select128 ? ULA_CLOCK_128 : ULA_CLOCK_48) / rate;
-            hasPsg = false; // For the moment
+            hasPsg = select128;
         }
 
         void getNextReadBuffer()
