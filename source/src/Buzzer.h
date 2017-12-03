@@ -105,16 +105,23 @@ class Buzzer : public sf::SoundStream
             // Smooth the signal directly from the ULA.
             if (playSound)
             {
+                // I'm going to try a trick for keeping the volume high,
+                // while not causing samples to overflow. The buzzer and
+                // PSG channel A are going to be positive, while channels
+                // B and C are going to be negative. Since I'm just inverting
+                // two waveforms, the generated sound should be the same
+                // to the ear, but since all signals are positive, the sum
+                // will not overflow.
                 filter[index] = (*source & 0x10) ? SOUND_VOLUME : 0;
                 if (tapeSound)
                 {
                     filter[index] += 
                         ((*source & 0x18) ? SAVE_VOLUME : 0)
-                        + ((*tapeIn & 0x40) ? LOAD_VOLUME : 0);
+                        - ((*tapeIn & 0x40) ? LOAD_VOLUME : 0);
                 }
                 if (hasPsg)
                 {
-                    filter[index] += (*psg_a + *psg_b + *psg_c);
+                    filter[index] += (*psg_a - *psg_b - *psg_c);
                 }
             }
             else

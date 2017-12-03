@@ -90,7 +90,7 @@ class PSG
                         counterE = 0;
                         envStep = 0;
                     }
-                    
+
                     // Update tone period for channel C.
                     if (a == 4 || a == 5)
                     {
@@ -105,6 +105,8 @@ class PSG
                     {
                         periodN = (r[6] & 0x1F);
                         counterN = 0;
+                        counterE = 0;
+                        envStep = 0;
                     }
 
                     // Update volume for channel A.
@@ -178,21 +180,6 @@ class PSG
 
                 if ((masterCounter & 0x3F) == 0x00)
                 {
-                    if ((r[8] & 0x10) == 0x10)
-                    {
-                        volumeA = envLevel;
-                    }
-
-                    if ((r[9] & 0x10) == 0x10)
-                    {
-                        volumeB = envLevel;
-                    }
-
-                    if ((r[10] & 0x10) == 0x10)
-                    {
-                        volumeC = envLevel;
-                    }
-
                     if (periodA && (++counterA == periodA))
                     {
                         waveA = 1 - waveA;
@@ -216,16 +203,6 @@ class PSG
                         channelN = static_cast<sf::Int16>(uniform(gen));
                         counterN = 0;
                     }
-
-                    channelA = (r[7] & 0x01) ? 0 : waveA;
-                    channelB = (r[7] & 0x02) ? 0 : waveB;
-                    channelC = (r[7] & 0x04) ? 0 : waveC;
-                    if ((r[7] & 0x08) == 0) channelA += channelN;
-                    if ((r[7] & 0x10) == 0) channelB += channelN;
-                    if ((r[7] & 0x20) == 0) channelC += channelN;
-                    channelA *= volumeA;
-                    channelB *= volumeB;
-                    channelC *= volumeC;
 
                     if (periodE && (++counterE == periodE))
                     {
@@ -272,6 +249,31 @@ class PSG
                             envLevel += envIncrement;
                         }
                     }
+
+                    if ((r[8] & 0x10) == 0x10)
+                    {
+                        volumeA = envLevel;
+                    }
+
+                    if ((r[9] & 0x10) == 0x10)
+                    {
+                        volumeB = envLevel;
+                    }
+
+                    if ((r[10] & 0x10) == 0x10)
+                    {
+                        volumeC = envLevel;
+                    }
+
+                    channelA = (r[7] & 0x01) ? 0 : waveA;
+                    channelB = (r[7] & 0x02) ? 0 : waveB;
+                    channelC = (r[7] & 0x04) ? 0 : waveC;
+                    if ((r[7] & 0x08) == 0) channelA += channelN;
+                    if ((r[7] & 0x10) == 0) channelB += channelN;
+                    if ((r[7] & 0x20) == 0) channelC += channelN;
+                    channelA *= volumeA;
+                    channelB *= volumeB;
+                    channelC *= volumeC;
                 }
             }
         }
