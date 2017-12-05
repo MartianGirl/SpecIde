@@ -12,8 +12,6 @@
 #include <iostream>
 #include <random>
 
-#include <SFML/Audio.hpp>
-
 using namespace std;
 
 class PSG
@@ -28,11 +26,11 @@ class PSG
 
         bool wr;
 
-        sf::Int16 channelA, channelB, channelC, channelN;
-        sf::Int16 volumeA, volumeB, volumeC;
-        sf::Int16 waveA, waveB, waveC;
+        int channelA, channelB, channelC, channelN;
+        int volumeA, volumeB, volumeC;
+        int waveA, waveB, waveC;
 
-        sf::Int16 envIncrement, envStart, envLevel;
+        int envIncrement, envStart, envLevel;
         size_t envStep;
 
         size_t counterA, counterB, counterC, counterN, counterE;
@@ -46,7 +44,7 @@ class PSG
 
         PSG() :
             r{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-                0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+              0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
             wr(false),
             channelA(0), channelB(0), channelC(0), channelN(0),
             volumeA(0x0F), volumeB(0x0F), volumeC(0x0F),
@@ -78,8 +76,6 @@ class PSG
                     {
                         periodA = (((r[1] & 0x0F) << 8) + r[0]) / 2;
                         counterA = 0;
-                        counterE = 0;
-                        envStep = 0;
                     }
 
                     // Update tone period for channel B.
@@ -87,8 +83,6 @@ class PSG
                     {
                         periodB = (((r[3] & 0x0F) << 8) + r[2]) / 2;
                         counterB = 0;
-                        counterE = 0;
-                        envStep = 0;
                     }
 
                     // Update tone period for channel C.
@@ -96,8 +90,6 @@ class PSG
                     {
                         periodC = (((r[5] & 0x0F) << 8) + r[4]) / 2;
                         counterC = 0;
-                        counterE = 0;
-                        envStep = 0;
                     }
 
                     // Update noise period.
@@ -105,8 +97,28 @@ class PSG
                     {
                         periodN = (r[6] & 0x1F);
                         counterN = 0;
+                    }
+
+                    // Update period for Envelope generator.
+                    if (a == 11 || a == 12)
+                    {
+                        periodE = ((r[12] << 8) + r[11]);
                         counterE = 0;
                         envStep = 0;
+                    }
+
+                    // Update parameters for envelope generator.
+                    if (a == 13)
+                    {
+                        // Start values depend on the attack bit.
+                        // Attack = 0: Start at 1111, count down.
+                        // Attack = 1: Start at 0000, count up.
+                        envStart = ((r[13] & 0x04) == 0x00) ? 0x0F : 0x00;
+                        envIncrement = ((r[13] & 0x04) == 0x00) ? -1 : 1;
+                        envLevel = envStart;
+                        envStep = 0;
+                        counterE = 0;
+
                     }
 
                     // Update volume for channel A.
@@ -154,28 +166,6 @@ class PSG
                         }
 
                     }
-
-                    // Update period for Envelope generator.
-                    if (a == 11 || a == 12)
-                    {
-                        periodE = ((r[12] << 8) + r[11]);
-                        counterE = 0;
-                        envStep = 0;
-                    }
-
-                    // Update parameters for envelope generator.
-                    if (a == 13)
-                    {
-                        // Start values depend on the attack bit.
-                        // Attack = 0: Start at 1111, count down.
-                        // Attack = 1: Start at 0000, count up.
-                        envStart = ((r[13] & 0x04) == 0x00) ? 0x0F : 0x00;
-                        envIncrement = ((r[13] & 0x04) == 0x00) ? -1 : 1;
-                        envLevel = envStart;
-                        envStep = 0;
-                        counterE = 0;
-
-                    }
                 }
 
                 if ((masterCounter & 0x3F) == 0x00)
@@ -200,7 +190,7 @@ class PSG
 
                     if (periodN && (++counterN == periodN))
                     {
-                        channelN = static_cast<sf::Int16>(uniform(gen));
+                        channelN = uniform(gen);
                         counterN = 0;
                     }
 

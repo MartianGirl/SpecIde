@@ -22,9 +22,9 @@ constexpr size_t FILTER_SIZE = 352;
 constexpr size_t ULA_CLOCK_48 = 7000000;
 constexpr size_t ULA_CLOCK_128 = 7093800;
 
-constexpr sf::Int16 SOUND_VOLUME = 0x1FFF / FILTER_SIZE;
-constexpr sf::Int16 SAVE_VOLUME = SOUND_VOLUME / 4;
-constexpr sf::Int16 LOAD_VOLUME = SAVE_VOLUME;
+constexpr sf::Int16 SOUND_VOLUME = 0x10;
+constexpr sf::Int16 SAVE_VOLUME = 0x08;
+constexpr sf::Int16 LOAD_VOLUME = 0x04;
 
 class Buzzer : public sf::SoundStream
 {
@@ -32,13 +32,13 @@ class Buzzer : public sf::SoundStream
         std::vector<std::vector<sf::Int16>> buffers;
         std::queue<size_t> queuedBuffers;
         size_t rdBuffer, wrBuffer;
-        sf::Int16 filter[FILTER_SIZE];
+        int filter[FILTER_SIZE];
 
         uint_fast8_t *source;
         uint_fast8_t *tapeIn;
-        sf::Int16 *psg_a;
-        sf::Int16 *psg_b;
-        sf::Int16 *psg_c;
+        int *psg_a;
+        int *psg_b;
+        int *psg_c;
 
         size_t millis;  // Dummy
         size_t skip;
@@ -68,7 +68,7 @@ class Buzzer : public sf::SoundStream
             return true;
         }
 
-        void setPsg(sf::Int16* a, sf::Int16* b, sf::Int16* c)
+        void setPsg(int* a, int* b, int* c)
         {
             psg_a = a; psg_b = b; psg_c = c;
         }
@@ -133,10 +133,10 @@ class Buzzer : public sf::SoundStream
             if (++count == skip)
             {
                 count = 0;
-                sf::Int16 s = -0x3FFF;
+                int s = 0;
                 for (size_t i = 0; i < FILTER_SIZE; ++i)
                     s += filter[i];
-                buffers[wrBuffer][wrSample] = s;
+                buffers[wrBuffer][wrSample] = static_cast<sf::Int16>(s);
                 ++wrSample;
                 if (wrSample == MAX_SAMPLES)
                 {
