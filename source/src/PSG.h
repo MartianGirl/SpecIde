@@ -95,7 +95,7 @@ class PSG
                     // Update noise period.
                     if (a == 6)
                     {
-                        periodN = (r[6] & 0x1F);
+                        periodN = (r[6] & 0x1F); 
                         counterN = 0;
                     }
 
@@ -118,7 +118,6 @@ class PSG
                         envLevel = envStart;
                         envStep = 0;
                         counterE = 0;
-
                     }
 
                     // Update volume for channel A.
@@ -164,7 +163,6 @@ class PSG
                             counterE = 0;
                             envStep = 0;
                         }
-
                     }
                 }
 
