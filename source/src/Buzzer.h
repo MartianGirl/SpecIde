@@ -117,10 +117,6 @@ class Buzzer : public sf::SoundStream
                         + ((*source & 0x18) ? SAVE_VOLUME : 0)
                         + ((*tapeIn & 0x40) ? LOAD_VOLUME : 0);
                 }
-                if (hasPsg)
-                {
-                    filter[index] += *psg;
-                }
             }
             else
             {
@@ -134,6 +130,8 @@ class Buzzer : public sf::SoundStream
                 int s = 0;
                 for (size_t i = 0; i < FILTER_SIZE; ++i)
                     s += filter[i];
+                if (hasPsg)
+                    s += *psg;
                 buffers[wrBuffer][wrSample] = static_cast<sf::Int16>(s);
                 ++wrSample;
                 if (wrSample == MAX_SAMPLES)
