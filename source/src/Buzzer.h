@@ -36,9 +36,7 @@ class Buzzer : public sf::SoundStream
 
         uint_fast8_t *source;
         uint_fast8_t *tapeIn;
-        int *psg_a;
-        int *psg_b;
-        int *psg_c;
+        int *psg;
 
         size_t millis;  // Dummy
         size_t skip;
@@ -68,9 +66,9 @@ class Buzzer : public sf::SoundStream
             return true;
         }
 
-        void setPsg(int* a, int* b, int* c)
+        void setPsg(int* sound)
         {
-            psg_a = a; psg_b = b; psg_c = c;
+            psg = sound;
         }
 
         void set128K(bool select128)
@@ -121,7 +119,7 @@ class Buzzer : public sf::SoundStream
                 }
                 if (hasPsg)
                 {
-                    filter[index] += (*psg_a + *psg_b + *psg_c);
+                    filter[index] += *psg;
                 }
             }
             else

@@ -61,7 +61,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
 #endif
 
     buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
-    buzzer.setPsg(&spectrum.psg.channelA, &spectrum.psg.channelB, &spectrum.psg.channelC);
+    buzzer.setPsg(&spectrum.psg.sound);
     buzzer.play();
 }
 
