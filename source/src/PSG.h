@@ -310,7 +310,7 @@ class PSG
             else        // Linear (louder)
             {
                 for (size_t i = 0; i < 16; ++i)
-                    out[i] = 0x111 * i;
+                    out[i] = static_cast<int>(0x111 * i);
             }
         }
 };
