@@ -35,10 +35,13 @@ class PSG
         int out[16];
 
         int envIncrement, envStart, envLevel;
+        int envSlope, envCycle;
         size_t envStep;
+        bool envHold;
 
         size_t counterA, counterB, counterC, counterN, counterE;
         size_t periodA, periodB, periodC, periodN, periodE;
+        size_t loA, loB, loC;
 
         size_t masterCounter;
 
@@ -47,8 +50,8 @@ class PSG
         uniform_int_distribution<> uniform;
 
         PSG() :
-            r{0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x01, 0xFF,
-              0x1F, 0x1F, 0x1F, 0x00, 0x01, 0x0F, 0xFF, 0xFF},
+            r{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
             wr(false),
             channelA(0), channelB(0), channelC(0),
             noise(0),
@@ -82,44 +85,54 @@ class PSG
                     // Update tone period for channel A.
                     if (a == 0 || a == 1)
                     {
-                        periodA = (((r[1] & 0x0F) << 8) + r[0]) / 2;
+                        periodA = (((r[1] & 0x0F) << 8) + r[0]);
+                        if (periodA == 0) periodA = 1;
+                        loA = periodA / 2;
                         counterA = 0;
+                        restartEnvelope();
                     }
 
                     // Update tone period for channel B.
                     if (a == 2 || a == 3)
                     {
-                        periodB = (((r[3] & 0x0F) << 8) + r[2]) / 2;
+                        periodB = (((r[3] & 0x0F) << 8) + r[2]);
+                        if (periodB == 0) periodB = 1;
+                        loB = periodB / 2;
                         counterB = 0;
+                        restartEnvelope();
                     }
 
                     // Update tone period for channel C.
                     if (a == 4 || a == 5)
                     {
-                        periodC = (((r[5] & 0x0F) << 8) + r[4]) / 2;
+                        periodC = (((r[5] & 0x0F) << 8) + r[4]);
+                        if (periodC == 0) periodC = 1;
+                        loC = periodC / 2;
                         counterC = 0;
+                        restartEnvelope();
                     }
 
                     // Update noise period.
                     if (a == 6)
                     {
                         periodN = (r[6] & 0x1F);
+                        if (periodN == 0) periodN = 1;
                         counterN = 0;
+                        restartEnvelope();
                     }
 
                     // Update period for Envelope generator.
                     if (a >= 11 || a <= 13)
                     {
-                        periodE = ((r[12] << 8) + r[11]);
+                        periodE = ((r[12] << 8) + r[11]) * 2;
+                        if (periodE == 0) periodE = 1;
 
                         // Start values depend on the attack bit.
                         // Attack = 0: Start at 1111, count down.
                         // Attack = 1: Start at 0000, count up.
                         envStart = ((r[13] & 0x04) == 0x00) ? 0x0F : 0x00;
                         envIncrement = ((r[13] & 0x04) == 0x00) ? -1 : 1;
-                        envLevel = envStart;
-                        envStep = 0;
-                        counterE = 0;
+                        restartEnvelope();
                     }
 
                     // Update volume for channel A.
@@ -132,8 +145,7 @@ class PSG
                         else
                         {
                             volumeA = envStart;
-                            counterE = 0;
-                            envStep = 0;
+                            restartEnvelope();
                         }
                     }
 
@@ -147,8 +159,7 @@ class PSG
                         else
                         {
                             volumeB = envStart;
-                            counterE = 0;
-                            envStep = 0;
+                            restartEnvelope();
                         }
                     }
 
@@ -162,39 +173,41 @@ class PSG
                         else
                         {
                             volumeC = envStart;
-                            counterE = 0;
-                            envStep = 0;
+                            restartEnvelope();
                         }
                     }
                 }
 
                 if ((masterCounter & 0x3F) == 0x00)
                 {
-                    if (periodA && (++counterA == periodA))
+                    if (++counterA == loA)
                     {
+                        loA = periodA - loA;
                         waveA = 1 - waveA;
                         counterA = 0;
                     }
 
-                    if (periodB && (++counterB == periodB))
+                    if (++counterB == loB)
                     {
+                        loB = periodB - loB;
                         waveB = 1 - waveB;
                         counterB = 0;
                     }
 
-                    if (periodC && (++counterC == periodC))
+                    if (++counterC == loC)
                     {
+                        loC = periodC - loC;
                         waveC = 1 - waveC;
                         counterC = 0;
                     }
 
-                    if (periodN && (++counterN == periodN))
+                    if (++counterN == periodN)
                     {
                         noise = uniform(gen);
                         counterN = 0;
                     }
 
-                    if (periodE && (++counterE == periodE))
+                    if (envHold == false && ++counterE == periodE)
                     {
                         counterE = 0;
                         if (envStep == 0x0F)    // We've finished a cycle.
@@ -206,25 +219,26 @@ class PSG
                                 // Hold = 0: Repeat the cycle.
                                 if ((r[13] & 0x01) == 0x01)
                                 {
+                                    envHold = true;
+
                                     // Alternate and hold: Reset level to
                                     // the starting value, hold.
                                     if ((r[13] & 0x02) == 0x02)
                                     {
                                         envLevel = envStart;
                                     }
-                                    counterE = periodE + 1; // Trick for holding.
                                 }
                                 else
                                 {
                                     // Alternate = 1: Invert direction.
                                     if ((r[13] & 0x02) == 0x02)
                                     {
-                                        envStart = 0x0F - envStart;
-                                        envIncrement = -envIncrement;
+                                        envCycle = 0x0F - envCycle;
+                                        envSlope = -envSlope;
                                     }
 
                                     envStep = 0x00;
-                                    envLevel = envStart;
+                                    envLevel = envCycle;
                                 }
 
                             }
@@ -233,13 +247,13 @@ class PSG
                                 // Continue = 0: Just one cycle, return to 0000.
                                 //               Hold.
                                 envLevel = 0x00;
-                                counterE = periodE + 1; // Trick for holding.
+                                envHold = true;
                             }
                         }
                         else    // We are in the middle of a cycle.
                         {
                             ++envStep;
-                            envLevel += envIncrement;
+                            envLevel += envSlope;
                         }
                     }
 
@@ -312,6 +326,28 @@ class PSG
                 for (size_t i = 0; i < 16; ++i)
                     out[i] = 0x111 * i;
             }
+        }
+
+        void reset()
+        {
+            for (size_t i = 0; i < 16; ++i)
+                r[i] = 0;
+
+            periodA = periodB = periodC = 1;
+            loA = loB = loC = 0;
+            periodE = 1;
+            periodN = 1;
+            volumeA = volumeB = volumeC = 0;
+        }
+
+        void restartEnvelope()
+        {
+            counterE = 0;
+            envStep = 0;
+            envCycle = envStart;
+            envSlope = envIncrement;
+            envLevel = envStart;
+            envHold = false;
         }
 };
 
