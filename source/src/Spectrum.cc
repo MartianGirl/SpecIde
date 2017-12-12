@@ -266,6 +266,7 @@ void Spectrum::reset()
 {
     ula.reset();    // Synchronize clock level.
     z80.reset();
+    psg.reset();
 
     if (spectrum128K)
     {
