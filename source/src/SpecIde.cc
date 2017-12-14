@@ -97,6 +97,9 @@ int main(int argc, char* argv[])
         if (*it == "--nopsg")
             screen.buzzer.hasPsg = false;
 
+        if (*it == "--psglinear")
+            screen.spectrum.psg.setVolumeLevels(false);
+
         // SD1 was a protection device used in Camelot Warriors. It simply
         // forced bit 5 low for any port read, if the device didn't force
         // this bit high.

@@ -37,6 +37,7 @@ class Screen : public GraphicWindow
         bool done;
         bool fullscreen;
         bool smooth;
+        bool squareRootDac;
 
         size_t scale;
         size_t xSize, ySize;

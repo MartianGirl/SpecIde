@@ -11,6 +11,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
     GraphicWindow(344 * scale, 288 * scale, "SpecIde", fullscreen),
     done(false),
     fullscreen(fullscreen), smooth(false),
+    squareRootDac(true),
     scale(scale),
     xSize(352), ySize(304)
 {
@@ -61,7 +62,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
 #endif
 
     buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
-    buzzer.setPsg(&spectrum.psg.channelA, &spectrum.psg.channelB, &spectrum.psg.channelC);
+    buzzer.setPsg(&spectrum.psg.sound);
     buzzer.play();
 }
 
@@ -191,6 +192,10 @@ void Screen::pollEvents()
                             fullscreen = !fullscreen;
                             setFullScreen(fullscreen);
                         }
+                        break;
+                    case Keyboard::F8:
+                        squareRootDac = !squareRootDac;
+                        spectrum.psg.setVolumeLevels(squareRootDac);
                         break;
                     case Keyboard::F9:
                         if (event.key.shift)
