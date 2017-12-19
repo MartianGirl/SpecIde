@@ -47,13 +47,13 @@ class PSG
         uniform_int_distribution<> uniform;
 
         PSG() :
-            r{0x00, 0x01, 0x00, 0x01, 0x00, 0x01, 0x01, 0xFF,
-              0x1F, 0x1F, 0x1F, 0x00, 0x01, 0x0F, 0xFF, 0xFF},
+            r{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
             wr(false),
             channelA(0), channelB(0), channelC(0),
             noise(0),
             volumeA(0), volumeB(0), volumeC(0),
-            waveA(0), waveB(0), waveC(0),
+            waveA(1), waveB(1), waveC(1),
             sound(0),
             out{0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
                 0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF},
@@ -83,21 +83,24 @@ class PSG
                     // Update tone period for channel A.
                     if (a == 0 || a == 1)
                     {
-                        periodA = (((r[1] & 0x0F) << 8) + r[0]) / 2;
+                        periodA = (((r[1] & 0x0F) << 8) + r[0]);
+                        if (periodA == 0) ++periodA;
                         counterA = 0;
                     }
 
                     // Update tone period for channel B.
                     if (a == 2 || a == 3)
                     {
-                        periodB = (((r[3] & 0x0F) << 8) + r[2]) / 2;
+                        periodB = (((r[3] & 0x0F) << 8) + r[2]);
+                        if (periodB == 0) ++periodB;
                         counterB = 0;
                     }
 
                     // Update tone period for channel C.
                     if (a == 4 || a == 5)
                     {
-                        periodC = (((r[5] & 0x0F) << 8) + r[4]) / 2;
+                        periodC = (((r[5] & 0x0F) << 8) + r[4]);
+                        if (periodC == 0) ++periodC;
                         counterC = 0;
                     }
 
@@ -105,6 +108,7 @@ class PSG
                     if (a == 6)
                     {
                         periodN = (r[6] & 0x1F); 
+                        if (periodN == 0) ++periodN;
                         counterN = 0;
                     }
 
@@ -112,6 +116,7 @@ class PSG
                     if (a >= 11 || a <= 13)
                     {
                         periodE = ((r[12] << 8) + r[11]);
+                        if (periodE == 0) ++periodE;
 
                         // Start values depend on the attack bit.
                         // Attack = 0: Start at 1111, count down.
@@ -169,33 +174,37 @@ class PSG
                     }
                 }
 
-                if ((masterCounter & 0x3F) == 0x00)
+                // Because period means a complete wave cycle (high/low)
+                if ((masterCounter & 0x1F) == 0x00)
                 {
-                    if (periodA && (++counterA == periodA))
+                    if (++counterA == periodA)
                     {
                         waveA = 1 - waveA;
                         counterA = 0;
                     }
 
-                    if (periodB && (++counterB == periodB))
+                    if (++counterB == periodB)
                     {
                         waveB = 1 - waveB;
                         counterB = 0;
                     }
 
-                    if (periodC && (++counterC == periodC))
+                    if (++counterC == periodC)
                     {
                         waveC = 1 - waveC;
                         counterC = 0;
                     }
+                }
 
-                    if (periodN && (++counterN == periodN))
+                if ((masterCounter & 0x3F) == 0x00)
+                {
+                    if (++counterN == periodN)
                     {
                         noise = uniform(gen);
                         counterN = 0;
                     }
 
-                    if (periodE && (++counterE == periodE))
+                    if (++counterE == periodE)
                     {
                         counterE = 0;
                         if (envStep == 0x0F)    // We've finished a cycle.
@@ -259,17 +268,16 @@ class PSG
                         volumeC = envLevel;
                     }
 
-                    channelA = (r[7] & 0x01) ? 0 : waveA;
-                    channelB = (r[7] & 0x02) ? 0 : waveB;
-                    channelC = (r[7] & 0x04) ? 0 : waveC;
-                    if ((r[7] & 0x08) == 0) channelA += noise;
-                    if ((r[7] & 0x10) == 0) channelB += noise;
-                    if ((r[7] & 0x20) == 0) channelC += noise;
+                    channelA = (r[7] & 0x01) ? 1 : waveA;
+                    channelB = (r[7] & 0x02) ? 1 : waveB;
+                    channelC = (r[7] & 0x04) ? 1 : waveC;
+                    if ((r[7] & 0x08) == 0) channelA ^= noise;
+                    if ((r[7] & 0x10) == 0) channelB ^= noise;
+                    if ((r[7] & 0x20) == 0) channelC ^= noise;
                 }
+                sound = channelA * out[volumeA] + channelB * out[volumeB]
+                    + channelC * out[volumeC];
             }
-
-            sound = channelA * out[volumeA] + channelB * out[volumeB]
-                + channelC * out[volumeC];
         }
 
         uint_fast8_t read() { return latch_do; }
