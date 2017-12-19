@@ -13,10 +13,8 @@
 #include <queue>
 #include <vector>
 
-#include <SFML/Audio.hpp>
+#include "SoundChannel.h"
 
-constexpr size_t MAX_SAMPLES = 2048;
-constexpr size_t MAX_BUFFERS = 128;
 constexpr size_t FILTER_SIZE = 352;
 
 constexpr size_t ULA_CLOCK_48 = 7000000;
@@ -26,29 +24,24 @@ constexpr int SOUND_VOLUME = 0x10;
 constexpr int SAVE_VOLUME = 0x0C;
 constexpr int LOAD_VOLUME = 0x04;
 
-class Buzzer : public sf::SoundStream
+class Buzzer
 {
     public:
-        std::vector<std::vector<sf::Int16>> buffers;
-        std::queue<size_t> queuedBuffers;
-        size_t rdBuffer, wrBuffer;
+        SoundChannel channel;
+
         int filter[FILTER_SIZE];
 
         uint_fast8_t *source;
         uint_fast8_t *tapeIn;
         int *psg;
 
-        size_t millis;  // Dummy
         size_t skip;
-        size_t rate;
 
         bool playSound;
         bool tapeSound;
         bool hasPsg;
 
         Buzzer() :
-            buffers(MAX_BUFFERS, (std::vector<sf::Int16>(MAX_SAMPLES, 0))),
-            rdBuffer(0), wrBuffer(1),
             filter{0},
             playSound(true), tapeSound(true), hasPsg(false) {}
 
@@ -56,14 +49,8 @@ class Buzzer : public sf::SoundStream
         {
             source = src;
             tapeIn = ear;
-            initialize(1, static_cast<sf::Uint32>(sampleRate));
-            setAttenuation(0);
-            setVolume(100);
-            queuedBuffers.push(126);
-            queuedBuffers.push(127);
-            rate = sampleRate;
-            skip = ULA_CLOCK_48 / rate;
-            return true;
+            skip = ULA_CLOCK_48 / sampleRate;
+            return channel.open(sampleRate);
         }
 
         void setPsg(int* sound)
@@ -73,31 +60,13 @@ class Buzzer : public sf::SoundStream
 
         void set128K(bool select128)
         {
-            skip = (select128 ? ULA_CLOCK_128 : ULA_CLOCK_48) / rate;
+            skip = (select128 ? ULA_CLOCK_128 : ULA_CLOCK_48) / channel.sampleRate;
             hasPsg = select128;
-        }
-
-        void getNextReadBuffer()
-        {
-            if (queuedBuffers.empty() == false)
-            {
-                rdBuffer = queuedBuffers.front();
-                queuedBuffers.pop();
-            }
-        }
-
-        void getNextWriteBuffer()
-        {
-            do
-            {
-                wrBuffer = (wrBuffer + 1) % MAX_BUFFERS;
-            } while (wrBuffer == rdBuffer);
         }
 
         void sample()
         {
             static size_t count = 0;
-            static size_t wrSample = 0;
             static size_t index = 0;
 
             // Smooth the signal directly from the ULA.
@@ -132,30 +101,13 @@ class Buzzer : public sf::SoundStream
                     s += filter[i];
                 if (hasPsg)
                     s += *psg;
-                buffers[wrBuffer][wrSample] = static_cast<sf::Int16>(s);
-                ++wrSample;
-                if (wrSample == MAX_SAMPLES)
-                {
-                    wrSample = 0;
-                    queuedBuffers.push(wrBuffer);
-                    getNextWriteBuffer();
-                }
+
+                channel.push(static_cast<int_fast16_t>(s));
             }
         }
 
-    private:
-        virtual bool onGetData(Chunk& data)
-        {
-            getNextReadBuffer();
-            data.sampleCount = MAX_SAMPLES;
-            data.samples = &(buffers[rdBuffer])[0];
-            return true;
-        }
-
-        virtual void onSeek(sf::Time offset) 
-        {
-            millis = offset.asMilliseconds();
-        }
+        void play() { channel.play(); }
+        void stop() { channel.stop(); }
 };
 
 // vim: et:sw=4:ts=4
