@@ -272,9 +272,9 @@ class PSG
                     channelA = (r[7] & 0x01) ? 1 : waveA;
                     channelB = (r[7] & 0x02) ? 1 : waveB;
                     channelC = (r[7] & 0x04) ? 1 : waveC;
-                    if ((r[7] & 0x08) == 0) channelA ^= noise;
-                    if ((r[7] & 0x10) == 0) channelB ^= noise;
-                    if ((r[7] & 0x20) == 0) channelC ^= noise;
+                    if ((r[7] & 0x08) == 0) channelA += noise;
+                    if ((r[7] & 0x10) == 0) channelB += noise;
+                    if ((r[7] & 0x20) == 0) channelC += noise;
                 }
                 sound = channelA * out[volumeA] + channelB * out[volumeB]
                     + channelC * out[volumeC];
