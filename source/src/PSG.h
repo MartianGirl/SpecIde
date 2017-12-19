@@ -55,11 +55,12 @@ class PSG
             wr(false),
             channelA(0), channelB(0), channelC(0),
             noise(0),
-            volumeA(0x0F), volumeB(0x0F), volumeC(0x0F),
+            volumeA(0), volumeB(0), volumeC(0),
             waveA(0), waveB(0), waveC(0),
             sound(0),
             out{0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
                 0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF},
+            envIncrement(1), envStart(0), envLevel(0), envStep(0),
             counterA(0), counterB(0), counterC(0), counterN(0), counterE(0),
             periodA(1), periodB(1), periodC(1), periodN(1), periodE(1),
             masterCounter(0),
@@ -324,7 +325,7 @@ class PSG
             else        // Linear (louder)
             {
                 for (size_t i = 0; i < 16; ++i)
-                    out[i] = 0x111 * i;
+                    out[i] = static_cast<int>(0x111 * i);
             }
         }
 
