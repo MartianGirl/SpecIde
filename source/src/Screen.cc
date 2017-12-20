@@ -61,7 +61,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
     pixels.assign(vectorSize, 0x000000FF);
 #endif
 
-    channel.open(4, SAMPLE_RATE);
+    channel.open(8, SAMPLE_RATE);
     buzzer.init(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
     channel.play();
 }
