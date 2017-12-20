@@ -86,16 +86,22 @@ int main(int argc, char* argv[])
             screen.buzzer.tapeSound = true;
 
         if (*it == "--nosound")
+        {
             screen.buzzer.playSound = false;
+            screen.spectrum.psg.playSound = false;
+        }
 
         if (*it == "--sound")
+        {
             screen.buzzer.playSound = true;
+            screen.spectrum.psg.playSound = true;
+        }
 
         if (*it == "--psg")
-            screen.buzzer.hasPsg = true;
+            screen.spectrum.psg.playSound = true;
 
         if (*it == "--nopsg")
-            screen.buzzer.hasPsg = false;
+            screen.spectrum.psg.playSound = false;
 
         if (*it == "--psglinear")
             screen.spectrum.psg.setVolumeLevels(false);

@@ -13,58 +13,46 @@
 #include <queue>
 #include <vector>
 
-#include "SoundChannel.h"
+#include "SoundDefs.h"
 
-constexpr size_t FILTER_SIZE = 352;
-
-constexpr size_t ULA_CLOCK_48 = 7000000;
-constexpr size_t ULA_CLOCK_128 = 7093800;
-
-constexpr int SOUND_VOLUME = 0x10;
-constexpr int SAVE_VOLUME = 0x0C;
-constexpr int LOAD_VOLUME = 0x04;
+constexpr int SOUND_VOLUME = 0x2E;
+constexpr int SAVE_VOLUME = 0x17;
+constexpr int LOAD_VOLUME = 0x0B;
 
 class Buzzer
 {
     public:
-        SoundChannel channel;
-
         int filter[FILTER_SIZE];
 
         uint_fast8_t *source;
         uint_fast8_t *tapeIn;
-        int *psg;
 
         size_t skip;
+        size_t rate;
+
+        int signal;
 
         bool playSound;
         bool tapeSound;
-        bool hasPsg;
 
         Buzzer() :
             filter{0},
-            playSound(true), tapeSound(true), hasPsg(false) {}
+            playSound(true), tapeSound(true) {}
 
-        bool open(uint_fast8_t* src, uint_fast8_t* ear, size_t sampleRate)
+        void init(uint_fast8_t* src, uint_fast8_t* ear, size_t sampleRate)
         {
             source = src;
             tapeIn = ear;
-            skip = ULA_CLOCK_48 / sampleRate;
-            return channel.open(sampleRate);
-        }
-
-        void setPsg(int* sound)
-        {
-            psg = sound;
+            rate = sampleRate;
+            skip = ULA_CLOCK_48 / rate;
         }
 
         void set128K(bool select128)
         {
-            skip = (select128 ? ULA_CLOCK_128 : ULA_CLOCK_48) / channel.sampleRate;
-            hasPsg = select128;
+            skip = (select128 ? ULA_CLOCK_128 : ULA_CLOCK_48) / rate;
         }
 
-        void sample()
+        bool sample()
         {
             static size_t count = 0;
             static size_t index = 0;
@@ -96,18 +84,15 @@ class Buzzer
             if (++count == skip)
             {
                 count = 0;
-                int s = 0;
+                signal = 0;
                 for (size_t i = 0; i < FILTER_SIZE; ++i)
-                    s += filter[i];
-                if (hasPsg)
-                    s += *psg;
+                    signal += filter[i];
 
-                channel.push(static_cast<int_fast16_t>(s));
+                return true;
             }
-        }
 
-        void play() { channel.play(); }
-        void stop() { channel.stop(); }
+            return false;
+        }
 };
 
 // vim: et:sw=4:ts=4

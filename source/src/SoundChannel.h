@@ -28,19 +28,33 @@ class SoundChannel : public sf::SoundStream
 
         size_t millis;  // Not really used.
         size_t sampleRate;
+        size_t channels;
 
         SoundChannel() :
-            buffers(MAX_BUFFERS, (std::vector<sf::Int16>(MAX_SAMPLES, 0))),
+            buffers(MAX_BUFFERS, (std::vector<sf::Int16>())),
             rdBuffer(0), wrBuffer(1) {}
 
-        bool open(size_t rate)
+        bool open(size_t chan, size_t rate)
         {
             sampleRate = rate;
-            initialize(1, static_cast<sf::Uint32>(sampleRate));
+            channels = chan;
+
+            // Reserve buffer space.
+            for (std::vector<std::vector<sf::Int16>>::iterator it = buffers.begin();
+                    it != buffers.end();
+                    ++it)
+            {
+                it->assign(channels * MAX_SAMPLES, 0);
+            }
+
+            initialize(channels, static_cast<sf::Uint32>(sampleRate));
+
             setAttenuation(0);
             setVolume(100);
             queuedBuffers.push(126);
             queuedBuffers.push(127);
+            cout << "Initialized " << channels << " channels ";
+            cout << "at " << sampleRate << " Hz." << endl;
             return true;
         }
 
@@ -61,11 +75,13 @@ class SoundChannel : public sf::SoundStream
             } while (wrBuffer == rdBuffer);
         }
 
-        void push(int_fast16_t sample)
+        void push(int* samples)
         {
             static size_t wrSample = 0;
 
-            buffers[wrBuffer][wrSample] = static_cast<sf::Int16>(sample);
+            for (size_t i = 0; i < channels; ++i)
+                buffers[wrBuffer][(channels * wrSample) + i] =
+                    static_cast<sf::Int16>(samples[i]);
 
             if (++wrSample == MAX_SAMPLES)
             {
@@ -79,7 +95,7 @@ class SoundChannel : public sf::SoundStream
         virtual bool onGetData(Chunk& data)
         {
             getNextReadBuffer();
-            data.sampleCount = MAX_SAMPLES;
+            data.sampleCount = MAX_SAMPLES * channels;
             data.samples = &(buffers[rdBuffer])[0];
             return true;
         }

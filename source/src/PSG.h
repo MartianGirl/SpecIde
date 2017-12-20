@@ -12,6 +12,8 @@
 #include <iostream>
 #include <random>
 
+#include "SoundDefs.h"
+
 using namespace std;
 
 class PSG
@@ -30,7 +32,8 @@ class PSG
         int noise;
         int volumeA, volumeB, volumeC;
         int waveA, waveB, waveC;
-        int sound;
+
+        int signal;
 
         int out[16];
 
@@ -44,6 +47,8 @@ class PSG
 
         size_t masterCounter;
 
+        bool playSound;
+
         random_device rd;
         mt19937 gen;
         uniform_int_distribution<> uniform;
@@ -56,15 +61,19 @@ class PSG
             noise(0),
             volumeA(0), volumeB(0), volumeC(0),
             waveA(1), waveB(1), waveC(1),
-            sound(0),
+            signal(0),
             out{0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
                 0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF},
             envIncrement(1), envStart(0), envLevel(0), envStep(0),
             counterA(0), counterB(0), counterC(0), counterN(0), counterE(0),
             periodA(1), periodB(1), periodC(1), periodN(1), periodE(1),
             masterCounter(0),
-            gen(rd()), uniform(0, 1) {}
-
+            playSound(true),
+            gen(rd()), uniform(0, 1)
+            {
+                for (size_t i = 0; i < 16; ++i)
+                    out[i] *= 8;
+            }
 
         void clock()
         {
@@ -268,16 +277,30 @@ class PSG
                     {
                         volumeC = envLevel;
                     }
-
-                    channelA = (r[7] & 0x01) ? 1 : waveA;
-                    channelB = (r[7] & 0x02) ? 1 : waveB;
-                    channelC = (r[7] & 0x04) ? 1 : waveC;
-                    if ((r[7] & 0x08) == 0) channelA += noise;
-                    if ((r[7] & 0x10) == 0) channelB += noise;
-                    if ((r[7] & 0x20) == 0) channelC += noise;
                 }
-                sound = channelA * out[volumeA] + channelB * out[volumeB]
-                    + channelC * out[volumeC];
+
+            }
+        }
+
+        void sample()
+        {
+            // Update PSG channels.
+            if (playSound)
+            {
+                channelA = (r[7] & 0x01) ? 1 : waveA;
+                channelB = (r[7] & 0x02) ? 1 : waveB;
+                channelC = (r[7] & 0x04) ? 1 : waveC;
+                if ((r[7] & 0x08) == 0) channelA += noise;
+                if ((r[7] & 0x10) == 0) channelB += noise;
+                if ((r[7] & 0x20) == 0) channelC += noise;
+                channelA *= out[volumeA];
+                channelB *= out[volumeB];
+                channelC *= out[volumeC];
+                signal = channelA + channelB + channelC;
+            }
+            else
+            {
+                signal = 0;
             }
         }
 
@@ -315,12 +338,12 @@ class PSG
                     0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF};
 
                 for (size_t i = 0; i < 16; ++i)
-                    out[i] = arr[i];
+                    out[i] = 8 * arr[i];
             }
             else        // Linear (louder)
             {
                 for (size_t i = 0; i < 16; ++i)
-                    out[i] = static_cast<int>(0x111 * i);
+                    out[i] = 8 * static_cast<int>(0x111 * i);
             }
         }
 

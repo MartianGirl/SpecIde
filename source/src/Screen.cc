@@ -61,16 +61,28 @@ Screen::Screen(size_t scale, bool fullscreen) :
     pixels.assign(vectorSize, 0x000000FF);
 #endif
 
-    buzzer.open(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
-    buzzer.setPsg(&spectrum.psg.sound);
-    buzzer.play();
+    channel.open(4, SAMPLE_RATE);
+    buzzer.init(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn, SAMPLE_RATE);
+    channel.play();
 }
 
 void Screen::clock()
 {
     spectrum.clock();
     spectrum.ula.tapeIn = tape.advance();
-    buzzer.sample();
+
+    // Generate sound
+    if (buzzer.sample())
+    {
+        spectrum.psg.sample();
+
+        samples[0] = samples[7] = buzzer.signal;
+        samples[1] = samples[6] = spectrum.psg.channelA;
+        samples[2] = samples[5] = spectrum.psg.channelB;
+        samples[3] = samples[4] = spectrum.psg.channelC;
+
+        channel.push(samples);
+    }
 }
 
 bool Screen::update()
@@ -173,7 +185,7 @@ void Screen::pollEvents()
         switch (event.type)
         {
             case Event::Closed:
-                buzzer.stop();
+                channel.stop();
                 done = true;
                 break;
 
@@ -205,6 +217,7 @@ void Screen::pollEvents()
                         else
                         {
                             buzzer.playSound = !buzzer.playSound;
+                            spectrum.psg.playSound = !spectrum.psg.playSound;
                         }
                         break;
                     case Keyboard::F5:

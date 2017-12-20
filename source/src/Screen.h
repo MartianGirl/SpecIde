@@ -19,6 +19,8 @@
 #include "Buzzer.h"
 #include "Tape.h"
 
+#include "SoundChannel.h"
+
 #include <cstddef>
 #include <cstdint>
 #include <cassert>
@@ -33,6 +35,9 @@ class Screen : public GraphicWindow
         Spectrum spectrum;
         Buzzer buzzer;
         Tape tape;
+        SoundChannel channel;
+
+        int samples[8];
 
         bool done;
         bool fullscreen;
