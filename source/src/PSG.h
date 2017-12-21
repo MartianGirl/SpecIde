@@ -69,12 +69,7 @@ class PSG
             periodA(1), periodB(1), periodC(1), periodN(1), periodE(1),
             masterCounter(0),
             playSound(true),
-            gen(rd()), uniform(0, 1)
-            {
-                for (size_t i = 0; i < 16; ++i)
-                    out[i] *= 8;
-            }
-
+            gen(rd()), uniform(0, 1) {} 
         void clock()
         {
             ++masterCounter;
@@ -338,12 +333,12 @@ class PSG
                     0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF};
 
                 for (size_t i = 0; i < 16; ++i)
-                    out[i] = 8 * arr[i];
+                    out[i] = arr[i];
             }
             else        // Linear (louder)
             {
                 for (size_t i = 0; i < 16; ++i)
-                    out[i] = 8 * static_cast<int>(0x111 * i);
+                    out[i] = static_cast<int>(0x111 * i);
             }
         }
 
