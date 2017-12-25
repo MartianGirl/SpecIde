@@ -15,20 +15,17 @@
 
 #include "SoundDefs.h"
 
-constexpr int SOUND_VOLUME = 0x2E;
-constexpr int SAVE_VOLUME = 0x17;
-constexpr int LOAD_VOLUME = 0x0B;
+constexpr int SOUND_VOLUME = 0x3FFF;
+constexpr int SAVE_VOLUME = 0x1FFF;
+constexpr int LOAD_VOLUME = 0x0FFF;
 
 class Buzzer
 {
     public:
-        int filter[FILTER_SIZE];
+        int filter[FILTER_BZZ_SIZE];
 
         uint_fast8_t *source;
         uint_fast8_t *tapeIn;
-
-        size_t skip;
-        size_t rate;
 
         int signal;
 
@@ -39,22 +36,14 @@ class Buzzer
             filter{0},
             playSound(true), tapeSound(true) {}
 
-        void init(uint_fast8_t* src, uint_fast8_t* ear, size_t sampleRate)
+        void init(uint_fast8_t* src, uint_fast8_t* ear)
         {
             source = src;
             tapeIn = ear;
-            rate = sampleRate;
-            skip = ULA_CLOCK_48 / rate;
         }
 
-        void set128K(bool select128)
+        void update()
         {
-            skip = (select128 ? ULA_CLOCK_128 : ULA_CLOCK_48) / rate;
-        }
-
-        bool sample()
-        {
-            static size_t count = 0;
             static size_t index = 0;
 
             // Smooth the signal directly from the ULA.
@@ -79,19 +68,15 @@ class Buzzer
             {
                 filter[index] = 0x00;
             }
-            index = (index + 1) % FILTER_SIZE;
+            index = (index + 1) % FILTER_BZZ_SIZE;
+        }
 
-            if (++count == skip)
-            {
-                count = 0;
+        void sample()
+        {
                 signal = 0;
-                for (size_t i = 0; i < FILTER_SIZE; ++i)
+                for (size_t i = 0; i < FILTER_BZZ_SIZE; ++i)
                     signal += filter[i];
-
-                return true;
-            }
-
-            return false;
+                signal /= FILTER_BZZ_SIZE;
         }
 };
 

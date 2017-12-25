@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
         if (*it == "--48")
         {
-            screen.buzzer.set128K(false);
+            screen.set128K(false);
             screen.spectrum.loadRoms(0);
             useDefaultModel = false;
 
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 
         if (*it == "--128")
         {
-            screen.buzzer.set128K(true);
+            screen.set128K(true);
             screen.spectrum.loadRoms(1);
             screen.spectrum.set128K();
             useDefaultModel = false;
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 
         if (*it == "--plus2")
         {
-            screen.buzzer.set128K(true);
+            screen.set128K(true);
             screen.spectrum.loadRoms(2);
             screen.spectrum.setPlus2();
             useDefaultModel = false;
@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
 
     if (useDefaultModel)
     {
-        screen.buzzer.set128K(false);
+        screen.set128K(false);
         screen.spectrum.loadRoms(0);
     }
 

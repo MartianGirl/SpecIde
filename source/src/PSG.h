@@ -28,12 +28,11 @@ class PSG
 
         bool wr;
 
+        int sound;
         int channelA, channelB, channelC;
         int noise;
         int volumeA, volumeB, volumeC;
         int waveA, waveB, waveC;
-
-        int signal;
 
         int out[16];
 
@@ -57,229 +56,225 @@ class PSG
             r{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
               0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
             wr(false),
+            sound(0),
             channelA(0), channelB(0), channelC(0),
             noise(0),
             volumeA(0), volumeB(0), volumeC(0),
             waveA(1), waveB(1), waveC(1),
-            signal(0),
-            out{0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
-                0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF},
+            out{0x0000, 0x0024, 0x0092, 0x0148, 0x0246, 0x038E, 0x051E, 0x06F8,
+                0x091A, 0x0B84, 0x0E38, 0x1134, 0x147A, 0x1808, 0x1BDE, 0x1FFE},
             envIncrement(1), envStart(0), envLevel(0), envStep(0),
             counterA(0), counterB(0), counterC(0), counterN(0), counterE(0),
             periodA(1), periodB(1), periodC(1), periodN(1), periodE(1),
             masterCounter(0),
             playSound(true),
             gen(rd()), uniform(0, 1) {} 
+
         void clock()
         {
             ++masterCounter;
 
-            if ((masterCounter & 0x03) == 0x00)
+            a = latch_a;
+            latch_do = r[a];
+
+            if (wr)
             {
-                a = latch_a;
-                latch_do = r[a];
+                // Write registers.
+                r[a] = latch_di;
+                wr = false;
 
-                if (wr)
+                // Update tone period for channel A.
+                if (a == 0 || a == 1)
                 {
-                    // Write registers.
-                    r[a] = latch_di;
-                    wr = false;
+                    periodA = (((r[1] & 0x0F) << 8) + r[0]);
+                    if (periodA == 0) periodA = 1;
+                    counterA = 0;
+                    restartEnvelope();
+                }
 
-                    // Update tone period for channel A.
-                    if (a == 0 || a == 1)
+                // Update tone period for channel B.
+                if (a == 2 || a == 3)
+                {
+                    periodB = (((r[3] & 0x0F) << 8) + r[2]);
+                    if (periodB == 0) periodB = 1;
+                    counterB = 0;
+                    restartEnvelope();
+                }
+
+                // Update tone period for channel C.
+                if (a == 4 || a == 5)
+                {
+                    periodC = (((r[5] & 0x0F) << 8) + r[4]);
+                    if (periodC == 0) periodC = 1;
+                    counterC = 0;
+                    restartEnvelope();
+                }
+
+                // Update noise period.
+                if (a == 6)
+                {
+                    periodN = (r[6] & 0x1F);
+                    if (periodN == 0) periodN = 1;
+                    counterN = 0;
+                    restartEnvelope();
+                }
+
+                // Update period for Envelope generator.
+                if (a >= 11 || a <= 13)
+                {
+                    periodE = ((r[12] << 8) + r[11]);
+                    if (periodE == 0) periodE = 1;
+
+                    // Start values depend on the attack bit.
+                    // Attack = 0: Start at 1111, count down.
+                    // Attack = 1: Start at 0000, count up.
+                    envStart = ((r[13] & 0x04) == 0x00) ? 0x0F : 0x00;
+                    envIncrement = ((r[13] & 0x04) == 0x00) ? -1 : 1;
+                    restartEnvelope();
+                }
+
+                // Update volume for channel A.
+                if (a == 8)
+                {
+                    if ((r[8] & 0x10) == 0x00)
                     {
-                        periodA = (((r[1] & 0x0F) << 8) + r[0]);
-                        if (periodA == 0) periodA = 1;
-                        counterA = 0;
+                        volumeA = r[8] & 0x0F;
+                    }
+                    else
+                    {
+                        volumeA = envStart;
                         restartEnvelope();
-                    }
-
-                    // Update tone period for channel B.
-                    if (a == 2 || a == 3)
-                    {
-                        periodB = (((r[3] & 0x0F) << 8) + r[2]);
-                        if (periodB == 0) periodB = 1;
-                        counterB = 0;
-                        restartEnvelope();
-                    }
-
-                    // Update tone period for channel C.
-                    if (a == 4 || a == 5)
-                    {
-                        periodC = (((r[5] & 0x0F) << 8) + r[4]);
-                        if (periodC == 0) periodC = 1;
-                        counterC = 0;
-                        restartEnvelope();
-                    }
-
-                    // Update noise period.
-                    if (a == 6)
-                    {
-                        periodN = (r[6] & 0x1F);
-                        if (periodN == 0) periodN = 1;
-                        counterN = 0;
-                        restartEnvelope();
-                    }
-
-                    // Update period for Envelope generator.
-                    if (a >= 11 || a <= 13)
-                    {
-                        periodE = ((r[12] << 8) + r[11]);
-                        if (periodE == 0) periodE = 1;
-
-                        // Start values depend on the attack bit.
-                        // Attack = 0: Start at 1111, count down.
-                        // Attack = 1: Start at 0000, count up.
-                        envStart = ((r[13] & 0x04) == 0x00) ? 0x0F : 0x00;
-                        envIncrement = ((r[13] & 0x04) == 0x00) ? -1 : 1;
-                        restartEnvelope();
-                    }
-
-                    // Update volume for channel A.
-                    if (a == 8)
-                    {
-                        if ((r[8] & 0x10) == 0x00)
-                        {
-                            volumeA = r[8] & 0x0F;
-                        }
-                        else
-                        {
-                            volumeA = envStart;
-                            restartEnvelope();
-                        }
-                    }
-
-                    // Update volume for channel B.
-                    if (a == 9)
-                    {
-                        if ((r[9] & 0x10) == 0x00)
-                        {
-                            volumeB = r[9] & 0x0F;
-                        }
-                        else
-                        {
-                            volumeB = envStart;
-                            restartEnvelope();
-                        }
-                    }
-
-                    // Update volume for channel C.
-                    if (a == 10)
-                    {
-                        if ((r[10] & 0x10) == 0x00)
-                        {
-                            volumeC = r[10] & 0x0F;
-                        }
-                        else
-                        {
-                            volumeC = envStart;
-                            restartEnvelope();
-                        }
                     }
                 }
 
-                // Because period means a complete wave cycle (high/low)
-                if ((masterCounter & 0x1F) == 0x00)
+                // Update volume for channel B.
+                if (a == 9)
                 {
-                    if (++counterA == periodA)
+                    if ((r[9] & 0x10) == 0x00)
                     {
-                        waveA = 1 - waveA;
-                        counterA = 0;
+                        volumeB = r[9] & 0x0F;
                     }
-
-                    if (++counterB == periodB)
+                    else
                     {
-                        waveB = 1 - waveB;
-                        counterB = 0;
-                    }
-
-                    if (++counterC == periodC)
-                    {
-                        waveC = 1 - waveC;
-                        counterC = 0;
+                        volumeB = envStart;
+                        restartEnvelope();
                     }
                 }
 
-                if ((masterCounter & 0x3F) == 0x00)
+                // Update volume for channel C.
+                if (a == 10)
                 {
-                    if (++counterN == periodN)
+                    if ((r[10] & 0x10) == 0x00)
                     {
-                        noise = uniform(gen);
-                        counterN = 0;
+                        volumeC = r[10] & 0x0F;
                     }
-
-                    if (envHold == false && ++counterE == periodE)
+                    else
                     {
-                        counterE = 0;
-                        if (envStep == 0x0F)    // We've finished a cycle.
+                        volumeC = envStart;
+                        restartEnvelope();
+                    }
+                }
+            }
+
+            // Because period means a complete wave cycle (high/low)
+            if ((masterCounter & 0x07) == 0x00)
+            {
+                if (++counterA == periodA)
+                {
+                    waveA = 1 - waveA;
+                    counterA = 0;
+                }
+
+                if (++counterB == periodB)
+                {
+                    waveB = 1 - waveB;
+                    counterB = 0;
+                }
+
+                if (++counterC == periodC)
+                {
+                    waveC = 1 - waveC;
+                    counterC = 0;
+                }
+            }
+
+            if ((masterCounter & 0x0F) == 0x00)
+            {
+                if (++counterN == periodN)
+                {
+                    noise = uniform(gen);
+                    counterN = 0;
+                }
+
+                if (envHold == false && ++counterE == periodE)
+                {
+                    counterE = 0;
+                    if (envStep == 0x0F)    // We've finished a cycle.
+                    {
+                        // Continue = 1: Cycle pattern controlled by Hold.
+                        if ((r[13] & 0x08) == 0x08)
                         {
-                            // Continue = 1: Cycle pattern controlled by Hold.
-                            if ((r[13] & 0x08) == 0x08)
+                            // Hold = 1: Keep last level.
+                            // Hold = 0: Repeat the cycle.
+                            if ((r[13] & 0x01) == 0x01)
                             {
-                                // Hold = 1: Keep last level.
-                                // Hold = 0: Repeat the cycle.
-                                if ((r[13] & 0x01) == 0x01)
+                                envHold = true;
+
+                                // Alternate and hold: Reset level to
+                                // the starting value, hold.
+                                if ((r[13] & 0x02) == 0x02)
                                 {
-                                    envHold = true;
-
-                                    // Alternate and hold: Reset level to
-                                    // the starting value, hold.
-                                    if ((r[13] & 0x02) == 0x02)
-                                    {
-                                        envLevel = envStart;
-                                    }
+                                    envLevel = envStart;
                                 }
-                                else
-                                {
-                                    // Alternate = 1: Invert direction.
-                                    if ((r[13] & 0x02) == 0x02)
-                                    {
-                                        envCycle = 0x0F - envCycle;
-                                        envSlope = -envSlope;
-                                    }
-
-                                    envStep = 0x00;
-                                    envLevel = envCycle;
-                                }
-
                             }
                             else
                             {
-                                // Continue = 0: Just one cycle, return to 0000.
-                                //               Hold.
-                                envLevel = 0x00;
-                                envHold = true;
+                                // Alternate = 1: Invert direction.
+                                if ((r[13] & 0x02) == 0x02)
+                                {
+                                    envCycle = 0x0F - envCycle;
+                                    envSlope = -envSlope;
+                                }
+
+                                envStep = 0x00;
+                                envLevel = envCycle;
                             }
+
                         }
-                        else    // We are in the middle of a cycle.
+                        else
                         {
-                            ++envStep;
-                            envLevel += envSlope;
+                            // Continue = 0: Just one cycle, return to 0000.
+                            //               Hold.
+                            envLevel = 0x00;
+                            envHold = true;
                         }
                     }
-
-                    if ((r[8] & 0x10) == 0x10)
+                    else    // We are in the middle of a cycle.
                     {
-                        volumeA = envLevel;
-                    }
-
-                    if ((r[9] & 0x10) == 0x10)
-                    {
-                        volumeB = envLevel;
-                    }
-
-                    if ((r[10] & 0x10) == 0x10)
-                    {
-                        volumeC = envLevel;
+                        ++envStep;
+                        envLevel += envSlope;
                     }
                 }
 
+                if ((r[8] & 0x10) == 0x10)
+                {
+                    volumeA = envLevel;
+                }
+
+                if ((r[9] & 0x10) == 0x10)
+                {
+                    volumeB = envLevel;
+                }
+
+                if ((r[10] & 0x10) == 0x10)
+                {
+                    volumeC = envLevel;
+                }
             }
         }
 
         void sample()
         {
-            // Update PSG channels.
             if (playSound)
             {
                 channelA = (r[7] & 0x01) ? 1 : waveA;
@@ -291,11 +286,10 @@ class PSG
                 channelA *= out[volumeA];
                 channelB *= out[volumeB];
                 channelC *= out[volumeC];
-                signal = channelA + channelB + channelC;
             }
             else
             {
-                signal = 0;
+                channelA = channelB = channelC = 0;
             }
         }
 
@@ -329,8 +323,8 @@ class PSG
             if (sqr)    // Square root (quieter)
             {
                 int arr[16] = {
-                    0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
-                    0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF};
+                    0x0000, 0x0024, 0x0092, 0x0148, 0x0246, 0x038E, 0x051E, 0x06F8,
+                    0x091A, 0x0B84, 0x0E38, 0x1134, 0x147A, 0x1808, 0x1BDE, 0x1FFE};
 
                 for (size_t i = 0; i < 16; ++i)
                     out[i] = arr[i];
@@ -338,7 +332,7 @@ class PSG
             else        // Linear (louder)
             {
                 for (size_t i = 0; i < 16; ++i)
-                    out[i] = static_cast<int>(0x111 * i);
+                    out[i] = static_cast<int>(0x222 * i);
             }
         }
 
