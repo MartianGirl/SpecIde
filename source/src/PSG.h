@@ -28,8 +28,10 @@ class PSG
 
         bool wr;
 
-        int sound;
-        int filter[FILTER_PSG_SIZE];
+        int signalA, signalB, signalC;
+        int filterA[FILTER_PSG_SIZE];
+        int filterB[FILTER_PSG_SIZE];
+        int filterC[FILTER_PSG_SIZE];
         int channelA, channelB, channelC;
         int noise;
         int volumeA, volumeB, volumeC;
@@ -55,15 +57,15 @@ class PSG
 
         PSG() :
             r{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
             wr(false),
-            sound(0),
+            signalA(0), signalB(0), signalC(0),
             channelA(0), channelB(0), channelC(0),
             noise(0),
             volumeA(0), volumeB(0), volumeC(0),
             waveA(1), waveB(1), waveC(1),
-            out{0x0000, 0x0024, 0x0092, 0x0148, 0x0246, 0x038E, 0x051E, 0x06F8,
-                0x091A, 0x0B84, 0x0E38, 0x1134, 0x147A, 0x1808, 0x1BDE, 0x1FFE},
+            out{0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
+                0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF},
             envIncrement(1), envStart(0), envLevel(0), envStep(0),
             counterA(0), counterB(0), counterC(0), counterN(0), counterE(0),
             periodA(1), periodB(1), periodC(1), periodN(1), periodE(1),
@@ -271,31 +273,39 @@ class PSG
                 }
             }
 
-            channelA = channelB = channelC = 0;
+            signalA = signalB = signalC = 0;
 
             if (playSound)
             {
-                if ((r[7] & 0x01) == 0) channelA += waveA;
-                if ((r[7] & 0x02) == 0) channelB += waveB;
-                if ((r[7] & 0x04) == 0) channelC += waveC;
-                if ((r[7] & 0x08) == 0) channelA += noise;
-                if ((r[7] & 0x10) == 0) channelB += noise;
-                if ((r[7] & 0x20) == 0) channelC += noise;
-                channelA *= out[volumeA];
-                channelB *= out[volumeB];
-                channelC *= out[volumeC];
+                if ((r[7] & 0x01) == 0) signalA += waveA;
+                if ((r[7] & 0x02) == 0) signalB += waveB;
+                if ((r[7] & 0x04) == 0) signalC += waveC;
+                if ((r[7] & 0x08) == 0) signalA += noise;
+                if ((r[7] & 0x10) == 0) signalB += noise;
+                if ((r[7] & 0x20) == 0) signalC += noise;
+                signalA *= out[volumeA];
+                signalB *= out[volumeB];
+                signalC *= out[volumeC];
             }
 
-            filter[index] = channelA + channelB + channelC;
+            filterA[index] = signalA;
+            filterB[index] = signalB;
+            filterC[index] = signalC;
             index = (index + 1) % FILTER_PSG_SIZE;
         }
 
         void sample()
         {
-            sound = 0;
+            channelA = channelB = channelC = 0;
             for (size_t i = 0; i < FILTER_PSG_SIZE; ++i)
-                sound += filter[i];
-            sound /= FILTER_PSG_SIZE;
+            {
+                channelA += filterA[i];
+                channelB += filterB[i];
+                channelC += filterC[i];
+            }
+            channelA /= FILTER_PSG_SIZE;
+            channelB /= FILTER_PSG_SIZE;
+            channelC /= FILTER_PSG_SIZE;
         }
 
 
@@ -329,8 +339,8 @@ class PSG
             if (sqr)    // Square root (quieter)
             {
                 int arr[16] = {
-                    0x0000, 0x0024, 0x0092, 0x0148, 0x0246, 0x038E, 0x051E, 0x06F8,
-                    0x091A, 0x0B84, 0x0E38, 0x1134, 0x147A, 0x1808, 0x1BDE, 0x1FFE};
+                    0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
+                    0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF};
 
                 for (size_t i = 0; i < 16; ++i)
                     out[i] = arr[i];

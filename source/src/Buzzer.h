@@ -15,9 +15,9 @@
 
 #include "SoundDefs.h"
 
-constexpr int SOUND_VOLUME = 0x3FFF;
-constexpr int SAVE_VOLUME = 0x1FFF;
-constexpr int LOAD_VOLUME = 0x0FFF;
+constexpr int SOUND_VOLUME = 0x1FFF;
+constexpr int SAVE_VOLUME = 0x0FFF;
+constexpr int LOAD_VOLUME = 0x03FF;
 
 class Buzzer
 {
