@@ -29,6 +29,7 @@ class PSG
         bool wr;
 
         int sound;
+        int filter[FILTER_PSG_SIZE];
         int channelA, channelB, channelC;
         int noise;
         int volumeA, volumeB, volumeC;
@@ -72,6 +73,8 @@ class PSG
 
         void clock()
         {
+            static size_t index = 0;
+
             ++masterCounter;
 
             a = latch_a;
@@ -88,7 +91,6 @@ class PSG
                 {
                     periodA = (((r[1] & 0x0F) << 8) + r[0]);
                     if (periodA == 0) periodA = 1;
-                    counterA = 0;
                     restartEnvelope();
                 }
 
@@ -97,7 +99,6 @@ class PSG
                 {
                     periodB = (((r[3] & 0x0F) << 8) + r[2]);
                     if (periodB == 0) periodB = 1;
-                    counterB = 0;
                     restartEnvelope();
                 }
 
@@ -106,7 +107,6 @@ class PSG
                 {
                     periodC = (((r[5] & 0x0F) << 8) + r[4]);
                     if (periodC == 0) periodC = 1;
-                    counterC = 0;
                     restartEnvelope();
                 }
 
@@ -115,7 +115,6 @@ class PSG
                 {
                     periodN = (r[6] & 0x1F);
                     if (periodN == 0) periodN = 1;
-                    counterN = 0;
                     restartEnvelope();
                 }
 
@@ -179,107 +178,106 @@ class PSG
             // Because period means a complete wave cycle (high/low)
             if ((masterCounter & 0x07) == 0x00)
             {
-                if (++counterA == periodA)
+                if (counterA-- == 0)
                 {
                     waveA = 1 - waveA;
-                    counterA = 0;
+                    counterA = periodA;
                 }
 
-                if (++counterB == periodB)
+                if (counterB-- == 0)
                 {
                     waveB = 1 - waveB;
-                    counterB = 0;
+                    counterB = periodB;
                 }
 
-                if (++counterC == periodC)
+                if (counterC-- == 0)
                 {
                     waveC = 1 - waveC;
-                    counterC = 0;
-                }
-            }
-
-            if ((masterCounter & 0x0F) == 0x00)
-            {
-                if (++counterN == periodN)
-                {
-                    noise = uniform(gen);
-                    counterN = 0;
+                    counterC = periodC;
                 }
 
-                if (envHold == false && ++counterE == periodE)
+                if ((masterCounter & 0x0F) == 0x00)
                 {
-                    counterE = 0;
-                    if (envStep == 0x0F)    // We've finished a cycle.
+                    if (counterN-- == 0)
                     {
-                        // Continue = 1: Cycle pattern controlled by Hold.
-                        if ((r[13] & 0x08) == 0x08)
-                        {
-                            // Hold = 1: Keep last level.
-                            // Hold = 0: Repeat the cycle.
-                            if ((r[13] & 0x01) == 0x01)
-                            {
-                                envHold = true;
+                        noise = uniform(gen);
+                        counterN = periodN;
+                    }
 
-                                // Alternate and hold: Reset level to
-                                // the starting value, hold.
-                                if ((r[13] & 0x02) == 0x02)
+                    if (envHold == false && counterE-- == 0)
+                    {
+                        counterE = periodE;
+                        if (envStep == 0x0F)    // We've finished a cycle.
+                        {
+                            // Continue = 1: Cycle pattern controlled by Hold.
+                            if ((r[13] & 0x08) == 0x08)
+                            {
+                                // Hold = 1: Keep last level.
+                                // Hold = 0: Repeat the cycle.
+                                if ((r[13] & 0x01) == 0x01)
                                 {
-                                    envLevel = envStart;
+                                    envHold = true;
+
+                                    // Alternate and hold: Reset level to
+                                    // the starting value, hold.
+                                    if ((r[13] & 0x02) == 0x02)
+                                    {
+                                        envLevel = envStart;
+                                    }
                                 }
+                                else
+                                {
+                                    // Alternate = 1: Invert direction.
+                                    if ((r[13] & 0x02) == 0x02)
+                                    {
+                                        envCycle = 0x0F - envCycle;
+                                        envSlope = -envSlope;
+                                    }
+
+                                    envStep = 0x00;
+                                    envLevel = envCycle;
+                                }
+
                             }
                             else
                             {
-                                // Alternate = 1: Invert direction.
-                                if ((r[13] & 0x02) == 0x02)
-                                {
-                                    envCycle = 0x0F - envCycle;
-                                    envSlope = -envSlope;
-                                }
-
-                                envStep = 0x00;
-                                envLevel = envCycle;
+                                // Continue = 0: Just one cycle, return to 0000.
+                                //               Hold.
+                                envLevel = 0x00;
+                                envHold = true;
                             }
-
                         }
-                        else
+                        else    // We are in the middle of a cycle.
                         {
-                            // Continue = 0: Just one cycle, return to 0000.
-                            //               Hold.
-                            envLevel = 0x00;
-                            envHold = true;
+                            ++envStep;
+                            envLevel += envSlope;
                         }
                     }
-                    else    // We are in the middle of a cycle.
+
+                    if ((r[8] & 0x10) == 0x10)
                     {
-                        ++envStep;
-                        envLevel += envSlope;
+                        volumeA = envLevel;
                     }
-                }
 
-                if ((r[8] & 0x10) == 0x10)
-                {
-                    volumeA = envLevel;
-                }
+                    if ((r[9] & 0x10) == 0x10)
+                    {
+                        volumeB = envLevel;
+                    }
 
-                if ((r[9] & 0x10) == 0x10)
-                {
-                    volumeB = envLevel;
-                }
-
-                if ((r[10] & 0x10) == 0x10)
-                {
-                    volumeC = envLevel;
+                    if ((r[10] & 0x10) == 0x10)
+                    {
+                        volumeC = envLevel;
+                    }
                 }
             }
-        }
 
-        void sample()
-        {
+            channelA = channelB = channelC = 0;
+
             if (playSound)
             {
-                channelA = (r[7] & 0x01) ? 1 : waveA;
-                channelB = (r[7] & 0x02) ? 1 : waveB;
-                channelC = (r[7] & 0x04) ? 1 : waveC;
+                if ((r[7] & 0x01) == 0) channelA += waveA;
+                if ((r[7] & 0x02) == 0) channelB += waveB;
+                if ((r[7] & 0x04) == 0) channelC += waveC;
                 if ((r[7] & 0x08) == 0) channelA += noise;
                 if ((r[7] & 0x10) == 0) channelB += noise;
                 if ((r[7] & 0x20) == 0) channelC += noise;
@@ -287,11 +285,19 @@ class PSG
                 channelB *= out[volumeB];
                 channelC *= out[volumeC];
             }
-            else
-            {
-                channelA = channelB = channelC = 0;
-            }
+
+            filter[index] = channelA + channelB + channelC;
+            index = (index + 1) % FILTER_PSG_SIZE;
         }
+
+        void sample()
+        {
+            sound = 0;
+            for (size_t i = 0; i < FILTER_PSG_SIZE; ++i)
+                sound += filter[i];
+            sound /= FILTER_PSG_SIZE;
+        }
+
 
         uint_fast8_t read() { return latch_do; }
 
