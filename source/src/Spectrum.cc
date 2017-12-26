@@ -129,6 +129,9 @@ void Spectrum::clock()
     bool wr_ = ((z80.c & SIGNAL_WR_) == SIGNAL_WR_);
     size_t memArea = (z80.a & 0xC000) >> 14;
 
+    static size_t count = 0;
+    ++count;
+
     // First we clock the ULA. This generates video and contention signals.
     // We need to provide the ULA with the Z80 address and control buses.
     ula.z80_a = z80.a;
@@ -158,7 +161,7 @@ void Spectrum::clock()
     ula.clock();
     z80.c = ula.c;
 
-    if (spectrum128K)
+    if (spectrum128K && ((count & 0x03) == 0x00))
     {
         psg.clock();
     }

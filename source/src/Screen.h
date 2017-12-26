@@ -38,6 +38,7 @@ class Screen : public GraphicWindow
         SoundChannel channel;
 
         int samples[8];
+        size_t skip;
 
         bool done;
         bool fullscreen;
@@ -56,6 +57,7 @@ class Screen : public GraphicWindow
         bool update();
         void setFullScreen(bool fs);
         void setSmooth(bool sm);
+        void set128K(bool is128K);
 
         void pollEvents();
         void scanKeys(sf::Event const& event);
