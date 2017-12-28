@@ -273,13 +273,13 @@ class PSG
                 }
             }
 
-            signalA = signalB = signalC = 0;
+            signalA = signalB = signalC = 1;
 
             if (playSound)
             {
-                if ((r[7] & 0x01) == 0) signalA += waveA;
-                if ((r[7] & 0x02) == 0) signalB += waveB;
-                if ((r[7] & 0x04) == 0) signalC += waveC;
+                if ((r[7] & 0x01) == 0) signalA = waveA;
+                if ((r[7] & 0x02) == 0) signalB = waveB;
+                if ((r[7] & 0x04) == 0) signalC = waveC;
                 if ((r[7] & 0x08) == 0) signalA += noise;
                 if ((r[7] & 0x10) == 0) signalB += noise;
                 if ((r[7] & 0x20) == 0) signalC += noise;
