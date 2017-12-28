@@ -62,7 +62,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
     pixels.assign(vectorSize, 0x000000FF);
 #endif
 
-    channel.open(8, SAMPLE_RATE);
+    channel.open(2, SAMPLE_RATE);
     buzzer.init(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn);
     channel.play();
 }
@@ -81,10 +81,8 @@ void Screen::clock()
         count = 0;
         buzzer.sample();
         spectrum.psg.sample();
-        samples[0] = samples[1] = buzzer.signal;
-        samples[2] = samples[3] = spectrum.psg.channelA;
-        samples[4] = samples[5] = spectrum.psg.channelB;
-        samples[6] = samples[7] = spectrum.psg.channelC;
+        samples[0] = samples[1] = buzzer.signal + spectrum.psg.channelA
+            + spectrum.psg.channelB + spectrum.psg.channelC;
 
         channel.push(samples);
     }

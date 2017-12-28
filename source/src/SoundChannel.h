@@ -34,10 +34,12 @@ class SoundChannel : public sf::SoundStream
             buffers(MAX_BUFFERS, (std::vector<sf::Int16>())),
             rdBuffer(0), wrBuffer(1) {}
 
-        bool open(size_t chan, size_t rate)
+        bool open(unsigned int chan, unsigned int rate)
         {
             sampleRate = rate;
             channels = chan;
+
+            initialize(chan, rate);
 
             // Reserve buffer space.
             for (std::vector<std::vector<sf::Int16>>::iterator it = buffers.begin();
@@ -46,8 +48,6 @@ class SoundChannel : public sf::SoundStream
             {
                 it->assign(channels * MAX_SAMPLES, 0);
             }
-
-            initialize(channels, static_cast<sf::Uint32>(sampleRate));
 
             setAttenuation(0);
             setVolume(100);

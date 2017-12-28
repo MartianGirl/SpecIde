@@ -37,7 +37,7 @@ class Screen : public GraphicWindow
         Tape tape;
         SoundChannel channel;
 
-        int samples[8];
+        int samples[2];
         size_t skip;
 
         bool done;
