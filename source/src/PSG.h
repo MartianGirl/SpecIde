@@ -92,7 +92,6 @@ class PSG
                 if (a == 0 || a == 1)
                 {
                     periodA = (((r[1] & 0x0F) << 8) + r[0]);
-                    if (periodA == 0) periodA = 1;
                     restartEnvelope();
                 }
 
@@ -100,7 +99,6 @@ class PSG
                 if (a == 2 || a == 3)
                 {
                     periodB = (((r[3] & 0x0F) << 8) + r[2]);
-                    if (periodB == 0) periodB = 1;
                     restartEnvelope();
                 }
 
@@ -108,7 +106,6 @@ class PSG
                 if (a == 4 || a == 5)
                 {
                     periodC = (((r[5] & 0x0F) << 8) + r[4]);
-                    if (periodC == 0) periodC = 1;
                     restartEnvelope();
                 }
 
@@ -116,7 +113,6 @@ class PSG
                 if (a == 6)
                 {
                     periodN = (r[6] & 0x1F);
-                    if (periodN == 0) periodN = 1;
                     restartEnvelope();
                 }
 
@@ -124,7 +120,6 @@ class PSG
                 if (a >= 11 || a <= 13)
                 {
                     periodE = ((r[12] << 8) + r[11]);
-                    if (periodE == 0) periodE = 1;
 
                     // Start values depend on the attack bit.
                     // Attack = 0: Start at 1111, count down.
@@ -365,8 +360,6 @@ class PSG
 
         void restartEnvelope()
         {
-            counterE = 0;
-            envStep = 0;
             envCycle = envStart;
             envSlope = envIncrement;
             envLevel = envStart;
