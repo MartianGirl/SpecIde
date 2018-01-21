@@ -42,7 +42,6 @@ class PSG
         int envIncrement, envStart, envLevel;
         int envSlope, envCycle;
         size_t envStep;
-        bool envHold;
 
         size_t counterA, counterB, counterC, counterN, counterE;
         size_t periodA, periodB, periodC, periodN, periodE;
@@ -92,35 +91,34 @@ class PSG
                 if (a == 0 || a == 1)
                 {
                     periodA = (((r[1] & 0x0F) << 8) + r[0]);
-                    restartEnvelope();
                 }
 
                 // Update tone period for channel B.
                 if (a == 2 || a == 3)
                 {
                     periodB = (((r[3] & 0x0F) << 8) + r[2]);
-                    restartEnvelope();
                 }
 
                 // Update tone period for channel C.
                 if (a == 4 || a == 5)
                 {
                     periodC = (((r[5] & 0x0F) << 8) + r[4]);
-                    restartEnvelope();
                 }
 
                 // Update noise period.
                 if (a == 6)
                 {
                     periodN = (r[6] & 0x1F);
-                    restartEnvelope();
                 }
 
                 // Update period for Envelope generator.
-                if (a >= 11 || a <= 13)
+                if (a == 11 || a == 12)
                 {
                     periodE = ((r[12] << 8) + r[11]);
+                }
 
+                if (a == 13)
+                {
                     // Start values depend on the attack bit.
                     // Attack = 0: Start at 1111, count down.
                     // Attack = 1: Start at 0000, count up.
@@ -136,11 +134,6 @@ class PSG
                     {
                         volumeA = r[8] & 0x0F;
                     }
-                    else
-                    {
-                        volumeA = envStart;
-                        restartEnvelope();
-                    }
                 }
 
                 // Update volume for channel B.
@@ -150,11 +143,6 @@ class PSG
                     {
                         volumeB = r[9] & 0x0F;
                     }
-                    else
-                    {
-                        volumeB = envStart;
-                        restartEnvelope();
-                    }
                 }
 
                 // Update volume for channel C.
@@ -163,11 +151,6 @@ class PSG
                     if ((r[10] & 0x10) == 0x00)
                     {
                         volumeC = r[10] & 0x0F;
-                    }
-                    else
-                    {
-                        volumeC = envStart;
-                        restartEnvelope();
                     }
                 }
             }
@@ -201,9 +184,10 @@ class PSG
                         counterN = periodN;
                     }
 
-                    if (envHold == false && counterE-- == 0)
+                    if (counterE-- == 0)
                     {
                         counterE = periodE;
+
                         if (envStep == 0x0F)    // We've finished a cycle.
                         {
                             // Continue = 1: Cycle pattern controlled by Hold.
@@ -213,8 +197,6 @@ class PSG
                                 // Hold = 0: Repeat the cycle.
                                 if ((r[13] & 0x01) == 0x01)
                                 {
-                                    envHold = true;
-
                                     // Alternate and hold: Reset level to
                                     // the starting value, hold.
                                     if ((r[13] & 0x02) == 0x02)
@@ -234,14 +216,12 @@ class PSG
                                     envStep = 0x00;
                                     envLevel = envCycle;
                                 }
-
                             }
                             else
                             {
                                 // Continue = 0: Just one cycle, return to 0000.
                                 //               Hold.
                                 envLevel = 0x00;
-                                envHold = true;
                             }
                         }
                         else    // We are in the middle of a cycle.
@@ -360,10 +340,11 @@ class PSG
 
         void restartEnvelope()
         {
+            counterE = 0;
+            envStep = 0;
             envCycle = envStart;
             envSlope = envIncrement;
             envLevel = envStart;
-            envHold = false;
         }
 };
 
