@@ -46,6 +46,8 @@ class ULA
         size_t ulaVersion;
         size_t maxPixel;
         size_t maxScan;
+        size_t interruptStart;
+        size_t interruptEnd;
 
         // Memory signals
         uint_fast16_t a;

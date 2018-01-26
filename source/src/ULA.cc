@@ -11,6 +11,7 @@ size_t ULA::hSyncEnd[2] = {0x16F, 0x177};
 ULA::ULA() :
     ulaVersion(1),
     maxPixel(448), maxScan(312),
+    interruptStart(0), interruptEnd(63),
     hiz(true),
     z80_a(0xFFFF), z80_c(0xFFFF), z80_mask(0xFFFF),
     cpuClock(false), ulaReset(true),
@@ -65,6 +66,8 @@ void ULA::clock()
     static size_t chargeDelay = 0;
     static size_t capacitor = 0;
 
+    static bool interruptRange = false;
+
     // Here we:
     // 1. Generate video control signals.
     if (pixel == hBorderStart)
@@ -101,6 +104,15 @@ void ULA::clock()
     {
         hSyncEdge = false;
         vSyncEdge = false;
+    }
+
+    if (pixel == interruptStart)
+    {
+        interruptRange = true;
+    }
+    else if (pixel == interruptEnd)
+    {
+        interruptRange = false;
     }
 
     // 2. Generate video data.
@@ -206,8 +218,8 @@ void ULA::clock()
 
     // 3. ULA port & Interrupt.
     c = z80_c;
-    if ((scan == vSyncStart) && (pixel < 64))
-        //&& ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
+    if ((scan == vSyncStart) && (interruptRange == true)
+        && ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
         c &= ~SIGNAL_INT_;
     else
         c |= SIGNAL_INT_;

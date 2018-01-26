@@ -279,7 +279,10 @@ void Spectrum::reset()
 
         ula.maxPixel = 456;
         ula.maxScan = 311;
-        
+        ula.interruptStart = 4;
+        ula.interruptEnd = 75;
+
+
         paging = 0x00;
     }
     else
@@ -290,6 +293,9 @@ void Spectrum::reset()
 
         ula.maxPixel = 448;
         ula.maxScan = 312;
+        ula.interruptStart = 0;
+        ula.interruptEnd = 63;
+
 
         paging = 0x20;
     }
