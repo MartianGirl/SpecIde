@@ -16,8 +16,8 @@
 #include "SoundDefs.h"
 
 constexpr int SOUND_VOLUME = 0x0FFF;
-constexpr int SAVE_VOLUME = 0x07FF;
-constexpr int LOAD_VOLUME = 0x03FF;
+constexpr int SAVE_VOLUME = 0x03FF;
+constexpr int LOAD_VOLUME = 0x01FF;
 
 class Buzzer
 {
@@ -49,13 +49,6 @@ class Buzzer
             // Smooth the signal directly from the ULA.
             if (playSound)
             {
-                // I'm going to try a trick for keeping the volume high,
-                // while not causing samples to overflow. The buzzer and
-                // PSG channel A are going to be positive, while channels
-                // B and C are going to be negative. Since I'm just inverting
-                // two waveforms, the generated sound should be the same
-                // to the ear, but since all signals are positive, the sum
-                // will not overflow.
                 filter[index] = (*source & 0x10) ? SOUND_VOLUME : 0;
                 if (tapeSound)
                 {
