@@ -39,6 +39,23 @@ int main(int argc, char* argv[])
     vector<string> tapes;
     for (vector<string>::iterator it = params.begin(); it != params.end(); ++it)
     {
+        if (*it == "--help" || *it == "-h")
+        {
+            cout << "--help, -h:    Show this help." << endl << endl;
+            cout << "Model selection:" << endl;
+            cout << "--48           Spectrum 48K. (Default)" << endl;
+            cout << "--128          Spectrum 128K." << endl;
+            cout << "--plus2        Spectrum +2." << endl << endl;
+            cout << "ULA version:" << endl;
+            cout << "--issue2       Spectrum 48K Issue 2." << endl;
+            cout << "--issue3       Spectrum 48K Issue 3. (Default)" << endl << endl;
+            cout << "Other hardware:" << endl;
+            cout << "--kempston     Enable kempston joystick. (Default)" << endl;
+            cout << "--nokempston   Disable kempston joystick." << endl << endl;
+
+            screen.done = true;
+        }
+
         // Model selection.
         if (*it == "--issue2")
             screen.spectrum.ula.ulaVersion = 0;
@@ -60,6 +77,7 @@ int main(int argc, char* argv[])
             screen.spectrum.loadRoms(1);
             screen.spectrum.set128K();
             useDefaultModel = false;
+            screen.spectrum.ula.ulaVersion = 1;
         }
 
         if (*it == "--plus2")
@@ -68,6 +86,7 @@ int main(int argc, char* argv[])
             screen.spectrum.loadRoms(2);
             screen.spectrum.setPlus2();
             useDefaultModel = false;
+            screen.spectrum.ula.ulaVersion = 1;
         }
 
         // I'm putting both set and unset flags in case I implement loading
@@ -102,6 +121,12 @@ int main(int argc, char* argv[])
 
         if (*it == "--nopsg")
             screen.spectrum.psg.playSound = false;
+
+        if (*it == "--acb")
+            screen.stereo = 1;
+
+        if (*it == "--abc")
+            screen.stereo = 2;
 
         if (*it == "--psglinear")
             screen.spectrum.psg.setVolumeLevels(false);

@@ -53,6 +53,8 @@ class Screen : public GraphicWindow
         sf::Sprite scrSprite;
         std::vector<sf::Uint32> pixels;
 
+        size_t stereo;
+
         void clock();
         bool update();
         void setFullScreen(bool fs);

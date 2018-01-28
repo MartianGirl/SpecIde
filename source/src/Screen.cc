@@ -14,7 +14,8 @@ Screen::Screen(size_t scale, bool fullscreen) :
     fullscreen(fullscreen), smooth(false),
     squareRootDac(true),
     scale(scale),
-    xSize(352), ySize(304)
+    xSize(352), ySize(304),
+    stereo(0)
 {
     // Create a texture. It'll be 352x304, which holds the entire Spectrum
     // screen.
@@ -71,18 +72,43 @@ void Screen::clock()
 {
     static size_t count = 0;
 
+    ++count;
+
     spectrum.clock();
-    spectrum.ula.tapeIn = tape.advance();
+
+    if ((count % 2) == 0)
+        spectrum.ula.tapeIn = tape.advance();
+
     buzzer.update();
 
     // Generate sound
-    if (++count == skip)
+    if ((count % skip) == 0)
     {
-        count = 0;
         buzzer.sample();
         spectrum.psg.sample();
-        samples[0] = samples[1] = buzzer.signal + spectrum.psg.channelA
-            + spectrum.psg.channelB + spectrum.psg.channelC;
+
+        switch (stereo)
+        {
+            case 1: // ACB
+                samples[0] = buzzer.signal
+                    + spectrum.psg.channelA + spectrum.psg.channelC;
+                samples[1] = buzzer.signal
+                    + spectrum.psg.channelB + spectrum.psg.channelC;
+                break;
+
+            case 2: // ABC
+                samples[0] = buzzer.signal
+                    + spectrum.psg.channelA + spectrum.psg.channelB;
+                samples[1] = buzzer.signal
+                    + spectrum.psg.channelC + spectrum.psg.channelB;
+                break;
+
+            default:
+                samples[0] = samples[1] = buzzer.signal + spectrum.psg.channelA
+                    + spectrum.psg.channelB + spectrum.psg.channelC;
+                break;
+        }
+
 
         channel.push(samples);
     }
