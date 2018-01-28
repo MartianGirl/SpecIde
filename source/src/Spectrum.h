@@ -10,6 +10,7 @@
 #include "ULA.h"
 #include "Z80.h"
 #include "Z80Defs.h"
+#include "Buzzer.h"
 #include "PSG.h"
 
 #include <fstream>
@@ -28,6 +29,7 @@ class Spectrum
         Z80 z80;
         ULA ula;
         PSG psg;
+        Buzzer buzzer;
 
         // Kempston Joystick.
         uint_fast8_t joystick;
@@ -48,8 +50,6 @@ class Spectrum
         Memory ram[64]; // 1024KB
         Memory rom[16]; // 256KB - Speccy uses 16K, 128K uses 32K, +3 uses 64K
         Memory* map[4];
-
-        // sf::SoundBuffer buzzer;
 
         // This one is going to be called at 7MHz, and is going to:
         // 1. Clock the ULA. This starts the ULA counters.

@@ -29,6 +29,7 @@ class Tape
         size_t index;           // Last reached index in the tape.
         size_t sample;          // Sample counter.
         bool playing;
+        bool clock;
         uint8_t level;          // Tape output level.
         size_t counter;         // Cassette counter :-)
 
@@ -36,7 +37,7 @@ class Tape
 
         Tape() :
             pointer(0), index(0), sample(0),
-            playing(false), level(0x00), is48K(true) {}
+            playing(false), clock(false), level(0x00), is48K(true) {}
 
         void load(string const& fileName);
 

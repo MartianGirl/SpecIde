@@ -16,7 +16,6 @@
 
 #include "GraphicWindow.h"
 #include "Spectrum.h"
-#include "Buzzer.h"
 #include "Tape.h"
 
 #include "SoundChannel.h"
@@ -33,7 +32,6 @@ class Screen : public GraphicWindow
         Screen(size_t scale, bool fullscreen);
 
         Spectrum spectrum;
-        Buzzer buzzer;
         Tape tape;
         SoundChannel channel;
 

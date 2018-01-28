@@ -32,6 +32,8 @@ Spectrum::Spectrum() :
         Memory(14, true), Memory(14, true), Memory(14, true), Memory(14, true)},
     map{&rom[0], &ram[5], &ram[2], &ram[0]}
 {
+    buzzer.init(&ula.ioPortOut, &ula.tapeIn);
+
     // This is just for the laughs. We initialize the whole RAM to random
     // values to see the random attributes that appeared in the Spectrum
     // at boot time.
@@ -161,9 +163,11 @@ void Spectrum::clock()
     ula.clock();
     z80.c = ula.c;
 
-    if (spectrum128K && ((count & 0x03) == 0x00))
+    if ((count & 0x03) == 0x00)
     {
-        psg.clock();
+        count = 0;
+        buzzer.update();
+        if (spectrum128K) psg.clock();
     }
 
     // We clock the Z80 if the ULA allows.

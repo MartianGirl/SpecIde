@@ -39,7 +39,8 @@ void Tape::load(string const& fileName)
 
 uint_fast8_t Tape::advance()
 {
-    if (playing)
+    clock = !clock;
+    if (playing && clock)
     {
         if (sample-- == 0)
         {

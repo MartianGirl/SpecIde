@@ -99,20 +99,20 @@ int main(int argc, char* argv[])
             screen.spectrum.kempston = false;
 
         if (*it == "--notapesound")
-            screen.buzzer.tapeSound = false;
+            screen.spectrum.buzzer.tapeSound = false;
 
         if (*it == "--tapesound")
-            screen.buzzer.tapeSound = true;
+            screen.spectrum.buzzer.tapeSound = true;
 
         if (*it == "--nosound")
         {
-            screen.buzzer.playSound = false;
+            screen.spectrum.buzzer.playSound = false;
             screen.spectrum.psg.playSound = false;
         }
 
         if (*it == "--sound")
         {
-            screen.buzzer.playSound = true;
+            screen.spectrum.buzzer.playSound = true;
             screen.spectrum.psg.playSound = true;
         }
 

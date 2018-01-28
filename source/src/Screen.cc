@@ -64,7 +64,6 @@ Screen::Screen(size_t scale, bool fullscreen) :
 #endif
 
     channel.open(2, SAMPLE_RATE);
-    buzzer.init(&spectrum.ula.ioPortOut, &spectrum.ula.tapeIn);
     channel.play();
 }
 
@@ -75,40 +74,35 @@ void Screen::clock()
     ++count;
 
     spectrum.clock();
-
-    if ((count % 2) == 0)
-        spectrum.ula.tapeIn = tape.advance();
-
-    buzzer.update();
+    spectrum.ula.tapeIn = tape.advance();
 
     // Generate sound
     if ((count % skip) == 0)
     {
-        buzzer.sample();
+        spectrum.buzzer.sample();
         spectrum.psg.sample();
 
         switch (stereo)
         {
             case 1: // ACB
-                samples[0] = buzzer.signal
+                samples[0] = spectrum.buzzer.signal
                     + spectrum.psg.channelA + spectrum.psg.channelC;
-                samples[1] = buzzer.signal
+                samples[1] = spectrum.buzzer.signal
                     + spectrum.psg.channelB + spectrum.psg.channelC;
                 break;
 
             case 2: // ABC
-                samples[0] = buzzer.signal
+                samples[0] = spectrum.buzzer.signal
                     + spectrum.psg.channelA + spectrum.psg.channelB;
-                samples[1] = buzzer.signal
+                samples[1] = spectrum.buzzer.signal
                     + spectrum.psg.channelC + spectrum.psg.channelB;
                 break;
 
             default:
-                samples[0] = samples[1] = buzzer.signal + spectrum.psg.channelA
+                samples[0] = samples[1] = spectrum.buzzer.signal + spectrum.psg.channelA
                     + spectrum.psg.channelB + spectrum.psg.channelC;
                 break;
         }
-
 
         channel.push(samples);
     }
@@ -241,11 +235,11 @@ void Screen::pollEvents()
                     case Keyboard::F9:
                         if (event.key.shift)
                         {
-                            buzzer.tapeSound = !buzzer.tapeSound;
+                            spectrum.buzzer.tapeSound = !spectrum.buzzer.tapeSound;
                         }
                         else
                         {
-                            buzzer.playSound = !buzzer.playSound;
+                            spectrum.buzzer.playSound = !spectrum.buzzer.playSound;
                             spectrum.psg.playSound = !spectrum.psg.playSound;
                         }
                         break;

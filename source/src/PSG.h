@@ -42,11 +42,10 @@ class PSG
         int envIncrement, envStart, envLevel;
         int envSlope, envCycle;
         size_t envStep;
+        bool envA, envB, envC;
 
         size_t counterA, counterB, counterC, counterN, counterE;
         size_t periodA, periodB, periodC, periodN, periodE;
-
-        size_t masterCounter;
 
         bool playSound;
 
@@ -66,17 +65,18 @@ class PSG
             out{0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
                 0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF},
             envIncrement(1), envStart(0), envLevel(0), envStep(0),
+            envA(false), envB(false), envC(false),
             counterA(0), counterB(0), counterC(0), counterN(0), counterE(0),
             periodA(1), periodB(1), periodC(1), periodN(1), periodE(1),
-            masterCounter(0),
             playSound(true),
             gen(rd()), uniform(0, 1) {} 
 
         void clock()
         {
             static size_t index = 0;
+            static size_t count = 0;
 
-            ++masterCounter;
+            ++count;
 
             a = latch_a;
             latch_do = r[a];
@@ -116,18 +116,21 @@ class PSG
                         // Update volume for channel A.
                         if ((r[8] & 0x10) == 0x00)
                             volumeA = r[8] & 0x0F;
+                        envA = ((r[8] & 0x10) == 0x10);
                         break;
 
                     case 9:
                         // Update volume for channel B.
                         if ((r[9] & 0x10) == 0x00)
                             volumeB = r[9] & 0x0F;
+                        envB = ((r[9] & 0x10) == 0x10);
                         break;
 
                     case 10:
                         // Update volume for channel C.
                         if ((r[10] & 0x10) == 0x00)
                             volumeC = r[10] & 0x0F;
+                        envC = ((r[10] & 0x10) == 0x10);
                         break;
 
                     case 11:
@@ -151,7 +154,7 @@ class PSG
             }
 
             // Because period means a complete wave cycle (high/low)
-            if ((masterCounter & 0x07) == 0x00)
+            if ((count & 0x07) == 0x00)
             {
                 if (counterA-- == 0)
                 {
@@ -171,7 +174,7 @@ class PSG
                     counterC = periodC;
                 }
 
-                if ((masterCounter & 0x0F) == 0x00)
+                if ((count & 0x0F) == 0x00)
                 {
                     if (counterN-- == 0)
                     {
@@ -226,20 +229,9 @@ class PSG
                         }
                     }
 
-                    if ((r[8] & 0x10) == 0x10)
-                    {
-                        volumeA = envLevel;
-                    }
-
-                    if ((r[9] & 0x10) == 0x10)
-                    {
-                        volumeB = envLevel;
-                    }
-
-                    if ((r[10] & 0x10) == 0x10)
-                    {
-                        volumeC = envLevel;
-                    }
+                    if (envA) volumeA = envLevel;
+                    if (envB) volumeB = envLevel;
+                    if (envC) volumeC = envLevel;
                 }
             }
 
