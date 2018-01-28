@@ -87,71 +87,66 @@ class PSG
                 r[a] = latch_di;
                 wr = false;
 
-                // Update tone period for channel A.
-                if (a == 0 || a == 1)
+                switch (a)
                 {
-                    periodA = (((r[1] & 0x0F) << 8) + r[0]);
-                }
+                    case 0:
+                    case 1:
+                        // Update tone period for channel A.
+                        periodA = (((r[1] & 0x0F) << 8) + r[0]);
+                        break;
 
-                // Update tone period for channel B.
-                if (a == 2 || a == 3)
-                {
-                    periodB = (((r[3] & 0x0F) << 8) + r[2]);
-                }
+                    case 2:
+                    case 3:
+                        // Update tone period for channel B.
+                        periodB = (((r[3] & 0x0F) << 8) + r[2]);
+                        break;
 
-                // Update tone period for channel C.
-                if (a == 4 || a == 5)
-                {
-                    periodC = (((r[5] & 0x0F) << 8) + r[4]);
-                }
+                    case 4:
+                    case 5:
+                        // Update tone period for channel C.
+                        periodC = (((r[5] & 0x0F) << 8) + r[4]);
+                        break;
 
-                // Update noise period.
-                if (a == 6)
-                {
-                    periodN = (r[6] & 0x1F);
-                }
+                    case 6:
+                        // Update noise period.
+                        periodN = (r[6] & 0x1F);
+                        break;
 
-                // Update period for Envelope generator.
-                if (a == 11 || a == 12)
-                {
-                    periodE = ((r[12] << 8) + r[11]);
-                }
+                    case 8:
+                        // Update volume for channel A.
+                        if ((r[8] & 0x10) == 0x00)
+                            volumeA = r[8] & 0x0F;
+                        break;
 
-                if (a == 13)
-                {
-                    // Start values depend on the attack bit.
-                    // Attack = 0: Start at 1111, count down.
-                    // Attack = 1: Start at 0000, count up.
-                    envStart = ((r[13] & 0x04) == 0x00) ? 0x0F : 0x00;
-                    envIncrement = ((r[13] & 0x04) == 0x00) ? -1 : 1;
-                    restartEnvelope();
-                }
+                    case 9:
+                        // Update volume for channel B.
+                        if ((r[9] & 0x10) == 0x00)
+                            volumeB = r[9] & 0x0F;
+                        break;
 
-                // Update volume for channel A.
-                if (a == 8)
-                {
-                    if ((r[8] & 0x10) == 0x00)
-                    {
-                        volumeA = r[8] & 0x0F;
-                    }
-                }
+                    case 10:
+                        // Update volume for channel C.
+                        if ((r[10] & 0x10) == 0x00)
+                            volumeC = r[10] & 0x0F;
+                        break;
 
-                // Update volume for channel B.
-                if (a == 9)
-                {
-                    if ((r[9] & 0x10) == 0x00)
-                    {
-                        volumeB = r[9] & 0x0F;
-                    }
-                }
+                    case 11:
+                    case 12:
+                        // Update period for Envelope generator.
+                        periodE = ((r[12] << 8) + r[11]);
+                        break;
 
-                // Update volume for channel C.
-                if (a == 10)
-                {
-                    if ((r[10] & 0x10) == 0x00)
-                    {
-                        volumeC = r[10] & 0x0F;
-                    }
+                    case 13:
+                        // Start values depend on the attack bit.
+                        // Attack = 0: Start at 1111, count down.
+                        // Attack = 1: Start at 0000, count up.
+                        envStart = ((r[13] & 0x04) == 0x00) ? 0x0F : 0x00;
+                        envIncrement = ((r[13] & 0x04) == 0x00) ? -1 : 1;
+                        restartEnvelope();
+                        break;
+
+                    default:
+                        break;
                 }
             }
 
