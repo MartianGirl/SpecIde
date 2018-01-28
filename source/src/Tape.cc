@@ -41,17 +41,13 @@ uint_fast8_t Tape::advance()
 {
     if (playing)
     {
-        if (sample != 0)
-        {
-            --sample;
-        }
-        else
+        if (sample-- == 0)
         {
             level ^= 0x7F;
             
             if (pointer < pulseData.size())
             {
-                sample = 2 * pulseData[pointer]; // Clocking at 7MHz
+                sample = pulseData[pointer];
                 ++pointer;
 
                 // If we reach an index, we mark it.
