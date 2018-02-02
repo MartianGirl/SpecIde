@@ -1138,9 +1138,9 @@ BOOST_AUTO_TEST_CASE(bit_manipulation_reg_test)
     runCycles(z80, m, 8);
     BOOST_CHECK_EQUAL(z80.af.l, 0x18);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x54);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x74);
     runCycles(z80, m, 8);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x54);
+    BOOST_CHECK_EQUAL(z80.af.l, 0x74);
 }
 
 BOOST_AUTO_TEST_CASE(bit_manipulation_ptrhl_test)
