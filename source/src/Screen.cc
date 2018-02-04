@@ -9,8 +9,6 @@ using namespace sf;
 
 Screen::Screen(size_t scale, bool fullscreen) :
     GraphicWindow(344 * scale, 288 * scale, "SpecIde", fullscreen),
-    // frameReady(false), renderDone(false),
-    // renderThread(&Screen::render, this),
     skip(ULA_CLOCK_48 / SAMPLE_RATE),
     done(false),
     fullscreen(fullscreen), smooth(false),
@@ -135,7 +133,6 @@ bool Screen::update()
         window.clear(Color::Black);
         window.draw(scrSprite);
         window.display();
-        // frameReady = true;
 
         tick = true;
 
@@ -157,11 +154,6 @@ bool Screen::update()
 
 void Screen::setFullScreen(bool fs)
 {
-    // // First we need to stop the render thread.
-    // renderDone = true;
-    // renderThread.join();
-
-    // window.setActive(true);
     window.close();
     if (fs)
     {
@@ -202,12 +194,6 @@ void Screen::setFullScreen(bool fs)
     window.setKeyRepeatEnabled(false);
     window.setMouseCursorVisible(false);
     window.setJoystickThreshold(0.5);
-
-    // // Restart the thread
-    // window.setActive(false);
-
-    // renderDone = false;
-    // renderThread = thread(&Screen::render, this);
 }
 
 void Screen::setSmooth(bool sm)
@@ -263,8 +249,6 @@ void Screen::pollEvents()
                         spectrum.reset();
                         break;
                     case Keyboard::F10:
-                        // renderDone = true;
-                        // renderThread.join();
                         done = true;
                         break;
                     case Keyboard::F11:
@@ -609,25 +593,5 @@ void Screen::set128K(bool is128K)
     skip = ((is128K) ? ULA_CLOCK_128 : ULA_CLOCK_48) / SAMPLE_RATE + 1;
     cout << "Skipping " << skip << " samples." << endl;
 }
-
-// void Screen::render()
-// {
-    // cout << "Starting render thread." << endl;
-    // window.setActive(true);
-//
-    // while (renderDone == false)
-    // {
-        // if (frameReady)
-        // {
-            // window.clear(Color::Black);
-            // window.draw(scrSprite);
-            // window.display();
-            // frameReady = false;
-        // }
-    // }
-//
-    // window.setActive(false);
-    // cout << "Ending render thread." << endl;
-// }
 
 // vim: et:sw=4:ts=4

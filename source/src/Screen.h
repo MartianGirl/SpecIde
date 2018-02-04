@@ -24,7 +24,6 @@
 #include <cstdint>
 #include <cassert>
 #include <queue>
-// #include <thread>
 #include <vector>
 
 class Screen : public GraphicWindow
@@ -35,10 +34,6 @@ class Screen : public GraphicWindow
         Spectrum spectrum;
         Tape tape;
         SoundChannel channel;
-
-        // volatile bool frameReady;
-        // volatile bool renderDone;
-        // std::thread renderThread;
 
         int samples[2];
         size_t skip;
@@ -72,8 +67,6 @@ class Screen : public GraphicWindow
         uint_fast8_t keyboardMask[8];
 
         void texture(size_t x, size_t y);
-
-        // void render();
 };
 
 // vim: et:sw=4:ts=4
