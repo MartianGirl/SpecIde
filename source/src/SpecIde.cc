@@ -58,17 +58,19 @@ int main(int argc, char* argv[])
 
         // Model selection.
         if (*it == "--issue2")
-            screen.spectrum.ula.ulaVersion = 0;
-
-        if (*it == "--issue3")
-            screen.spectrum.ula.ulaVersion = 1;
-
-        if (*it == "--48")
         {
             screen.set128K(false);
             screen.spectrum.loadRoms(0);
             useDefaultModel = false;
+            screen.spectrum.ula.ulaVersion = 0;
+        }
 
+        if (*it == "--issue3" || *it == "--48")
+        {
+            screen.set128K(false);
+            screen.spectrum.loadRoms(0);
+            useDefaultModel = false;
+            screen.spectrum.ula.ulaVersion = 1;
         }
 
         if (*it == "--128")
@@ -77,7 +79,7 @@ int main(int argc, char* argv[])
             screen.spectrum.loadRoms(1);
             screen.spectrum.set128K();
             useDefaultModel = false;
-            screen.spectrum.ula.ulaVersion = 1;
+            screen.spectrum.ula.ulaVersion = 2;
         }
 
         if (*it == "--plus2")
@@ -86,7 +88,7 @@ int main(int argc, char* argv[])
             screen.spectrum.loadRoms(2);
             screen.spectrum.setPlus2();
             useDefaultModel = false;
-            screen.spectrum.ula.ulaVersion = 1;
+            screen.spectrum.ula.ulaVersion = 2;
         }
 
         // I'm putting both set and unset flags in case I implement loading

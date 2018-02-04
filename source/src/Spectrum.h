@@ -44,10 +44,8 @@ class Spectrum
         size_t scrBank;
         bool contendedRam;
 
-        // I'm going to exceed the original requirements, and then limit the
-        // configuration to the required model.
-        Memory ram[64]; // 1024KB
-        Memory rom[16]; // 256KB - Speccy uses 16K, 128K uses 32K, +3 uses 64K
+        Memory ram[8]; // 128K
+        Memory rom[2]; // 64K - Speccy uses 16K, 128K uses 32K
         Memory* map[4];
 
         // This one is going to be called at 7MHz, and is going to:
@@ -57,9 +55,6 @@ class Spectrum
         // 4. Access the memory for the Z80.
         void clock();
         void reset();
-
-        // sf::SoundBuffer ear;
-        // sf::SoundBuffer mic;
 
         void loadRoms(size_t model);
         void initMems(size_t model);

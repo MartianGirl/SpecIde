@@ -11,25 +11,8 @@ Spectrum::Spectrum() :
     ramBank(3), romBank(0), scrBank(5),
     contendedRam(false),
     ram{Memory(14), Memory(14), Memory(14), Memory(14),     // 64K
-        Memory(14), Memory(14), Memory(14), Memory(14),     // 128K
-        Memory(14), Memory(14), Memory(14), Memory(14),
-        Memory(14), Memory(14), Memory(14), Memory(14),     // 256K
-        Memory(14), Memory(14), Memory(14), Memory(14),
-        Memory(14), Memory(14), Memory(14), Memory(14),
-        Memory(14), Memory(14), Memory(14), Memory(14),
-        Memory(14), Memory(14), Memory(14), Memory(14),     // 512K
-        Memory(14), Memory(14), Memory(14), Memory(14),
-        Memory(14), Memory(14), Memory(14), Memory(14),
-        Memory(14), Memory(14), Memory(14), Memory(14),
-        Memory(14), Memory(14), Memory(14), Memory(14),
-        Memory(14), Memory(14), Memory(14), Memory(14),
-        Memory(14), Memory(14), Memory(14), Memory(14),
-        Memory(14), Memory(14), Memory(14), Memory(14),
-        Memory(14), Memory(14), Memory(14), Memory(14)},    // 1024K
-    rom{Memory(14, true), Memory(14, true), Memory(14, true), Memory(14, true),
-        Memory(14, true), Memory(14, true), Memory(14, true), Memory(14, true),
-        Memory(14, true), Memory(14, true), Memory(14, true), Memory(14, true),
-        Memory(14, true), Memory(14, true), Memory(14, true), Memory(14, true)},
+        Memory(14), Memory(14), Memory(14), Memory(14)},     // 128K
+    rom{Memory(14, true), Memory(14, true)},
     map{&rom[0], &ram[5], &ram[2], &ram[0]}
 {
     buzzer.init(&ula.ioPortOut, &ula.tapeIn);
@@ -280,11 +263,6 @@ void Spectrum::reset()
         romBank = 0;
         scrBank = 5;
 
-        ula.maxPixel = 456;
-        ula.maxScan = 311;
-        ula.interruptStart = 4;
-        ula.interruptEnd = 75;
-
         paging = 0x00;
     }
     else
@@ -292,11 +270,6 @@ void Spectrum::reset()
         ramBank = 0;
         romBank = 0;
         scrBank = 5;
-
-        ula.maxPixel = 448;
-        ula.maxScan = 312;
-        ula.interruptStart = 0;
-        ula.interruptEnd = 63;
 
         paging = 0x20;
     }

@@ -1,17 +1,13 @@
 #include "ULA.h"
 
-int_fast32_t ULA::voltages[2][4] = {
+int_fast32_t ULA::voltages[3][4] = {
     {391, 728, 3653, 3790}, // ULA 5C (Issue 2)
-    {342, 652, 3591, 3753}  // ULA 6C (Issue 3)
+    {342, 652, 3591, 3753}, // ULA 6C (Issue 3)
+    {342, 652, 3591, 3753}  // ULA 7C (128K)
 };
-
-size_t ULA::hSyncStart[2] = {0x150, 0x158};
-size_t ULA::hSyncEnd[2] = {0x16F, 0x177};
 
 ULA::ULA() :
     ulaVersion(1),
-    maxPixel(448), maxScan(312),
-    interruptStart(0), interruptEnd(63),
     hiz(true),
     z80_a(0xFFFF), z80_c(0xFFFF), z80_mask(0xFFFF),
     cpuClock(false), ulaReset(true),
@@ -70,49 +66,95 @@ void ULA::clock()
 
     // Here we:
     // 1. Generate video control signals.
-    if (pixel == hBorderStart)
+    switch (pixel)
     {
-        display = false;
-    }
-    else if (pixel == hBlankStart)
-    {
-        blanking = true;
-        ++scan;
-        vSyncEdge = (scan == (vSyncEnd + 1));
-        retrace = (scan >= vSyncStart) && (scan <= vSyncEnd);
+        case hBorderStart:  // 0x100
+            display = false; break;
 
-        if (scan == vBlankEnd)
-            flash += 0x04;
-        else if (scan == maxScan)
-            scan = 0;
-    }
-    else if (pixel == (hSyncEnd[ulaVersion] + 1))
-    {
-        hSyncEdge = true;
-    }
-    else if (pixel == hBlankEnd)
-    {
-        blanking = (scan >= vBlankStart) && (scan <= vBlankEnd);
-    }
-    else if (pixel == maxPixel)
-    {
-        pixel = 0;
-        display = (scan < vBorderStart);
-        ulaReset = false;
-    }
-    else
-    {
-        hSyncEdge = false;
-        vSyncEdge = false;
+        case hBlankStart:   // 0x140
+            blanking = true;
+            ++scan;
+            vSyncEdge = (scan == vSyncEnd);
+            retrace = (scan >= vSyncStart) && (scan < vSyncEnd);
+
+            switch (scan)
+            {
+                case vBlankEnd:
+                    flash += 0x04;
+                    break;
+
+                case maxScan48K:
+                    if (ulaVersion != 2)
+                        scan = 0;
+                    break;
+
+                case maxScan128K:
+                    if (ulaVersion == 2)
+                        scan = 0;
+                    break;
+
+                default:
+                    break;
+            }
+            break;
+
+        case hSyncEndULA5:
+            if (ulaVersion == 0)
+                hSyncEdge = true;
+            break;
+
+        case hSyncEndULA6:
+            if (ulaVersion != 0)
+                hSyncEdge = true;
+            break;
+
+        case hBlankEnd:
+            blanking = (scan >= vBlankStart) && (scan <= vBlankEnd);
+            break;
+
+        case maxPixel48K:
+            if (ulaVersion != 2)
+            {
+                pixel = 0;
+                display = (scan < vBorderStart);
+                ulaReset = false;
+            }
+            break;
+
+        case maxPixel128K:
+            if (ulaVersion == 2)
+            {
+                pixel = 0;
+                display = (scan < vBorderStart);
+                ulaReset = false;
+            }
+            break;
+
+        default:
+            hSyncEdge = false;
+            vSyncEdge = false;
     }
 
-    if (pixel == interruptStart)
+    switch (pixel)
     {
-        interruptRange = true;
-    }
-    else if (pixel == interruptEnd)
-    {
-        interruptRange = false;
+        case interruptStart48K:
+            if (ulaVersion != 2)
+                interruptRange = (scan == vSyncStart);
+            break;
+        case interruptStart128K:
+            if (ulaVersion == 2)
+                interruptRange = (scan == vSyncStart);
+            break;
+        case interruptEnd48K:
+            if (ulaVersion != 2)
+                interruptRange = false;
+            break;
+        case interruptEnd128K:
+            if (ulaVersion == 2)
+                interruptRange = false;
+            break;
+        default:
+            break;
     }
 
     // 2. Generate video data.
@@ -217,12 +259,11 @@ void ULA::clock()
     }
 
     // 3. ULA port & Interrupt.
-    c = z80_c;
-    if ((scan == vSyncStart) && (interruptRange == true)
-        && ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
-        c &= ~SIGNAL_INT_;
+    if (interruptRange)
+            //&& ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
+        c = z80_c & ~SIGNAL_INT_;
     else
-        c |= SIGNAL_INT_;
+        c = z80_c | SIGNAL_INT_;
 
     // First attempt at MIC/EAR feedback loop.
     // Let's keep this here for the moment.

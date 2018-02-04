@@ -28,8 +28,16 @@ class ULA
         static constexpr size_t hBorderEnd = 0x1BF;
         static constexpr size_t hBlankStart = 0x140;
         static constexpr size_t hBlankEnd = 0x19F;
-        static size_t hSyncStart[2];
-        static size_t hSyncEnd[2];
+        static constexpr size_t hSyncStartULA5 = 0x150;
+        static constexpr size_t hSyncStartULA6 = 0x158;
+        static constexpr size_t hSyncEndULA5 = 0x170; // +1
+        static constexpr size_t hSyncEndULA6 = 0x178; // +1
+        static constexpr size_t maxPixel48K = 0x1C0;
+        static constexpr size_t maxPixel128K = 0x1C8;
+        static constexpr size_t interruptStart48K = 0x000;
+        static constexpr size_t interruptEnd48K = 0x03F;
+        static constexpr size_t interruptStart128K = 0x004;
+        static constexpr size_t interruptEnd128K = 0x04B;
 
         static constexpr size_t scanStart = 0x000;
         static constexpr size_t scanEnd = 0x0BF;
@@ -38,16 +46,14 @@ class ULA
         static constexpr size_t vBlankStart = 0x0F8;
         static constexpr size_t vBlankEnd = 0x0FF;
         static constexpr size_t vSyncStart = 0x0F8;
-        static constexpr size_t vSyncEnd = 0x0FB;
+        static constexpr size_t vSyncEnd = 0x0FC; // +1
+        static constexpr size_t maxScan48K = 0x138;
+        static constexpr size_t maxScan128K = 0x137;
 
-        static int_fast32_t voltages[2][4];
+        static int_fast32_t voltages[3][4];
 
         // These values depend on the model
         size_t ulaVersion;
-        size_t maxPixel;
-        size_t maxScan;
-        size_t interruptStart;
-        size_t interruptEnd;
 
         // Memory signals
         uint_fast16_t a;
