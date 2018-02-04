@@ -43,7 +43,6 @@ class Spectrum
         size_t romBank;
         size_t scrBank;
         bool contendedRam;
-        bool contendedRom;
 
         // I'm going to exceed the original requirements, and then limit the
         // configuration to the required model.

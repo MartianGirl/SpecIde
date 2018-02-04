@@ -10,7 +10,7 @@ elseif(WIN32)
     set(Boost_NO_BOOST_CMAKE TRUE)
 endif()
 
-find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+find_package(Boost COMPONENTS thread unit_test_framework REQUIRED)
 
 # This is for all platforms
 include_directories(${PROJECT_SOURCE_DIR}/src)
@@ -23,7 +23,7 @@ add_executable(TZXFileTest
     TZXFileTest.cc
     ${PROJECT_SOURCE_DIR}/src/TZXFile.cc)
 target_link_libraries(TZXFileTest
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
@@ -40,7 +40,7 @@ add_executable(ULATest
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc
     ${PROJECT_SOURCE_DIR}/src/Z80.cc)
 target_link_libraries(ULATest
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
@@ -52,7 +52,7 @@ add_executable(SpectrumTest
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc
     ${PROJECT_SOURCE_DIR}/src/Spectrum.cc)
 target_link_libraries(SpectrumTest
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
@@ -62,7 +62,7 @@ add_executable(Z80Test
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
 target_link_libraries(Z80Test
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
@@ -72,7 +72,7 @@ add_executable(Z80AluTest
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
 target_link_libraries(Z80AluTest
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
@@ -82,7 +82,7 @@ add_executable(Z80InterruptTest
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
 target_link_libraries(Z80InterruptTest
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
@@ -92,7 +92,7 @@ add_executable(Z80JumpTest
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
 target_link_libraries(Z80JumpTest
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
@@ -102,7 +102,7 @@ add_executable(Z80BitTest
     ${PROJECT_SOURCE_DIR}/src/Z80.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
 target_link_libraries(Z80BitTest
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
@@ -110,7 +110,7 @@ add_executable(MemoryTest
     MemoryTest.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc)
 target_link_libraries(MemoryTest
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
@@ -118,7 +118,7 @@ add_executable(Z80RegisterTest
     Z80RegisterTest.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
 target_link_libraries(Z80RegisterTest
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 

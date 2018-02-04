@@ -98,6 +98,12 @@ int main(int argc, char* argv[])
         if (*it == "--nokempston")
             screen.spectrum.kempston = false;
 
+        if (*it == "--pad")
+            screen.pad = true;
+
+        if (*it == "--nopad")
+            screen.pad = false;
+
         if (*it == "--notapesound")
             screen.spectrum.buzzer.tapeSound = false;
 

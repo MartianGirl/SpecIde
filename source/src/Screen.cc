@@ -9,13 +9,16 @@ using namespace sf;
 
 Screen::Screen(size_t scale, bool fullscreen) :
     GraphicWindow(344 * scale, 288 * scale, "SpecIde", fullscreen),
+    // frameReady(false), renderDone(false),
+    // renderThread(&Screen::render, this),
     skip(ULA_CLOCK_48 / SAMPLE_RATE),
     done(false),
     fullscreen(fullscreen), smooth(false),
     squareRootDac(true),
     scale(scale),
     xSize(352), ySize(304),
-    stereo(0)
+    stereo(0),
+    pad(false)
 {
     // Create a texture. It'll be 352x304, which holds the entire Spectrum
     // screen.
@@ -132,6 +135,8 @@ bool Screen::update()
         window.clear(Color::Black);
         window.draw(scrSprite);
         window.display();
+        // frameReady = true;
+
         tick = true;
 
         pollEvents();
@@ -152,6 +157,11 @@ bool Screen::update()
 
 void Screen::setFullScreen(bool fs)
 {
+    // // First we need to stop the render thread.
+    // renderDone = true;
+    // renderThread.join();
+
+    // window.setActive(true);
     window.close();
     if (fs)
     {
@@ -192,6 +202,12 @@ void Screen::setFullScreen(bool fs)
     window.setKeyRepeatEnabled(false);
     window.setMouseCursorVisible(false);
     window.setJoystickThreshold(0.5);
+
+    // // Restart the thread
+    // window.setActive(false);
+
+    // renderDone = false;
+    // renderThread = thread(&Screen::render, this);
 }
 
 void Screen::setSmooth(bool sm)
@@ -247,6 +263,8 @@ void Screen::pollEvents()
                         spectrum.reset();
                         break;
                     case Keyboard::F10:
+                        // renderDone = true;
+                        // renderThread.join();
                         done = true;
                         break;
                     case Keyboard::F11:
@@ -318,11 +336,61 @@ void Screen::pollEvents()
                 break;
 
             case Event::JoystickButtonPressed:
-                spectrum.joystick |= 0x10;
+                if (pad)
+                {
+                    switch (event.joystickButton.button)
+                    {
+                        case 1: // Emulate press 'B'
+                            spectrum.ula.keys[0] &= 0xEF; break;
+                        case 2: // Emulate press 'N'
+                            spectrum.ula.keys[0] &= 0xF7; break;
+                        case 3: // Emulate press 'V'
+                            spectrum.ula.keys[7] &= 0xEF; break;
+                        case 4: // Emulate press 'C'
+                            spectrum.ula.keys[7] &= 0xF7; break;
+                        case 5: // Emulate press 'X'
+                            spectrum.ula.keys[7] &= 0xFB; break;
+                        case 6: // Emulate press 'G'
+                            spectrum.ula.keys[6] &= 0xEF; break;
+                        case 7: // Emulate press 'H'
+                            spectrum.ula.keys[1] &= 0xEF; break;
+                        default:    // Other buttons map to the joystick.
+                            spectrum.joystick |= 0x10; break;
+                    }
+                }
+                else
+                {
+                    spectrum.joystick |= 0x10;
+                }
                 break;
 
             case Event::JoystickButtonReleased:
-                spectrum.joystick &= 0xEF;
+                if (pad)
+                {
+                    switch (event.joystickButton.button)
+                    {
+                        case 1: // Emulate release 'B'
+                            spectrum.ula.keys[0] |= 0x10; break;
+                        case 2: // Emulate release 'N'
+                            spectrum.ula.keys[0] |= 0x08; break;
+                        case 3: // Emulate release 'V'
+                            spectrum.ula.keys[7] |= 0x10; break;
+                        case 4: // Emulate release 'C'
+                            spectrum.ula.keys[7] |= 0x08; break;
+                        case 5: // Emulate release 'X'
+                            spectrum.ula.keys[7] |= 0x04; break;
+                        case 6: // Emulate release 'G'
+                            spectrum.ula.keys[6] |= 0x10; break;
+                        case 7: // Emulate release 'H'
+                            spectrum.ula.keys[1] |= 0x10; break;
+                        default:    // Other buttons map to the joystick.
+                            spectrum.joystick &= 0xEF; break;
+                    }
+                }
+                else
+                {
+                    spectrum.joystick &= 0xEF;
+                }
                 break;
 
             default:
@@ -541,5 +609,25 @@ void Screen::set128K(bool is128K)
     skip = ((is128K) ? ULA_CLOCK_128 : ULA_CLOCK_48) / SAMPLE_RATE + 1;
     cout << "Skipping " << skip << " samples." << endl;
 }
+
+// void Screen::render()
+// {
+    // cout << "Starting render thread." << endl;
+    // window.setActive(true);
+//
+    // while (renderDone == false)
+    // {
+        // if (frameReady)
+        // {
+            // window.clear(Color::Black);
+            // window.draw(scrSprite);
+            // window.display();
+            // frameReady = false;
+        // }
+    // }
+//
+    // window.setActive(false);
+    // cout << "Ending render thread." << endl;
+// }
 
 // vim: et:sw=4:ts=4

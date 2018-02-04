@@ -9,7 +9,7 @@ Spectrum::Spectrum() :
     idle(0xFF),
     paging(0x20),
     ramBank(3), romBank(0), scrBank(5),
-    contendedRam(false), contendedRom(false),
+    contendedRam(false),
     ram{Memory(14), Memory(14), Memory(14), Memory(14),     // 64K
         Memory(14), Memory(14), Memory(14), Memory(14),     // 128K
         Memory(14), Memory(14), Memory(14), Memory(14),
@@ -264,7 +264,6 @@ void Spectrum::updatePage()
             map[3] = &ram[ramBank];
 
             contendedRam = ((paging & 0x01) == 0x01);   // RAM 1-3-5-7
-            contendedRom = ((paging & 0x11) == 0x01);   // ROM 0, RAM 1-3-5-7
         }
     }
 }
@@ -286,7 +285,6 @@ void Spectrum::reset()
         ula.interruptStart = 4;
         ula.interruptEnd = 75;
 
-
         paging = 0x00;
     }
     else
@@ -299,7 +297,6 @@ void Spectrum::reset()
         ula.maxScan = 312;
         ula.interruptStart = 0;
         ula.interruptEnd = 63;
-
 
         paging = 0x20;
     }
