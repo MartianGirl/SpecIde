@@ -49,9 +49,10 @@ int main(int argc, char* argv[])
             cout << "ULA version:" << endl;
             cout << "--issue2       Spectrum 48K Issue 2." << endl;
             cout << "--issue3       Spectrum 48K Issue 3. (Default)" << endl << endl;
-            cout << "Other hardware:" << endl;
-            cout << "--kempston     Enable kempston joystick. (Default)" << endl;
-            cout << "--nokempston   Disable kempston joystick." << endl << endl;
+            cout << "Joystick options:" << endl;
+            cout << "--kempston     Enable kempston joystick." << endl;
+            cout << "--sinclair     Enable sinclair joystick #1. (Default)" << endl;
+            cout << "--pad          Map additional gamepad buttons to keys." << endl << endl;
 
             screen.done = true;
         }
@@ -97,7 +98,7 @@ int main(int argc, char* argv[])
         if (*it == "--kempston")
             screen.spectrum.kempston = true;
 
-        if (*it == "--nokempston")
+        if (*it == "--sinclair")
             screen.spectrum.kempston = false;
 
         if (*it == "--pad")

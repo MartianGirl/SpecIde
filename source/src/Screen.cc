@@ -297,21 +297,43 @@ void Screen::pollEvents()
                     case Joystick::X:
                     case Joystick::U:
                     case Joystick::PovX:
-                        spectrum.joystick &= 0xFC;
-                        if (event.joystickMove.position < -34.0)
-                            spectrum.joystick |= 0x02;
-                        else if (event.joystickMove.position > 34.0)
-                            spectrum.joystick |= 0x01;
+                        if (spectrum.kempston)
+                        {
+                            spectrum.joystick &= 0xFC;
+                            if (event.joystickMove.position < -34.0)
+                                spectrum.joystick |= 0x02;
+                            else if (event.joystickMove.position > 34.0)
+                                spectrum.joystick |= 0x01;
+                        }
+                        else
+                        {
+                            spectrum.ula.keys[3] |= 0x018;
+                            if (event.joystickMove.position < -34.0)
+                                spectrum.ula.keys[3] &= 0xEF;
+                            else if (event.joystickMove.position > 34.0)
+                                spectrum.ula.keys[3] &= 0xF7;
+                        }
                         break;
 
                     case Joystick::Y:
                     case Joystick::V:
                     case Joystick::PovY:
-                        spectrum.joystick &= 0xF3;
-                        if (event.joystickMove.position < -34.0)
-                            spectrum.joystick |= 0x08;
-                        else if (event.joystickMove.position > 34.0)
-                            spectrum.joystick |= 0x04;
+                        if (spectrum.kempston)
+                        {
+                            spectrum.joystick &= 0xF3;
+                            if (event.joystickMove.position < -34.0)
+                                spectrum.joystick |= 0x08;
+                            else if (event.joystickMove.position > 34.0)
+                                spectrum.joystick |= 0x04;
+                        }
+                        else
+                        {
+                            spectrum.ula.keys[3] |= 0x06;
+                            if (event.joystickMove.position < -34.0)
+                                spectrum.ula.keys[3] &= 0xFD;
+                            else if (event.joystickMove.position > 34.0)
+                                spectrum.ula.keys[3] &= 0xFB;
+                        }
                         break;
 
                     default:
@@ -339,12 +361,20 @@ void Screen::pollEvents()
                         case 7: // Emulate press 'H'
                             spectrum.ula.keys[1] &= 0xEF; break;
                         default:    // Other buttons map to the joystick.
-                            spectrum.joystick |= 0x10; break;
+                            if (spectrum.kempston)
+                                spectrum.joystick |= 0x10;
+                            else
+                                spectrum.ula.keys[3] &= 0xFE;   // '0'
+                            break;
                     }
+
                 }
                 else
                 {
-                    spectrum.joystick |= 0x10;
+                    if (spectrum.kempston)
+                        spectrum.joystick |= 0x10;
+                    else
+                        spectrum.ula.keys[3] &= 0xFE;
                 }
                 break;
 
@@ -368,12 +398,19 @@ void Screen::pollEvents()
                         case 7: // Emulate release 'H'
                             spectrum.ula.keys[1] |= 0x10; break;
                         default:    // Other buttons map to the joystick.
-                            spectrum.joystick &= 0xEF; break;
+                            if (spectrum.kempston)
+                                spectrum.joystick &= 0xEF;
+                            else
+                                spectrum.ula.keys[3] |= 0x01;
+                            break;
                     }
                 }
                 else
                 {
-                    spectrum.joystick &= 0xEF;
+                    if (spectrum.kempston)
+                        spectrum.joystick &= 0xEF;
+                    else
+                        spectrum.ula.keys[3] |= 0x01;
                 }
                 break;
 

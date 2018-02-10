@@ -4,7 +4,7 @@
 
 Spectrum::Spectrum() :
     joystick(0),
-    kempston(true),
+    kempston(false),
     spectrum128K(false),
     idle(0xFF),
     paging(0x20),
