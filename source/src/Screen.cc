@@ -3,6 +3,7 @@
 #include "SoundDefs.h"
 
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 using namespace sf;
@@ -133,6 +134,15 @@ bool Screen::update()
         window.clear(Color::Black);
         window.draw(scrSprite);
         window.display();
+
+        if (tape.pulseData.size())
+        {
+            stringstream ss;
+            double percent = 100.0 * tape.pointer / tape.pulseData.size();
+            ss << "SpecIde [" << setfill('0') << setw(3);
+            ss << static_cast<size_t>(percent) << "%]" ; 
+            window.setTitle(ss.str());
+        }
 
         tick = true;
 
@@ -456,7 +466,7 @@ void Screen::scanKeys(Event const& event)
         case Keyboard::Period:  // Symbol Shift + M
             keyboardMask[0] = 0xF9;
             break;
-        // case Keyboard::LAlt:    // Extend Mode = Caps Shift + Symbol Shift
+            // case Keyboard::LAlt:    // Extend Mode = Caps Shift + Symbol Shift
             // keyboardMask[0] = 0xFD; keyboardMask[7] = 0xFE;
             // break;
         case Keyboard::Escape:  // Break = Caps Shift + Space
@@ -550,13 +560,13 @@ void Screen::scanKeys(Event const& event)
         case Keyboard::Left:        // Caps Shift + 5
             keyboardMask[4] = 0xEF; keyboardMask[7] = 0xFE;
             break;
-        // case Keyboard::Home:        // Inv Video: Caps Shift + 4
+            // case Keyboard::Home:        // Inv Video: Caps Shift + 4
             // keyboardMask[4] = 0xF7; keyboardMask[7] = 0xFE;
             // break;
-        // case Keyboard::End:         // True Video: Caps Shift + 3
+            // case Keyboard::End:         // True Video: Caps Shift + 3
             // keyboardMask[4] = 0xFB; keyboardMask[7] = 0xFE;
             // break;
-        // case Keyboard::Tab:      // Caps Lock: Caps Shift + 2
+            // case Keyboard::Tab:      // Caps Lock: Caps Shift + 2
             // keyboardMask[4] = 0xFD; keyboardMask[7] = 0xFE;
             // break;
         case Keyboard::Delete:   // Edit: Caps Shift + 1
