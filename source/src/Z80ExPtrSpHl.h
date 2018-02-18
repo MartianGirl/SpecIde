@@ -6,7 +6,7 @@
  *
  * Encoding: 11 100 011
  * M Cycles: 5 (OCF, SRB(3), SRB(4), SWB(3), SWB(5))
- * T States: 5
+ * T States: 19
  *
  */
 
