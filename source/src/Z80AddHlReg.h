@@ -12,7 +12,8 @@ bool z80AddHlReg()
     {
         case 0:
             memAddrMode = 0x00000000;
-            return false;
+            cpuProcCycles = 2;
+            return true;
 
         case 1:
             // Save HL and operand.
@@ -42,7 +43,7 @@ bool z80AddHlReg()
             acc.w += wz.h + (af.l & FLAG_C);
             af.l &= ~FLAG_C;
             af.l |= (acc.h & FLAG_C);
-            return false;
+            return true;
 
         case 5:
             // 5 and 3 are affected by the high byte.

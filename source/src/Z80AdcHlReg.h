@@ -11,10 +11,9 @@ bool z80AdcHlReg()
     switch (executionStep)
     {
         case 0:
-            memRdCycles = 0;
-            memWrCycles = 0;
             memAddrMode = 0x00000000;
-            return false;
+            cpuProcCycles = 2;
+            return true;
 
         case 1:
             // Save HL and operand.
@@ -48,7 +47,7 @@ bool z80AdcHlReg()
             af.l ^= ((acc.h & FLAG_C) << 2) & FLAG_PV;
             af.l &= ~FLAG_C;
             af.l |= (acc.h & FLAG_C);
-            return false;
+            return true;
 
         case 5:
             // Sign is affected by the 16-bit result - hence high byte.
