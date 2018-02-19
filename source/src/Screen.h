@@ -55,6 +55,10 @@ class Screen : public GraphicWindow
 
         bool pad;
 
+        bool flashTap;
+
+        void run();
+
         void clock();
         bool update();
         void setFullScreen(bool fs);

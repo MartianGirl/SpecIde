@@ -33,6 +33,7 @@ void Tape::load(string const& fileName)
         // Create a .tap object, load its contents in pulseData.
         TAPFile tap;
         tap.load(fileName);
+        tapData = tap.fileData;
         tap.parse(pulseData, indexData, stopData);
     }
 }

@@ -1,7 +1,6 @@
 #include <iostream>
 #include <iomanip>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -10,18 +9,6 @@
 #include "Screen.h"
 
 #include "config.h"
-
-#ifdef USE_BOOST_THREADS
-#include <boost/chrono/include.hpp>
-#include <boost/thread.hpp>
-using namespace boost::this_thread;
-using namespace boost::chrono;
-#else
-#include <chrono>
-#include <thread>
-using namespace std::this_thread;
-using namespace std::chrono;
-#endif
 
 using namespace std;
 
@@ -140,6 +127,9 @@ int main(int argc, char* argv[])
         if (*it == "--psglinear")
             screen.spectrum.psg.setVolumeLevels(false);
 
+        if (*it == "--flashtap")
+            screen.flashTap = true;
+
         // SD1 was a protection device used in Camelot Warriors. It simply
         // forced bit 5 low for any port read, if the device didn't force
         // this bit high.
@@ -162,23 +152,7 @@ int main(int argc, char* argv[])
     for (vector<string>::iterator it = tapes.begin(); it != tapes.end(); ++it)
         screen.tape.load(*it);
 
-    steady_clock::time_point tick = steady_clock::now();
-    // This is faster than "while(true)".
-    for(;;)
-    {
-        // Update Spectrum hardware.
-        screen.clock();
-
-        // Update the screen.
-        if (screen.update())
-        {
-            sleep_until(tick + milliseconds(20));
-            tick = steady_clock::now();
-
-            if (screen.done)
-                return 0;
-        }
-    }
+    screen.run();
 }
 
 // vim: et:sw=4:ts=4

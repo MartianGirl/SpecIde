@@ -91,6 +91,21 @@ class SoundChannel : public sf::SoundStream
             }
         }
 
+        void push(int l, int r)
+        {
+            static size_t wrSample = 0;
+
+            buffers[wrBuffer][2 * wrSample + 0] = l;
+            buffers[wrBuffer][2 * wrSample + 1] = r;
+
+            if (++wrSample == MAX_SAMPLES)
+            {
+                wrSample = 0;
+                queuedBuffers.push(wrBuffer);
+                getNextWriteBuffer();
+            }
+        }
+
     private:
         virtual bool onGetData(Chunk& data)
         {

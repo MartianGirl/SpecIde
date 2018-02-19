@@ -25,6 +25,9 @@ class Tape
         set<size_t> stopData;       // Stop points, relative to pulse data.
         set<size_t> stopIf48K;      // Stop points only for 48K mode.
 
+        vector<uint8_t> tapData;     // Raw TAP data, just for tape load trap.
+        size_t tapPointer;          // Raw TAP pointer.
+
         size_t pointer;         // Index to pulse data.
         size_t index;           // Last reached index in the tape.
         size_t sample;          // Sample counter.
@@ -36,6 +39,7 @@ class Tape
         bool is48K;             // For deciding if we stop or not :)
 
         Tape() :
+            tapPointer(0),
             pointer(0), index(0), sample(0),
             playing(false), clock(false), level(0x00), is48K(true) {}
 

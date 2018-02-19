@@ -5,6 +5,20 @@
 #include <iostream>
 #include <sstream>
 
+#include "config.h"
+
+#ifdef USE_BOOST_THREADS
+#include <boost/chrono/include.hpp>
+#include <boost/thread.hpp>
+using namespace boost::this_thread;
+using namespace boost::chrono;
+#else
+#include <chrono>
+#include <thread>
+using namespace std::this_thread;
+using namespace std::chrono;
+#endif
+
 using namespace std;
 using namespace sf;
 
@@ -17,7 +31,8 @@ Screen::Screen(size_t scale, bool fullscreen) :
     scale(scale),
     xSize(352), ySize(304),
     stereo(0),
-    pad(false)
+    pad(false),
+    flashTap(false)
 {
     // Create a texture. It'll be 352x304, which holds the entire Spectrum
     // screen.
@@ -69,49 +84,157 @@ Screen::Screen(size_t scale, bool fullscreen) :
     channel.play();
 }
 
+void Screen::run()
+{
+    steady_clock::time_point tick = steady_clock::now();
+
+    while (!done)
+    {
+        // Now this chunk is for instant loading of TAPs.
+        // Check tape trap
+        if (flashTap == true 
+                && spectrum.z80.pc.w == 0x0557 && spectrum.z80.state == Z80State::ST_OCF_T4L_RFSH2)
+        {
+            // Should push on stack SA_LD_RET (0x053F)
+            uint_fast16_t stack = --spectrum.z80.sp.w;
+            if (stack > 0xBFFF)
+                spectrum.map[3]->write(stack & 0x3FFF, 0x05);
+            else if (stack > 0x7FFF)
+                spectrum.map[2]->write(stack & 0x3FFF, 0x05);
+            else if (stack > 0x3FFF)
+                spectrum.map[1]->write(stack & 0x3FFF, 0x05);
+
+            stack = --spectrum.z80.sp.w;
+            if (stack > 0xBFFF)
+                spectrum.map[3]->write(stack & 0x3FFF, 0x3F);
+            else if (stack > 0x7FFF)
+                spectrum.map[2]->write(stack & 0x3FFF, 0x3F);
+            else if (stack > 0x3FFF)
+                spectrum.map[1]->write(stack & 0x3FFF, 0x3F);
+
+            size_t dataLength = tape.tapData[tape.tapPointer + 1] * 0x100
+                + tape.tapData[tape.tapPointer];
+            uint8_t flagByte = tape.tapData[tape.tapPointer + 2];
+
+            while (spectrum.z80.af.h != flagByte)
+            {
+                tape.tapPointer += dataLength + 2;
+                if (tape.tapPointer >= tape.tapData.size()) tape.tapPointer = 0;
+                dataLength = tape.tapData[tape.tapPointer + 1] * 0x100
+                    + tape.tapData[tape.tapPointer];
+                flagByte = tape.tapData[tape.tapPointer + 2];
+            }
+
+            uint_fast16_t addr = spectrum.z80.ix.w;
+            uint_fast16_t bytes = spectrum.z80.de.w;
+
+            if (dataLength < bytes)
+            {
+                spectrum.z80.ix.w += dataLength;
+                spectrum.z80.de.w -= dataLength;
+                spectrum.z80.af.l &= 0xFE;
+
+                size_t ii = 1;
+                while (ii < dataLength)
+                {
+                    if (addr > 0xBFFF)
+                        spectrum.map[3]->write(addr & 0x3FFF, tape.tapData[tape.tapPointer + 3 + ii]);
+                    else if (addr > 0x7FFF)
+                        spectrum.map[2]->write(addr & 0x3FFF, tape.tapData[tape.tapPointer + 3 + ii]);
+                    else if (addr > 0x3FFF)
+                        spectrum.map[1]->write(addr & 0x3FFF, tape.tapData[tape.tapPointer + 3 + ii]);
+                    ++addr;
+                    ++ii;
+                }
+            }
+            else
+            {
+                spectrum.z80.ix.w += bytes;
+                spectrum.z80.de.w -= bytes;
+                spectrum.z80.af.l |= 0x01;
+
+                size_t ii = 0;
+                while (ii < bytes)
+                {
+                    if (addr > 0xBFFF)
+                        spectrum.map[3]->write(addr & 0x3FFF, tape.tapData[tape.tapPointer + 3 + ii]);
+                    else if (addr > 0x7FFF)
+                        spectrum.map[2]->write(addr & 0x3FFF, tape.tapData[tape.tapPointer + 3 + ii]);
+                    else if (addr > 0x3FFF)
+                        spectrum.map[1]->write(addr & 0x3FFF, tape.tapData[tape.tapPointer + 3 + ii]);
+                    ++addr;
+                    ++ii;
+                }
+            }
+
+            tape.tapPointer += dataLength + 2;
+            if (tape.tapPointer >= tape.tapData.size()) tape.tapPointer = 0;
+
+            spectrum.z80.decode(0xC9);   // RET
+            spectrum.z80.startInstruction();
+        }
+
+        // Update Spectrum hardware.
+        clock();
+
+        // Update the screen.
+        if (update())
+        {
+            sleep_until(tick + std::chrono::milliseconds(20));
+            tick = steady_clock::now();
+        }
+
+        if (done) return;
+    }
+}
+
 void Screen::clock()
 {
-    static size_t count = 0;
-
-    ++count;
+    static size_t count = skip;
+    static bool tapeTick = false;
 
     spectrum.clock();
 
-    if (tape.playing && (count & 0x01))
+    if (tape.playing)
     {
-        if (tape.sample-- == 0)
+        tapeTick = !tapeTick;
+        if (tapeTick == true && tape.sample-- == 0)
             spectrum.ula.tapeIn = tape.advance();
     }
 
     // Generate sound
-    if ((count % skip) == 0)
+    if (--count == 0)
     {
+        count = skip;
         spectrum.buzzer.sample();
         spectrum.psg.sample();
 
         switch (stereo)
         {
             case 1: // ACB
-                samples[0] = spectrum.buzzer.signal
-                    + spectrum.psg.channelA + spectrum.psg.channelC;
-                samples[1] = spectrum.buzzer.signal
-                    + spectrum.psg.channelB + spectrum.psg.channelC;
+                channel.push(
+                        spectrum.buzzer.signal
+                        + spectrum.psg.channelA + spectrum.psg.channelC,
+                        spectrum.buzzer.signal
+                        + spectrum.psg.channelB + spectrum.psg.channelC);
                 break;
 
             case 2: // ABC
-                samples[0] = spectrum.buzzer.signal
-                    + spectrum.psg.channelA + spectrum.psg.channelB;
-                samples[1] = spectrum.buzzer.signal
-                    + spectrum.psg.channelC + spectrum.psg.channelB;
+                channel.push(
+                        spectrum.buzzer.signal
+                        + spectrum.psg.channelA + spectrum.psg.channelB,
+                        spectrum.buzzer.signal
+                        + spectrum.psg.channelC + spectrum.psg.channelB);
                 break;
 
             default:
-                samples[0] = samples[1] = spectrum.buzzer.signal + spectrum.psg.channelA
-                    + spectrum.psg.channelB + spectrum.psg.channelC;
+                channel.push(
+                        spectrum.buzzer.signal + spectrum.psg.channelA
+                        + spectrum.psg.channelB + spectrum.psg.channelC,
+                        spectrum.buzzer.signal + spectrum.psg.channelA
+                        + spectrum.psg.channelB + spectrum.psg.channelC);
                 break;
         }
-
-        channel.push(samples);
     }
 }
 
