@@ -1,19 +1,34 @@
 #include "ULA.h"
 
-int_fast32_t ULA::voltages[3][4] = {
+int_fast32_t ULA::voltages[3][4] =
+{
     {391, 728, 3653, 3790}, // ULA 5C (Issue 2)
     {342, 652, 3591, 3753}, // ULA 6C (Issue 3)
     {342, 652, 3591, 3753}  // ULA 7C (128K)
 };
 
+bool ULA::delayTable[16] = 
+{
+    true, true, true, true, true, true, true, true,
+    true, true, true, true, false, false, false, false
+};
+
+bool ULA::idleTable[16] =
+{
+    true, true, true, true, true, true, false, false,
+    false, false, false, false, false, false, true, true
+};
+
+bool ULA::hizTable[16] =
+{
+    true, true, true, true, false, false, false, false,
+    false, false, false, false, true, true, true, true
+};
+
+uint32_t ULA::colourTable[0x100];
+
 ULA::ULA() :
-    ulaVersion(1),
-    hiz(true),
-    z80_a(0xFFFF), z80_c(0xFFFF), z80_mask(0xFFFF),
-    cpuClock(false), ulaReset(true),
-    display(true), idle(false), 
     hSyncEdge(false), vSyncEdge(false), blanking(false), retrace(false),
-    ioPortIn(0xFF), ioPortOut(0x00), inMask(0xBF), tapeIn(0),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF)
 {
@@ -40,32 +55,8 @@ ULA::ULA() :
     }
 }
 
-void ULA::clock()
+void ULA::generateVideoControlSignals()
 {
-    static size_t pixel = 0;
-    static size_t scan = 0;
-    static uint_fast8_t flash = 0;
-    static bool z80Clk = false;
-
-    static size_t rdWait = 0;
-    static uint_fast16_t z80_c_1 = 0xFFFF;
-    static uint_fast16_t z80_c_2 = 0xFFFF;
-
-    static uint_fast16_t dataAddr, attrAddr;
-
-    static uint_fast8_t data;
-    static uint_fast8_t attr;
-    static uint_fast8_t dataLatch;
-    static uint_fast8_t attrLatch;
-
-    static size_t ear = 0;
-    static size_t chargeDelay = 0;
-    static size_t capacitor = 0;
-
-    static bool interruptRange = false;
-
-    // Here we:
-    // 1. Generate video control signals.
     switch (pixel)
     {
         case hBorderStart:  // 0x100
@@ -134,33 +125,24 @@ void ULA::clock()
             hSyncEdge = false;
             vSyncEdge = false;
     }
+}
 
-    switch (pixel)
-    {
-        case interruptStart48K:
-            if (ulaVersion != 2)
-                interruptRange = (scan == vSyncStart);
-            break;
-        case interruptStart128K:
-            if (ulaVersion == 2)
-                interruptRange = (scan == vSyncStart);
-            break;
-        case interruptEnd48K:
-            if (ulaVersion != 2)
-                interruptRange = false;
-            break;
-        case interruptEnd128K:
-            if (ulaVersion == 2)
-                interruptRange = false;
-            break;
-        default:
-            break;
-    }
+void ULA::generateInterrupt()
+{
+    if (ulaVersion == 2
+            && pixel >= interruptStart128K && pixel < interruptEnd128K)
+        z80_c &= ~SIGNAL_INT_;
+    else if (ulaVersion != 2
+            /* && pixel >= interruptStart48K */ && pixel < interruptEnd48K)
+        z80_c &= ~SIGNAL_INT_;
+    else
+        z80_c |= SIGNAL_INT_;
+}
 
-    // 2. Generate video data.
+void ULA::generateVideoData()
+{
     if (display)
     {
-        bool delay;
         // 2.a. Check for contended memory or I/O accesses.
 
         // Memory Contention
@@ -185,16 +167,14 @@ void ULA::clock()
         // We use the same contention manager, and we consider contention when
         // there is any contention, and when no contention is not disabled.
         bool contention = (memContention || ioContention)   // Contention On?
-                && !(memContentionOff || ioContentionOff);  // Contention Off?
+            && !(memContentionOff || ioContentionOff);  // Contention Off?
+
+        idle = idleTable[pixel & 0x0F];
+        hiz = hizTable[pixel & 0x0F];
 
         // 2.b. Read from memory.
         switch (pixel & 0x0F)
         {
-            case 0x00:
-            case 0x01:
-            case 0x02:
-            case 0x03:
-                idle = true; delay = true; hiz = true; break;
             case 0x04:
                 // Generate addresses (which must be pair).
                 dataAddr = ((pixel & 0xF0) >> 3)    // 000SSSSS SSSPPPP0
@@ -206,72 +186,66 @@ void ULA::clock()
                     | ((scan & 0xF8) << 2)          // 00000076 54376540
                     | 0x1800;
                 a = dataAddr;
-                idle = true; delay = true; hiz = false; break;
-            case 0x05:
-                dataLatch = d;
-                idle = true; delay = true; hiz = false; break;
+                break;
             case 0x06:
                 a = attrAddr;
-                idle = false; delay = true; hiz = false; break;
-            case 0x07:
-                attrLatch = d;
-                data = dataLatch; attr = attrLatch;
-                idle = false; delay = true; hiz = false; break;
+                break;
             case 0x08:
                 a = dataAddr + 1;
-                idle = false; delay = true; hiz = false; break;
-            case 0x09:
-                dataLatch = d;
-                idle = false; delay = true; hiz = false; break;
+                break;
             case 0x0A:
                 a = attrAddr + 1;
-                idle = false; delay = true; hiz = false; break;
+                break;
+            case 0x05:
+            case 0x09:
+                dataLatch = d;
+                break;
+            case 0x07:
+                data = dataLatch;
+                attr = attrLatch = d;
+                colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+                colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+                break;
             case 0x0B:
                 attrLatch = d;
-                idle = false; delay = true; hiz = false; break;
-            case 0x0C:
-            case 0x0D:
-                idle = false; delay = false; hiz = true; break;
-            case 0x0E:
-                idle = true; delay = false; hiz = true; break;
+                break;
             case 0x0F:
-                data = dataLatch; attr = attrLatch;
-                idle = true; delay = false; hiz = true; break;
+                data = dataLatch;
+                attr = attrLatch;
+                colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+                colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+                break;
             default:
-                a = 0xFFFF;
-                idle = true; delay = false; hiz = true; break;
+                break;
         }
 
         // 2.c. Resolve contention and generate CPU clock.
-        cpuClock = !(contention && delay);
+        cpuClock = !(contention && delayTable[pixel & 0x0F]);
     }
     else
     {
-        hiz = true;
-        cpuClock = true;
-        idle = true;
-
         if ((pixel & 0x07) == 0x07)
         {
             data = 0xFF;
             attr = borderAttr;
+            colour1 = colourTable[0x80 | (attr & 0x7F)]; // Border only shows colour 1.
         }
     }
 
-    // 3. ULA port & Interrupt.
-    if (interruptRange)
-            //&& ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_)) != 0x0000))
-        c = z80_c & ~SIGNAL_INT_;
-    else
-        c = z80_c | SIGNAL_INT_;
+    // 4. Generate video signal. Generate colours.
+    rgba = (data & 0x80) ? colour1 : colour0;
+    data <<= 1;
+}
 
+void ULA::tapeEarMic()
+{
     // First attempt at MIC/EAR feedback loop.
     // Let's keep this here for the moment.
-    size_t voltage = voltages[ulaVersion][(ioPortOut & 0x18) >> 3];
+    size_t v = voltage[(ioPortOut & 0x18) >> 3];
 
-    if (voltage > 3000)
+    if (v > 3000)
     {
-        ear = voltage;
+        ear = v;
         if (chargeDelay < 86400)
             ++chargeDelay;
         capacitor = 368 + (chargeDelay >> 4);
@@ -280,7 +254,7 @@ void ULA::clock()
     {
         chargeDelay = 0;
         if (capacitor == 0)
-            ear = voltage;
+            ear = v;
         else
             --capacitor;
     }
@@ -288,65 +262,80 @@ void ULA::clock()
     // Tape input forces values on EAR pin.
     if ((tapeIn & 0xC0) == 0x80) ear = 342;
     if ((tapeIn & 0xC0) == 0xC0) ear = 3790;
+}
 
+void ULA::ioPort()
+{
     // We read keyboard if we're reading the ULA port, during TW.
-    if (cpuClock)   // Port read access is contended.
+    if (((z80_c & SIGNAL_IORQ_) == 0x0000) && ((z80_a & 0x0001) == 0x0000))
     {
-        if (((z80_c & SIGNAL_IORQ_) == 0x0000) && ((z80_a & 0x0001) == 0x0000))
+        if ((z80_c & SIGNAL_RD_) == 0x0000)
         {
-            if ((z80_c & SIGNAL_RD_) == 0x0000)
-            {
-                ++rdWait;
+            ++rdWait;
 
-                if (rdWait == 5)
-                {
-                    rdWait = 0;
-                    ioPortIn = inMask;
-                    ioPortIn |= (ear < 700) ? 0x00 : 0x40;
-                    if ((z80_a & 0x8000) == 0x0000) ioPortIn &= keys[0];
-                    if ((z80_a & 0x4000) == 0x0000) ioPortIn &= keys[1];
-                    if ((z80_a & 0x2000) == 0x0000) ioPortIn &= keys[2];
-                    if ((z80_a & 0x1000) == 0x0000) ioPortIn &= keys[3];
-                    if ((z80_a & 0x0800) == 0x0000) ioPortIn &= keys[4];
-                    if ((z80_a & 0x0400) == 0x0000) ioPortIn &= keys[5];
-                    if ((z80_a & 0x0200) == 0x0000) ioPortIn &= keys[6];
-                    if ((z80_a & 0x0100) == 0x0000) ioPortIn &= keys[7];
-                    d = ioPortIn;
-                }
-            }
-
-            if ((z80_c & SIGNAL_WR_) == 0x0000)
+            if (rdWait == 5)
             {
-                ioPortOut = d;
-                borderAttr = ioPortOut & 0x07;
+                rdWait = 0;
+                ioPortIn = inMask;
+                ioPortIn |= (ear < 700) ? 0x00 : 0x40;
+                if ((z80_a & 0x8000) == 0x0000) ioPortIn &= keys[0];
+                if ((z80_a & 0x4000) == 0x0000) ioPortIn &= keys[1];
+                if ((z80_a & 0x2000) == 0x0000) ioPortIn &= keys[2];
+                if ((z80_a & 0x1000) == 0x0000) ioPortIn &= keys[3];
+                if ((z80_a & 0x0800) == 0x0000) ioPortIn &= keys[4];
+                if ((z80_a & 0x0400) == 0x0000) ioPortIn &= keys[5];
+                if ((z80_a & 0x0200) == 0x0000) ioPortIn &= keys[6];
+                if ((z80_a & 0x0100) == 0x0000) ioPortIn &= keys[7];
+                d = ioPortIn;
             }
         }
 
-        z80_c_2 = z80_c_1;
-        z80_c_1 = z80_c;
-
-        z80Clk = !z80Clk;
+        if ((z80_c & SIGNAL_WR_) == 0x0000)
+        {
+            ioPortOut = d;
+            borderAttr = ioPortOut & 0x07;
+        }
     }
 
-    // 4. Generate video signal. Generate colours.
-    rgba = colourTable[((data & 0x80) ^ (attr & flash)) | (attr & 0x7F)];
+    z80_c_2 = z80_c_1;
+    z80_c_1 = z80_c;
 
-    // 4.b. Update data and attribute registers.
-    data <<= 1;
+    z80Clk = !z80Clk;
+}
 
-    // 5. Update counters
+void ULA::clock()
+{
+    generateVideoControlSignals();
+
+    if (scan == vSyncStart)
+        generateInterrupt();
+
+    generateVideoData();
+
+    tapeEarMic();
+
+    // Port access is contended.
+    if (cpuClock)
+        ioPort();
+
     ++pixel;
 
     if (ulaReset)
-    {
-        pixel = 0;
-        scan = 0;
-        ulaReset = false;
-        z80Clk = false;
-        display = true;
+        start();
+}
 
-        z80_c_2 = z80_c_1 = 0xFFFF;
-    }
+void ULA::start()
+{
+    pixel = 0;
+    scan = 0;
+    ulaReset = false;
+    z80Clk = false;
+    display = true;
+
+    z80_c_2 = z80_c_1 = 0xFFFF;
+
+    for (size_t ii = 0; ii < 4; ++ii)
+        voltage[ii] = voltages[ulaVersion][ii];
 }
 
 void ULA::reset()

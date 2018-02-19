@@ -39,52 +39,45 @@ void Tape::load(string const& fileName)
 
 uint_fast8_t Tape::advance()
 {
-    clock = !clock;
-    if (playing && clock)
+    level ^= 0x7F;
+
+    if (pointer < pulseData.size())
     {
-        if (sample-- == 0)
+        sample = pulseData[pointer];
+        ++pointer;
+
+        // If we reach an index, we mark it.
+        if (indexData.find(pointer) != indexData.end())
         {
-            level ^= 0x7F;
-            
-            if (pointer < pulseData.size())
-            {
-                sample = pulseData[pointer];
-                ++pointer;
-
-                // If we reach an index, we mark it.
-                if (indexData.find(pointer) != indexData.end())
-                {
-                    cout << "Reached index: " << pointer << endl;
-                    index = pointer;
-                }
-
-                // If we find a stop point, stop and reset level.
-                if (stopData.find(pointer) != stopData.end())
-                {
-                    cout << "Stopped." << endl;
-                    playing = false;
-                    level = 0x00;
-                }
-
-                if (is48K && stopIf48K.find(pointer) != stopIf48K.end())
-                {
-                    cout << "Stopped in 48K mode." << endl;
-                    playing = false;
-                    level = 0x00;
-                }
-
-            }
-            else
-            // If we reach the end of the tape, stop, rewind
-            // and reset level.
-            {
-                cout << "End of tape." << endl;
-                pointer = 0;
-                sample = 0;
-                playing = false;
-                level = 0x00;
-            }
+            cout << "Reached index: " << pointer << endl;
+            index = pointer;
         }
+
+        // If we find a stop point, stop and reset level.
+        if (stopData.find(pointer) != stopData.end())
+        {
+            cout << "Stopped." << endl;
+            playing = false;
+            level = 0x00;
+        }
+
+        if (is48K && stopIf48K.find(pointer) != stopIf48K.end())
+        {
+            cout << "Stopped in 48K mode." << endl;
+            playing = false;
+            level = 0x00;
+        }
+
+    }
+    else
+        // If we reach the end of the tape, stop, rewind
+        // and reset level.
+    {
+        cout << "End of tape." << endl;
+        pointer = 0;
+        sample = 0;
+        playing = false;
+        level = 0x00;
     }
 
     return level;

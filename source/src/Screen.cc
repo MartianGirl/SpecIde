@@ -76,7 +76,12 @@ void Screen::clock()
     ++count;
 
     spectrum.clock();
-    spectrum.ula.tapeIn = tape.advance();
+
+    if (tape.playing && (count & 0x01))
+    {
+        if (tape.sample-- == 0)
+            spectrum.ula.tapeIn = tape.advance();
+    }
 
     // Generate sound
     if ((count % skip) == 0)

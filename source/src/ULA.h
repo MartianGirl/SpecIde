@@ -21,6 +21,13 @@ class ULA
         void clock();
         void reset();
 
+        void generateVideoControlSignals();
+        void generateInterrupt();
+        void generateVideoData();
+        void tapeEarMic();
+        void ioPort();
+        void start();
+
         // Constant-ish statics.
         static constexpr size_t pixelStart = 0x000;
         static constexpr size_t pixelEnd = 0x0FF;
@@ -50,26 +57,57 @@ class ULA
         static constexpr size_t maxScan48K = 0x138;
         static constexpr size_t maxScan128K = 0x137;
 
+        int_fast32_t voltage[4];
+
         static int_fast32_t voltages[3][4];
+        static bool delayTable[16];
+        static bool idleTable[16];
+        static bool hizTable[16];
+
+        static uint32_t colourTable[0x100];
+        uint32_t colour0, colour1;
 
         // These values depend on the model
-        size_t ulaVersion;
+        size_t ulaVersion = 1;
+
+        // ULA internals
+        size_t pixel = 0;
+        size_t scan = 0;
+        uint_fast8_t flash = 0;
+        bool z80Clk = false;
+
+        size_t rdWait = 0;
+        uint_fast16_t z80_c_1 = 0xFFFF;
+        uint_fast16_t z80_c_2 = 0xFFFF;
+
+        uint_fast16_t dataAddr, attrAddr;
+
+        uint_fast8_t data;
+        uint_fast8_t attr;
+        uint_fast8_t dataLatch;
+        uint_fast8_t attrLatch;
+
+        size_t ear = 0;
+        size_t chargeDelay = 0;
+        size_t capacitor = 0;
+
+        bool interruptRange = false;
 
         // Memory signals
         uint_fast16_t a;
         uint_fast8_t d;
-        bool hiz;
+        bool hiz = true;
 
-        uint_fast16_t z80_a;
-        uint_fast16_t z80_c;
-        uint_fast16_t z80_mask;
-        bool cpuClock;
-        bool ulaReset;
+        uint_fast16_t z80_a = 0xFFFF;
+        uint_fast16_t z80_c = 0xFFFF;
+        uint_fast16_t z80_mask = 0xFFFF;
+        bool cpuClock = false;
+        bool ulaReset = true;
 
         // Video signals
         uint32_t rgba;
-        bool display;
-        bool idle;
+        bool display = true;
+        bool idle = true;
 
         // Useful video signals
         bool hSyncEdge;
@@ -77,14 +115,12 @@ class ULA
         bool blanking;
         bool retrace;
 
-        uint32_t colourTable[0x100];
-
         // Port 0xFE
-        uint_fast8_t ioPortIn;
-        uint_fast8_t ioPortOut;
-        uint_fast8_t inMask;
-        uint_fast8_t borderAttr;
-        uint_fast8_t tapeIn;
+        uint_fast8_t ioPortIn = 0xFF;
+        uint_fast8_t ioPortOut = 0x00;
+        uint_fast8_t inMask = 0xBF;
+        uint_fast8_t borderAttr = 0x00;
+        uint_fast8_t tapeIn = 0x00;
 
         // Keyboard half rows
         uint_fast8_t keys[8];

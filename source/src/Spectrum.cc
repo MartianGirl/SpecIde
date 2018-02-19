@@ -144,7 +144,7 @@ void Spectrum::clock()
     }
 
     ula.clock();
-    z80.c = ula.c;
+    z80.c = ula.z80_c;
 
     if ((count & 0x03) == 0x00)
     {
