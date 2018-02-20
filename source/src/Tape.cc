@@ -25,6 +25,7 @@ void Tape::load(string const& fileName)
         TZXFile tzx;
         tzx.load(fileName);
         tzx.parse(pulseData, indexData, stopData, stopIf48K);
+        tapData.insert(tapData.end(), tzx.romData.begin(), tzx.romData.end());
     }
     else if (extension == ".tap")
     {
@@ -33,9 +34,11 @@ void Tape::load(string const& fileName)
         // Create a .tap object, load its contents in pulseData.
         TAPFile tap;
         tap.load(fileName);
-        tapData = tap.fileData;
+        tapData.insert(tapData.end(), tap.fileData.begin(), tap.fileData.end());
         tap.parse(pulseData, indexData, stopData);
     }
+
+    cout << "FlashTap: " << tapData.size() << " bytes." << endl;
 }
 
 uint_fast8_t Tape::advance()

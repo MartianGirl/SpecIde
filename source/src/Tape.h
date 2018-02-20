@@ -67,6 +67,44 @@ class Tape
         uint_fast8_t advance();
         void next() {}
         void prev() {}
+
+        // Functions for tap blocks
+        uint_fast8_t getBlockByte(size_t offset)
+        {
+            return tapData[tapPointer + offset];
+        }
+
+        bool foundTapBlock(uint_fast8_t flag)
+        {
+            bool res;
+            if (getBlockByte(2) == flag)
+            {
+                cout << "Loading block.";
+                res = true;
+            }
+            else
+            {
+                cout << "Found block.";
+                res = false;
+            }
+
+            cout << " Flag: " << static_cast<size_t>(getBlockByte(2));
+            cout << " Length: " << getBlockLength() << endl;
+            return res;
+        }
+
+        size_t getBlockLength()
+        {
+            return getBlockByte(1) * 0x100 + getBlockByte(0);
+        }
+
+        void nextTapBlock()
+        {
+            tapPointer += 2 + getBlockLength();
+
+            if (tapPointer >= tapData.size())
+                tapPointer = 0;
+        }
 };
 
 // vim: et:sw=4:ts=4:

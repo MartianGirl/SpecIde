@@ -35,6 +35,7 @@ class TZXFile
         uint8_t majorVersion, minorVersion;
 
         vector<uint8_t> fileData;
+        vector<uint8_t> romData;
 
         size_t pointer;
         size_t loopStart;

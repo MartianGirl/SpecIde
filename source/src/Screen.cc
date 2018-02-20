@@ -92,87 +92,8 @@ void Screen::run()
     {
         // Now this chunk is for instant loading of TAPs.
         // Check tape trap
-        if (flashTap == true 
-                && spectrum.z80.pc.w == 0x0557 && spectrum.z80.state == Z80State::ST_OCF_T4L_RFSH2)
-        {
-            // Should push on stack SA_LD_RET (0x053F)
-            uint_fast16_t stack = --spectrum.z80.sp.w;
-            if (stack > 0xBFFF)
-                spectrum.map[3]->write(stack & 0x3FFF, 0x05);
-            else if (stack > 0x7FFF)
-                spectrum.map[2]->write(stack & 0x3FFF, 0x05);
-            else if (stack > 0x3FFF)
-                spectrum.map[1]->write(stack & 0x3FFF, 0x05);
-
-            stack = --spectrum.z80.sp.w;
-            if (stack > 0xBFFF)
-                spectrum.map[3]->write(stack & 0x3FFF, 0x3F);
-            else if (stack > 0x7FFF)
-                spectrum.map[2]->write(stack & 0x3FFF, 0x3F);
-            else if (stack > 0x3FFF)
-                spectrum.map[1]->write(stack & 0x3FFF, 0x3F);
-
-            size_t dataLength = tape.tapData[tape.tapPointer + 1] * 0x100
-                + tape.tapData[tape.tapPointer];
-            uint8_t flagByte = tape.tapData[tape.tapPointer + 2];
-
-            while (spectrum.z80.af.h != flagByte)
-            {
-                tape.tapPointer += dataLength + 2;
-                if (tape.tapPointer >= tape.tapData.size()) tape.tapPointer = 0;
-                dataLength = tape.tapData[tape.tapPointer + 1] * 0x100
-                    + tape.tapData[tape.tapPointer];
-                flagByte = tape.tapData[tape.tapPointer + 2];
-            }
-
-            uint_fast16_t addr = spectrum.z80.ix.w;
-            uint_fast16_t bytes = spectrum.z80.de.w;
-
-            if (dataLength < bytes)
-            {
-                spectrum.z80.ix.w += dataLength;
-                spectrum.z80.de.w -= dataLength;
-                spectrum.z80.af.l &= 0xFE;
-
-                size_t ii = 1;
-                while (ii < dataLength)
-                {
-                    if (addr > 0xBFFF)
-                        spectrum.map[3]->write(addr & 0x3FFF, tape.tapData[tape.tapPointer + 3 + ii]);
-                    else if (addr > 0x7FFF)
-                        spectrum.map[2]->write(addr & 0x3FFF, tape.tapData[tape.tapPointer + 3 + ii]);
-                    else if (addr > 0x3FFF)
-                        spectrum.map[1]->write(addr & 0x3FFF, tape.tapData[tape.tapPointer + 3 + ii]);
-                    ++addr;
-                    ++ii;
-                }
-            }
-            else
-            {
-                spectrum.z80.ix.w += bytes;
-                spectrum.z80.de.w -= bytes;
-                spectrum.z80.af.l |= 0x01;
-
-                size_t ii = 0;
-                while (ii < bytes)
-                {
-                    if (addr > 0xBFFF)
-                        spectrum.map[3]->write(addr & 0x3FFF, tape.tapData[tape.tapPointer + 3 + ii]);
-                    else if (addr > 0x7FFF)
-                        spectrum.map[2]->write(addr & 0x3FFF, tape.tapData[tape.tapPointer + 3 + ii]);
-                    else if (addr > 0x3FFF)
-                        spectrum.map[1]->write(addr & 0x3FFF, tape.tapData[tape.tapPointer + 3 + ii]);
-                    ++addr;
-                    ++ii;
-                }
-            }
-
-            tape.tapPointer += dataLength + 2;
-            if (tape.tapPointer >= tape.tapData.size()) tape.tapPointer = 0;
-
-            spectrum.z80.decode(0xC9);   // RET
-            spectrum.z80.startInstruction();
-        }
+        if (flashTap == true && cpuInRefresh())
+            checkTapeTraps();
 
         // Update Spectrum hardware.
         clock();
@@ -767,6 +688,81 @@ void Screen::set128K(bool is128K)
 {
     skip = ((is128K) ? ULA_CLOCK_128 : ULA_CLOCK_48) / SAMPLE_RATE + 1;
     cout << "Skipping " << skip << " samples." << endl;
+}
+
+bool Screen::cpuInRefresh()
+{
+    return (spectrum.z80.state == Z80State::ST_OCF_T4L_RFSH2);
+}
+
+void Screen::checkTapeTraps()
+{
+    switch (spectrum.z80.pc.w)
+    {
+        case 0x557: // LD_BYTES
+            if (tape.tapData.size())
+                trapLdBytes();
+            break;
+
+        case 0x4C2: // SA_BYTES
+            break;
+
+        default:
+            break;
+    }
+}
+
+void Screen::writeMemory(uint_fast16_t a, uint_fast8_t d)
+{
+    a &= 0xFFFF;
+    if (a > 0x3FFF) // Don't write ROM.
+        spectrum.map[a >> 14]->write(a & 0x3FFF, d);
+}
+
+uint_fast8_t Screen::readMemory(uint_fast16_t a)
+{
+    a &= 0xFFFF;
+    return spectrum.map[a >> 14]->read(a & 0x3FFF);
+}
+
+void Screen::trapLdBytes()
+{
+    // Push on stack SA_LD_RET (0x053F)
+    writeMemory(--spectrum.z80.sp.w, 0x05);
+    writeMemory(--spectrum.z80.sp.w, 0x3F);
+
+    // Find first block that matches flag byte
+    while (tape.foundTapBlock(spectrum.z80.af.h) == false)
+        tape.nextTapBlock();
+
+    // Get parameters from CPU registers
+    uint_fast16_t start = spectrum.z80.ix.w;
+    uint_fast16_t bytes = spectrum.z80.de.w;
+    uint_fast16_t block = tape.getBlockLength();
+
+    if (block < bytes)
+    {
+        // Load error if not enough bytes.
+        spectrum.z80.af.l &= 0xFE;
+    }
+    else
+    {
+        block = bytes;
+        spectrum.z80.af.l |= 0x01;
+    }
+    spectrum.z80.ix.w += block; spectrum.z80.ix.w &= 0xFFFF;
+    spectrum.z80.de.w -= block;
+
+    // Dump block to memory.
+    for (size_t ii = 0; ii < block; ++ii)
+        writeMemory(start + ii, tape.getBlockByte(ii + 3));
+
+    // Advance tape
+    tape.nextTapBlock();
+
+    // Force RET
+    spectrum.z80.decode(0xC9);
+    spectrum.z80.startInstruction();
 }
 
 // vim: et:sw=4:ts=4

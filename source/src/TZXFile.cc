@@ -62,6 +62,7 @@ void TZXFile::parse(
         // pulseData.clear();
         // indexData.clear();
         // stopData.clear();
+        romData.clear();
         if (pulseData.size() != 0)
         {
             indexData.insert(pulseData.size());
@@ -106,10 +107,15 @@ void TZXFile::parse(
                 pulseData.push_back(syncPulse1);
                 pulseData.push_back(syncPulse2);
 
+                romData.push_back(dataLength & 0x00FF);
+                romData.push_back((dataLength & 0xFF00) >> 8);
+
                 // Data
                 for (size_t ii = 0; ii < dataLength; ++ii)
                 {
                     byte = fileData[pointer + 5 + ii];
+                    romData.push_back(byte);
+
                     for (size_t jj = 0; jj < 8; ++jj)
                     {
                         pulseData.insert(pulseData.end(),
@@ -166,10 +172,14 @@ void TZXFile::parse(
                 pulseData.push_back(syncPulse1);
                 pulseData.push_back(syncPulse2);
 
+                romData.push_back(dataLength & 0x00FF);
+                romData.push_back((dataLength & 0xFF00) >> 8);
+
                 // Data
                 for (size_t ii = 0; ii < dataLength; ++ii)
                 {
                     byte = fileData[pointer + 19 + ii];
+                    romData.push_back(byte);
 
                     bitsInByte = (ii == (dataLength - 1)) ? bitsInLastByte : 8;
                     // byte &= (0xFF << (8 - bitsInByte));

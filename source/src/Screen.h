@@ -56,6 +56,11 @@ class Screen : public GraphicWindow
         bool pad;
 
         bool flashTap;
+        bool cpuInRefresh();
+        void checkTapeTraps();
+        void writeMemory(uint_fast16_t a, uint_fast8_t d);
+        uint_fast8_t readMemory(uint_fast16_t a);
+        void trapLdBytes();
 
         void run();
 
