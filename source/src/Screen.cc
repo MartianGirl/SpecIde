@@ -697,18 +697,10 @@ bool Screen::cpuInRefresh()
 
 void Screen::checkTapeTraps()
 {
-    switch (spectrum.z80.pc.w)
+    if (spectrum.z80.pc.w == 0x56D) // LD_START
     {
-        case 0x557: // LD_BYTES
-            if (tape.tapData.size())
-                trapLdBytes();
-            break;
-
-        case 0x4C2: // SA_BYTES
-            break;
-
-        default:
-            break;
+        if (tape.tapData.size())
+            trapLdBytes();
     }
 }
 
@@ -727,12 +719,8 @@ uint_fast8_t Screen::readMemory(uint_fast16_t a)
 
 void Screen::trapLdBytes()
 {
-    // Push on stack SA_LD_RET (0x053F)
-    writeMemory(--spectrum.z80.sp.w, 0x05);
-    writeMemory(--spectrum.z80.sp.w, 0x3F);
-
-    // Find first block that matches flag byte
-    while (tape.foundTapBlock(spectrum.z80.af.h) == false)
+    // Find first block that matches flag byte (Flag is in AF')
+    while (tape.foundTapBlock(spectrum.z80.af_.h) == false)
         tape.nextTapBlock();
 
     // Get parameters from CPU registers
