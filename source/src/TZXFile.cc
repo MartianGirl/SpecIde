@@ -127,6 +127,7 @@ void TZXFile::parse(
                 // Pause. Add index always.
                 if (pause)
                 {
+                    indexData.insert(pulseData.size());
                     if ((pulseData.size() % 2) == 0)
                     {
                         pulseData.push_back(3500);
@@ -137,7 +138,6 @@ void TZXFile::parse(
                         pulseData.push_back(3500 * pause);
                     }
                 }
-                indexData.insert(pulseData.size());
 
                 pointer += dataLength + 5;
                 break;
@@ -194,6 +194,7 @@ void TZXFile::parse(
                 // Pause. Add index always.
                 if (pause)
                 {
+                    indexData.insert(pulseData.size());
                     if ((pulseData.size() % 2) == 0)
                     {
                         pulseData.push_back(3500);
@@ -204,7 +205,6 @@ void TZXFile::parse(
                         pulseData.push_back(3500 * pause);
                     }
                 }
-                indexData.insert(pulseData.size());
 
                 pointer += dataLength + 19;
                 break;
@@ -274,6 +274,7 @@ void TZXFile::parse(
                 // a SpeedLock block...)
                 if (pause)
                 {
+                    indexData.insert(pulseData.size());
                     if ((pulseData.size() % 2) == 0)
                     {
                         pulseData.push_back(3500);
@@ -283,7 +284,6 @@ void TZXFile::parse(
                     {
                         pulseData.push_back(3500 * pause);
                     }
-                    indexData.insert(pulseData.size());
                 }
 
                 pointer += dataLength + 11;
@@ -325,6 +325,7 @@ void TZXFile::parse(
 
                 // Pause = 0 means Stop The Tape. However, we'll insert
                 // one second pause to properly end the block.
+                indexData.insert(pulseData.size());
                 {
                     size_t delay = (pause != 0) ? pause : 1000;
                     if ((pulseData.size() % 2) == 0)
@@ -338,7 +339,6 @@ void TZXFile::parse(
                     }
                 }
 
-                indexData.insert(pulseData.size());
                 if (pause == 0)
                     stopData.insert(pulseData.size());
 

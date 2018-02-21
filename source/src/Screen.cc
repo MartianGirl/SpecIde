@@ -290,8 +290,15 @@ void Screen::pollEvents()
                         }
                         break;
                     case Keyboard::F8:
-                        squareRootDac = !squareRootDac;
-                        spectrum.psg.setVolumeLevels(squareRootDac);
+                        if (event.key.shift)
+                        {
+                            tape.useSaveData = !tape.useSaveData;
+                            tape.selectTapData();
+                        }
+                        else
+                        {
+                            tape.writeSaveData();
+                        }
                         break;
                     case Keyboard::F9:
                         if (event.key.shift)
@@ -700,7 +707,12 @@ void Screen::checkTapeTraps()
     if (spectrum.z80.pc.w == 0x56D) // LD_START
     {
         if (tape.tapData.size())
-            trapLdBytes();
+            trapLdStart();
+    }
+
+    if (spectrum.z80.pc.w == 0x4C7) // SA_BYTES
+    {
+        trapSaBytes();
     }
 }
 
@@ -717,8 +729,12 @@ uint_fast8_t Screen::readMemory(uint_fast16_t a)
     return spectrum.map[a >> 14]->read(a & 0x3FFF);
 }
 
-void Screen::trapLdBytes()
+void Screen::trapLdStart()
 {
+    // Start tape.
+    if (tape.playing == false)
+        tape.play();
+
     // Find first block that matches flag byte (Flag is in AF')
     while (tape.foundTapBlock(spectrum.z80.af_.h) == false)
         tape.nextTapBlock();
@@ -747,6 +763,38 @@ void Screen::trapLdBytes()
 
     // Advance tape
     tape.nextTapBlock();
+
+    // Force RET
+    spectrum.z80.decode(0xC9);
+    spectrum.z80.startInstruction();
+
+    if (tape.tapPointer == 0)
+        tape.rewind();
+}
+
+void Screen::trapSaBytes()
+{
+    uint_fast16_t start = spectrum.z80.ix.w;
+    uint_fast16_t bytes = spectrum.z80.de.w + 2;
+    uint_fast8_t checksum;
+
+    tape.saveData.push_back(bytes & 0x00FF);
+    tape.saveData.push_back((bytes & 0xFF00) >> 8);
+    tape.saveData.push_back(spectrum.z80.af.h);
+    bytes -= 2;
+
+    spectrum.z80.ix.w += bytes; spectrum.z80.ix.w &= 0xFFFF;
+    spectrum.z80.de.w -= bytes;
+
+    checksum = spectrum.z80.af.h;
+    for (size_t ii = 0; ii < bytes; ++ii)
+    {
+        uint_fast8_t byte = readMemory(start + ii);
+        tape.saveData.push_back(byte);
+        checksum ^= byte;
+    }
+    
+    tape.saveData.push_back(checksum);
 
     // Force RET
     spectrum.z80.decode(0xC9);

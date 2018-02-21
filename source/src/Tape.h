@@ -1,7 +1,9 @@
 #pragma once
 
+#include <fstream>
 #include <iostream>
 #include <set>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -25,8 +27,13 @@ class Tape
         set<size_t> stopData;       // Stop points, relative to pulse data.
         set<size_t> stopIf48K;      // Stop points only for 48K mode.
 
-        vector<uint8_t> tapData;     // Raw TAP data, just for tape load trap.
+        vector<uint8_t> tapData;    // Raw TAP data, just for tape load trap.
         size_t tapPointer;          // Raw TAP pointer.
+
+        vector<uint8_t> saveData;
+        vector<uint8_t> loadData;
+        bool useSaveData;
+        size_t tapes;
 
         size_t pointer;         // Index to pulse data.
         size_t index;           // Last reached index in the tape.
@@ -40,6 +47,7 @@ class Tape
 
         Tape() :
             tapPointer(0),
+            useSaveData(false), tapes(0),
             pointer(0), index(0), sample(0),
             playing(false), clock(false), level(0x00), is48K(true) {}
 
@@ -55,6 +63,7 @@ class Tape
         void rewind(size_t position = 0)
         {
             playing = false; sample = 0; pointer = position; level = 0x00;
+            if (position == 0) tapPointer = 0;
             cout << "Rewind to " << position << "..." << endl;
         }
 
@@ -65,8 +74,8 @@ class Tape
         }
 
         uint_fast8_t advance();
-        void next() {}
-        void prev() {}
+        void next() { pointer = *(indexData.upper_bound(pointer + 1)); }
+        void prev() { pointer = *(indexData.lower_bound(pointer - 1)); }
 
         // Functions for tap blocks
         uint_fast8_t getBlockByte(size_t offset)
@@ -104,6 +113,34 @@ class Tape
 
             if (tapPointer >= tapData.size())
                 tapPointer = 0;
+
+            next();
+        }
+
+        void selectTapData()
+        {
+            if (useSaveData)
+                tapData.assign(saveData.begin(), saveData.end());
+            else
+                tapData.assign(loadData.begin(), loadData.end());
+            tapPointer = 0;
+        }
+
+        void writeSaveData()
+        {
+            ++tapes;
+
+            stringstream name;
+            name << "savetape" << setw(2) << setfill('0') << tapes << ".tap";
+            cout << "Saving to " << name.str() << endl;
+
+            char *data = reinterpret_cast<char*>(&saveData[0]);
+            size_t size = saveData.size();
+            ofstream ofs(name.str().c_str(), std::ofstream::binary);
+            ofs.write(data, size);
+            ofs.close();
+
+            saveData.clear();
         }
 };
 
