@@ -741,10 +741,6 @@ uint_fast8_t Screen::readMemory(uint_fast16_t a)
 
 void Screen::trapLdStart()
 {
-    // Start tape.
-    if (tape.playing == false)
-        tape.play();
-
     // Find first block that matches flag byte (Flag is in AF')
     while (tape.foundTapBlock(spectrum.z80.af_.h) == false)
         tape.nextTapBlock();
