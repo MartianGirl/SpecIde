@@ -102,7 +102,7 @@ class Tape
             return res;
         }
 
-        size_t getBlockLength()
+        uint16_t getBlockLength()
         {
             return getBlockByte(1) * 0x100 + getBlockByte(0);
         }

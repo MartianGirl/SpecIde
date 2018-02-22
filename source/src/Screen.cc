@@ -101,7 +101,11 @@ void Screen::run()
         // Update the screen.
         if (update())
         {
+#ifdef USE_BOOST_THREADS
+            sleep_until(tick + boost::chrono::milliseconds(20));
+#else
             sleep_until(tick + std::chrono::milliseconds(20));
+#endif
             tick = steady_clock::now();
         }
 
@@ -746,9 +750,9 @@ void Screen::trapLdStart()
         tape.nextTapBlock();
 
     // Get parameters from CPU registers
-    uint_fast16_t start = spectrum.z80.ix.w;
-    uint_fast16_t bytes = spectrum.z80.de.w;
-    uint_fast16_t block = tape.getBlockLength();
+    uint16_t start = spectrum.z80.ix.w;
+    uint16_t bytes = spectrum.z80.de.w;
+    uint16_t block = tape.getBlockLength();
 
     if (block < bytes)
     {
@@ -764,7 +768,7 @@ void Screen::trapLdStart()
     spectrum.z80.de.w -= block;
 
     // Dump block to memory.
-    for (size_t ii = 0; ii < block; ++ii)
+    for (uint_fast16_t ii = 0; ii < block; ++ii)
         writeMemory(start + ii, tape.getBlockByte(ii + 3));
 
     // Advance tape
@@ -780,9 +784,9 @@ void Screen::trapLdStart()
 
 void Screen::trapSaBytes()
 {
-    uint_fast16_t start = spectrum.z80.ix.w;
-    uint_fast16_t bytes = spectrum.z80.de.w + 2;
-    uint_fast8_t checksum;
+    uint16_t start = spectrum.z80.ix.w;
+    uint16_t bytes = spectrum.z80.de.w + 2;
+    uint8_t checksum;
 
     tape.saveData.push_back(bytes & 0x00FF);
     tape.saveData.push_back((bytes & 0xFF00) >> 8);
@@ -793,7 +797,7 @@ void Screen::trapSaBytes()
     spectrum.z80.de.w -= bytes;
 
     checksum = spectrum.z80.af.h;
-    for (size_t ii = 0; ii < bytes; ++ii)
+    for (uint_fast16_t ii = 0; ii < bytes; ++ii)
     {
         uint_fast8_t byte = readMemory(start + ii);
         tape.saveData.push_back(byte);

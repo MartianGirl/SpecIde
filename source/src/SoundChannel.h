@@ -95,8 +95,8 @@ class SoundChannel : public sf::SoundStream
         {
             static size_t wrSample = 0;
 
-            buffers[wrBuffer][2 * wrSample + 0] = l;
-            buffers[wrBuffer][2 * wrSample + 1] = r;
+            buffers[wrBuffer][2 * wrSample + 0] = static_cast<sf::Int16>(l);
+            buffers[wrBuffer][2 * wrSample + 1] = static_cast<sf::Int16>(r);
 
             if (++wrSample == MAX_SAMPLES)
             {
