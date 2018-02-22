@@ -289,6 +289,16 @@ void Screen::pollEvents()
                             setFullScreen(fullscreen);
                         }
                         break;
+                    case Keyboard::F7:
+                        if (event.key.shift)
+                        {
+                            tape.clearSaveData();
+                        }
+                        else
+                        {
+                            tape.appendLoadData();
+                        }
+                        break;
                     case Keyboard::F8:
                         if (event.key.shift)
                         {

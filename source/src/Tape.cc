@@ -38,8 +38,8 @@ void Tape::load(string const& fileName)
         tap.parse(pulseData, indexData, stopData);
     }
 
-    cout << "FlashTap: " << loadData.size() << " bytes." << endl;
-    cout << "Selecting load tape as quick tape." << endl;
+    cout << "FlashTAP: " << loadData.size() << " bytes." << endl;
+    cout << "FlashTAP is load tape." << endl;
     tapData.assign(loadData.begin(), loadData.end());
 }
 

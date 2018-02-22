@@ -120,9 +120,16 @@ class Tape
         void selectTapData()
         {
             if (useSaveData)
+            {
+                cout << "FlashTAP is save tape." << endl;
                 tapData.assign(saveData.begin(), saveData.end());
+            }
             else
+            {
+                cout << "FlashTAP is load tape." << endl;
                 tapData.assign(loadData.begin(), loadData.end());
+            }
+
             tapPointer = 0;
         }
 
@@ -139,8 +146,18 @@ class Tape
             ofstream ofs(name.str().c_str(), std::ofstream::binary);
             ofs.write(data, size);
             ofs.close();
+        }
 
+        void clearSaveData()
+        {
+            cout << "Clearing save buffer." << endl;
             saveData.clear();
+        }
+
+        void appendLoadData()
+        {
+            cout << "Dumping FlashTAP to save buffer." << endl;
+            saveData.insert(saveData.end(), tapData.begin(), tapData.end());
         }
 };
 
