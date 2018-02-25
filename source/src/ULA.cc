@@ -57,83 +57,50 @@ ULA::ULA() :
 
 void ULA::generateVideoControlSignals()
 {
-    switch (pixel)
+    if (pixel == hBorderStart)
     {
-        case hBorderStart:  // 0x100
-            display = false; break;
+        display = false;
+    }
+    else if (pixel == hBlankStart)
+    {
+        blanking = true;
+        ++scan;
+        vSyncEdge = (scan == vSyncEnd);
+        retrace = (scan >= vSyncStart) && (scan < vSyncEnd);
 
-        case hBlankStart:   // 0x140
-            blanking = true;
-            ++scan;
-            vSyncEdge = (scan == vSyncEnd);
-            retrace = (scan >= vSyncStart) && (scan < vSyncEnd);
-
-            switch (scan)
-            {
-                case vBlankEnd:
-                    flash += 0x04;
-                    break;
-
-                case maxScan48K:
-                    if (ulaVersion != 2)
-                        scan = 0;
-                    break;
-
-                case maxScan128K:
-                    if (ulaVersion == 2)
-                        scan = 0;
-                    break;
-
-                default:
-                    break;
-            }
-            break;
-
-        case hSyncEndULA5:
-            if (ulaVersion == 0)
-                hSyncEdge = true;
-            break;
-
-        case hSyncEndULA6:
-            if (ulaVersion != 0)
-                hSyncEdge = true;
-            break;
-
-        case hBlankEnd:
-            blanking = (scan >= vBlankStart) && (scan <= vBlankEnd);
-            break;
-
-        case maxPixel48K:
-            if (ulaVersion != 2)
-            {
-                pixel = 0;
-                display = (scan < vBorderStart);
-                ulaReset = false;
-            }
-            break;
-
-        case maxPixel128K:
-            if (ulaVersion == 2)
-            {
-                pixel = 0;
-                display = (scan < vBorderStart);
-                ulaReset = false;
-            }
-            break;
-
-        default:
-            hSyncEdge = false;
-            vSyncEdge = false;
+        if (scan == vBlankEnd)
+        {
+            flash += 0x04;
+        }
+        else if (scan == maxScan)
+        {
+            scan = 0;
+        }
+    }
+    else if (pixel == hSyncEnd)
+    {
+        hSyncEdge = true;
+    }
+    else if (pixel == hBlankEnd)
+    {
+        blanking = (scan >= vBlankStart) && (scan <= vBlankEnd);
+    }
+    else if (pixel == maxPixel)
+    {
+        pixel = 0;
+        display = (scan < vBorderStart);
+        ulaReset = false;
+    }
+    else
+    {
+        hSyncEdge = false;
+        vSyncEdge = false;
     }
 }
 
 void ULA::generateInterrupt()
 {
-    if (ulaVersion == 2
-            && pixel >= interruptStart128K && pixel < interruptEnd128K)
-        z80_c &= ~SIGNAL_INT_;
-    else if (ulaVersion != 2
-            /* && pixel >= interruptStart48K */ && pixel < interruptEnd48K)
+    if (pixel >= interruptStart && pixel < interruptEnd)
         z80_c &= ~SIGNAL_INT_;
     else
         z80_c |= SIGNAL_INT_;
@@ -334,12 +301,60 @@ void ULA::start()
 
     z80_c_2 = z80_c_1 = 0xFFFF;
 
-    for (size_t ii = 0; ii < 4; ++ii)
-        voltage[ii] = voltages[ulaVersion][ii];
 }
 
 void ULA::reset()
 {
     ulaReset = true;
+}
+
+void ULA::setUlaVersion(size_t version)
+{
+    ulaVersion = version;
+
+    hBorderStart = 0x100;
+    hBlankStart = 0x140;
+    hBlankEnd = 0x19F;
+
+    vBorderStart = 0x0C0;
+    vBlankStart = 0x0F8;
+    vBlankEnd = 0x0FF;
+    vSyncStart = 0x0F8;
+    vSyncEnd = 0x0FC;
+
+    switch (ulaVersion)
+    {
+        case 0:
+            hSyncEnd = 0x170;
+            maxPixel = 0x1C0;
+            interruptStart = 0x000;
+            interruptEnd = 0x03F;
+            maxScan = 0x138;
+            break;
+        case 1:
+            hSyncEnd = 0x178;
+            maxPixel = 0x1C0;
+            interruptStart = 0x000;
+            interruptEnd = 0x03F;
+            maxScan = 0x138;
+            break;
+        case 2:
+            hSyncEnd = 0x178;
+            maxPixel = 0x1C8;
+            interruptStart = 0x004;
+            interruptEnd = 0x04B;
+            maxScan = 0x137;
+            break;
+        default:
+            hSyncEnd = 0x178;
+            maxPixel = 0x1C0;
+            interruptStart = 0x000;
+            interruptEnd = 0x03F;
+            maxScan = 0x138;
+            break;
+    }
+
+    for (size_t ii = 0; ii < 4; ++ii)
+        voltage[ii] = voltages[ulaVersion][ii];
 }
 // vim: et:sw=4:ts=4:

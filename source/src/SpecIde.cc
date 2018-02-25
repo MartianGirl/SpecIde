@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
             screen.set128K(false);
             screen.spectrum.loadRoms(0);
             useDefaultModel = false;
-            screen.spectrum.ula.ulaVersion = 0;
+            screen.spectrum.ula.setUlaVersion(0);
         }
 
         if (*it == "--issue3" || *it == "--48")
@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
             screen.set128K(false);
             screen.spectrum.loadRoms(0);
             useDefaultModel = false;
-            screen.spectrum.ula.ulaVersion = 1;
+            screen.spectrum.ula.setUlaVersion(1);
         }
 
         if (*it == "--128")
@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
             screen.spectrum.loadRoms(1);
             screen.spectrum.set128K();
             useDefaultModel = false;
-            screen.spectrum.ula.ulaVersion = 2;
+            screen.spectrum.ula.setUlaVersion(2);
         }
 
         if (*it == "--plus2")
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
             screen.spectrum.loadRoms(2);
             screen.spectrum.setPlus2();
             useDefaultModel = false;
-            screen.spectrum.ula.ulaVersion = 2;
+            screen.spectrum.ula.setUlaVersion(2);
         }
 
         // I'm putting both set and unset flags in case I implement loading
@@ -147,6 +147,7 @@ int main(int argc, char* argv[])
     {
         screen.set128K(false);
         screen.spectrum.loadRoms(0);
+        screen.spectrum.ula.setUlaVersion(1);
     }
 
     for (vector<string>::iterator it = tapes.begin(); it != tapes.end(); ++it)

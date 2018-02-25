@@ -28,34 +28,22 @@ class ULA
         void ioPort();
         void start();
 
-        // Constant-ish statics.
-        static constexpr size_t pixelStart = 0x000;
-        static constexpr size_t pixelEnd = 0x0FF;
-        static constexpr size_t hBorderStart = 0x100;
-        static constexpr size_t hBorderEnd = 0x1BF;
-        static constexpr size_t hBlankStart = 0x140;
-        static constexpr size_t hBlankEnd = 0x19F;
-        static constexpr size_t hSyncStartULA5 = 0x150;
-        static constexpr size_t hSyncStartULA6 = 0x158;
-        static constexpr size_t hSyncEndULA5 = 0x170; // +1
-        static constexpr size_t hSyncEndULA6 = 0x178; // +1
-        static constexpr size_t maxPixel48K = 0x1C0;
-        static constexpr size_t maxPixel128K = 0x1C8;
-        static constexpr size_t interruptStart48K = 0x000;
-        static constexpr size_t interruptEnd48K = 0x03F;
-        static constexpr size_t interruptStart128K = 0x004;
-        static constexpr size_t interruptEnd128K = 0x04B;
+        void setUlaVersion(size_t version);
 
-        static constexpr size_t scanStart = 0x000;
-        static constexpr size_t scanEnd = 0x0BF;
-        static constexpr size_t vBorderStart = 0x0C0;
-        static constexpr size_t vBorderEnd = 0x137;
-        static constexpr size_t vBlankStart = 0x0F8;
-        static constexpr size_t vBlankEnd = 0x0FF;
-        static constexpr size_t vSyncStart = 0x0F8;
-        static constexpr size_t vSyncEnd = 0x0FC; // +1
-        static constexpr size_t maxScan48K = 0x138;
-        static constexpr size_t maxScan128K = 0x137;
+        size_t hBorderStart;
+        size_t hBlankStart;
+        size_t hBlankEnd;
+        size_t hSyncEnd;
+        size_t maxPixel;
+        size_t interruptStart;
+        size_t interruptEnd;
+
+        size_t vBorderStart;
+        size_t vBlankStart;
+        size_t vBlankEnd;
+        size_t vSyncStart;
+        size_t vSyncEnd;
+        size_t maxScan;
 
         int_fast32_t voltage[4];
 
