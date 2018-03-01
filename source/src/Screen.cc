@@ -2,9 +2,6 @@
 
 #include "SoundDefs.h"
 
-#include <iostream>
-#include <sstream>
-
 #include "config.h"
 
 #ifdef USE_BOOST_THREADS
@@ -50,8 +47,8 @@ Screen::Screen(size_t scale, bool fullscreen) :
         xOffset = (bestMode.width - ((xSize - 8) * sScale)) / 2;
         yOffset = 0;
 
-        cout << "XScale " << xScale << " YScale " << yScale << endl;
-        cout << "Using scale " << sScale << endl;
+        printf("XScale %.3f YScale %.3f\n", xScale, yScale);
+        printf("Using scale %.3f\n", sScale);
 
         size_t start = (312 - suggestedScans) / 2;
         size_t lines = bestMode.height;
@@ -88,7 +85,7 @@ void Screen::run()
 {
     steady_clock::time_point tick = steady_clock::now();
 
-    while (!done)
+    for (;;)
     {
         // Now this chunk is for instant loading of TAPs.
         // Check tape trap
@@ -165,22 +162,22 @@ void Screen::clock()
 
 bool Screen::update()
 {
-    bool tick = false;
-
     static size_t xPos = 0;
     static size_t yPos = 0;
 
+    // These conditions cannot happen at the same time:
+    // - HSYNC and VSYNC only happen during the blanking interval.
+    // - VSYNC happens at the end of blanking interval. (0x140)
+    // - HSYNC happens at the beginning of HSYNC interval. (0x170-0x178)
     // If not blanking, draw.
     if (spectrum.ula.blanking == false)
     {
         pixels[(yPos * xSize) + xPos] = spectrum.ula.rgba;
         ++xPos;
     }
-
-    // Act on sync pulses falling edges:
-    // VSYNC falling edge restores the beam to the top of the screen.
-    if (spectrum.ula.vSyncEdge)
+    else if (spectrum.ula.vSyncEdge)
     {
+        // VSYNC falling edge restores the beam to the top of the screen.
         yPos = 0;
 
         scrTexture.update(reinterpret_cast<Uint8*>(&pixels[0]));
@@ -190,29 +187,28 @@ bool Screen::update()
 
         if (tape.pulseData.size())
         {
-            stringstream ss;
-            double percent = 100.0 * tape.pointer / tape.pulseData.size();
-            ss << "SpecIde [" << setfill('0') << setw(3);
-            ss << static_cast<size_t>(percent) << "%]" ; 
-            window.setTitle(ss.str());
+            char str[64];
+            unsigned int percent = 100 * tape.pointer / tape.pulseData.size();
+            snprintf(str, 64, "SpecIde [%03u%%]", percent);
+            window.setTitle(str);
         }
-
-        tick = true;
 
         pollEvents();
 
         tape.is48K = (spectrum.paging & 0x20) ? true : false;
-    }
 
-    // HSYNC falling edge restores the beam to the beginning of the next line.
-    if (spectrum.ula.hSyncEdge)
+        return true;
+    }
+    else if (spectrum.ula.hSyncEdge)
     {
+        // HSYNC falling edge restores the beam to the beginning of
+        // the next line.
         xPos = 0;
         if (spectrum.ula.retrace == false)
             ++yPos;
     }
 
-    return tick;
+    return false;
 }
 
 void Screen::setFullScreen(bool fs)
@@ -231,8 +227,8 @@ void Screen::setFullScreen(bool fs)
         xOffset = (bestMode.width - ((xSize - 8) * sScale)) / 2;
         yOffset = 0;
 
-        cout << "XScale " << xScale << " YScale " << yScale << endl;
-        cout << "Using scale " << sScale << endl;
+        printf("XScale %.3f YScale %.3f\n", xScale, yScale);
+        printf("Using scale %.3f\n", sScale);
 
         size_t start = (312 - suggestedScans) / 2;
         size_t lines = bestMode.height;
@@ -708,7 +704,7 @@ void Screen::texture(size_t x, size_t y)
 void Screen::set128K(bool is128K)
 {
     skip = ((is128K) ? ULA_CLOCK_128 : ULA_CLOCK_48) / SAMPLE_RATE + 1;
-    cout << "Skipping " << skip << " samples." << endl;
+    printf("Skipping %ld samples.\n", skip);
 }
 
 bool Screen::cpuInRefresh()

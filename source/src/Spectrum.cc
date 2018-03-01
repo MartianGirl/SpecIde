@@ -23,9 +23,9 @@ Spectrum::Spectrum() :
     srand(static_cast<unsigned int>(time(0)));
     for (size_t a = 0; a < 0x4000; ++a)
     {
-        map[1]->memory[a] = rand() % 0x100;
-        map[2]->memory[a] = rand() % 0x100;
-        map[3]->memory[a] = rand() % 0x100;
+        map[1]->memory[a] = rand() & 0xFF;
+        map[2]->memory[a] = rand() & 0xFF;
+        map[3]->memory[a] = rand() & 0xFF;
     }
 }
 
@@ -62,14 +62,14 @@ void Spectrum::loadRoms(size_t model)
         pos = 0;
 
         // Try opening ROM in the current directory.
-        cout << "Trying ROM: " << romName << endl;
+        printf("Trying ROM: %s\n", romName.c_str());
         ifs.open(romName, ifstream::binary);
 
         // If it fails, try the ROM in /usr/share/spectrum-roms
         if (ifs.fail())
         {
             romName = romPath + romName;
-            cout << "Trying ROM: " << romName << endl;
+            printf("Trying ROM: %s\n", romName.c_str());
             ifs.open(romName, ifstream::binary);
         }
 
@@ -115,7 +115,6 @@ void Spectrum::clock()
     size_t memArea = (z80.a & 0xC000) >> 14;
 
     static size_t count = 0;
-    ++count;
 
     // First we clock the ULA. This generates video and contention signals.
     // We need to provide the ULA with the Z80 address and control buses.
@@ -146,7 +145,7 @@ void Spectrum::clock()
     ula.clock();
     z80.c = ula.z80_c;
 
-    if ((count & 0x03) == 0x00)
+    if ((++count & 0x03) == 0x00)
     {
         count = 0;
         buzzer.update();

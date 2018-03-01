@@ -38,8 +38,8 @@ void Tape::load(string const& fileName)
         tap.parse(pulseData, indexData, stopData);
     }
 
-    cout << "FlashTAP: " << loadData.size() << " bytes." << endl;
-    cout << "FlashTAP is load tape." << endl;
+    printf("FlashTAP: %ld bytes.\n", loadData.size());
+    printf("FlashTAP is load tape.\n");
     tapData.assign(loadData.begin(), loadData.end());
 }
 
@@ -55,21 +55,21 @@ uint_fast8_t Tape::advance()
         // If we reach an index, we mark it.
         if (indexData.find(pointer) != indexData.end())
         {
-            cout << "Reached index: " << pointer << endl;
+            printf("Reached index: %ld\n", pointer);
             index = pointer;
         }
 
         // If we find a stop point, stop and reset level.
         if (stopData.find(pointer) != stopData.end())
         {
-            cout << "Stopped." << endl;
+            printf("Stopped.\n");
             playing = false;
             level = 0x00;
         }
 
         if (is48K && stopIf48K.find(pointer) != stopIf48K.end())
         {
-            cout << "Stopped in 48K mode." << endl;
+            printf("Stopped in 48K mode.\n");
             playing = false;
             level = 0x00;
         }
@@ -79,7 +79,7 @@ uint_fast8_t Tape::advance()
         // If we reach the end of the tape, stop, rewind
         // and reset level.
     {
-        cout << "End of tape." << endl;
+        printf("End of tape.\n");
         pointer = 0;
         sample = 0;
         playing = false;

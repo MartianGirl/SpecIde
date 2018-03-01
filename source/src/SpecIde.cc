@@ -1,5 +1,3 @@
-#include <iostream>
-#include <iomanip>
 #include <memory>
 #include <string>
 #include <vector>
@@ -14,8 +12,8 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    cout << "SpecIde Version " << SPECIDE_VERSION_MAJOR;
-    cout << "." << SPECIDE_VERSION_MINOR << endl;
+    printf("SpecIde Version %d.%d\n",
+            SPECIDE_VERSION_MAJOR, SPECIDE_VERSION_MINOR);
 
     // The Screen class is now actually more of a "console".
     // We create the instance, and load the given tape (if any).
@@ -28,18 +26,7 @@ int main(int argc, char* argv[])
     {
         if (*it == "--help" || *it == "-h")
         {
-            cout << "--help, -h:    Show this help." << endl << endl;
-            cout << "Model selection:" << endl;
-            cout << "--48           Spectrum 48K. (Default)" << endl;
-            cout << "--128          Spectrum 128K." << endl;
-            cout << "--plus2        Spectrum +2." << endl << endl;
-            cout << "ULA version:" << endl;
-            cout << "--issue2       Spectrum 48K Issue 2." << endl;
-            cout << "--issue3       Spectrum 48K Issue 3. (Default)" << endl << endl;
-            cout << "Joystick options:" << endl;
-            cout << "--kempston     Enable kempston joystick." << endl;
-            cout << "--sinclair     Enable sinclair joystick #1. (Default)" << endl;
-            cout << "--pad          Map additional gamepad buttons to keys." << endl << endl;
+            printf("Show some help.\n");
 
             screen.done = true;
         }
