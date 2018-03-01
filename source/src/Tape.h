@@ -66,13 +66,13 @@ class Tape
         {
             playing = false; sample = 0; pointer = position; level = 0x00;
             if (position == 0) tapPointer = 0;
-            printf("Rewind to %ld...\n", position);
+            printf("Rewind to %zu...\n", position);
         }
 
         void resetCounter()
         {
             counter = pointer + 1;
-            printf("Set counter at %ld...\n", pointer);
+            printf("Set counter at %zu...\n", pointer);
         }
 
         uint_fast8_t advance();
@@ -99,7 +99,7 @@ class Tape
                 res = false;
             }
 
-            printf("Flag: %3d  Length: %5d\n",
+            printf("Flag: %3u  Length: %5u\n",
                     getBlockByte(2), getBlockLength());
             return res;
         }
@@ -140,7 +140,7 @@ class Tape
             ++tapes;
 
             char name[256];
-            snprintf(name, 256, "savetape%02ld.tap", tapes);
+            snprintf(name, 256, "savetape%02zu.tap", tapes);
             printf("Saving to %s\n", name);
 
             char *data = reinterpret_cast<char*>(&saveData[0]);

@@ -188,8 +188,8 @@ bool Screen::update()
         if (tape.pulseData.size())
         {
             char str[64];
-            unsigned int percent = 100 * tape.pointer / tape.pulseData.size();
-            snprintf(str, 64, "SpecIde [%03u%%]", percent);
+            size_t percent = 100 * tape.pointer / tape.pulseData.size();
+            snprintf(str, 64, "SpecIde [%03zu%%]", percent);
             window.setTitle(str);
         }
 
@@ -704,7 +704,7 @@ void Screen::texture(size_t x, size_t y)
 void Screen::set128K(bool is128K)
 {
     skip = ((is128K) ? ULA_CLOCK_128 : ULA_CLOCK_48) / SAMPLE_RATE + 1;
-    printf("Skipping %ld samples.\n", skip);
+    printf("Skipping %zu samples.\n", skip);
 }
 
 bool Screen::cpuInRefresh()

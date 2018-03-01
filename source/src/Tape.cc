@@ -38,7 +38,7 @@ void Tape::load(string const& fileName)
         tap.parse(pulseData, indexData, stopData);
     }
 
-    printf("FlashTAP: %ld bytes.\n", loadData.size());
+    printf("FlashTAP: %zu bytes.\n", loadData.size());
     printf("FlashTAP is load tape.\n");
     tapData.assign(loadData.begin(), loadData.end());
 }
@@ -55,7 +55,7 @@ uint_fast8_t Tape::advance()
         // If we reach an index, we mark it.
         if (indexData.find(pointer) != indexData.end())
         {
-            printf("Reached index: %ld\n", pointer);
+            printf("Reached index: %zu\n", pointer);
             index = pointer;
         }
 
