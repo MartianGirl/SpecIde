@@ -8,8 +8,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <iomanip>
-#include <iostream>
 #include <random>
 
 #include "SoundDefs.h"
@@ -89,57 +87,57 @@ class PSG
 
                 switch (a)
                 {
-                    case 0:
-                    case 1:
+                    case 000:
+                    case 001:
                         // Update tone period for channel A.
                         periodA = (((r[1] & 0x0F) << 8) + r[0]);
                         break;
 
-                    case 2:
-                    case 3:
+                    case 002:
+                    case 003:
                         // Update tone period for channel B.
                         periodB = (((r[3] & 0x0F) << 8) + r[2]);
                         break;
 
-                    case 4:
-                    case 5:
+                    case 004:
+                    case 005:
                         // Update tone period for channel C.
                         periodC = (((r[5] & 0x0F) << 8) + r[4]);
                         break;
 
-                    case 6:
+                    case 006:
                         // Update noise period.
                         periodN = (r[6] & 0x1F);
                         break;
 
-                    case 8:
+                    case 010:
                         // Update volume for channel A.
                         if ((r[8] & 0x10) == 0x00)
                             volumeA = r[8] & 0x0F;
                         envA = ((r[8] & 0x10) == 0x10);
                         break;
 
-                    case 9:
+                    case 011:
                         // Update volume for channel B.
                         if ((r[9] & 0x10) == 0x00)
                             volumeB = r[9] & 0x0F;
                         envB = ((r[9] & 0x10) == 0x10);
                         break;
 
-                    case 10:
+                    case 012:
                         // Update volume for channel C.
                         if ((r[10] & 0x10) == 0x00)
                             volumeC = r[10] & 0x0F;
                         envC = ((r[10] & 0x10) == 0x10);
                         break;
 
-                    case 11:
-                    case 12:
+                    case 013:
+                    case 014:
                         // Update period for Envelope generator.
                         periodE = ((r[12] << 8) + r[11]);
                         break;
 
-                    case 13:
+                    case 015:
                         // Start values depend on the attack bit.
                         // Attack = 0: Start at 1111, count down.
                         // Attack = 1: Start at 0000, count up.
