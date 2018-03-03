@@ -34,16 +34,16 @@ class Spectrum
         bool kempston;
         bool spectrum128K;
         bool spectrumPlus2;
+        bool spectrumPlus2A;
+        bool spectrumPlus3;
         uint_fast8_t idle;
-        uint_fast8_t paging;
+        uint_fast16_t paging;
 
-        size_t ramBank;
-        size_t romBank;
-        size_t scrBank;
-        bool contendedRam;
+        size_t screen;
+        bool contendedPage[4];
 
         Memory ram[8]; // 128K
-        Memory rom[2]; // 64K - Speccy uses 16K, 128K uses 32K
+        Memory rom[4]; // 64K - Speccy uses 16K, 128K uses 32K, +2A/+3 uses 64K
         Memory* map[4];
 
         // This one is going to be called at 7MHz, and is going to:
@@ -58,7 +58,8 @@ class Spectrum
         void initMems(size_t model);
         void set128K();
         void setPlus2();
-        void updatePage();
+        void updatePage128K();
+        void updatePagePlus2A(uint_fast8_t reg);
 };
 
 // vim: et:sw=4:ts=4

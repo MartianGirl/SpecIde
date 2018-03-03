@@ -118,7 +118,7 @@ void ULA::generateVideoData()
         // We only delay T1H until the ULA has finished reading. The rest of
         // states are not contended. We do this by checking MREQ is low.
         // We contend T-States, which means we only consider high clock phase.
-        bool memContention = (((z80_a & z80_mask) & 0xC000) == 0x4000) && z80Clk;
+        bool memContention = contendedBank && z80Clk;
         bool memContentionOff = ((z80_c & SIGNAL_MREQ_) == 0x0000);
 
         // I/O Contention
@@ -134,7 +134,7 @@ void ULA::generateVideoData()
         // We use the same contention manager, and we consider contention when
         // there is any contention, and when no contention is not disabled.
         bool contention = (memContention || ioContention)   // Contention On?
-            && !(memContentionOff || ioContentionOff);  // Contention Off?
+            && !(memContentionOff || ioContentionOff);      // Contention Off?
 
         idle = idleTable[pixel & 0x0F];
         hiz = hizTable[pixel & 0x0F];

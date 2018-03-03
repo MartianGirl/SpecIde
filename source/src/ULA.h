@@ -88,7 +88,7 @@ class ULA
 
         uint_fast16_t z80_a = 0xFFFF;
         uint_fast16_t z80_c = 0xFFFF;
-        uint_fast16_t z80_mask = 0xFFFF;
+        bool contendedBank = false;
         bool cpuClock = false;
         bool ulaReset = true;
 
