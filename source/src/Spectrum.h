@@ -58,6 +58,8 @@ class Spectrum
         void initMems(size_t model);
         void set128K();
         void setPlus2();
+        void setPlus2A();
+        void setPlus3();
         void updatePage128K();
         void updatePagePlus2A(uint_fast8_t reg);
 };

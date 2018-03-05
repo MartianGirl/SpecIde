@@ -44,7 +44,7 @@ class Buzzer
 
         void update()
         {
-            static size_t index = 0;
+            static uint_fast32_t index = 0;
 
             // Smooth the signal directly from the ULA.
             if (playSound)
@@ -67,7 +67,7 @@ class Buzzer
         void sample()
         {
                 signal = 0;
-                for (size_t i = 0; i < FILTER_BZZ_SIZE; ++i)
+                for (uint_fast32_t i = 0; i < FILTER_BZZ_SIZE; ++i)
                     signal += filter[i];
                 signal /= FILTER_BZZ_SIZE;
         }

@@ -29,29 +29,29 @@
 class Screen : public GraphicWindow
 {
     public:
-        Screen(size_t scale, bool fullscreen);
+        Screen(uint_fast32_t scale, bool fullscreen);
 
         Spectrum spectrum;
         Tape tape;
         SoundChannel channel;
 
         int samples[2];
-        size_t skip;
+        uint_fast32_t skip;
 
         bool done;
         bool fullscreen;
         bool smooth;
         bool squareRootDac;
 
-        size_t scale;
-        size_t xSize, ySize;
+        uint_fast32_t scale;
+        uint_fast32_t xSize, ySize;
         float xOffset, yOffset;
 
         sf::Texture scrTexture;
         sf::Sprite scrSprite;
         std::vector<sf::Uint32> pixels;
 
-        size_t stereo;
+        uint_fast8_t stereo;
 
         bool pad;
 
@@ -76,7 +76,7 @@ class Screen : public GraphicWindow
         
         uint_fast8_t keyboardMask[8];
 
-        void texture(size_t x, size_t y);
+        void texture(uint_fast32_t x, uint_fast32_t y);
 };
 
 // vim: et:sw=4:ts=4

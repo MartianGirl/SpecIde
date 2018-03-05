@@ -94,6 +94,8 @@ void Spectrum::set128K()
 {
     spectrum128K = true;
     spectrumPlus2 = false;
+    spectrumPlus2A = false;
+    spectrumPlus3 = false;
     reset();
 }
 
@@ -101,6 +103,26 @@ void Spectrum::setPlus2()
 {
     spectrum128K = true;
     spectrumPlus2 = true;
+    spectrumPlus2A = false;
+    spectrumPlus3 = false;
+    reset();
+}
+
+void Spectrum::setPlus2A()
+{
+    spectrum128K = true;
+    spectrumPlus2 = false;
+    spectrumPlus2A = true;
+    spectrumPlus3 = false;
+    reset();
+}
+
+void Spectrum::setPlus3()
+{
+    spectrum128K = true;
+    spectrumPlus2 = false;
+    spectrumPlus2A = true;
+    spectrumPlus3 = true;
     reset();
 }
 
@@ -138,17 +160,26 @@ void Spectrum::clock()
         ula.contendedBank = false;
 
     // ULA gets the data from memory or Z80, or outputs data to Z80.
-    if (ula.hiz == false)           // Is ULA mastering the bus?
+    if (!spectrumPlus2A)
     {
+        if (ula.hiz == false)           // Is ULA mastering the bus?
+        {
 
-        // ULA renders the selected memory bank for video.
-        // In 48K models, this one is fixed.
-        // In 128K models, this one can be RAM5 or RAM7.
-        ula.d = ram[screen].read(ula.a);
+            // ULA renders the selected memory bank for video.
+            // In 48K models, this one is fixed.
+            // In 128K models, this one can be RAM5 or RAM7.
+            ula.d = ram[screen].read(ula.a);
+        }
+        else    // If ULA is not mastering, Z80 is.
+        {
+            // ula.d = z80.d;
+            ula.io = z80.d;
+        }
     }
-    else    // If ULA is not mastering, Z80 is.
+    else
     {
-        ula.d = z80.d;
+        ula.d = ram[screen].read(ula.a);
+        ula.io = z80.d;
     }
 
     ula.clock();
@@ -175,7 +206,7 @@ void Spectrum::clock()
                 }
                 else if ((z80.a & 0x0001) == 0x0000)
                 {
-                    z80.d = ula.d;
+                    z80.d = ula.io;
                 }
                 else if (ula.idle == false)
                 {

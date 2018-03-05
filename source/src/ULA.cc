@@ -1,10 +1,11 @@
 #include "ULA.h"
 
-int_fast32_t ULA::voltages[3][4] =
+uint_fast32_t ULA::voltages[4][4] =
 {
     {391, 728, 3653, 3790}, // ULA 5C (Issue 2)
     {342, 652, 3591, 3753}, // ULA 6C (Issue 3)
-    {342, 652, 3591, 3753}  // ULA 7C (128K)
+    {342, 652, 3591, 3753}, // ULA 7C (128K)
+    {342, 652, 3591, 3753}  // GA40085 (+2A/+3)
 };
 
 bool ULA::delayTable[16] = 
@@ -32,7 +33,7 @@ ULA::ULA() :
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF)
 {
-    for (size_t i = 0; i < 0x100; ++i)
+    for (uint_fast32_t i = 0; i < 0x100; ++i)
     {
         // Generate colour table.
         // dhpppiii
@@ -112,29 +113,36 @@ void ULA::generateVideoData()
     {
         // 2.a. Check for contended memory or I/O accesses.
 
-        // Memory Contention
-        // We detect memory contended states whenever the address is in the
-        // contention range (0x4000-0x7FFF).
-        // We only delay T1H until the ULA has finished reading. The rest of
-        // states are not contended. We do this by checking MREQ is low.
-        // We contend T-States, which means we only consider high clock phase.
-        bool memContention = contendedBank && z80Clk;
-        bool memContentionOff = ((z80_c & SIGNAL_MREQ_) == 0x0000);
+        if (ulaVersion == 3)
+        {
+            contention = contendedBank && ((z80_c & SIGNAL_MREQ_) == 0x0000);
+        }
+        else
+        {
+            // Memory Contention
+            // We detect memory contended states whenever the address is in the
+            // contention range (0x4000-0x7FFF).
+            // We only delay T1H until the ULA has finished reading. The rest of
+            // states are not contended. We do this by checking MREQ is low.
+            // We contend T-States, which means we only consider high clock phase.
+            bool memContention = contendedBank && z80Clk;
+            bool memContentionOff = ((z80_c & SIGNAL_MREQ_) == 0x0000);
 
-        // I/O Contention
-        // We detect I/O contended states whenever the address is even (A0 = 0)
-        // and IORQ is low.
-        // We only delay T2H. We do this by checking a delayed version of IORQ.
-        bool ioUlaPort = ((z80_a & 0x0001) == 0x0000);
-        bool iorqLow = ((z80_c & SIGNAL_IORQ_) == 0x0000);          // T2 TW T3
-        bool iorqLow_d = ((z80_c_2 & SIGNAL_IORQ_) == 0x0000);      // TW T3 T1
-        bool ioContention = ioUlaPort && iorqLow && z80Clk;         // T2 TW T3
-        bool ioContentionOff = ioUlaPort && iorqLow_d;              // TW T3 NN
+            // I/O Contention
+            // We detect I/O contended states whenever the address is even (A0 = 0)
+            // and IORQ is low.
+            // We only delay T2H. We do this by checking a delayed version of IORQ.
+            bool ioUlaPort = ((z80_a & 0x0001) == 0x0000);
+            bool iorqLow = ((z80_c & SIGNAL_IORQ_) == 0x0000);          // T2 TW T3
+            bool iorqLow_d = ((z80_c_2 & SIGNAL_IORQ_) == 0x0000);      // TW T3 T1
+            bool ioContention = ioUlaPort && iorqLow && z80Clk;         // T2 TW T3
+            bool ioContentionOff = ioUlaPort && iorqLow_d;              // TW T3 NN
 
-        // We use the same contention manager, and we consider contention when
-        // there is any contention, and when no contention is not disabled.
-        bool contention = (memContention || ioContention)   // Contention On?
-            && !(memContentionOff || ioContentionOff);      // Contention Off?
+            // We use the same contention manager, and we consider contention when
+            // there is any contention, and when no contention is not disabled.
+            contention = (memContention || ioContention)        // Contention On?
+                && !(memContentionOff || ioContentionOff);      // Contention Off?
+        }
 
         idle = idleTable[pixel & 0x0F];
         hiz = hizTable[pixel & 0x0F];
@@ -187,7 +195,15 @@ void ULA::generateVideoData()
         }
 
         // 2.c. Resolve contention and generate CPU clock.
-        cpuClock = !(contention && delayTable[pixel & 0x0F]);
+        if (ulaVersion == 3)
+        {
+            if (contention && delayTable[pixel & 0x0F])
+                z80_c &= ~SIGNAL_WAIT_;
+            else
+                z80_c |= SIGNAL_WAIT_;
+        }
+        else
+            cpuClock = !(contention && delayTable[pixel & 0x0F]);
     }
     else
     {
@@ -208,22 +224,25 @@ void ULA::tapeEarMic()
 {
     // First attempt at MIC/EAR feedback loop.
     // Let's keep this here for the moment.
-    size_t v = voltage[(ioPortOut & 0x18) >> 3];
+    if (ulaVersion != 3)
+    {
+        uint_fast32_t v = voltage[(ioPortOut & 0x18) >> 3];
 
-    if (v > 3000)
-    {
-        ear = v;
-        if (chargeDelay < 86400)
-            ++chargeDelay;
-        capacitor = 368 + (chargeDelay >> 4);
-    }
-    else
-    {
-        chargeDelay = 0;
-        if (capacitor == 0)
+        if (v > 3000)
+        {
             ear = v;
+            if (chargeDelay < 86400)
+                ++chargeDelay;
+            capacitor = 368 + (chargeDelay >> 4);
+        }
         else
-            --capacitor;
+        {
+            chargeDelay = 0;
+            if (capacitor == 0)
+                ear = v;
+            else
+                --capacitor;
+        }
     }
 
     // Tape input forces values on EAR pin.
@@ -253,13 +272,13 @@ void ULA::ioPort()
                 if ((z80_a & 0x0400) == 0x0000) ioPortIn &= keys[5];
                 if ((z80_a & 0x0200) == 0x0000) ioPortIn &= keys[6];
                 if ((z80_a & 0x0100) == 0x0000) ioPortIn &= keys[7];
-                d = ioPortIn;
+                io = ioPortIn;
             }
         }
 
         if ((z80_c & SIGNAL_WR_) == 0x0000)
         {
-            ioPortOut = d;
+            ioPortOut = io;
             borderAttr = ioPortOut & 0x07;
         }
     }
@@ -282,7 +301,7 @@ void ULA::clock()
     tapeEarMic();
 
     // Port access is contended.
-    if (cpuClock)
+    if (cpuClock == true && (z80_c & SIGNAL_WAIT_) == SIGNAL_WAIT_)
         ioPort();
 
     ++pixel;
@@ -308,7 +327,7 @@ void ULA::reset()
     ulaReset = true;
 }
 
-void ULA::setUlaVersion(size_t version)
+void ULA::setUlaVersion(uint_fast8_t version)
 {
     ulaVersion = version;
 
@@ -345,6 +364,14 @@ void ULA::setUlaVersion(size_t version)
             interruptEnd = 0x04B;
             maxScan = 0x137;
             break;
+        case 3:
+            hSyncEnd = 0x178;
+            maxPixel = 0x1C8;
+            interruptStart = 0x004;
+            interruptEnd = 0x04B;
+            maxScan = 0x137;
+            cpuClock = true;
+            break;
         default:
             hSyncEnd = 0x178;
             maxPixel = 0x1C0;
@@ -354,7 +381,50 @@ void ULA::setUlaVersion(size_t version)
             break;
     }
 
-    for (size_t ii = 0; ii < 4; ++ii)
+    bool delayUla[16] = {
+        true, true, true, true, true, true, true, true,
+        true, true, true, true, false, false, false, false
+    };
+    bool idleUla[16] = {
+        true, true, true, true, true, true, false, false,
+        false, false, false, false, false, false, true, true
+    };
+    bool hizUla[16] = {
+        true, true, true, true, false, false, false, false,
+        false, false, false, false, true, true, true, true
+    };
+
+    bool delayGa[16] = {
+        true, true, true, true, true, true, true, true,
+        true, false, false, true, true, true, true, true
+    };
+    bool idleGa[16] = {
+        true, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true
+    };
+    bool hizGa[16] = {
+        true, true, true, true, false, false, false, false,
+        false, false, false, false, true, true, true, true
+    };
+
+
+    for (uint_fast8_t ii = 0; ii < 16; ++ii)
+    {
+        if (ulaVersion == 3)
+        {
+            delayTable[ii] = delayGa[ii];
+            idleTable[ii] = idleGa[ii];
+            hizTable[ii] = hizGa[ii];
+        }
+        else
+        {
+            delayTable[ii] = delayUla[ii];
+            idleTable[ii] = idleUla[ii];
+            hizTable[ii] = hizUla[ii];
+        }
+    }
+
+    for (uint_fast32_t ii = 0; ii < 4; ++ii)
         voltage[ii] = voltages[ulaVersion][ii];
 }
 // vim: et:sw=4:ts=4:

@@ -19,7 +19,7 @@ using namespace std::chrono;
 using namespace std;
 using namespace sf;
 
-Screen::Screen(size_t scale, bool fullscreen) :
+Screen::Screen(uint_fast32_t scale, bool fullscreen) :
     GraphicWindow(344 * scale, 288 * scale, "SpecIde", fullscreen),
     skip(ULA_CLOCK_48 / SAMPLE_RATE),
     done(false),
@@ -50,8 +50,8 @@ Screen::Screen(size_t scale, bool fullscreen) :
         printf("XScale %.3f YScale %.3f\n", xScale, yScale);
         printf("Using scale %.3f\n", sScale);
 
-        size_t start = (312 - suggestedScans) / 2;
-        size_t lines = bestMode.height;
+        uint_fast32_t start = (312 - suggestedScans) / 2;
+        uint_fast32_t lines = bestMode.height;
 
         scrSprite.setTexture(scrTexture);
         scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
@@ -70,7 +70,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
 
     window.setJoystickThreshold(0.5);
 
-    size_t vectorSize = xSize * (ySize + 8);    // Count blanking lines.
+    uint_fast32_t vectorSize = xSize * (ySize + 8);    // Count blanking lines.
 #if SPECIDE_BYTE_ORDER == 1
     pixels.assign(vectorSize, 0xFF000000);
 #else
@@ -112,7 +112,7 @@ void Screen::run()
 
 void Screen::clock()
 {
-    static size_t count = skip;
+    static uint_fast32_t count = skip;
     static bool tapeTick = false;
 
     spectrum.clock();
@@ -162,8 +162,8 @@ void Screen::clock()
 
 bool Screen::update()
 {
-    static size_t xPos = 0;
-    static size_t yPos = 0;
+    static uint_fast32_t xPos = 0;
+    static uint_fast32_t yPos = 0;
 
     // These conditions cannot happen at the same time:
     // - HSYNC and VSYNC only happen during the blanking interval.
@@ -188,8 +188,8 @@ bool Screen::update()
         if (tape.pulseData.size())
         {
             char str[64];
-            size_t percent = 100 * tape.pointer / tape.pulseData.size();
-            snprintf(str, 64, "SpecIde [%03zu%%]", percent);
+            uint_fast32_t percent = 100 * tape.pointer / tape.pulseData.size();
+            snprintf(str, 64, "SpecIde [%03lu%%]", percent);
             window.setTitle(str);
         }
 
@@ -230,8 +230,8 @@ void Screen::setFullScreen(bool fs)
         printf("XScale %.3f YScale %.3f\n", xScale, yScale);
         printf("Using scale %.3f\n", sScale);
 
-        size_t start = (312 - suggestedScans) / 2;
-        size_t lines = bestMode.height;
+        uint_fast32_t start = (312 - suggestedScans) / 2;
+        uint_fast32_t lines = bestMode.height;
 
         scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
                     static_cast<uint_fast32_t>(xSize - 8), static_cast<uint_fast32_t>(lines)));
@@ -693,7 +693,7 @@ void Screen::scanKeys(Event const& event)
     }
 }
 
-void Screen::texture(size_t x, size_t y)
+void Screen::texture(uint_fast32_t x, uint_fast32_t y)
 {
     if (!scrTexture.create(static_cast<Uint32>(x), static_cast<Uint32>(y)))
         assert(false);
@@ -704,7 +704,7 @@ void Screen::texture(size_t x, size_t y)
 void Screen::set128K(bool is128K)
 {
     skip = ((is128K) ? ULA_CLOCK_128 : ULA_CLOCK_48) / SAMPLE_RATE + 1;
-    printf("Skipping %zu samples.\n", skip);
+    printf("Skipping %lu samples.\n", skip);
 }
 
 bool Screen::cpuInRefresh()

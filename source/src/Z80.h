@@ -126,10 +126,10 @@ class Z80
         uint_fast8_t x, y, z, p, q;
         uint_fast8_t opcode;
         uint_fast8_t prefix;
-        size_t executionStep;
-        size_t memRdCycles, memWrCycles;
-        size_t ioRdCycles, ioWrCycles;
-        size_t cpuProcCycles;
+        uint_fast8_t executionStep;
+        uint_fast8_t memRdCycles, memWrCycles;
+        uint_fast8_t ioRdCycles, ioWrCycles;
+        uint_fast8_t cpuProcCycles;
         uint_fast32_t memAddrMode;
 
         bool nmiAccept;

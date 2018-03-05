@@ -65,6 +65,15 @@ int main(int argc, char* argv[])
             useDefaultModel = false;
             screen.spectrum.ula.setUlaVersion(2);
         }
+        
+        if (*it == "--plus2a")
+        {
+            screen.set128K(true);
+            screen.spectrum.loadRoms(3);
+            screen.spectrum.setPlus2A();
+            useDefaultModel = false;
+            screen.spectrum.ula.setUlaVersion(3);
+        }
 
         // I'm putting both set and unset flags in case I implement loading
         // default parameters from a config file, which would override the

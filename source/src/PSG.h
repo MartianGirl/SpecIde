@@ -39,11 +39,11 @@ class PSG
 
         int envIncrement, envStart, envLevel;
         int envSlope, envCycle;
-        size_t envStep;
+        uint_fast8_t envStep;
         bool envA, envB, envC;
 
-        size_t counterA, counterB, counterC, counterN, counterE;
-        size_t periodA, periodB, periodC, periodN, periodE;
+        uint_fast32_t counterA, counterB, counterC, counterN, counterE;
+        uint_fast32_t periodA, periodB, periodC, periodN, periodE;
 
         bool playSound;
 
@@ -71,8 +71,8 @@ class PSG
 
         void clock()
         {
-            static size_t index = 0;
-            static size_t count = 0;
+            static uint_fast16_t index = 0;
+            static uint_fast32_t count = 0;
 
             ++count;
 
@@ -257,7 +257,7 @@ class PSG
         void sample()
         {
             channelA = channelB = channelC = 0;
-            for (size_t i = 0; i < FILTER_PSG_SIZE; ++i)
+            for (uint_fast16_t i = 0; i < FILTER_PSG_SIZE; ++i)
             {
                 channelA += filterA[i];
                 channelB += filterB[i];
@@ -273,7 +273,7 @@ class PSG
 
         void write(uint_fast8_t byte)
         {
-            static size_t wait = 0;
+            static uint_fast8_t wait = 0;
 
             if (++wait == 5)
             {
@@ -285,7 +285,7 @@ class PSG
 
         void addr(uint_fast8_t byte)
         {
-            static size_t wait = 0;
+            static uint_fast8_t wait = 0;
 
             if (++wait == 5)
             {
@@ -302,19 +302,19 @@ class PSG
                     0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
                     0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF};
 
-                for (size_t i = 0; i < 16; ++i)
+                for (uint_fast8_t i = 0; i < 16; ++i)
                     out[i] = arr[i];
             }
             else        // Linear (louder)
             {
-                for (size_t i = 0; i < 16; ++i)
+                for (uint_fast8_t i = 0; i < 16; ++i)
                     out[i] = static_cast<int>(0x222 * i);
             }
         }
 
         void reset()
         {
-            for (size_t i = 0; i < 16; ++i)
+            for (uint_fast8_t i = 0; i < 16; ++i)
                 r[i] = 0;
 
             periodA = periodB = periodC = 1;
