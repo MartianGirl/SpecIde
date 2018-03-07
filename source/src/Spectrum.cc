@@ -154,10 +154,7 @@ void Spectrum::clock()
     ula.z80_c = z80.c;
 
     // If a contended RAM page is selected, we'll have memory contention.
-    if ((contendedPage[memArea] == true))
-        ula.contendedBank = true;
-    else
-        ula.contendedBank = false;
+    ula.contendedBank = contendedPage[memArea];
 
     // ULA gets the data from memory or Z80, or outputs data to Z80.
     if (!spectrumPlus2A)

@@ -111,11 +111,20 @@ void ULA::generateVideoData()
 {
     if (display)
     {
-        // 2.a. Check for contended memory or I/O accesses.
+        // Check for contended memory or I/O accesses.
+        idle = idleTable[pixel & 0x0F];
+        hiz = hizTable[pixel & 0x0F];
 
         if (ulaVersion == 3)
         {
+            // Memory Contention
+            // +2A/+3 only apply contention if MREQ is low.
             contention = contendedBank && ((z80_c & SIGNAL_MREQ_) == 0x0000);
+
+            if (contention && delayTable[pixel & 0x0F])
+                z80_c &= ~SIGNAL_WAIT_;
+            else
+                z80_c |= SIGNAL_WAIT_;
         }
         else
         {
@@ -142,12 +151,12 @@ void ULA::generateVideoData()
             // there is any contention, and when no contention is not disabled.
             contention = (memContention || ioContention)        // Contention On?
                 && !(memContentionOff || ioContentionOff);      // Contention Off?
+
+            // Resolve contention and generate CPU clock.
+            cpuClock = !(contention && delayTable[pixel & 0x0F]);
         }
 
-        idle = idleTable[pixel & 0x0F];
-        hiz = hizTable[pixel & 0x0F];
-
-        // 2.b. Read from memory.
+        // Read from memory.
         switch (pixel & 0x0F)
         {
             case 0x04:
@@ -168,7 +177,7 @@ void ULA::generateVideoData()
             case 0x08:
                 a = dataAddr + 1;
                 break;
-            case 0x0A:
+            case 0x0a:
                 a = attrAddr + 1;
                 break;
             case 0x05:
@@ -181,10 +190,10 @@ void ULA::generateVideoData()
                 colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
                 colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
                 break;
-            case 0x0B:
+            case 0x0b:
                 attrLatch = d;
                 break;
-            case 0x0F:
+            case 0x0f:
                 data = dataLatch;
                 attr = attrLatch;
                 colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
@@ -193,20 +202,12 @@ void ULA::generateVideoData()
             default:
                 break;
         }
-
-        // 2.c. Resolve contention and generate CPU clock.
-        if (ulaVersion == 3)
-        {
-            if (contention && delayTable[pixel & 0x0F])
-                z80_c &= ~SIGNAL_WAIT_;
-            else
-                z80_c |= SIGNAL_WAIT_;
-        }
-        else
-            cpuClock = !(contention && delayTable[pixel & 0x0F]);
     }
     else
     {
+        if (delayTable[pixel & 0x0F] == false)
+            z80_c |= SIGNAL_WAIT_;
+
         if ((pixel & 0x07) == 0x07)
         {
             data = 0xFF;
@@ -297,7 +298,6 @@ void ULA::clock()
         generateInterrupt();
 
     generateVideoData();
-
     tapeEarMic();
 
     // Port access is contended.
@@ -367,8 +367,8 @@ void ULA::setUlaVersion(uint_fast8_t version)
         case 3:
             hSyncEnd = 0x178;
             maxPixel = 0x1C8;
-            interruptStart = 0x004;
-            interruptEnd = 0x04B;
+            interruptStart = 0x002;
+            interruptEnd = 0x041;
             maxScan = 0x137;
             cpuClock = true;
             break;
@@ -395,16 +395,16 @@ void ULA::setUlaVersion(uint_fast8_t version)
     };
 
     bool delayGa[16] = {
-        true, true, true, true, true, true, true, true,
-        true, false, false, true, true, true, true, true
+        true, true, false, false, true, true, true, true,
+        true, true, true, true, true, true, true, true
     };
     bool idleGa[16] = {
         true, true, true, true, true, true, true, true,
         true, true, true, true, true, true, true, true
     };
     bool hizGa[16] = {
-        true, true, true, true, false, false, false, false,
-        false, false, false, false, true, true, true, true
+        true, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true
     };
 
 
