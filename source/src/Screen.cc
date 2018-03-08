@@ -175,6 +175,14 @@ bool Screen::update()
         pixels[(yPos * xSize) + xPos] = spectrum.ula.rgba;
         ++xPos;
     }
+    else if (spectrum.ula.hSyncEdge)
+    {
+        // HSYNC falling edge restores the beam to the beginning of
+        // the next line.
+        xPos = 0;
+        if (spectrum.ula.retrace == false)
+            ++yPos;
+    }
     else if (spectrum.ula.vSyncEdge)
     {
         // VSYNC falling edge restores the beam to the top of the screen.
@@ -198,14 +206,6 @@ bool Screen::update()
         tape.is48K = (spectrum.paging & 0x20) ? true : false;
 
         return true;
-    }
-    else if (spectrum.ula.hSyncEdge)
-    {
-        // HSYNC falling edge restores the beam to the beginning of
-        // the next line.
-        xPos = 0;
-        if (spectrum.ula.retrace == false)
-            ++yPos;
     }
 
     return false;
