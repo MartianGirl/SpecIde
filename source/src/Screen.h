@@ -29,7 +29,7 @@
 class Screen : public GraphicWindow
 {
     public:
-        Screen(uint_fast32_t scale, bool fullscreen);
+        Screen(size_t scale, bool fullscreen);
 
         Spectrum spectrum;
         Tape tape;
@@ -43,8 +43,8 @@ class Screen : public GraphicWindow
         bool smooth;
         bool squareRootDac;
 
-        uint_fast32_t scale;
-        uint_fast32_t xSize, ySize;
+        size_t scale;
+        size_t xSize, ySize;
         float xOffset, yOffset;
 
         sf::Texture scrTexture;
@@ -76,7 +76,7 @@ class Screen : public GraphicWindow
         
         uint_fast8_t keyboardMask[8];
 
-        void texture(uint_fast32_t x, uint_fast32_t y);
+        void texture(size_t x, size_t y);
 };
 
 // vim: et:sw=4:ts=4
