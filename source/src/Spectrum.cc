@@ -64,6 +64,10 @@ void Spectrum::loadRoms(size_t model)
             romNames.push_back("plus3-2.rom");
             romNames.push_back("plus3-3.rom");
             break;
+
+        default:
+            romNames.push_back("48.rom");
+            break;
     }
 
     for (size_t i = 0; i < romNames.size(); ++i)
@@ -146,7 +150,7 @@ void Spectrum::clock()
     bool wr_ = ((z80.c & SIGNAL_WR_) == SIGNAL_WR_);
     size_t memArea = (z80.a & 0xC000) >> 14;
 
-    static size_t count = 0;
+    static uint_fast8_t count = 0;
 
     // First we clock the ULA. This generates video and contention signals.
     // We need to provide the ULA with the Z80 address and control buses.
@@ -157,27 +161,10 @@ void Spectrum::clock()
     ula.contendedBank = contendedPage[memArea];
 
     // ULA gets the data from memory or Z80, or outputs data to Z80.
-    if (!spectrumPlus2A)
-    {
-        if (ula.hiz == false)           // Is ULA mastering the bus?
-        {
-
-            // ULA renders the selected memory bank for video.
-            // In 48K models, this one is fixed.
-            // In 128K models, this one can be RAM5 or RAM7.
-            ula.d = ram[screen].read(ula.a);
-        }
-        else    // If ULA is not mastering, Z80 is.
-        {
-            // ula.d = z80.d;
-            ula.io = z80.d;
-        }
-    }
-    else
-    {
-        ula.d = ram[screen].read(ula.a);
-        ula.io = z80.d;
-    }
+    // I've found that separating both data buses is helpful for all
+    // Speccies.
+    ula.d = ram[screen].read(ula.a);
+    ula.io = z80.d;
 
     ula.clock();
     z80.c = ula.z80_c;

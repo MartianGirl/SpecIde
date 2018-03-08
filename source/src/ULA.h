@@ -50,7 +50,6 @@ class ULA
         static uint_fast32_t voltages[4][4];
         static bool delayTable[16];
         static bool idleTable[16];
-        static bool hizTable[16];
 
         static uint32_t colourTable[0x100];
         uint32_t colour0, colour1;
@@ -85,7 +84,6 @@ class ULA
         uint_fast16_t a;
         uint_fast8_t d;
         uint_fast8_t io;
-        bool hiz = true;
 
         uint_fast16_t z80_a = 0xFFFF;
         uint_fast16_t z80_c = 0xFFFF;
