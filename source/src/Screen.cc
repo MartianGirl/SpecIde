@@ -730,13 +730,13 @@ void Screen::writeMemory(uint_fast16_t a, uint_fast8_t d)
 {
     a &= 0xFFFF;
     if (a > 0x3FFF) // Don't write ROM.
-        spectrum.map[a >> 14]->write(a & 0x3FFF, d);
+        spectrum.map[a >> 14][a & 0x3FFF] = d;
 }
 
 uint_fast8_t Screen::readMemory(uint_fast16_t a)
 {
     a &= 0xFFFF;
-    return spectrum.map[a >> 14]->read(a & 0x3FFF);
+    return spectrum.map[a >> 14][a & 0x3FFF];
 }
 
 void Screen::trapLdStart()

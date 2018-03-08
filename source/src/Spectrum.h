@@ -39,12 +39,13 @@ class Spectrum
         uint_fast8_t idle;
         uint_fast16_t paging;
 
-        size_t screen;
         bool contendedPage[4];
+        bool romPage[4];
 
-        Memory ram[8]; // 128K
-        Memory rom[4]; // 64K - Speccy uses 16K, 128K uses 32K, +2A/+3 uses 64K
-        Memory* map[4];
+        uint_fast8_t ram[2 << 17];
+        uint_fast8_t rom[2 << 16];
+        uint_fast8_t* map[4];
+        uint_fast8_t* scr;
 
         // This one is going to be called at 7MHz, and is going to:
         // 1. Clock the ULA. This starts the ULA counters.
@@ -62,6 +63,20 @@ class Spectrum
         void setPlus3();
         void updatePage128K();
         void updatePagePlus2A(uint_fast8_t reg);
+        void setPage(
+                uint_fast8_t page, uint_fast8_t bank,
+                bool isRom, bool isContended)
+        {
+            size_t addr = bank * (2 << 14);
+            map[page] = (isRom) ? &rom[addr] : &ram[addr];
+            romPage[page] = isRom;
+            contendedPage[page] = isContended;
+        }
+
+        void setScreen(uint_fast8_t page)
+        {
+            scr = &ram[page * (2 << 14)];
+        }
 };
 
 // vim: et:sw=4:ts=4

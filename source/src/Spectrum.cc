@@ -1,4 +1,5 @@
 #include "Spectrum.h"
+
 #include <cstdlib>
 #include <ctime>
 
@@ -10,13 +11,8 @@ Spectrum::Spectrum() :
     spectrumPlus2A(false),
     idle(0xFF),
     paging(0x0020),
-    screen(5),
     contendedPage{false, true, false, false},
-    ram{Memory(14), Memory(14), Memory(14), Memory(14),     // 64K
-        Memory(14), Memory(14), Memory(14), Memory(14)},    // 128K
-    rom{Memory(14, true), Memory(14, true),     // 32K
-        Memory(14, true), Memory(14, true)},    // 64K
-    map{&rom[0], &ram[5], &ram[2], &ram[0]}
+    romPage{true, false, false, false}
 {
     buzzer.init(&ula.ioPortOut, &ula.tapeIn);
 
@@ -24,12 +20,14 @@ Spectrum::Spectrum() :
     // values to see the random attributes that appeared in the Spectrum
     // at boot time.
     srand(static_cast<unsigned int>(time(0)));
-    for (size_t a = 0; a < 0x4000; ++a)
-    {
-        map[1]->memory[a] = rand() & 0xFF;
-        map[2]->memory[a] = rand() & 0xFF;
-        map[3]->memory[a] = rand() & 0xFF;
-    }
+    for (size_t a = 0; a < (2 << 17); ++a)
+        ram[a] = rand() & 0xFF;
+
+    setPage(0, 0, true, false);
+    setPage(1, 5, false, true);
+    setPage(2, 2, false, false);
+    setPage(3, 0, false, false);
+    setScreen(5);
 }
 
 void Spectrum::loadRoms(size_t model)
@@ -88,7 +86,7 @@ void Spectrum::loadRoms(size_t model)
         }
 
         while (ifs.get(c))
-            rom[i].memory[pos++] = c;
+            rom[((2 << 14) * i) + pos++] = c;
 
         ifs.close();
     }
@@ -151,6 +149,7 @@ void Spectrum::clock()
     size_t memArea = (z80.a & 0xC000) >> 14;
 
     static uint_fast8_t count = 0;
+    static uint_fast8_t bus = 0;
 
     // First we clock the ULA. This generates video and contention signals.
     // We need to provide the ULA with the Z80 address and control buses.
@@ -163,7 +162,7 @@ void Spectrum::clock()
     // ULA gets the data from memory or Z80, or outputs data to Z80.
     // I've found that separating both data buses is helpful for all
     // Speccies.
-    ula.d = ram[screen].read(ula.a);
+    bus = ula.d = scr[ula.a];
     ula.io = z80.d;
 
     ula.clock();
@@ -194,7 +193,7 @@ void Spectrum::clock()
                 }
                 else if (ula.idle == false)
                 {
-                    z80.d = ram[screen].d & idle;  // Get the byte from the video memory.
+                    z80.d = bus & idle;  // Get the byte from the video memory.
                 }
                 else
                 {
@@ -270,9 +269,9 @@ void Spectrum::clock()
             // Bank 2: 8000h - Extended memory
             // Bank 3: C000h - Extended memory (can be contended)
             if (rd_ == false)
-                z80.d = map[memArea]->read(z80.a);
-            else if (wr_ == false)
-                map[memArea]->write(z80.a, z80.d);
+                z80.d = map[memArea][z80.a & 0x3FFF];
+            else if (romPage[memArea] == false && wr_ == false)
+                map[memArea][z80.a & 0x3FFF] = z80.d;
         }
         else
         {
@@ -297,17 +296,13 @@ void Spectrum::updatePage128K()
 
             size_t ramBank = paging & 0x0007;
             size_t romBank = (paging & 0x0010) >> 4;
-            screen = ((paging & 0x0008) >> 2) | 0x05;
 
-            map[0] = &rom[romBank];
-            map[1] = &ram[5];
-            map[2] = &ram[2];
-            map[3] = &ram[ramBank];
+            setScreen(((paging & 0x0008) >> 2) | 0x05);
 
-            contendedPage[0] = false;
-            contendedPage[1] = true;
-            contendedPage[2] = false;
-            contendedPage[3] = ((paging & 0x0001) == 0x01);   // RAM 1-3-5-7
+            setPage(0, romBank, true, false);
+            setPage(1, 5, false, true);
+            setPage(2, 2, false, false);
+            setPage(3, ramBank, false, ((paging & 0x0001) == 0x01));
         }
     }
 }
@@ -332,28 +327,28 @@ void Spectrum::updatePagePlus2A(uint_fast8_t reg)
                 switch (paging & 0x0600)
                 {
                     case 0x0000:
-                        map[0] = &ram[0]; contendedPage[0] = false;
-                        map[1] = &ram[1]; contendedPage[1] = false;
-                        map[2] = &ram[2]; contendedPage[2] = false;
-                        map[3] = &ram[3]; contendedPage[3] = false;
+                        setPage(0, 0, false, false);
+                        setPage(1, 1, false, false);
+                        setPage(2, 2, false, false);
+                        setPage(3, 3, false, false);
                         break;
                     case 0x0200:
-                        map[0] = &ram[4]; contendedPage[0] = true;
-                        map[1] = &ram[5]; contendedPage[1] = true;
-                        map[2] = &ram[6]; contendedPage[2] = true;
-                        map[3] = &ram[7]; contendedPage[3] = true;
+                        setPage(0, 4, false, true);
+                        setPage(1, 5, false, true);
+                        setPage(2, 6, false, true);
+                        setPage(3, 7, false, true);
                         break;
                     case 0x0400:
-                        map[0] = &ram[4]; contendedPage[0] = true;
-                        map[1] = &ram[5]; contendedPage[1] = true;
-                        map[2] = &ram[6]; contendedPage[2] = true;
-                        map[3] = &ram[3]; contendedPage[3] = false;
+                        setPage(0, 4, false, true);
+                        setPage(1, 5, false, true);
+                        setPage(2, 6, false, true);
+                        setPage(3, 3, false, false);
                         break;
                     case 0x0600:
-                        map[0] = &ram[4]; contendedPage[0] = true;
-                        map[1] = &ram[7]; contendedPage[1] = true;
-                        map[2] = &ram[6]; contendedPage[2] = true;
-                        map[3] = &ram[3]; contendedPage[3] = false;
+                        setPage(0, 4, false, true);
+                        setPage(1, 7, false, true);
+                        setPage(2, 6, false, true);
+                        setPage(3, 3, false, false);
                         break;
                 }
             }
@@ -362,18 +357,13 @@ void Spectrum::updatePagePlus2A(uint_fast8_t reg)
                 size_t ramBank = paging & 0x0007;
                 size_t romBank =
                     ((paging & 0x0010) >> 4) | ((paging & 0x0400) >> 9);
-                screen = ((paging & 0x0008) >> 2) | 0x05;
-                // screen = ((paging & 0x08) == 0x00) ? 5 : 7;
 
-                map[0] = &rom[romBank];
-                map[1] = &ram[5];
-                map[2] = &ram[2];
-                map[3] = &ram[ramBank];
+                setScreen(((paging & 0x0008) >> 2) | 0x05);
 
-                contendedPage[0] = false;
-                contendedPage[1] = true;
-                contendedPage[2] = false;
-                contendedPage[3] = ((paging & 0x0004) == 0x0004);   // RAM 4-5-6-7
+                setPage(0, romBank, true, false);
+                setPage(1, 5, false, true);
+                setPage(2, 2, false, false);
+                setPage(3, ramBank, false, ((paging & 0x0004) == 0x04));
             }
         }
     }
@@ -387,22 +377,20 @@ void Spectrum::reset()
 
     if (spectrum128K)
     {
-        map[0] = &rom[0]; contendedPage[0] = false;
-        map[1] = &ram[5]; contendedPage[1] = true;
-        map[2] = &ram[2]; contendedPage[2] = false;
-        map[3] = &ram[0]; contendedPage[3] = false;
-
-        screen = 5;
+        setPage(0, 0, true, false);
+        setPage(1, 5, false, true);
+        setPage(2, 2, false, false);
+        setPage(3, 0, false, false);
+        setScreen(5);
         paging = 0x0000;
     }
     else
     {
-        map[0] = &rom[0]; contendedPage[0] = false;
-        map[1] = &ram[5]; contendedPage[1] = true;
-        map[2] = &ram[2]; contendedPage[2] = false;
-        map[3] = &ram[0]; contendedPage[3] = false;
-
-        screen = 5;
+        setPage(0, 0, true, false);
+        setPage(1, 5, false, true);
+        setPage(2, 2, false, false);
+        setPage(3, 0, false, false);
+        setScreen(5);
         paging = 0x0020;
     }
 }
