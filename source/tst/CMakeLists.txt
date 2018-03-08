@@ -27,35 +27,6 @@ target_link_libraries(TZXFileTest
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
-add_executable(ULATest
-    ULATest.cc
-    ${PROJECT_SOURCE_DIR}/src/GraphicWindow.cc
-    ${PROJECT_SOURCE_DIR}/src/Screen.cc
-    ${PROJECT_SOURCE_DIR}/src/Tape.cc
-    ${PROJECT_SOURCE_DIR}/src/TAPFile.cc
-    ${PROJECT_SOURCE_DIR}/src/TZXFile.cc
-    ${PROJECT_SOURCE_DIR}/src/Spectrum.cc
-    ${PROJECT_SOURCE_DIR}/src/ULA.cc
-    ${PROJECT_SOURCE_DIR}/src/Memory.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80Register.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80.cc)
-target_link_libraries(ULATest
-    ${Boost_LIBRARIES}
-    ${SFML_LIBRARIES}
-    ${SFML_DEPENDENCIES})
-
-add_executable(SpectrumTest
-    SpectrumTest.cc
-    ${PROJECT_SOURCE_DIR}/src/ULA.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80.cc
-    ${PROJECT_SOURCE_DIR}/src/Memory.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80Register.cc
-    ${PROJECT_SOURCE_DIR}/src/Spectrum.cc)
-target_link_libraries(SpectrumTest
-    ${Boost_LIBRARIES}
-    ${SFML_LIBRARIES}
-    ${SFML_DEPENDENCIES})
-
 add_executable(Z80Test
     Z80Test.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
@@ -106,14 +77,6 @@ target_link_libraries(Z80BitTest
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
-add_executable(MemoryTest
-    MemoryTest.cc
-    ${PROJECT_SOURCE_DIR}/src/Memory.cc)
-target_link_libraries(MemoryTest
-    ${Boost_LIBRARIES}
-    ${SFML_LIBRARIES}
-    ${SFML_DEPENDENCIES})
-
 add_executable(Z80RegisterTest
     Z80RegisterTest.cc
     ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
@@ -123,9 +86,8 @@ target_link_libraries(Z80RegisterTest
     ${SFML_DEPENDENCIES})
 
 install(TARGETS
-    SpectrumTest ULATest
     Z80Test Z80AluTest Z80InterruptTest Z80JumpTest Z80BitTest
-    MemoryTest Z80RegisterTest
+    Z80RegisterTest
     TZXFileTest
     RUNTIME
     DESTINATION ${PROJECT_INSTALL_DIR}/tst)

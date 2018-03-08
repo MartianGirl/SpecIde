@@ -24,6 +24,7 @@ BOOST_AUTO_TEST_CASE(display_position_test)
     for (size_t i = 0; i < 139776000; ++i)
     {
         sc0.spectrum.ula.clock();
+        sc0.spectrum.ula.d = sc0.spectrum.ram[5].read(sc0.spectrum.ula.a);
         sc0.update();
     }
 }
@@ -54,14 +55,7 @@ BOOST_AUTO_TEST_CASE(image_generation_test)
     for (size_t i = 0; i < 139776000; ++i)
     {
         sc0.spectrum.ula.clock();
-        if (sc0.spectrum.ula.hiz == false)
-        {
-            sc0.spectrum.map[1]->a = sc0.spectrum.ula.a;
-            sc0.spectrum.map[1]->rd_ = sc0.spectrum.ula.hiz;
-            sc0.spectrum.map[1]->as_ = sc0.spectrum.ula.hiz;
-            sc0.spectrum.map[1]->clock();
-            sc0.spectrum.ula.d = sc0.spectrum.map[1]->d;
-        }
+        sc0.spectrum.ula.d = sc0.spectrum.ram[5].read(sc0.spectrum.ula.a);
         sc0.update();
     }
 }
@@ -84,14 +78,7 @@ BOOST_AUTO_TEST_CASE(image_load_test)
             sc0.spectrum.ula.borderAttr = (sc0.spectrum.ula.borderAttr + 0x01) & 0x07;
 
         sc0.spectrum.ula.clock();
-        if (sc0.spectrum.ula.hiz == false)
-        {
-            sc0.spectrum.map[1]->a = sc0.spectrum.ula.a;
-            sc0.spectrum.map[1]->rd_ = sc0.spectrum.ula.hiz;
-            sc0.spectrum.map[1]->as_ = sc0.spectrum.ula.hiz;
-            sc0.spectrum.map[1]->clock();
-            sc0.spectrum.ula.d = sc0.spectrum.map[1]->d;
-        }
+        sc0.spectrum.ula.d = sc0.spectrum.ram[5].read(sc0.spectrum.ula.a);
         sc0.update();
     }
 }
