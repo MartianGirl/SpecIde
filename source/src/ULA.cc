@@ -251,11 +251,12 @@ void ULA::ioPort()
     {
         if ((z80_c & SIGNAL_RD_) == 0x0000)
         {
-            ++rdWait;
+            ++wait;
 
-            if (rdWait == 5)
+            if (wait == 5)
             {
-                rdWait = 0;
+                wait = 0;
+
                 ioPortIn = inMask;
                 ioPortIn |= (ear < 700) ? 0x00 : 0x40;
                 if ((z80_a & 0x8000) == 0x0000) ioPortIn &= keys[0];

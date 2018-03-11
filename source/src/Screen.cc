@@ -22,6 +22,7 @@ using namespace sf;
 Screen::Screen(size_t scale, bool fullscreen) :
     GraphicWindow(344 * scale, 288 * scale, "SpecIde", fullscreen),
     skip(ULA_CLOCK_48 / SAMPLE_RATE),
+    count(skip),
     done(false),
     fullscreen(fullscreen), smooth(false),
     squareRootDac(true),
@@ -81,7 +82,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
     channel.play();
 }
 
-void Screen::run()
+void Screen::run48()
 {
     steady_clock::time_point tick = steady_clock::now();
 
@@ -93,7 +94,7 @@ void Screen::run()
             checkTapeTraps();
 
         // Update Spectrum hardware.
-        clock();
+        clock48();
 
         // Update the screen.
         if (update())
@@ -110,12 +111,140 @@ void Screen::run()
     }
 }
 
-void Screen::clock()
+void Screen::run128()
 {
-    static uint_fast32_t count = skip;
+    steady_clock::time_point tick = steady_clock::now();
+
+    for (;;)
+    {
+        // Now this chunk is for instant loading of TAPs.
+        // Check tape trap
+        if (flashTap == true && cpuInRefresh())
+            checkTapeTraps();
+
+        // Update Spectrum hardware.
+        clock128();
+
+        // Update the screen.
+        if (update())
+        {
+#ifdef USE_BOOST_THREADS
+            sleep_until(tick + boost::chrono::milliseconds(20));
+#else
+            sleep_until(tick + std::chrono::milliseconds(20));
+#endif
+            tick = steady_clock::now();
+        }
+
+        if (done) return;
+    }
+}
+
+void Screen::runPlus3()
+{
+    steady_clock::time_point tick = steady_clock::now();
+
+    for (;;)
+    {
+        // Now this chunk is for instant loading of TAPs.
+        // Check tape trap
+        if (flashTap == true && cpuInRefresh())
+            checkTapeTraps();
+
+        // Update Spectrum hardware.
+        clockPlus3();
+
+        // Update the screen.
+        if (update())
+        {
+#ifdef USE_BOOST_THREADS
+            sleep_until(tick + boost::chrono::milliseconds(20));
+#else
+            sleep_until(tick + std::chrono::milliseconds(20));
+#endif
+            tick = steady_clock::now();
+        }
+
+        if (done) return;
+    }
+}
+
+void Screen::clock48()
+{
     static bool tapeTick = false;
 
-    spectrum.clock();
+    spectrum.clock48();
+
+    if (tape.playing)
+    {
+        tapeTick = !tapeTick;
+        if (tapeTick == true && tape.sample-- == 0)
+            spectrum.ula.tapeIn = tape.advance();
+    }
+
+    // Generate sound
+    if (--count == 0)
+    {
+        count = skip;
+        spectrum.buzzer.sample();
+        channel.push(spectrum.buzzer.signal, spectrum.buzzer.signal);
+    }
+}
+
+void Screen::clock128()
+{
+    static bool tapeTick = false;
+
+    spectrum.clock128();
+
+    if (tape.playing)
+    {
+        tapeTick = !tapeTick;
+        if (tapeTick == true && tape.sample-- == 0)
+            spectrum.ula.tapeIn = tape.advance();
+    }
+
+    // Generate sound
+    if (--count == 0)
+    {
+        count = skip;
+        spectrum.buzzer.sample();
+        spectrum.psg.sample();
+
+        switch (stereo)
+        {
+            case 1: // ACB
+                channel.push(
+                        spectrum.buzzer.signal
+                        + spectrum.psg.channelA + spectrum.psg.channelC,
+                        spectrum.buzzer.signal
+                        + spectrum.psg.channelB + spectrum.psg.channelC);
+                break;
+
+            case 2: // ABC
+                channel.push(
+                        spectrum.buzzer.signal
+                        + spectrum.psg.channelA + spectrum.psg.channelB,
+                        spectrum.buzzer.signal
+                        + spectrum.psg.channelC + spectrum.psg.channelB);
+                break;
+
+            default:
+                channel.push(
+                        spectrum.buzzer.signal + spectrum.psg.channelA
+                        + spectrum.psg.channelB + spectrum.psg.channelC,
+                        spectrum.buzzer.signal + spectrum.psg.channelA
+                        + spectrum.psg.channelB + spectrum.psg.channelC);
+                break;
+        }
+    }
+}
+
+void Screen::clockPlus3()
+{
+    static bool tapeTick = false;
+
+    spectrum.clockPlus3();
 
     if (tape.playing)
     {
@@ -704,6 +833,7 @@ void Screen::texture(size_t x, size_t y)
 void Screen::set128K(bool is128K)
 {
     skip = ((is128K) ? ULA_CLOCK_128 : ULA_CLOCK_48) / SAMPLE_RATE + 1;
+    count = skip;
     printf("Skipping %lu samples.\n", skip);
 }
 
