@@ -720,7 +720,7 @@ void Screen::checkTapeTraps()
             trapLdStart();
     }
 
-    if (spectrum.z80.pc.w == 0x4C7) // SA_BYTES
+    if (spectrum.z80.pc.w == 0x4D1) // SA_FLAG
     {
         trapSaBytes();
     }

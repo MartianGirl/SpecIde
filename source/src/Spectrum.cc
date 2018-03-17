@@ -149,7 +149,7 @@ void Spectrum::clock()
     size_t memArea = (z80.a & 0xC000) >> 14;
 
     static uint_fast8_t count = 0;
-    static uint_fast8_t bus = 0;
+    static uint_fast8_t bus;
 
     // First we clock the ULA. This generates video and contention signals.
     // We need to provide the ULA with the Z80 address and control buses.
@@ -162,7 +162,7 @@ void Spectrum::clock()
     // ULA gets the data from memory or Z80, or outputs data to Z80.
     // I've found that separating both data buses is helpful for all
     // Speccies.
-    bus = ula.d = scr[ula.a];
+    ula.d = bus = scr[ula.a];
     ula.io = z80.d;
 
     ula.clock();

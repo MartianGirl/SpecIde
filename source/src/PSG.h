@@ -26,10 +26,6 @@ class PSG
 
         bool wr;
 
-        int signalA, signalB, signalC;
-        int filterA[FILTER_PSG_SIZE];
-        int filterB[FILTER_PSG_SIZE];
-        int filterC[FILTER_PSG_SIZE];
         int channelA, channelB, channelC;
         int noise;
         int volumeA, volumeB, volumeC;
@@ -55,7 +51,6 @@ class PSG
             r{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
             wr(false),
-            signalA(0), signalB(0), signalC(0),
             channelA(0), channelB(0), channelC(0),
             noise(0),
             volumeA(0), volumeB(0), volumeC(0),
@@ -71,7 +66,7 @@ class PSG
 
         void clock()
         {
-            static uint_fast16_t index = 0;
+            // static uint_fast16_t index = 0;
             static uint_fast32_t count = 0;
 
             ++count;
@@ -232,40 +227,24 @@ class PSG
                     if (envC) volumeC = envLevel;
                 }
             }
-
-            signalA = signalB = signalC = 1;
-
-            if (playSound)
-            {
-                if ((r[7] & 0x01) == 0) signalA = waveA;
-                if ((r[7] & 0x02) == 0) signalB = waveB;
-                if ((r[7] & 0x04) == 0) signalC = waveC;
-                if ((r[7] & 0x08) == 0) signalA += noise;
-                if ((r[7] & 0x10) == 0) signalB += noise;
-                if ((r[7] & 0x20) == 0) signalC += noise;
-                signalA *= out[volumeA];
-                signalB *= out[volumeB];
-                signalC *= out[volumeC];
-            }
-
-            filterA[index] = signalA;
-            filterB[index] = signalB;
-            filterC[index] = signalC;
-            index = (index + 1) % FILTER_PSG_SIZE;
         }
 
         void sample()
         {
-            channelA = channelB = channelC = 0;
-            for (uint_fast16_t i = 0; i < FILTER_PSG_SIZE; ++i)
+            channelA = channelB = channelC = 1;
+
+            if (playSound)
             {
-                channelA += filterA[i];
-                channelB += filterB[i];
-                channelC += filterC[i];
+                if ((r[7] & 0x01) == 0) channelA = waveA;
+                if ((r[7] & 0x02) == 0) channelB = waveB;
+                if ((r[7] & 0x04) == 0) channelC = waveC;
+                if ((r[7] & 0x08) == 0) channelA += noise;
+                if ((r[7] & 0x10) == 0) channelB += noise;
+                if ((r[7] & 0x20) == 0) channelC += noise;
+                channelA *= out[volumeA];
+                channelB *= out[volumeB];
+                channelC *= out[volumeC];
             }
-            channelA /= FILTER_PSG_SIZE;
-            channelB /= FILTER_PSG_SIZE;
-            channelC /= FILTER_PSG_SIZE;
         }
 
 
