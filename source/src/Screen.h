@@ -37,7 +37,6 @@ class Screen : public GraphicWindow
 
         int samples[2];
         uint_fast32_t skip;
-        uint_fast32_t count;
 
         bool done;
         bool fullscreen;
@@ -64,14 +63,9 @@ class Screen : public GraphicWindow
         void trapLdStart();
         void trapSaBytes();
 
-        void run48();
-        void run128();
-        void runPlus3();
+        void run();
 
-        void clock48();
-        void clock128();
-        void clockPlus3();
-
+        void clock();
         bool update();
         void setFullScreen(bool fs);
         void setSmooth(bool sm);

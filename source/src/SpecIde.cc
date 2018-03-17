@@ -19,7 +19,6 @@ int main(int argc, char* argv[])
     // We create the instance, and load the given tape (if any).
     Screen screen(2, true);
     bool useDefaultModel = true;
-    size_t family = 0;
 
     vector<string> params(argv, argv + argc);
     vector<string> tapes;
@@ -39,7 +38,6 @@ int main(int argc, char* argv[])
             screen.spectrum.loadRoms(0);
             useDefaultModel = false;
             screen.spectrum.ula.setUlaVersion(0);
-            family = 0;
         }
 
         if (*it == "--issue3" || *it == "--48")
@@ -48,7 +46,6 @@ int main(int argc, char* argv[])
             screen.spectrum.loadRoms(0);
             useDefaultModel = false;
             screen.spectrum.ula.setUlaVersion(1);
-            family = 0;
         }
 
         if (*it == "--128")
@@ -58,7 +55,6 @@ int main(int argc, char* argv[])
             screen.spectrum.set128K();
             useDefaultModel = false;
             screen.spectrum.ula.setUlaVersion(2);
-            family = 1;
         }
 
         if (*it == "--plus2")
@@ -68,7 +64,6 @@ int main(int argc, char* argv[])
             screen.spectrum.setPlus2();
             useDefaultModel = false;
             screen.spectrum.ula.setUlaVersion(2);
-            family = 1;
         }
         
         if (*it == "--plus2a")
@@ -78,7 +73,6 @@ int main(int argc, char* argv[])
             screen.spectrum.setPlus2A();
             useDefaultModel = false;
             screen.spectrum.ula.setUlaVersion(3);
-            family = 2;
         }
 
         // I'm putting both set and unset flags in case I implement loading
@@ -155,18 +149,7 @@ int main(int argc, char* argv[])
     for (vector<string>::iterator it = tapes.begin(); it != tapes.end(); ++it)
         screen.tape.load(*it);
 
-    switch (family)
-    {
-        case 1:
-            screen.run128();
-            break;
-        case 2:
-            screen.runPlus3();
-            break;
-        default:
-            screen.run48();
-            break;
-    }
+    screen.run();
 }
 
 // vim: et:sw=4:ts=4

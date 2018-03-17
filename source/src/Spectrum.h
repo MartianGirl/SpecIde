@@ -39,7 +39,6 @@ class Spectrum
         uint_fast8_t idle;
         uint_fast16_t paging;
 
-        uint_fast16_t contendedMask;
         bool contendedPage[4];
         bool romPage[4];
 
@@ -53,9 +52,7 @@ class Spectrum
         // 2. Access memory for the ULA, if the ULA is not high impedance.
         // 3. Clock the Z80, if the ULA says so.
         // 4. Access the memory for the Z80.
-        void clock48();
-        void clock128();
-        void clockPlus3();
+        void clock();
         void reset();
 
         void loadRoms(size_t model);
@@ -64,9 +61,10 @@ class Spectrum
         void setPlus2();
         void setPlus2A();
         void setPlus3();
-        void updatePage(size_t reg);
+        void updatePage128K();
+        void updatePagePlus2A(uint_fast8_t reg);
         void setPage(
-                size_t page, size_t bank,
+                uint_fast8_t page, uint_fast8_t bank,
                 bool isRom, bool isContended)
         {
             size_t addr = bank * (2 << 14);
@@ -75,7 +73,7 @@ class Spectrum
             contendedPage[page] = isContended;
         }
 
-        void setScreen(size_t page)
+        void setScreen(uint_fast8_t page)
         {
             scr = &ram[page * (2 << 14)];
         }
