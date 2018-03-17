@@ -66,7 +66,6 @@ class PSG
 
         void clock()
         {
-            // static uint_fast16_t index = 0;
             static uint_fast32_t count = 0;
 
             ++count;

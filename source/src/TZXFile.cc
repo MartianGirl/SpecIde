@@ -15,20 +15,20 @@ void TZXFile::load(string const& fileName)
         fileData.clear();
         while (ifs.get(c))
             fileData.push_back(c);
-    }
 
-    // TZX header is:
-    // 0-6 - ZXTape!
-    // 7   - 0x1A
-    // 8   - Major version number (0x01)
-    // 9   - Minor version number
-    //
-    // If the magic checks, store the version numbers.
-    if (equal(&magic[0x00], &magic[0x08], fileData.begin()))
-    {
-        majorVersion = fileData[0x08];
-        minorVersion = fileData[0x09];
-        magicIsOk = true;
+        // TZX header is:
+        // 0-6 - ZXTape!
+        // 7   - 0x1A
+        // 8   - Major version number (0x01)
+        // 9   - Minor version number
+        //
+        // If the magic checks, store the version numbers.
+        if (equal(&magic[0x00], &magic[0x08], fileData.begin()))
+        {
+            majorVersion = fileData[0x08];
+            minorVersion = fileData[0x09];
+            magicIsOk = true;
+        }
     }
 }
 
