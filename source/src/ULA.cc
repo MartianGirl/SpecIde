@@ -336,28 +336,28 @@ void ULA::setUlaVersion(uint_fast8_t version)
 
     switch (ulaVersion)
     {
-        case 0:
+        case 0: // 48K, Issue 2
             hSyncEnd = 0x170;
             maxPixel = 0x1C0;
             interruptStart = 0x000;
             interruptEnd = 0x03F;
             maxScan = 0x138;
             break;
-        case 1:
+        case 1: // 48K, Issue 3
             hSyncEnd = 0x178;
             maxPixel = 0x1C0;
             interruptStart = 0x000;
             interruptEnd = 0x03F;
             maxScan = 0x138;
             break;
-        case 2:
+        case 2: // 128K, +2
             hSyncEnd = 0x178;
             maxPixel = 0x1C8;
             interruptStart = 0x004;
             interruptEnd = 0x04B;
             maxScan = 0x137;
             break;
-        case 3:
+        case 3: // +2A, +3
             hSyncEnd = 0x178;
             maxPixel = 0x1C8;
             interruptStart = 0x002;
@@ -365,6 +365,18 @@ void ULA::setUlaVersion(uint_fast8_t version)
             maxScan = 0x137;
             cpuClock = true;
             break;
+        // case 4: // Pentagon
+            // hSyncEnd = 0x158;
+            // hBlankStart = 0x138;
+            // hBlankEnd = 0x177;
+            // maxPixel = 0x1C0;
+            // vBlankStart = 0x0F0;
+            // vSyncStart = 0x0F0;
+            // maxScan = 0x140;
+            // interruptStart = 0x000;
+            // interruptEnd = 0x03F;
+            // break;
+
         default:
             hSyncEnd = 0x178;
             maxPixel = 0x1C0;
