@@ -12,7 +12,8 @@ Spectrum::Spectrum() :
     idle(0xFF),
     paging(0x0020), mask(0x0001),
     contendedPage{false, true, false, false},
-    romPage{true, false, false, false}
+    romPage{true, false, false, false},
+    set48(true), rom48(true)
 {
     buzzer.init(&ula.ioPortOut, &ula.tapeIn);
 
@@ -345,6 +346,10 @@ void Spectrum::updatePage(uint_fast8_t reg)
                 setPage(1, 5, false, true);
                 setPage(2, 2, false, false);
                 setPage(3, ramBank, false, ((paging & mask) == mask));
+
+                rom48 = ((spectrumPlus2A && romBank == 3)
+                    || (spectrum128K && romBank == 1)) ? true : false;
+                set48 = ((paging & 0x0020) == 0x0020);
             }
         }
     }
@@ -364,6 +369,8 @@ void Spectrum::reset()
         setPage(3, 0, false, false);
         setScreen(5);
         paging = 0x0000;
+        set48 = false;
+        rom48 = false;
     }
     else
     {
@@ -373,6 +380,8 @@ void Spectrum::reset()
         setPage(3, 0, false, false);
         setScreen(5);
         paging = 0x0020;
+        set48 = true;
+        set48 = true;
     }
 }
 

@@ -89,7 +89,7 @@ void Screen::run()
     {
         // Now this chunk is for instant loading of TAPs.
         // Check tape trap
-        if (flashTap == true && cpuInRefresh())
+        if (flashTap == true && spectrum.rom48 && cpuInRefresh())
             checkTapeTraps();
 
         // Update Spectrum hardware.
@@ -203,7 +203,7 @@ bool Screen::update()
 
         pollEvents();
 
-        tape.is48K = (spectrum.paging & 0x20) ? true : false;
+        tape.is48K = spectrum.set48;
 
         return true;
     }

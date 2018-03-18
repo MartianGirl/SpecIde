@@ -48,6 +48,9 @@ class Spectrum
         uint_fast8_t* map[4];
         uint_fast8_t* scr;
 
+        bool set48;
+        bool rom48;
+
         // This one is going to be called at 7MHz, and is going to:
         // 1. Clock the ULA. This starts the ULA counters.
         // 2. Access memory for the ULA, if the ULA is not high impedance.
