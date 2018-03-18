@@ -38,6 +38,7 @@ class Spectrum
         bool spectrumPlus3;
         uint_fast8_t idle;
         uint_fast16_t paging;
+        uint_fast16_t mask;
 
         bool contendedPage[4];
         bool romPage[4];
@@ -61,8 +62,7 @@ class Spectrum
         void setPlus2();
         void setPlus2A();
         void setPlus3();
-        void updatePage128K();
-        void updatePagePlus2A(uint_fast8_t reg);
+        void updatePage(uint_fast8_t reg);
         void setPage(
                 uint_fast8_t page, uint_fast8_t bank,
                 bool isRom, bool isContended)

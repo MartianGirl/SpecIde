@@ -10,7 +10,7 @@ Spectrum::Spectrum() :
     spectrumPlus2(false),
     spectrumPlus2A(false),
     idle(0xFF),
-    paging(0x0020),
+    paging(0x0020), mask(0x0001),
     contendedPage{false, true, false, false},
     romPage{true, false, false, false}
 {
@@ -98,6 +98,7 @@ void Spectrum::set128K()
     spectrumPlus2 = false;
     spectrumPlus2A = false;
     spectrumPlus3 = false;
+    mask = 0x0001;
     reset();
 }
 
@@ -107,6 +108,7 @@ void Spectrum::setPlus2()
     spectrumPlus2 = true;
     spectrumPlus2A = false;
     spectrumPlus3 = false;
+    mask = 0x0001;
     reset();
 }
 
@@ -116,6 +118,7 @@ void Spectrum::setPlus2A()
     spectrumPlus2 = false;
     spectrumPlus2A = true;
     spectrumPlus3 = false;
+    mask = 0x0004;
     reset();
 }
 
@@ -125,6 +128,7 @@ void Spectrum::setPlus3()
     spectrumPlus2 = false;
     spectrumPlus2A = true;
     spectrumPlus3 = true;
+    mask = 0x0004;
     reset();
 }
 
@@ -203,62 +207,64 @@ void Spectrum::clock()
 
             if (spectrum128K)
             {
-                if (spectrumPlus2A)
+                switch (z80.a & 0xF003)
                 {
-                    if ((z80.a & 0xC002) == 0x4000)         // 0x7FFD.
-                    {
-                        if (wr_ == false)
-                            updatePagePlus2A(0);
-                    }
-                    else if ((z80.a & 0xF002) == 0x1000)    // 0x1FFD.
-                    {
-                        if (wr_ == false)
-                            updatePagePlus2A(1);
-                    }
-                    else if ((z80.a & 0xC002) == 0x8000)    // 0xBFFD: AY Data.
-                    {
-                        if (wr_ == false)
+                    case 0x0001:    // In +2A/+3 this is the floating bus port.
+                        if (spectrumPlus2A)
                         {
+                            if (rd_ == false)
+                            {
+                                if ((paging & 0x0020) == 0x0000)
+                                    z80.d = (bus & idle) | 0x01;
+                            }
+                            break;
+                        }
+                        // fall-through
+                    case 0x1001:    // 0x1FFD (+3 Paging High)
+                        if (spectrumPlus2A)
+                        {
+                            if (wr_ == false)
+                                updatePage(1);
+                            break;
+                        }
+                        // fall-through
+                    case 0x2001:    // 0x2FFD (+3 FDC Main Status)
+                        if (spectrumPlus2A)
+                        {
+                            break;
+                        }
+                        // fall-through
+                    case 0x3001:    // 0x3FFD (+3 FDC Data)
+                        if (spectrumPlus2A)
+                        {
+                            break;
+                        }
+                        // fall-through
+                    case 0x4001: // fall-through
+                    case 0x5001: // fall-through
+                    case 0x6001: // fall-through
+                    case 0x7001: // 0x7FFD (128K Paging / +3 Paging Low)
+                        if ((wr_ == false) || (spectrumPlus2A == false && rd_ == false))
+                            updatePage(0);
+                        break;
+
+                    case 0x8001: // fall-through
+                    case 0x9001: // fall-through
+                    case 0xA001: // fall-through
+                    case 0xB001: // 0xBFFD
+                        if (wr_ == false)
                             psg.write(z80.d);
-                        }
-                    }
-                    else if ((z80.a & 0xC002) == 0xC000)    // 0xFFFD: AY Regs.
-                    {
+                        break;
+
+                    case 0xC001: // fall-through
+                    case 0xD001: // fall-through
+                    case 0xE001: // fall-through
+                    case 0xF001: // 0xFFFD
                         if (wr_ == false)
-                        {
                             psg.addr(z80.d);
-                        }
                         else if (rd_ == false)
-                        {
                             z80.d = psg.read();
-                        }
-                    }
-                }
-                else
-                {
-                    if ((z80.a & 0x8002) == 0x0000)         // 0x7FFD: Page.
-                    {
-                        if (wr_ == false || rd_ == false)
-                            updatePage128K();
-                    }
-                    else if ((z80.a & 0xC002) == 0x8000)    // 0xBFFD: AY Data.
-                    {
-                        if (wr_ == false)
-                        {
-                            psg.write(z80.d);
-                        }
-                    }
-                    else if ((z80.a & 0xC002) == 0xC000)    // 0xFFFD: AY Regs.
-                    {
-                        if (wr_ == false)
-                        {
-                            psg.addr(z80.d);
-                        }
-                        else if (rd_ == false)
-                        {
-                            z80.d = psg.read();
-                        }
-                    }
+                        break;
                 }
             }
         }
@@ -282,32 +288,7 @@ void Spectrum::clock()
     }
 }
 
-void Spectrum::updatePage128K()
-{
-    static size_t wrWait = 0;
-
-    ++wrWait;
-    if (wrWait == 5)
-    {
-        wrWait = 0;
-        if ((paging & 0x0020) == 0x0000)
-        {
-            paging = z80.d;
-
-            size_t ramBank = paging & 0x0007;
-            size_t romBank = (paging & 0x0010) >> 4;
-
-            setScreen(((paging & 0x0008) >> 2) | 0x05);
-
-            setPage(0, romBank, true, false);
-            setPage(1, 5, false, true);
-            setPage(2, 2, false, false);
-            setPage(3, ramBank, false, ((paging & 0x0001) == 0x01));
-        }
-    }
-}
-
-void Spectrum::updatePagePlus2A(uint_fast8_t reg)
+void Spectrum::updatePage(uint_fast8_t reg)
 {
     static size_t wrWait = 0;
 
@@ -363,7 +344,7 @@ void Spectrum::updatePagePlus2A(uint_fast8_t reg)
                 setPage(0, romBank, true, false);
                 setPage(1, 5, false, true);
                 setPage(2, 2, false, false);
-                setPage(3, ramBank, false, ((paging & 0x0004) == 0x04));
+                setPage(3, ramBank, false, ((paging & mask) == mask));
             }
         }
     }
