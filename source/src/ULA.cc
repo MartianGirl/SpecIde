@@ -20,6 +20,12 @@ bool ULA::idleTable[16] =
     false, false, false, false, false, false, true, true
 };
 
+bool ULA::memTable[16] =
+{
+    true, true, true, true, false, false, false, false,
+    false, false, false, false, true, true, true, true
+};
+
 uint32_t ULA::colourTable[0x100];
 
 ULA::ULA() :
@@ -107,6 +113,7 @@ void ULA::generateVideoData()
     {
         // Check for contended memory or I/O accesses.
         idle = idleTable[pixel & 0x0F];
+        mem = memTable[pixel & 0x0F];
 
         if (ulaVersion == 3)
         {
@@ -394,6 +401,10 @@ void ULA::setUlaVersion(uint_fast8_t version)
         true, true, true, true, true, true, false, false,
         false, false, false, false, false, false, true, true
     };
+    bool memUla[16] = {
+        false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false
+    };
 
     bool delayGa[16] = {
         true, true, false, false, true, true, true, true,
@@ -403,6 +414,10 @@ void ULA::setUlaVersion(uint_fast8_t version)
         true, true, true, true, true, true, true, true,
         true, true, true, true, true, true, true, true
     };
+    bool memGa[16] = {
+        true, true, true, true, false, false, false, false,
+        false, false, false, false, true, true, true, true
+    };
 
 
     for (uint_fast8_t ii = 0; ii < 16; ++ii)
@@ -411,11 +426,13 @@ void ULA::setUlaVersion(uint_fast8_t version)
         {
             delayTable[ii] = delayGa[ii];
             idleTable[ii] = idleGa[ii];
+            memTable[ii] = memGa[ii];
         }
         else
         {
             delayTable[ii] = delayUla[ii];
             idleTable[ii] = idleUla[ii];
+            memTable[ii] = memUla[ii];
         }
     }
 

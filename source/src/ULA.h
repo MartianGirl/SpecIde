@@ -50,6 +50,7 @@ class ULA
         static uint_fast32_t voltages[4][4];
         static bool delayTable[16];
         static bool idleTable[16];
+        static bool memTable[16];
 
         static uint32_t colourTable[0x100];
         uint32_t colour0, colour1;
@@ -97,6 +98,7 @@ class ULA
         uint32_t rgba;
         bool display = true;
         bool idle = true;
+        bool mem = true;
 
         // Useful video signals
         bool hSyncEdge;
