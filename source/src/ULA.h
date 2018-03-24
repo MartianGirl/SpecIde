@@ -23,7 +23,8 @@ class ULA
 
         void generateVideoControlSignals();
         void generateInterrupt();
-        void generateVideoData();
+        void generateVideoDataUla();
+        void generateVideoDataGa();
         void tapeEarMic();
         void ioPort();
         void start();
