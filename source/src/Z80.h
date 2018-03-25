@@ -134,6 +134,7 @@ class Z80
 
         bool nmiAccept;
         bool nmiProcess;
+        bool intAccept;
         bool intProcess;
 
         uint_fast16_t c_d;

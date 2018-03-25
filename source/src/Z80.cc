@@ -76,6 +76,7 @@ void Z80::clock()
             return;
 
         case Z80State::ST_OCF_T4H_RFSH2:
+            intAccept = ((c & SIGNAL_INT_) == 0x0000);
             state = Z80State::ST_OCF_T4L_RFSH2;
             return;
 
@@ -175,6 +176,7 @@ void Z80::clock()
             return;
 
         case Z80State::ST_MEMRD_T3H_DATARD:
+            intAccept = ((c & SIGNAL_INT_) == 0x0000);
             state = Z80State::ST_MEMRD_T3L_DATARD;
             return;
 
@@ -213,6 +215,7 @@ void Z80::clock()
 
         case Z80State::ST_MEMWR_T3H_DATAWR:
             // d = dout;
+            intAccept = ((c & SIGNAL_INT_) == 0x0000);
             state = Z80State::ST_MEMWR_T3L_DATAWR;
             return;
 
@@ -253,6 +256,7 @@ void Z80::clock()
             return;
 
         case Z80State::ST_IORD_T3H_DATARD:
+            intAccept = ((c & SIGNAL_INT_) == 0x0000);
             state = Z80State::ST_IORD_T3L_DATARD;
             return;
 
@@ -299,6 +303,7 @@ void Z80::clock()
 
         case Z80State::ST_IOWR_T3H_DATAWR:
             // d = dout;
+            intAccept = ((c & SIGNAL_INT_) == 0x0000);
             state = Z80State::ST_IOWR_T3L_DATAWR;
             return;
 
@@ -324,6 +329,7 @@ void Z80::clock()
             // Wait state
         case Z80State::ST_CPU_T0H_WAITST:
             // c |= SIGNAL_RFSH_;
+            intAccept = ((c & SIGNAL_INT_) == 0x0000);
             state = Z80State::ST_CPU_T0L_WAITST;
             return;
 
@@ -405,12 +411,13 @@ void Z80::clock()
         state = Z80State::ST_NMI_T1H_ADDRWR;
     }
     // INT only happens if there is no NMI.
-    else if (((c & SIGNAL_INT_) == 0x0000) 
+    else if (intAccept
             && ((iff_d & IFF1) == IFF1)
             && ((iff & IFF1) == IFF1)
             && prefix == PREFIX_NO)
     {
         iff &= ~(IFF1 | IFF2);
+        intAccept = false;
         intProcess = true;
         iff &= ~HALT;
         c |= SIGNAL_HALT_;
