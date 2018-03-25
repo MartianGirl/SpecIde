@@ -101,7 +101,12 @@ void ULA::generateVideoControlSignals()
 
 void ULA::generateInterrupt()
 {
-    if (pixel >= interruptStart && pixel < interruptEnd)
+    if (pixel == interruptStart)
+        interrupt = true;
+    else if (pixel == interruptEnd)
+        interrupt = false;
+
+    if (interrupt)
         z80_c &= ~SIGNAL_INT_;
     else
         z80_c |= SIGNAL_INT_;
@@ -195,7 +200,9 @@ void ULA::generateVideoDataUla()
         {
             data = 0xFF;
             attr = borderAttr;
-            colour1 = colourTable[0x80 | (attr & 0x7F)]; // Border only shows colour 1.
+            // colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+            // colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+            colour1 = colourTable[0x80 | (attr & 0x3F)];
         }
     }
 
@@ -277,7 +284,9 @@ void ULA::generateVideoDataGa()
         {
             data = 0xFF;
             attr = borderAttr;
-            colour1 = colourTable[0x80 | (attr & 0x7F)]; // Border only shows colour 1.
+            // colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+            // colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+            colour1 = colourTable[0x80 | (attr & 0x3F)];
         }
     }
 
@@ -414,29 +423,29 @@ void ULA::setUlaVersion(uint_fast8_t version)
         case 0: // 48K, Issue 2
             hSyncEnd = 0x170;
             maxPixel = 0x1C0;
-            interruptStart = 0x000;
-            interruptEnd = 0x03F;
+            interruptStart = 0x1BE;
+            interruptEnd = 0x03E;
             maxScan = 0x138;
             break;
         case 1: // 48K, Issue 3
             hSyncEnd = 0x178;
             maxPixel = 0x1C0;
-            interruptStart = 0x000;
-            interruptEnd = 0x03F;
+            interruptStart = 0x1BE;
+            interruptEnd = 0x03E;
             maxScan = 0x138;
             break;
         case 2: // 128K, +2
             hSyncEnd = 0x178;
             maxPixel = 0x1C8;
-            interruptStart = 0x004;
-            interruptEnd = 0x04B;
+            interruptStart = 0x002;
+            interruptEnd = 0x042;
             maxScan = 0x137;
             break;
         case 3: // +2A, +3
             hSyncEnd = 0x178;
             maxPixel = 0x1C8;
             interruptStart = 0x002;
-            interruptEnd = 0x041;
+            interruptEnd = 0x042;
             maxScan = 0x137;
             cpuClock = true;
             break;
@@ -455,8 +464,8 @@ void ULA::setUlaVersion(uint_fast8_t version)
         default:
             hSyncEnd = 0x178;
             maxPixel = 0x1C0;
-            interruptStart = 0x000;
-            interruptEnd = 0x03F;
+            interruptStart = 0x1BE;
+            interruptEnd = 0x03E;
             maxScan = 0x138;
             break;
     }

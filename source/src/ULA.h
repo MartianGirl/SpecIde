@@ -36,8 +36,6 @@ class ULA
         uint_fast16_t hBlankEnd;
         uint_fast16_t hSyncEnd;
         uint_fast16_t maxPixel;
-        uint_fast16_t interruptStart;
-        uint_fast16_t interruptEnd;
 
         uint_fast16_t vBorderStart;
         uint_fast16_t vBlankStart;
@@ -80,8 +78,6 @@ class ULA
         uint_fast32_t chargeDelay = 0;
         uint_fast32_t capacitor = 0;
 
-        bool interruptRange = false;
-
         // Memory signals
         uint_fast16_t a;
         uint_fast8_t d;
@@ -119,5 +115,9 @@ class ULA
 
         // ULA interrupt
         uint_fast16_t c;
+        bool interrupt = false;
+        uint_fast16_t interruptStart;
+        uint_fast16_t interruptEnd;
+
 };
 // vim: et:sw=4:ts=4
