@@ -4,6 +4,7 @@
 #include <ctime>
 
 Spectrum::Spectrum() :
+    busD(0xFF),
     joystick(0),
     kempston(false),
     spectrum128K(false),
@@ -154,7 +155,6 @@ void Spectrum::clock()
     size_t memArea = (z80.a & 0xC000) >> 14;
 
     static uint_fast8_t count = 0;
-    static uint_fast8_t bus = 0;
 
     // First we clock the ULA. This generates video and contention signals.
     // We need to provide the ULA with the Z80 address and control buses.
@@ -169,11 +169,10 @@ void Spectrum::clock()
     // Speccies.
     ula.io = z80.d;
     ula.d = scr[ula.a];
+    if (ula.mem == false)
+        busD = ula.d;
 
     ula.clock();
-
-    if (ula.mem == false)
-        bus = ula.d;
     z80.c = ula.z80_c;
 
     if ((++count & 0x03) == 0x00)
@@ -201,7 +200,7 @@ void Spectrum::clock()
                 }
                 else if (ula.idle == false)
                 {
-                    z80.d = bus & idle;  // Get the byte from the video memory.
+                    z80.d = busD & idle;  // Get the byte from the video memory.
                 }
                 else
                 {
@@ -219,7 +218,7 @@ void Spectrum::clock()
                             if (rd_ == false)
                             {
                                 if ((paging & 0x0020) == 0x0000)
-                                    z80.d = (bus & idle) | 0x01;
+                                    z80.d = (busD & idle) | 0x01;
                             }
                             break;
                         }
@@ -282,7 +281,7 @@ void Spectrum::clock()
             {
                 z80.d = map[memArea][z80.a & 0x3FFF];
                 if (contendedPage[memArea] == true && ula.mem == true)
-                    bus = z80.d;
+                    busD = z80.d;
             }
             else if (romPage[memArea] == false && wr_ == false)
                 map[memArea][z80.a & 0x3FFF] = z80.d;

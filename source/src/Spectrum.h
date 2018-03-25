@@ -29,6 +29,8 @@ class Spectrum
         PSG psg;
         Buzzer buzzer;
 
+        uint_fast8_t busD;
+
         // Kempston Joystick.
         uint_fast8_t joystick;
         bool kempston;
