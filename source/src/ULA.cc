@@ -231,7 +231,7 @@ void ULA::generateVideoDataGa()
         // Read from memory.
         switch (pixel & 0x0F)
         {
-            case 0x04:
+            case 0x08:
                 // Generate addresses (which must be pair).
                 dataAddr = ((pixel & 0xF0) >> 3)    // 000SSSSS SSSPPPP0
                     | ((scan & 0x38) << 2)          // 00076210 54376540
@@ -243,29 +243,29 @@ void ULA::generateVideoDataGa()
                     | 0x1800;
                 a = dataAddr;
                 break;
-            case 0x06:
+            case 0x0a:
                 a = attrAddr;
                 break;
-            case 0x08:
+            case 0x0c:
                 a = dataAddr + 1;
                 break;
-            case 0x0a:
+            case 0x0e:
                 a = attrAddr + 1;
                 break;
-            case 0x05:
             case 0x09:
+            case 0x0d:
                 dataLatch = d;
                 break;
-            case 0x07:
+            case 0x0b:
                 data = dataLatch;
                 attr = attrLatch = d;
                 colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
                 colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
                 break;
-            case 0x0b:
+            case 0x0f:
                 attrLatch = d;
                 break;
-            case 0x0f:
+            case 0x03:
                 data = dataLatch;
                 attr = attrLatch;
                 colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
@@ -280,13 +280,15 @@ void ULA::generateVideoDataGa()
         if (delayTable[pixel & 0x0F] == false)
             z80_c |= SIGNAL_WAIT_;
 
-        if ((pixel & 0x07) == 0x07)
+        if ((pixel & 0x07) == 0x03)
         {
-            data = 0xFF;
-            attr = borderAttr;
-            // colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-            // colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-            colour1 = colourTable[0x80 | (attr & 0x3F)];
+            data = dataLatch;
+            attr = attrLatch;
+            dataLatch = 0xFF;
+            attrLatch = borderAttr;
+            colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+            colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+            // colour1 = colourTable[0x80 | (attr & 0x3F)];
         }
     }
 
@@ -423,15 +425,15 @@ void ULA::setUlaVersion(uint_fast8_t version)
         case 0: // 48K, Issue 2
             hSyncEnd = 0x170;
             maxPixel = 0x1C0;
-            interruptStart = 0x1BE;
-            interruptEnd = 0x03E;
+            interruptStart = 0x1BF;
+            interruptEnd = 0x03F;
             maxScan = 0x138;
             break;
         case 1: // 48K, Issue 3
             hSyncEnd = 0x178;
             maxPixel = 0x1C0;
-            interruptStart = 0x1BE;
-            interruptEnd = 0x03E;
+            interruptStart = 0x1BF;
+            interruptEnd = 0x03F;
             maxScan = 0x138;
             break;
         case 2: // 128K, +2
@@ -464,8 +466,8 @@ void ULA::setUlaVersion(uint_fast8_t version)
         default:
             hSyncEnd = 0x178;
             maxPixel = 0x1C0;
-            interruptStart = 0x1BE;
-            interruptEnd = 0x03E;
+            interruptStart = 0x1BF;
+            interruptEnd = 0x03F;
             maxScan = 0x138;
             break;
     }
@@ -492,8 +494,8 @@ void ULA::setUlaVersion(uint_fast8_t version)
         true, true, true, true, true, true, true, true
     };
     bool memGa[16] = {
-        true, true, true, true, false, false, false, false,
-        false, false, false, false, true, true, true, true
+        true, true, true, true, true, true, true, true,
+        false, true, false, true, false, true, false, true
     };
 
 

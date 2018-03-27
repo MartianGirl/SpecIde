@@ -4,7 +4,7 @@
 #include <ctime>
 
 Spectrum::Spectrum() :
-    busD(0xFF),
+    bus(0xFF),
     joystick(0),
     kempston(false),
     spectrum128K(false),
@@ -170,7 +170,7 @@ void Spectrum::clock()
     ula.io = z80.d;
     ula.d = scr[ula.a];
     if (ula.mem == false)
-        busD = ula.d;
+        bus = ula.d;
 
     ula.clock();
     z80.c = ula.z80_c;
@@ -200,7 +200,7 @@ void Spectrum::clock()
                 }
                 else if (ula.idle == false)
                 {
-                    z80.d = busD & idle;  // Get the byte from the video memory.
+                    z80.d = bus & idle;  // Get the byte from the video memory.
                 }
                 else
                 {
@@ -218,7 +218,7 @@ void Spectrum::clock()
                             if (rd_ == false)
                             {
                                 if ((paging & 0x0020) == 0x0000)
-                                    z80.d = (busD & idle) | 0x01;
+                                    z80.d = (bus_1 & idle) | 0x01;
                             }
                             break;
                         }
@@ -281,9 +281,10 @@ void Spectrum::clock()
             {
                 z80.d = map[memArea][z80.a & 0x3FFF];
                 if (contendedPage[memArea] == true && ula.mem == true)
-                    busD = z80.d;
+                    bus = z80.d;
             }
             else if (romPage[memArea] == false && wr_ == false)
+                if (z80.state == Z80State::ST_MEMWR_T3L_DATAWR)
                 map[memArea][z80.a & 0x3FFF] = z80.d;
         }
         else
@@ -293,6 +294,8 @@ void Spectrum::clock()
 
         z80.clock();
     }
+
+    bus_1 = bus;
 }
 
 void Spectrum::updatePage(uint_fast8_t reg)
