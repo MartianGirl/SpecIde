@@ -65,6 +65,11 @@ void Spectrum::loadRoms(size_t model)
             romNames.push_back("plus3-3.rom");
             break;
 
+        case 4:
+            romNames.push_back("128-spanish-0.rom");
+            romNames.push_back("128-spanish-1.rom");
+            break;
+
         default:
             romNames.push_back("48.rom");
             break;
@@ -171,7 +176,7 @@ void Spectrum::clock()
     // I've found that separating both data buses is helpful for all
     // Speccies.
     ula.io = z80.d;
-    ula.d = scr[(!spectrumPlus2A && snow) ? (ula.a & 0x3F00) | z80.ir.l : ula.a];
+    ula.d = scr[(!spectrumPlus2A && snow) ? ula.a & z80.a : ula.a];
     if (ula.mem == false)
         bus = ula.d;
 

@@ -57,6 +57,15 @@ int main(int argc, char* argv[])
             screen.spectrum.ula.setUlaVersion(2);
         }
 
+        if (*it == "--128sp")
+        {
+            screen.set128K(true);
+            screen.spectrum.loadRoms(4);
+            screen.spectrum.set128K();
+            useDefaultModel = false;
+            screen.spectrum.ula.setUlaVersion(2);
+        }
+
         if (*it == "--plus2")
         {
             screen.set128K(true);
