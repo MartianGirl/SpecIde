@@ -357,7 +357,6 @@ void ULA::ioPort()
         {
             ioPortOut = io;
             borderAttr = ioPortOut & 0x07;
-            if (display == false) attrLatch = borderAttr;
         }
     }
 
