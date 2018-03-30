@@ -171,7 +171,7 @@ void Spectrum::clock()
     // I've found that separating both data buses is helpful for all
     // Speccies.
     ula.io = z80.d;
-    ula.d = scr[(!spectrumPlus2A && snow) ? (z80.a & 0x3FFF) : ula.a];
+    ula.d = scr[(!spectrumPlus2A && snow) ? (ula.a & 0x3F00) | z80.ir.l : ula.a];
     if (ula.mem == false)
         bus = ula.d;
 
