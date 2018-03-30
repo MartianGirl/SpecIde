@@ -43,7 +43,7 @@ void Z80::clock()
             if (!intProcess && !nmiProcess && !(iff_d & HALT))
                 ++pc.w;
             c &= ~SIGNAL_M1_;
-            // c |= SIGNAL_RFSH_;
+            c |= SIGNAL_RFSH_;
             state = Z80State::ST_OCF_T1L_ADDRWR;
             return;
 
@@ -75,7 +75,7 @@ void Z80::clock()
             return;
 
         case Z80State::ST_OCF_T3L_RFSH1:
-            c &= ~(SIGNAL_MREQ_); // | SIGNAL_RFSH_);
+            c &= ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
             state = Z80State::ST_OCF_T4H_RFSH2;
             return;
 
@@ -95,7 +95,7 @@ void Z80::clock()
             // This state could be done in ST_OCF_T1_ADDRWR by incrementing
             // PC only if NMI is false...
             a = pc.w;
-            // c |= SIGNAL_RFSH_;
+            c |= SIGNAL_RFSH_;
             c &= ~SIGNAL_M1_;
             state = Z80State::ST_NMI_T1L_ADDRWR;
             return;
@@ -117,7 +117,7 @@ void Z80::clock()
         case Z80State::ST_INT_T1H_ADDRWR:
             a = pc.w;
             c &= ~SIGNAL_M1_;
-            // c |= SIGNAL_RFSH_;
+            c |= SIGNAL_RFSH_;
             state = Z80State::ST_INT_T1L_ADDRWR;
             return;
 
@@ -156,7 +156,7 @@ void Z80::clock()
             // Memory read cycle
         case Z80State::ST_MEMRD_T1H_ADDRWR:
             // INT mode 0 places bytes directly on the bus.
-            // c |= SIGNAL_RFSH_;
+            c |= SIGNAL_RFSH_;
             if (intProcess == false || im == 2)
                 a = getAddress();
             state = Z80State::ST_MEMRD_T1L_ADDRWR;
@@ -190,7 +190,7 @@ void Z80::clock()
             // Memory write cycle
         case Z80State::ST_MEMWR_T1H_ADDRWR:
             a = getAddress();
-            // c |= SIGNAL_RFSH_;
+            c |= SIGNAL_RFSH_;
             state = Z80State::ST_MEMWR_T1L_ADDRWR;
             return;
 
@@ -227,7 +227,7 @@ void Z80::clock()
 
             // I/O read cycle
         case Z80State::ST_IORD_T1H_ADDRWR:
-            // c |= SIGNAL_RFSH_;
+            c |= SIGNAL_RFSH_;
             a = getAddress();
             state = Z80State::ST_IORD_T1L_ADDRWR;
             return;
@@ -268,7 +268,7 @@ void Z80::clock()
             // I/O write cycle
         case Z80State::ST_IOWR_T1H_ADDRWR:
             a = getAddress();
-            // c |= SIGNAL_RFSH_;
+            c |= SIGNAL_RFSH_;
             state = Z80State::ST_IOWR_T1L_ADDRWR;
             return;
 
@@ -317,7 +317,7 @@ void Z80::clock()
             // The CPU internal cycle begins here, and it is extended by using
             // WAITSTates.
         case Z80State::ST_CPU_T0H_CPUPROC:
-            // c |= SIGNAL_RFSH_;
+            c |= SIGNAL_RFSH_;
             state = Z80State::ST_CPU_T0L_CPUPROC;
             return;
 
@@ -327,7 +327,7 @@ void Z80::clock()
 
             // Wait state
         case Z80State::ST_CPU_T0H_WAITST:
-            // c |= SIGNAL_RFSH_;
+            c |= SIGNAL_RFSH_;
             state = Z80State::ST_CPU_T0L_WAITST;
             return;
 
