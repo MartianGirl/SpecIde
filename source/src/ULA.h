@@ -31,6 +31,8 @@ class ULA
 
         void setUlaVersion(uint_fast8_t version);
 
+        uint_fast16_t videoStart;
+        uint_fast16_t videoEnd;
         uint_fast16_t hBorderStart;
         uint_fast16_t hBlankStart;
         uint_fast16_t hBlankEnd;
@@ -73,6 +75,8 @@ class ULA
         uint_fast8_t attr;
         uint_fast8_t dataLatch;
         uint_fast8_t attrLatch;
+        uint_fast8_t dataReg;
+        uint_fast8_t attrReg;
 
         uint_fast32_t ear = 0;
         uint_fast32_t chargeDelay = 0;
@@ -93,7 +97,8 @@ class ULA
 
         // Video signals
         uint32_t rgba;
-        bool display = true;
+        bool video = true;
+        bool border = false;
         bool idle = true;
         bool mem = true;
 

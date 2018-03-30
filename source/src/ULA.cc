@@ -58,9 +58,17 @@ ULA::ULA() :
 
 void ULA::generateVideoControlSignals()
 {
+    if (pixel == videoStart)
+    {
+        video = (scan < vBorderStart);
+    }
     if (pixel == hBorderStart)
     {
-        display = false;
+        border = true;
+    }
+    else if (pixel == videoEnd)
+    {
+        video = false;
     }
     else if (pixel == hBlankStart)
     {
@@ -89,7 +97,7 @@ void ULA::generateVideoControlSignals()
     else if (pixel == maxPixel)
     {
         pixel = 0;
-        display = (scan < vBorderStart);
+        border = (scan >= vBorderStart);
         ulaReset = false;
     }
     else
@@ -114,7 +122,7 @@ void ULA::generateInterrupt()
 
 void ULA::generateVideoDataUla()
 {
-    if (display)
+    if (!border)
     {
         // Check for contended memory or I/O accesses.
         idle = idleTable[pixel & 0x0F];
@@ -173,60 +181,48 @@ void ULA::generateVideoDataUla()
                 break;
             case 0x05:
             case 0x09:
-                dataLatch = d;
+                dataReg = d;
                 break;
             case 0x07:
-                data = dataLatch;
-                attr = attrLatch = d;
-                colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-                colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-                break;
             case 0x0b:
-                attrLatch = d;
-                break;
-            case 0x0f:
-                data = dataLatch;
-                attr = attrLatch;
-                colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-                colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+                attrReg = d;
                 break;
             default:
                 break;
-        }
-    }
-    else
-    {
-        if ((pixel & 0x07) == 0x07)
-        {
-            data = 0xFF;
-            attr = borderAttr;
-            // colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-            // colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-            colour1 = colourTable[0x80 | (attr & 0x3F)];
         }
     }
 
     // 4. Generate video signal. Generate colours.
     rgba = (data & 0x80) ? colour1 : colour0;
     data <<= 1;
+
+    if ((pixel & 0x07) == 0x07)
+    {
+        data = video ? dataLatch : 0xFF;
+        attr = video ? attrLatch : borderAttr;
+        dataLatch = dataReg;
+        attrLatch = attrReg;
+        colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+        colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+    }
 }
 
 void ULA::generateVideoDataGa()
 {
-    if (display)
+    if (!border)
     {
         // Check for contended memory or I/O accesses.
         idle = idleTable[pixel & 0x0F];
         mem = memTable[pixel & 0x0F];
 
-            // Memory Contention
-            // +2A/+3 only apply contention if MREQ is low.
-            contention = contendedBank && ((z80_c & SIGNAL_MREQ_) == 0x0000);
+        // Memory Contention
+        // +2A/+3 only apply contention if MREQ is low.
+        contention = contendedBank && ((z80_c & SIGNAL_MREQ_) == 0x0000);
 
-            if (contention && delayTable[pixel & 0x0F])
-                z80_c &= ~SIGNAL_WAIT_;
-            else
-                z80_c |= SIGNAL_WAIT_;
+        if (contention && delayTable[pixel & 0x0F])
+            z80_c &= ~SIGNAL_WAIT_;
+        else
+            z80_c |= SIGNAL_WAIT_;
 
         // Read from memory.
         switch (pixel & 0x0F)
@@ -254,22 +250,11 @@ void ULA::generateVideoDataGa()
                 break;
             case 0x09:
             case 0x0d:
-                dataLatch = d;
+                dataReg = d;
                 break;
             case 0x0b:
-                data = dataLatch;
-                attr = attrLatch = d;
-                colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-                colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-                break;
             case 0x0f:
-                attrLatch = d;
-                break;
-            case 0x03:
-                data = dataLatch;
-                attr = attrLatch;
-                colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-                colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+                attrReg = d;
                 break;
             default:
                 break;
@@ -279,22 +264,19 @@ void ULA::generateVideoDataGa()
     {
         if (delayTable[pixel & 0x0F] == false)
             z80_c |= SIGNAL_WAIT_;
-
-        if ((pixel & 0x07) == 0x03)
-        {
-            data = dataLatch;
-            attr = attrLatch;
-            dataLatch = 0xFF;
-            attrLatch = borderAttr;
-            colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-            colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-            // colour1 = colourTable[0x80 | (attr & 0x3F)];
-        }
     }
 
     // 4. Generate video signal. Generate colours.
     rgba = (data & 0x80) ? colour1 : colour0;
     data <<= 1;
+
+    if ((pixel & 0x07) == 0x03)
+    {
+        data = video ? dataReg : 0xFF;
+        attr = video ? attrReg : borderAttr;
+        colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+        colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+    }
 }
 
 void ULA::tapeEarMic()
@@ -395,7 +377,8 @@ void ULA::start()
     scan = 0;
     ulaReset = false;
     z80Clk = false;
-    display = true;
+    video = true;
+    border = false;
 
     z80_c_2 = z80_c_1 = 0xFFFF;
 
@@ -410,6 +393,8 @@ void ULA::setUlaVersion(uint_fast8_t version)
 {
     ulaVersion = version;
 
+    videoStart = 0x008;
+    videoEnd = 0x108;
     hBorderStart = 0x100;
     hBlankStart = 0x140;
     hBlankEnd = 0x19F;
