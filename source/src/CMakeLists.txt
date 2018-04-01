@@ -35,6 +35,14 @@ set(SpecIde_VERSION_MINOR 3)
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
 set(SpecIde_BIG_ENDIAN ${IS_BIG_ENDIAN})
 
+if(WIN32)
+    set(SpecIde_HOME_ENV "APPDATA")
+    set(SpecIde_CONF_DIR "SpecIde")
+elseif(UNIX)
+    set(SpecIde_HOME_ENV "HOME")
+    set(SpecIde_CONF_DIR ".SpecIde")
+endif()
+
 configure_file(
     "${PROJECT_SOURCE_DIR}/config.h.in"
     "${PROJECT_SOURCE_DIR}/config.h"

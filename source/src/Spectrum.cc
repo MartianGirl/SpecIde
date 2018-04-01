@@ -34,13 +34,22 @@ Spectrum::Spectrum() :
 
 void Spectrum::loadRoms(size_t model)
 {
-    size_t pos = 0;
-    char c;
-
     ifstream ifs;
-    string romPath("/usr/share/spectrum-roms/");
     vector<string> romNames;
+    vector<string> romPaths;
     string romName;
+
+    char* pHome = getenv(SPECIDE_HOME_ENV);
+
+    romPaths.push_back("");
+    if (pHome != nullptr)
+    {
+        string home(pHome);
+        home += string("/") + string(SPECIDE_CONF_DIR) + string("/roms/");
+        romPaths.push_back(home);
+    }
+    romPaths.push_back("/usr/local/share/spectrum-roms/");
+    romPaths.push_back("/usr/share/spectrum-roms/");
 
     switch (model)
     {
@@ -75,28 +84,32 @@ void Spectrum::loadRoms(size_t model)
             break;
     }
 
-    for (size_t i = 0; i < romNames.size(); ++i)
+    size_t j = 0;
+    bool fail = true;
+
+    do
     {
-        romName = romNames[i];
-        pos = 0;
-
-        // Try opening ROM in the current directory.
-        printf("Trying ROM: %s\n", romName.c_str());
-        ifs.open(romName, ifstream::binary);
-
-        // If it fails, try the ROM in /usr/share/spectrum-roms
-        if (ifs.fail())
+        for (size_t i = 0; i < romNames.size(); ++i)
         {
-            romName = romPath + romName;
+            size_t pos = 0;
+
+            romName = romPaths[j] + romNames[i];
             printf("Trying ROM: %s\n", romName.c_str());
             ifs.open(romName, ifstream::binary);
+
+            // If it fails, try the ROM in /usr/share/spectrum-roms
+            fail = ifs.fail();
+            if (fail)
+                break;
+
+            char c;
+            while (ifs.get(c))
+                rom[((2 << 14) * i) + pos++] = c;
+
+            ifs.close();
         }
-
-        while (ifs.get(c))
-            rom[((2 << 14) * i) + pos++] = c;
-
-        ifs.close();
-    }
+        ++j;
+    } while (fail && j < romPaths.size());
 }
 
 void Spectrum::set128K()

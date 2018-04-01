@@ -38,7 +38,8 @@ class Screen : public GraphicWindow
         int samples[2];
         uint_fast32_t skip;
 
-        bool done;
+        bool done = false;
+        bool menu = false;
         bool fullscreen;
         bool smooth;
         bool squareRootDac;
@@ -46,10 +47,13 @@ class Screen : public GraphicWindow
         size_t scale;
         size_t xSize, ySize;
         float xOffset, yOffset;
+        float xScale, yScale, sScale;
 
         sf::Texture scrTexture;
         sf::Sprite scrSprite;
         std::vector<sf::Uint32> pixels;
+
+        sf::Font zxFont;
 
         uint_fast8_t stereo;
 
@@ -67,12 +71,15 @@ class Screen : public GraphicWindow
 
         void clock();
         bool update();
+        void reopenWindow(bool fs);
         void setFullScreen(bool fs);
         void setSmooth(bool sm);
         void set128K(bool is128K);
 
         void pollEvents();
         void scanKeys(sf::Event const& event);
+
+        void updateMenu();
         
         uint_fast8_t keyboardMask[8];
 

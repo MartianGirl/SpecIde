@@ -22,7 +22,6 @@ using namespace sf;
 Screen::Screen(size_t scale, bool fullscreen) :
     GraphicWindow(344 * scale, 288 * scale, "SpecIde", fullscreen),
     skip(ULA_CLOCK_48 / SAMPLE_RATE),
-    done(false),
     fullscreen(fullscreen), smooth(false),
     squareRootDac(true),
     scale(scale),
@@ -35,40 +34,42 @@ Screen::Screen(size_t scale, bool fullscreen) :
     // screen.
     texture(xSize, ySize);
 
-    if (fullscreen)
+    // Load the ZX font, for the menu.
+    vector<string> fontPaths;
+    string fontName("ZXSpectrum.ttf");
+    char* pHome = getenv(SPECIDE_HOME_ENV);
+
+    fontPaths.push_back("");
+    if (pHome != nullptr)
     {
-        // Use best mode available.
-        float xScale = bestMode.width / static_cast<float>(xSize);
-        float yScale = bestMode.height / static_cast<float>(suggestedScans);
-        float sScale;
+        string home(pHome);
+        home += string("/") + string(SPECIDE_CONF_DIR) + string("/font/");
+        fontPaths.push_back(home);
 
-        // Adjust depending on the vertical scale.
-        sScale = yScale;
-        xOffset = (bestMode.width - ((xSize - 8) * sScale)) / 2;
-        yOffset = 0;
-
-        printf("XScale %.3f YScale %.3f\n", xScale, yScale);
-        printf("Using scale %.3f\n", sScale);
-
-        size_t start = (312 - suggestedScans) / 2;
-        size_t lines = bestMode.height;
-
-        scrSprite.setTexture(scrTexture);
-        scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
-                    static_cast<uint_fast32_t>(xSize - 8), static_cast<uint_fast32_t>(lines)));
-        scrSprite.setPosition(xOffset, yOffset);
-        scrSprite.setScale(Vector2f(sScale, sScale));
+        string fontHome(pHome);
+        fontHome += string("/.fonts/truetype/");
+        fontPaths.push_back(fontHome);
     }
-    else
+    fontPaths.push_back("/usr/local/share/fonts/truetype/");
+    fontPaths.push_back("/usr/share/fonts/truetype/");
+
+    size_t j = 0;
+    bool success = false;
+    do
     {
-        // We select the windowed mode by default.
-        scrSprite.setTexture(scrTexture);
-        scrSprite.setTextureRect(sf::IntRect(0, 8, 344, 288));
-        scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
-        scrSprite.setPosition(0, 0);
+        string font = fontPaths[j] + fontName;
+        printf("Trying font: %s\n", font.c_str());
+        success = zxFont.loadFromFile(font);
+        ++j;
+    } while (!success && j < fontPaths.size());
+
+    if (!success)
+    {
+        printf("Could not load menu font.\n");
+        assert(false);
     }
 
-    window.setJoystickThreshold(0.5);
+    setFullScreen(fullscreen);
 
     size_t vectorSize = xSize * (ySize + 8);    // Count blanking lines.
 #if SPECIDE_BYTE_ORDER == 1
@@ -78,7 +79,6 @@ Screen::Screen(size_t scale, bool fullscreen) :
 #endif
 
     channel.open(2, SAMPLE_RATE);
-    channel.play();
 }
 
 void Screen::run()
@@ -87,26 +87,46 @@ void Screen::run()
 
     for (;;)
     {
-        // Now this chunk is for instant loading of TAPs.
-        // Check tape trap
-        if (flashTap == true && spectrum.rom48 && cpuInRefresh())
-            checkTapeTraps();
-
-        // Update Spectrum hardware.
-        clock();
-
-        // Update the screen.
-        if (update())
+        channel.play();
+        for (;;)
         {
-#ifdef USE_BOOST_THREADS
-            sleep_until(tick + boost::chrono::milliseconds(20));
-#else
-            sleep_until(tick + std::chrono::milliseconds(20));
-#endif
-            tick = steady_clock::now();
-        }
+            // Now this chunk is for instant loading of TAPs.
+            // Check tape trap
+            if (flashTap == true && spectrum.rom48 && cpuInRefresh())
+                checkTapeTraps();
 
-        if (done) return;
+            // Update Spectrum hardware.
+            clock();
+
+            // Update the screen.
+            if (update())
+            {
+#ifdef USE_BOOST_THREADS
+                sleep_until(tick + boost::chrono::milliseconds(20));
+#else
+                sleep_until(tick + std::chrono::milliseconds(20));
+#endif
+                tick = steady_clock::now();
+            }
+
+            if (done) return;
+            if (menu) break;
+        }
+        channel.stop();
+
+        for (;;)
+        {
+            // Menu thingy.
+            updateMenu();
+#ifdef USE_BOOST_THREADS
+                sleep_until(tick + boost::chrono::milliseconds(20));
+#else
+                sleep_until(tick + std::chrono::milliseconds(20));
+#endif
+                tick = steady_clock::now();
+            if (done) return;
+            if (!menu) break;
+        }
     }
 }
 
@@ -211,16 +231,74 @@ bool Screen::update()
     return false;
 }
 
-void Screen::setFullScreen(bool fs)
+void Screen::updateMenu()
+{
+    RectangleShape rectangle(sf::Vector2f(100, 100));
+    rectangle.setFillColor(Color::White - Color(0, 0, 0, 64));
+    rectangle.setOutlineThickness(2);
+    rectangle.setOutlineColor(Color::Black);
+    rectangle.setSize(Vector2f(296, 232));
+    if (fullscreen)
+    {
+        rectangle.setPosition(xOffset + 24, yOffset + 24);
+        rectangle.setScale(Vector2f(sScale, sScale));
+    }
+    else
+    {
+        rectangle.setPosition(24, 24);
+        rectangle.setScale(Vector2f(scale, scale));
+    }
+
+    Text text;
+    text.setFont(zxFont);
+    text.setFillColor(Color::Black);
+    text.setString("SpecIDE Menu");
+
+    if (fullscreen)
+    {
+        text.setPosition(xOffset + 36, yOffset + 36);
+        text.setCharacterSize(8 * sScale);
+    }
+    else
+    {
+        text.setPosition(36, 36);
+        text.setCharacterSize(8 * scale);
+    }
+
+    window.clear(Color::Black);
+    window.draw(scrSprite);
+    window.draw(rectangle);
+    window.draw(text);
+    window.display();
+
+    Event event;
+    while (window.pollEvent(event))
+    {
+        if (event.type == Event::KeyPressed)
+            if (event.key.code == Keyboard::F1)
+                menu = false;
+    }
+}
+
+void Screen::reopenWindow(bool fs)
 {
     window.close();
+
+    if (fs)
+        window.create(bestMode, "SpecIDE", sf::Style::Fullscreen);
+    else
+        window.create(
+                sf::VideoMode(static_cast<sf::Uint32>(w), static_cast<sf::Uint32>(h)),
+                "SpecIDE", sf::Style::Close | sf::Style::Titlebar);
+}
+
+void Screen::setFullScreen(bool fs)
+{
     if (fs)
     {
         // Use best mode available.
-        window.create(bestMode, "SpecIDE", sf::Style::Fullscreen);
-        float xScale = bestMode.width / static_cast<float>(xSize);
-        float yScale = bestMode.height / static_cast<float>(suggestedScans);
-        float sScale;
+        xScale = bestMode.width / static_cast<float>(xSize);
+        yScale = bestMode.height / static_cast<float>(suggestedScans);
 
         // Adjust depending on the vertical scale.
         sScale = yScale;
@@ -233,6 +311,7 @@ void Screen::setFullScreen(bool fs)
         size_t start = (312 - suggestedScans) / 2;
         size_t lines = bestMode.height;
 
+        scrSprite.setTexture(scrTexture);
         scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
                     static_cast<uint_fast32_t>(xSize - 8), static_cast<uint_fast32_t>(lines)));
         scrSprite.setPosition(xOffset, yOffset);
@@ -240,12 +319,9 @@ void Screen::setFullScreen(bool fs)
     }
     else
     {
-        window.create(
-                sf::VideoMode(static_cast<sf::Uint32>(w), static_cast<sf::Uint32>(h)),
-                "SpecIDE", sf::Style::Close | sf::Style::Titlebar);
-        xOffset = yOffset = 0;
+        scrSprite.setTexture(scrTexture);
         scrSprite.setTextureRect(sf::IntRect(0, 8, 344, 288));
-        scrSprite.setPosition(xOffset, yOffset);
+        scrSprite.setPosition(0, 0);
         scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
     }
 
@@ -277,6 +353,9 @@ void Screen::pollEvents()
                 switch (event.key.code)
                 {
                     // Scan function keys
+                    case Keyboard::F1:
+                        menu = true;
+                        break;
                     case Keyboard::F2:
                         if (event.key.shift)
                         {
@@ -286,6 +365,7 @@ void Screen::pollEvents()
                         else
                         {
                             fullscreen = !fullscreen;
+                            reopenWindow(fullscreen);
                             setFullScreen(fullscreen);
                         }
                         break;

@@ -4,3 +4,5 @@
 
 // System config.
 #define SPECIDE_BIG_ENDIAN @SpecIde_BIG_ENDIAN@
+#define SPECIDE_HOME_ENV "@SpecIde_HOME_ENV@"
+#define SPECIDE_CONF_DIR "@SpecIde_CONF_DIR@"

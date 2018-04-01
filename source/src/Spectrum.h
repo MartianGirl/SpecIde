@@ -12,6 +12,7 @@
 #include "Z80Defs.h"
 #include "Buzzer.h"
 #include "PSG.h"
+#include "config.h"
 
 #include <fstream>
 #include <string>
