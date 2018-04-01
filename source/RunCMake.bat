@@ -1,5 +1,5 @@
 @echo off
-set BOOST_ROOT=C:\libs\boost_1_62_0
+set BOOST_ROOT=C:\libs\boost_1_66_0
 set Boost_NO_BOOST_CMAKE=TRUE
 
 if .%1.==.. goto USAGE
@@ -34,23 +34,23 @@ goto END
 
 :GNU
 set MINGW_SYSROOT=C:\MinGW
-set SFML_ROOT=C:\libs\MinGW\SFML-2.4.1
+set SFML_ROOT=C:\libs\MinGW\SFML-2.4.2
 cmake -DCMAKE_BUILD_TYPE=%BUILD% -G "MinGW Makefiles" .
 goto END
 
 :MS
-set SFML_ROOT=C:\libs\MSVC\SFML-2.4.1
-cmake -DCMAKE_BUILD_TYPE=%BUILD% -G "Visual Studio 14 2015 Win64" .
+set SFML_ROOT=C:\libs\MSVC\SFML-2.4.2
+cmake -DCMAKE_BUILD_TYPE=%BUILD% -G "Visual Studio 15 2017 Win64" .
 goto END
 
 :NINJAMS
-set SFML_ROOT=C:\libs\MSVC\SFML-2.4.1
+set SFML_ROOT=C:\libs\MSVC\SFML-2.4.2
 cmake -DCMAKE_BUILD_TYPE=%BUILD% -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -G "Ninja" .
 goto END
 
 :NINJAGNU
 set MINGW_SYSROOT=C:\MinGW
-set SFML_ROOT=C:\libs\MinGW\SFML-2.4.1
+set SFML_ROOT=C:\libs\MinGW\SFML-2.4.2
 cmake -DCMAKE_BUILD_TYPE=%BUILD% -G "Ninja" .
 goto END
 
