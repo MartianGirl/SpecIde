@@ -44,12 +44,20 @@ void Spectrum::loadRoms(size_t model)
     romPaths.push_back("");
     if (pHome != nullptr)
     {
+#if (SPECIDE_ON_UNIX==1)
         string home(pHome);
         home += string("/") + string(SPECIDE_CONF_DIR) + string("/roms/");
         romPaths.push_back(home);
+#else
+        string home(pHome);
+        home += string("\\") + string(SPECIDE_CONF_DIR) + string("\\roms\\");
+        romPaths.push_back(home);
+#endif
     }
+#if (SPECIDE_ON_UNIX==1)
     romPaths.push_back("/usr/local/share/spectrum-roms/");
     romPaths.push_back("/usr/share/spectrum-roms/");
+#endif
 
     switch (model)
     {

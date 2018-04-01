@@ -42,6 +42,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
     fontPaths.push_back("");
     if (pHome != nullptr)
     {
+#if (SPECIDE_ON_UNIX==1)
         string home(pHome);
         home += string("/") + string(SPECIDE_CONF_DIR) + string("/font/");
         fontPaths.push_back(home);
@@ -49,9 +50,16 @@ Screen::Screen(size_t scale, bool fullscreen) :
         string fontHome(pHome);
         fontHome += string("/.fonts/truetype/");
         fontPaths.push_back(fontHome);
+#else
+        string home(pHome);
+        home += string("\\") + string(SPECIDE_CONF_DIR) + string("\\font\\");
+        fontPaths.push_back(home);
+#endif
     }
+#if (SPECIDE_ON_UNIX==1)
     fontPaths.push_back("/usr/local/share/fonts/truetype/");
     fontPaths.push_back("/usr/share/fonts/truetype/");
+#endif
 
     size_t j = 0;
     bool success = false;

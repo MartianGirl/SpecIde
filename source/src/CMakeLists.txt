@@ -38,9 +38,11 @@ set(SpecIde_BIG_ENDIAN ${IS_BIG_ENDIAN})
 if(WIN32)
     set(SpecIde_HOME_ENV "APPDATA")
     set(SpecIde_CONF_DIR "SpecIde")
+    set(SpecIde_ON_UNIX 0)
 elseif(UNIX)
     set(SpecIde_HOME_ENV "HOME")
     set(SpecIde_CONF_DIR ".SpecIde")
+    set(SpecIde_ON_UNIX 1)
 endif()
 
 configure_file(
