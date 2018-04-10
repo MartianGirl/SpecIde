@@ -170,11 +170,14 @@ class PSG
                     waveC = 1 - waveC;
                     counterC = periodC;
                 }
+            }
 
+            if ((count & 0x0F) == 0x00)
+            {
                 if (counterN-- == 0)
                 {
                     noise = uniform(gen);
-                    counterN = 2 * periodN;
+                    counterN = periodN;
                 }
 
                 if (counterE-- == 0)
