@@ -33,9 +33,9 @@ class PSG
 
         int out[16];
 
-        int envIncrement, envStart, envLevel;
-        int envSlope, envCycle;
+        int envSlope, envStart, envLevel;
         uint_fast8_t envStep;
+        bool envHold;
         bool envA, envB, envC;
 
         uint_fast32_t counterA, counterB, counterC, counterN, counterE;
@@ -57,7 +57,9 @@ class PSG
             waveA(1), waveB(1), waveC(1),
             out{0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
                 0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF},
-            envIncrement(1), envStart(0), envLevel(0), envStep(0),
+            // out{0x000, 0x034, 0x04B, 0x06E, 0x0A3, 0x0F2, 0x151, 0x227,
+              //  0x289, 0x414, 0x5B2, 0x726, 0x906, 0xB55, 0xD79, 0xFFF},
+            envSlope(1), envStart(0), envLevel(0), envStep(0), envHold(false),
             envA(false), envB(false), envC(false),
             counterA(0), counterB(0), counterC(0), counterN(0), counterE(0),
             periodA(1), periodB(1), periodC(1), periodN(1), periodE(1),
@@ -135,9 +137,12 @@ class PSG
                         // Start values depend on the attack bit.
                         // Attack = 0: Start at 1111, count down.
                         // Attack = 1: Start at 0000, count up.
-                        envStart = ((r[13] & 0x04) == 0x00) ? 0x0F : 0x00;
-                        envIncrement = ((r[13] & 0x04) == 0x00) ? -1 : 1;
-                        restartEnvelope();
+                        if (r[13] != 0xFF)
+                        {
+                            envStart = ((r[13] & 0x04) == 0x00) ? 0x0F : 0x00;
+                            envSlope = ((r[13] & 0x04) == 0x00) ? -1 : 1;
+                            restartEnvelope();
+                        }
                         break;
 
                     default:
@@ -166,65 +171,65 @@ class PSG
                     counterC = periodC;
                 }
 
-                if ((count & 0x0F) == 0x00)
+                if (counterN-- == 0)
                 {
-                    if (counterN-- == 0)
+                    noise = uniform(gen);
+                    counterN = 2 * periodN;
+                }
+
+                if (counterE-- == 0)
+                {
+                    counterE = periodE;
+
+                    if (envHold == false)
                     {
-                        noise = uniform(gen);
-                        counterN = periodN;
+                        ++envStep;
+                        envLevel += envSlope;
                     }
 
-                    if (counterE-- == 0)
+                    if (envStep == 0x10)    // We've finished a cycle.
                     {
-                        counterE = periodE;
+                        envStep = 0x00;
 
-                        if (envStep == 0x0F)    // We've finished a cycle.
+                        // Continue = 1: Cycle pattern controlled by Hold.
+                        if ((r[13] & 0x08) == 0x08)
                         {
-                            // Continue = 1: Cycle pattern controlled by Hold.
-                            if ((r[13] & 0x08) == 0x08)
+                            // Hold = 1: Keep last level.
+                            if ((r[13] & 0x01) == 0x01)
                             {
-                                // Hold = 1: Keep last level.
-                                // Hold = 0: Repeat the cycle.
-                                if ((r[13] & 0x01) == 0x01)
-                                {
-                                    // Alternate and hold: Reset level to
-                                    // the starting value, hold.
-                                    if ((r[13] & 0x02) == 0x02)
-                                    {
-                                        envLevel = envStart;
-                                    }
-                                }
-                                else
-                                {
-                                    // Alternate = 1: Invert direction.
-                                    if ((r[13] & 0x02) == 0x02)
-                                    {
-                                        envCycle = 0x0F - envCycle;
-                                        envSlope = -envSlope;
-                                    }
+                                envHold = true;
 
-                                    envStep = 0x00;
-                                    envLevel = envCycle;
-                                }
+                                // Alternate and hold: Reset level to
+                                // the starting value, hold.
+                                if ((r[13] & 0x02) == 0x02)
+                                    envLevel = envStart;
                             }
+                            // Hold = 0: Repeat the cycle.
                             else
                             {
-                                // Continue = 0: Just one cycle, return to 0000.
-                                //               Hold.
-                                envLevel = 0x00;
+                                // Alternate = 1: Invert direction.
+                                if ((r[13] & 0x02) == 0x02)
+                                {
+                                    envLevel -= envSlope;
+                                    envSlope = -envSlope;
+                                }
+                                else
+                                    envLevel = envStart;
                             }
                         }
-                        else    // We are in the middle of a cycle.
+                        else
                         {
-                            ++envStep;
-                            envLevel += envSlope;
+                            // Continue = 0: Just one cycle, return to 0000.
+                            //               Hold.
+                            envLevel = 0x00;
+                            envHold = true;
                         }
                     }
-
-                    if (envA) volumeA = envLevel;
-                    if (envB) volumeB = envLevel;
-                    if (envC) volumeC = envLevel;
                 }
+
+                if (envA) volumeA = envLevel;
+                if (envB) volumeB = envLevel;
+                if (envC) volumeC = envLevel;
             }
         }
 
@@ -279,6 +284,8 @@ class PSG
                 int arr[16] = {
                     0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
                     0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF};
+                    //0x000, 0x034, 0x04B, 0x06E, 0x0A3, 0x0F2, 0x151, 0x227,
+                    //0x289, 0x414, 0x5B2, 0x726, 0x906, 0xB55, 0xD79, 0xFFF};
 
                 for (uint_fast8_t i = 0; i < 16; ++i)
                     out[i] = arr[i];
@@ -303,10 +310,8 @@ class PSG
 
         void restartEnvelope()
         {
-            counterE = 0;
             envStep = 0;
-            envCycle = envStart;
-            envSlope = envIncrement;
+            envHold = false;
             envLevel = envStart;
         }
 };

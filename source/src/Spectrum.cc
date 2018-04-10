@@ -180,8 +180,10 @@ void Spectrum::clock()
     bool wr_ = ((z80.c & SIGNAL_WR_) == SIGNAL_WR_);
     bool rf_ = ((z80.c & SIGNAL_RFSH_) == SIGNAL_RFSH_);
     size_t memArea = (z80.a & 0xC000) >> 14;
-    bool snow = (as_ == true && rf_ == false && contendedPage[memArea] == true)
-        && ((ula.a & 0x1800) != 0x1800) && ((ula.a & 0x0001) != 0x0001);
+    bool snow = (!spectrumPlus2A)
+        && (as_ == true && rf_ == false && contendedPage[memArea] == true)
+        && ((ula.a & 0x1800) != 0x1800)
+        && ((ula.a & 0x0001) != 0x0001);
 
     static uint_fast8_t count = 0;
 
@@ -197,7 +199,7 @@ void Spectrum::clock()
     // I've found that separating both data buses is helpful for all
     // Speccies.
     ula.io = z80.d;
-    ula.d = scr[(!spectrumPlus2A && snow) ? (ula.a & 0xFF00) | z80.ir.l : ula.a];
+    ula.d = scr[snow ? (ula.a & 0xFF00) | z80.ir.l : ula.a];
     if (ula.mem == false)
         bus = ula.d;
 
