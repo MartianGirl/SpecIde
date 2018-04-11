@@ -23,7 +23,8 @@ GNU/Linux:
 5. Run: cmake -DCMAKE_BUILD_TYPE=Release .
 6. Run: make clean && make install
 7. The binaries are installed in 'source/bin'. The test binaries are installed in 'source/bin/tst'
-8. To run it: Copy the file 48.rom from the spectrum-roms package (or find it online) to the 'source' directory.
+8. To run it: Copy the roms from the spectrum-roms package (or find it online)
+   to the ~/.SpecIde/roms directory. Download https://github.com/jfsebastian/zx-spectrum-unicode-font/blob/master/build/ZXSpectrum.ttf to ./SpecIde/font directory.
 9. Run: bin/SpecIde \<TZXFile.tzx|TAPFile.tap\>
 
 MacOS: (Thanks to David Garijo for taking the time of making this work and for providing the information!)
@@ -36,7 +37,8 @@ MacOS: (Thanks to David Garijo for taking the time of making this work and for p
    to /usr/local/Cellar/cmake/3.8.2/share/cmake/Modules
 7. Run: cmake -DCMAKE_BUILD_TYPE=Release .
 8. Run: make clean && make install
-9. To run it: Copy the file 48.rom from the spectrum-roms package (or find it online) to the 'source' directory.
+8. To run it: Copy the roms from the spectrum-roms package (or find it online)
+   to the ~/.SpecIde/roms directory. Download https://github.com/jfsebastian/zx-spectrum-unicode-font/blob/master/build/ZXSpectrum.ttf to ./SpecIde/font directory.
 10. Run: bin/SpecIde \<TZXFile.tzx|TAPFile.tap\>
 
 Windows:
@@ -71,4 +73,4 @@ in the build process.
    6.2. VS2015: Use the IDE.<br>
    6.3. Ninja: ninja install<br>
   
-7. Run it. You'll need to add the path to the libraries (SFML and Boost) to the system path.
+7. Run it. You'll need to add the path to the libraries (SFML and Boost) to the system path. The font https://github.com/jfsebastian/zx-spectrum-unicode-font/blob/master/build/ZXSpectrum.ttf and Spectrum roms can be placed under %APPDATA%\SpecIde\roms and %APPDATA%\SpecIde\font.
