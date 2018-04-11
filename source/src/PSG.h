@@ -8,7 +8,7 @@
 
 #include <cassert>
 #include <cstdint>
-#include <random>
+// #include <random>
 
 #include "SoundDefs.h"
 
@@ -27,7 +27,7 @@ class PSG
         bool wr;
 
         int channelA, channelB, channelC;
-        int noise;
+        int noise, seed;
         int volumeA, volumeB, volumeC;
         int waveA, waveB, waveC;
 
@@ -43,28 +43,30 @@ class PSG
 
         bool playSound;
 
-        random_device rd;
-        mt19937 gen;
-        uniform_int_distribution<> uniform;
+        // random_device rd;
+        // mt19937 gen;
+        // uniform_int_distribution<> uniform;
 
         PSG() :
             r{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
             wr(false),
             channelA(0), channelB(0), channelC(0),
-            noise(0),
+            noise(0), seed(0xFFFF),
             volumeA(0), volumeB(0), volumeC(0),
             waveA(1), waveB(1), waveC(1),
-            out{0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
-                0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF},
-            // out{0x000, 0x034, 0x04B, 0x06E, 0x0A3, 0x0F2, 0x151, 0x227,
-              //  0x289, 0x414, 0x5B2, 0x726, 0x906, 0xB55, 0xD79, 0xFFF},
+            // out{0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
+            //    0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF},
+            // out{0x000, 0x020, 0x033, 0x04d, 0x078, 0x0ca, 0x133, 0x239,
+            //    0x286, 0x45d, 0x606, 0x76e, 0x97b, 0xb8a, 0xdc5, 0xfff},
+            out{0x000, 0x034, 0x04B, 0x06E, 0x0A3, 0x0F2, 0x151, 0x227,
+                0x289, 0x414, 0x5B2, 0x726, 0x906, 0xB55, 0xD79, 0xFFF},
             envSlope(1), envStart(0), envLevel(0), envStep(0), envHold(false),
             envA(false), envB(false), envC(false),
             counterA(0), counterB(0), counterC(0), counterN(0), counterE(0),
             periodA(1), periodB(1), periodC(1), periodN(1), periodE(1),
-            playSound(true),
-            gen(rd()), uniform(0, 1) {} 
+            playSound(true) {}
+            // gen(rd()), uniform(0, 1) {} 
 
         void clock()
         {
@@ -170,19 +172,16 @@ class PSG
                     waveC = 1 - waveC;
                     counterC = periodC;
                 }
-            }
 
-            if ((count & 0x0F) == 0x00)
-            {
                 if (counterN-- == 0)
                 {
-                    noise = uniform(gen);
-                    counterN = periodN;
+                    noise = generateNoise();
+                    counterN = 2 * periodN;
                 }
 
                 if (counterE-- == 0)
                 {
-                    counterE = periodE;
+                    counterE = 2 * periodE;
 
                     if (envHold == false)
                     {
@@ -206,6 +205,8 @@ class PSG
                                 // the starting value, hold.
                                 if ((r[13] & 0x02) == 0x02)
                                     envLevel = envStart;
+                                else
+                                    envLevel -= envSlope;
                             }
                             // Hold = 0: Repeat the cycle.
                             else
@@ -285,10 +286,15 @@ class PSG
             if (sqr)    // Square root (quieter)
             {
                 int arr[16] = {
-                    0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
-                    0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF};
-                    //0x000, 0x034, 0x04B, 0x06E, 0x0A3, 0x0F2, 0x151, 0x227,
-                    //0x289, 0x414, 0x5B2, 0x726, 0x906, 0xB55, 0xD79, 0xFFF};
+                // These are my values.
+                // {0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
+                // 0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF};
+                // These values are from Lion 17 and V_Soft.
+                // {0x000, 0x020, 0x033, 0x04d, 0x078, 0x0ca, 0x133, 0x239,
+                // 0x286, 0x45d, 0x606, 0x76e, 0x97b, 0xb8a, 0xdc5, 0xfff};
+                // These are from Hacker Kay
+                    0x000, 0x034, 0x04B, 0x06E, 0x0A3, 0x0F2, 0x151, 0x227,
+                    0x289, 0x414, 0x5B2, 0x726, 0x906, 0xB55, 0xD79, 0xFFF};
 
                 for (uint_fast8_t i = 0; i < 16; ++i)
                     out[i] = arr[i];
@@ -309,6 +315,7 @@ class PSG
             periodE = 1;
             periodN = 1;
             volumeA = volumeB = volumeC = 0;
+            seed = 0xFFFF;
         }
 
         void restartEnvelope()
@@ -316,6 +323,13 @@ class PSG
             envStep = 0;
             envHold = false;
             envLevel = envStart;
+        }
+
+        int generateNoise()
+        {
+            // GenNoise (c) Hacker KAY & Sergey Bulba
+            seed = (seed * 2 + 1) ^ (((seed >> 16) ^ (seed >> 13)) & 1);
+            return ((seed >> 16) & 1);
         }
 };
 
