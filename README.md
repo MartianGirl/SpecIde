@@ -13,6 +13,12 @@ Currently, the emulator is functional and is quite accurate. Some of the support
 - Kempston/Sinclair joystick emulation from the PC joystick/gamepad.
 - Works in GNU/Linux, Windows, and MacOS.
 
+Credits and acknowledgements:
+David Garijo for helping with the MacOS build process.
+JFSebastian for his wonderful ZXSpectrum.ttf font.
+Ast_A_Moore for his help with the +2A timings and port 0x0FFD.
+chernandezba for his help with the initial values for IR register.
+
 How to install it:
 
 GNU/Linux:
