@@ -143,6 +143,7 @@ class PSG
                         if (r[13] != 0xFF)
                         {
                             envSlope = ((r[13] & 0x04) == 0x00) ? -1 : 1;
+                            envLevel = ((r[13] & 0x04) == 0x00) ? 0x0F : 0x00;
                             restartEnvelope();
                         }
                         break;
@@ -192,13 +193,13 @@ class PSG
                             // Continue = 1: Cycle pattern controlled by Hold.
                             if ((r[13] & 0x08) == 0x08)
                             {
-                                // Hold
+                                // Hold & Alternate
                                 if ((r[13] & 0x01) == 0x01)
                                     envHold = true;
 
                                 // If Alternate != Hold, change slope. :)
-                                if ((((r[13] >> 1) ^ r[13]) & 0x01) == 0x01)
-                                    envSlope = -envSlope;
+                                if (((r[13] & 0x02) >> 1) != (r[13] & 0x01))
+                                        envSlope = -envSlope;
                             }
                             else
                             {
@@ -208,9 +209,9 @@ class PSG
                                 envSlope = 1;
                             }
                         }
-                    }
 
-                    envLevel = (envSlope > 0) ? envStep : (0x0F - envStep);
+                        envLevel = (envSlope > 0) ? envStep : (0x0F - envStep);
+                    }
                 }
 
                 if (envA) volumeA = envLevel;
@@ -259,7 +260,8 @@ class PSG
             if (++wait == 5)
             {
                 wait = 0;
-                latch_a = byte & 0x0F;
+                if ((byte & 0x0F) == byte)
+                    latch_a = byte;
             }
         }
 
@@ -304,6 +306,7 @@ class PSG
         {
             envStep = 0;
             envHold = false;
+            counterE = periodE;
         }
 
         int generateNoise()
