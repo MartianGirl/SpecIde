@@ -9,6 +9,7 @@
 #include <cassert>
 #include <cstdint>
 // #include <random>
+#include <cstdio>
 
 #include "SoundDefs.h"
 
@@ -33,8 +34,8 @@ class PSG
 
         int out[16];
 
-        int envSlope, envStart, envLevel;
-        uint_fast8_t envStep;
+        int envSlope, envLevel;
+        int envStep;
         bool envHold;
         bool envA, envB, envC;
 
@@ -61,7 +62,7 @@ class PSG
             //    0x286, 0x45d, 0x606, 0x76e, 0x97b, 0xb8a, 0xdc5, 0xfff},
             out{0x000, 0x034, 0x04B, 0x06E, 0x0A3, 0x0F2, 0x151, 0x227,
                 0x289, 0x414, 0x5B2, 0x726, 0x906, 0xB55, 0xD79, 0xFFF},
-            envSlope(1), envStart(0), envLevel(0), envStep(0), envHold(false),
+            envSlope(1), envLevel(0), envStep(0), envHold(false),
             envA(false), envB(false), envC(false),
             counterA(0), counterB(0), counterC(0), counterN(0), counterE(0),
             periodA(1), periodB(1), periodC(1), periodN(1), periodE(1),
@@ -141,7 +142,6 @@ class PSG
                         // Attack = 1: Start at 0000, count up.
                         if (r[13] != 0xFF)
                         {
-                            envStart = ((r[13] & 0x04) == 0x00) ? 0x0F : 0x00;
                             envSlope = ((r[13] & 0x04) == 0x00) ? -1 : 1;
                             restartEnvelope();
                         }
@@ -185,50 +185,32 @@ class PSG
 
                     if (envHold == false)
                     {
-                        ++envStep;
-                        envLevel += envSlope;
-                    }
-
-                    if (envStep == 0x10)    // We've finished a cycle.
-                    {
-                        envStep = 0x00;
-
-                        // Continue = 1: Cycle pattern controlled by Hold.
-                        if ((r[13] & 0x08) == 0x08)
+                        if (++envStep >= 0x10)   // We've finished a cycle.
                         {
-                            // Hold = 1: Keep last level.
-                            if ((r[13] & 0x01) == 0x01)
-                            {
-                                envHold = true;
+                            envStep = 0x00;
 
-                                // Alternate and hold: Reset level to
-                                // the starting value, hold.
-                                if ((r[13] & 0x02) == 0x02)
-                                    envLevel = envStart;
-                                else
-                                    envLevel -= envSlope;
+                            // Continue = 1: Cycle pattern controlled by Hold.
+                            if ((r[13] & 0x08) == 0x08)
+                            {
+                                // Hold
+                                if ((r[13] & 0x01) == 0x01)
+                                    envHold = true;
+
+                                // If Alternate != Hold, change slope. :)
+                                if ((((r[13] >> 1) ^ r[13]) & 0x01) == 0x01)
+                                    envSlope = -envSlope;
                             }
-                            // Hold = 0: Repeat the cycle.
                             else
                             {
-                                // Alternate = 1: Invert direction.
-                                if ((r[13] & 0x02) == 0x02)
-                                {
-                                    envLevel -= envSlope;
-                                    envSlope = -envSlope;
-                                }
-                                else
-                                    envLevel = envStart;
+                                // Continue = 0: Just one cycle, return to 0000.
+                                //               Hold.
+                                envHold = true;
+                                envSlope = 1;
                             }
                         }
-                        else
-                        {
-                            // Continue = 0: Just one cycle, return to 0000.
-                            //               Hold.
-                            envLevel = 0x00;
-                            envHold = true;
-                        }
                     }
+
+                    envLevel = (envSlope > 0) ? envStep : (0x0F - envStep);
                 }
 
                 if (envA) volumeA = envLevel;
@@ -277,7 +259,7 @@ class PSG
             if (++wait == 5)
             {
                 wait = 0;
-                latch_a = byte;
+                latch_a = byte & 0x0F;
             }
         }
 
@@ -322,7 +304,6 @@ class PSG
         {
             envStep = 0;
             envHold = false;
-            envLevel = envStart;
         }
 
         int generateNoise()
