@@ -1,7 +1,7 @@
 #pragma once
 
 constexpr size_t FILTER_BZZ_SIZE = 96;
-// constexpr size_t FILTER_PSG_SIZE = 64;
+constexpr size_t FILTER_PSG_SIZE = 32;
 constexpr size_t ULA_CLOCK_48 = 7000000;
 constexpr size_t ULA_CLOCK_128 = 7093800;
 
