@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.sp.w, 0xFFFF);
     BOOST_CHECK(z80.a == 0x0000);
     BOOST_CHECK(z80.d == 0xFF);
-    BOOST_CHECK(z80.c == 0xFFFB);   // Removed refresh handling.
+    BOOST_CHECK(z80.c == (0xFFFF & ~(SIGNAL_MREQ_ | SIGNAL_RFSH_)));
 
     // Clock it once. We've run ST_OCF_T4_RFSH2
     z80.clock(); z80.clock();
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(state_machine_test)
     BOOST_CHECK_EQUAL(z80.sp.w, 0xFFFF);
     BOOST_CHECK(z80.a == 0x0000);
     BOOST_CHECK(z80.d == 0xFF);
-    BOOST_CHECK(z80.c == 0xFFFF);   // Removed refresh handling.
+    BOOST_CHECK(z80.c == (0xFFFF & ~SIGNAL_RFSH_));
 }
 
 BOOST_AUTO_TEST_CASE(states_ld_r_n_test)

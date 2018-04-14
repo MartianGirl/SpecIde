@@ -14,7 +14,7 @@ using namespace std;
 BOOST_AUTO_TEST_CASE(constructors_test)
 {
     TZXFile tzxFile;
-    tzxFile.load("TheTrapdoor.tzx");
+    tzxFile.load(boost::unit_test::framework::master_test_suite().argv[1]);
     BOOST_CHECK_EQUAL(tzxFile.fileData[0], 'Z');
     BOOST_CHECK_EQUAL(tzxFile.fileData[1], 'X');
     BOOST_CHECK_EQUAL(tzxFile.fileData[2], 'T');
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(block_parsing_test)
     set<size_t> stopIf48K;
 
     TZXFile tzx;
-    tzx.load("ThreeWeeksInParadise.tzx");
+    tzx.load(boost::unit_test::framework::master_test_suite().argv[1]);
     tzx.parse(pulseData, indexData, stopData, stopIf48K);
 }
 
