@@ -30,6 +30,33 @@ constexpr uint_fast8_t SREG_EXM = 1 << 5;
 constexpr uint_fast8_t SREG_DIO = 1 << 6;
 constexpr uint_fast8_t SREG_RQM = 1 << 7;
 
+class DiskDrive
+{
+    public:
+        bool busy;
+        bool disk;
+        bool prot;
+
+        int head[2];
+
+        DSKFile disk;
+
+        void readDiagnostic(uint_fast8_t* cmd, uint_fast8_t* res);
+        void specifySpeed(uint_fast8_t cmd);
+        void senseStatus(uint_fast8_t* cmd, uint_fast8_t* res);
+        void writeSector(uint_fast8_t* cmd, uint_fast8_t* res);
+        void readSector(uint_fast8_t* cmd, uint_fast8_t* res);
+        void recalibrate(uint_fast8_t* cmd);
+        void writeDeleted(uint_fast8_t* cmd, uint_fast8_t* res);
+        void readId(uint_fast8_t* cmd, uint_fast8_t* res);
+        void readDeleted(uint_fast8_t* cmd, uint_fast8_t* res);
+        void formatTrack(uint_fast8_t* cmd, uint_fast8_t* res);
+        void seekTrack(uint_fast8_t* cmd, uint_fast8_t* res);
+        void scanEqual(uint_fast8_t* cmd, uint_fast8_t* res);
+        void scanLow(uint_fast8_t* cmd, uint_fast8_t* res);
+        void scanHigh(uint_fast8_t* cmd, uint_fast8_t* res);
+};
+
 class FDC
 {
     public:
@@ -47,9 +74,11 @@ class FDC
 
         bool byte = false;
 
-        FDC() {} 
-
         FDCState state;
+
+        DiskDrive drive[4];
+
+        FDC() {}
 
         void clock()
         {
@@ -223,5 +252,6 @@ class FDC
             }
         }
 };
+
 
 // vim: et:sw=4:ts=4
