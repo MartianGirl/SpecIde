@@ -8,17 +8,8 @@
 
 bool z80PrefixCB()
 {
-    switch (executionStep)
-    {
-        case 0:
-            memAddrMode = 0x00000000;
-            prefix = PREFIX_CB;
-            return true;
-
-        default:    // Should not happen
-            assert(false);
-            return true;
-    }
+    prefix = PREFIX_CB;
+    return true;
 }
 
 // vim: et:sw=4:ts=4

@@ -22,28 +22,18 @@
 
 bool z80BitNReg()
 {
-    switch (executionStep)
-    {
-        case 0:
-            memAddrMode = 0x00000000;
+    acc.l = *reg8[z];
 
-            acc.l = *reg8[z];
+    af.l &= FLAG_C;
+    af.l |= FLAG_H;
+    af.l |= acc.l & (FLAG_5 | FLAG_3);
 
-            af.l &= FLAG_C;
-            af.l |= FLAG_H;
-            af.l |= acc.l & (FLAG_5 | FLAG_3);
+    acc.l &= (1 << y);
+    af.l |= acc.l & FLAG_S;
+    af.l |= (acc.l != 0x00) ? 0x00 : (FLAG_Z | FLAG_PV);
 
-            acc.l &= (1 << y);
-            af.l |= acc.l & FLAG_S;
-            af.l |= (acc.l != 0x00) ? 0x00 : (FLAG_Z | FLAG_PV);
-
-            prefix = PREFIX_NO;
-            return true;
-
-        default:    // Should not happen
-            assert(false);
-            return true;
-    }
+    prefix = PREFIX_NO;
+    return true;
 }
 
 // vim: et:sw=4:ts=4

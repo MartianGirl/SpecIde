@@ -12,21 +12,11 @@
 
 bool z80ExAfAf()
 {
-    switch (executionStep)
-    {
-        case 0:
-            memAddrMode = 0x00000000;
-
-            acc.w = af.w;
-            af.w = af_.w;
-            af_.w = acc.w;
-            prefix = PREFIX_NO;
-            return true;
-
-        default:    // Should not happen
-            assert(false);
-            return true;
-    }
+    acc.w = af.w;
+    af.w = af_.w;
+    af_.w = acc.w;
+    prefix = PREFIX_NO;
+    return true;
 }
 
 // vim: et:sw=4:ts=4

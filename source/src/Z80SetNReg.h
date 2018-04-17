@@ -22,20 +22,10 @@
 
 bool z80SetNReg()
 {
-    switch (executionStep)
-    {
-        case 0:
-            memAddrMode = 0x00000000;
+    *reg8[z] |= (1 << y);
 
-            *reg8[z] |= (1 << y);
-
-            prefix = PREFIX_NO;
-            return true;
-
-        default:    // Should not happen
-            assert(false);
-            return true;
-    }
+    prefix = PREFIX_NO;
+    return true;
 }
 
 // vim: et:sw=4:ts=4

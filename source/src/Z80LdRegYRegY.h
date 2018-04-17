@@ -22,19 +22,9 @@
 
 bool z80LdRegYRegY()
 {
-    switch (executionStep)
-    {
-        case 0:
-            memAddrMode = 0x00000000;
-
-            *(regy8[y]) = *(regy8[z]);
-            prefix = PREFIX_NO;
-            return true;
-
-        default:    // Should not happen
-            assert(false);
-            return true;
-    }
+    *(regy8[y]) = *(regy8[z]);
+    prefix = PREFIX_NO;
+    return true;
 }
 
 // vim: et:sw=4:ts=4

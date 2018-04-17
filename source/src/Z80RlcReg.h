@@ -25,27 +25,17 @@
 
 bool z80RlcReg()
 {
-    switch (executionStep)
-    {
-        case 0:
-            memAddrMode = 0x00000000;
-
-            acc.w = *reg8[z] << 1;
-            acc.h = acc.l = acc.l | acc.h;
-            *reg8[z] = acc.l;
-            acc.h ^= acc.h >> 1;
-            acc.h ^= acc.h >> 2;
-            acc.h ^= acc.h >> 4;
-            af.l = acc.l & (FLAG_S | FLAG_5 | FLAG_3 | FLAG_C);
-            af.l |= (acc.l) ? 0x00 : FLAG_Z;
-            af.l |= (acc.h & 0x01) ? 0x00 : FLAG_PV;
-            prefix = PREFIX_NO;
-            return true;
-
-        default:    // Should not happen
-            assert(false);
-            return true;
-    }
+    acc.w = *reg8[z] << 1;
+    acc.h = acc.l = acc.l | acc.h;
+    *reg8[z] = acc.l;
+    acc.h ^= acc.h >> 1;
+    acc.h ^= acc.h >> 2;
+    acc.h ^= acc.h >> 4;
+    af.l = acc.l & (FLAG_S | FLAG_5 | FLAG_3 | FLAG_C);
+    af.l |= (acc.l) ? 0x00 : FLAG_Z;
+    af.l |= (acc.h & 0x01) ? 0x00 : FLAG_PV;
+    prefix = PREFIX_NO;
+    return true;
 }
 
 // vim: et:sw=4:ts=4

@@ -10,25 +10,15 @@
 
 bool z80Im()
 {
-    switch (executionStep)
-    {
-        case 0:
-            memAddrMode = 0x00000000;
+    if ((y & 0x02) == 0x00)
+        im = 0;
+    else if ((y & 0x01) == 0x00)
+        im = 1;
+    else
+        im = 2;
 
-            if ((y & 0x02) == 0x00)
-                im = 0;
-            else if ((y & 0x01) == 0x00)
-                im = 1;
-            else
-                im = 2;
-
-            prefix = PREFIX_NO;
-            return true;
-
-        default:    // Should not happen
-            assert(false);
-            return true;
-    }
+    prefix = PREFIX_NO;
+    return true;
 }
 
 // vim: et:sw=4:ts=4

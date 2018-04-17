@@ -15,25 +15,15 @@
 
 bool z80Rrca()
 {
-    switch (executionStep)
-    {
-        case 0:
-            memAddrMode = 0x00000000;
-
-            acc.h = af.h & 0x01;
-            acc.l = af.h;
-            af.l &= FLAG_S | FLAG_Z | FLAG_PV;
-            af.l |= acc.h & FLAG_C;
-            acc.w >>= 1;
-            af.h = acc.l;
-            af.l |= af.h & (FLAG_5 | FLAG_3);
-            prefix = PREFIX_NO;
-            return true;
-
-        default:    // Should not happen
-            assert(false);
-            return true;
-    }
+    acc.h = af.h & 0x01;
+    acc.l = af.h;
+    af.l &= FLAG_S | FLAG_Z | FLAG_PV;
+    af.l |= acc.h & FLAG_C;
+    acc.w >>= 1;
+    af.h = acc.l;
+    af.l |= af.h & (FLAG_5 | FLAG_3);
+    prefix = PREFIX_NO;
+    return true;
 }
 
 // vim: et:sw=4:ts=4

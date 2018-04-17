@@ -129,8 +129,8 @@ class FDC
         {
             switch (cmdBuffer[0] & 0x1F)
             {
-                case 0x02:  // Read Track
-                    cmdBytes = 9;   // 02+MF+SK    HU TR HD ?? SZ NM GP SL
+                case 0x02:  // Read Track (Diagnostic)
+                    cmdBytes = 9;   // 02+MF+SK    HU TR HD SC SZ NM GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD NM SZ
                     return true;
 
