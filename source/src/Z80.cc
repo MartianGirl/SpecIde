@@ -672,4 +672,23 @@ void Z80::loadAddFlags()
         }
     }
 }
+
+void Z80::loadAndFlags()
+{
+    for (uint16_t a = 0; a < 0x100; ++a)
+    {
+        for (uint16_t b = 0; b < 0x100; ++b)
+        {
+            uint8_t sh = a & b;
+            uint8_t sl = a & b;
+            uint8_t f;
+
+            sh ^= sh >> 1; sh ^= sh >> 2; sh ^= sh >> 4;
+            f = (sh & 0x01) ? FLAG_H : FLAG_H | FLAG_PV;
+            f |= sl & (FLAG_S | FLAG_5 | FLAG_3);
+            f |= sl ? 0x00 : FLAG_Z;
+            andFlags[a][b] = f;
+        }
+    }
+}
 // vim: et:sw=4:ts=4

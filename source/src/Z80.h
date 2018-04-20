@@ -44,6 +44,7 @@ class Z80
         c_d(0xFFFF), iff_d(0x00), dout(0xFF)
         {
             loadAddFlags();
+            loadAndFlags();
         }
 
         void reset();
