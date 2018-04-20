@@ -1,5 +1,13 @@
 #include "Z80.h"
 
+uint8_t Z80::addFlags[2][256][256];
+uint8_t Z80::subFlags[2][256][256];
+uint8_t Z80::andFlags[256][256];
+uint8_t Z80::orFlags[256][256];
+uint8_t Z80::xorFlags[256][256];
+uint8_t Z80::cpFlags[256][256];
+
+
 void Z80::reset()
 {
     c &= ~SIGNAL_RESET_;
@@ -642,4 +650,26 @@ bool Z80::executeInt()
     return finished;
 }
 
+void Z80::loadAddFlags()
+{
+    for (uint16_t c = 0; c < 2; ++c)
+    {
+        for (uint16_t a = 0; a < 0x100; ++a)
+        {
+            for (uint16_t b = 0; b < 0x100; ++b)
+            {
+                uint16_t s = a + b + c;
+                uint8_t sh = (s >> 8) & 0x00FF;
+                uint8_t sl = s & 0x00FF;
+
+                uint8_t f = sl & (FLAG_S | FLAG_5 | FLAG_3);
+                f |= (sl ^ b ^ a) & FLAG_H;
+                f |= (((sl ^ b ^ a) >> 5) ^ (sh << 2)) & FLAG_PV;
+                f |= sh & FLAG_C;
+                f |= sl ? 0x00 : FLAG_Z;
+                addFlags[c][a][b] = f;
+            }
+        }
+    }
+}
 // vim: et:sw=4:ts=4

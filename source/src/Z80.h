@@ -41,7 +41,10 @@ class Z80
         cpuProcCycles(0),
         nmiAccept(false), nmiProcess(false),
         intProcess(false),
-        c_d(0xFFFF), iff_d(0x00), dout(0xFF) {}
+        c_d(0xFFFF), iff_d(0x00), dout(0xFF)
+        {
+            loadAddFlags();
+        }
 
         void reset();
         void clock();
@@ -140,6 +143,22 @@ class Z80
         uint_fast16_t c_d;
         uint_fast8_t iff_d;
         uint_fast8_t dout;
+
+        // Precalculated flags
+        static uint8_t addFlags[2][256][256];
+        static uint8_t subFlags[2][256][256];
+        static uint8_t andFlags[256][256];
+        static uint8_t orFlags[256][256];
+        static uint8_t xorFlags[256][256];
+        static uint8_t cpFlags[256][256];
+
+        void loadAddFlags();
+        void loadSubFlags();
+        void loadSbcFlags();
+        void loadAndFlags();
+        void loadOrFlags();
+        void loadXorFlags();
+        void loadCpFlags();
 };
 
 // vim: et:sw=4:ts=4
