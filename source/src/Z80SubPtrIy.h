@@ -39,16 +39,8 @@ bool z80SubPtrIy()
             return true;
 
         case 7:
-            acc.w = af.h - iReg.h;
-
-            af.l = acc.l & (FLAG_S | FLAG_5 | FLAG_3);
-            af.l |= FLAG_N;
-            af.l |= (acc.l ^ iReg.h ^ af.h) & FLAG_H;
-            af.l |= (((acc.l ^ iReg.h ^ af.h) >> 5) 
-                    ^ (acc.h << 2)) & FLAG_PV;
-            af.l |= acc.h & FLAG_C;                   // S.5H3V0C
-            af.l |= (acc.l) ? 0x00 : FLAG_Z;          // SZ5H3V0C
-            af.h = acc.l;
+            af.l = subFlags[0][af.h][iReg.h];
+            af.h -= iReg.h;
             prefix = PREFIX_NO;
             return true;
 

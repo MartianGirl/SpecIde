@@ -6,6 +6,7 @@ uint8_t Z80::andFlags[256][256];
 uint8_t Z80::orFlags[256][256];
 uint8_t Z80::xorFlags[256][256];
 uint8_t Z80::cpFlags[256][256];
+bool Z80::flagsReady = false;
 
 
 void Z80::reset()
@@ -28,7 +29,6 @@ void Z80::clock()
         iff &= ~(IFF1);
     }
 
-    // This at the end so that it is the "delayed" version.
     intAccept = ((c_d & SIGNAL_INT_) == 0x0000);
 
     c_d = c;
@@ -673,6 +673,30 @@ void Z80::loadAddFlags()
     }
 }
 
+void Z80::loadSubFlags()
+{
+    for (uint16_t c = 0; c < 2; ++c)
+    {
+        for (uint16_t a = 0; a < 0x100; ++a)
+        {
+            for (uint16_t b = 0; b < 0x100; ++b)
+            {
+                uint16_t s = a - b - c;
+                uint8_t sh = (s >> 8) & 0x00FF;
+                uint8_t sl = s & 0x00FF;
+
+                uint8_t f = sl & (FLAG_S | FLAG_5 | FLAG_3);
+                f |= FLAG_N;
+                f |= (sl ^ b ^ a) & FLAG_H;
+                f |= (((sl ^ b ^ a) >> 5) ^ (sh << 2)) & FLAG_PV;
+                f |= sh & FLAG_C;
+                f |= sl ? 0x00 : FLAG_Z;
+                subFlags[c][a][b] = f;
+            }
+        }
+    }
+}
+
 void Z80::loadAndFlags()
 {
     for (uint16_t a = 0; a < 0x100; ++a)
@@ -688,6 +712,66 @@ void Z80::loadAndFlags()
             f |= sl & (FLAG_S | FLAG_5 | FLAG_3);
             f |= sl ? 0x00 : FLAG_Z;
             andFlags[a][b] = f;
+        }
+    }
+}
+
+void Z80::loadOrFlags()
+{
+    for (uint16_t a = 0; a < 0x100; ++a)
+    {
+        for (uint16_t b = 0; b < 0x100; ++b)
+        {
+            uint8_t sh = a | b;
+            uint8_t sl = a | b;
+            uint8_t f;
+
+            sh ^= sh >> 1; sh ^= sh >> 2; sh ^= sh >> 4;
+            f = (sh & 0x01) ? 0 : FLAG_PV;
+            f |= sl & (FLAG_S | FLAG_5 | FLAG_3);
+            f |= sl ? 0x00 : FLAG_Z;
+            orFlags[a][b] = f;
+        }
+    }
+}
+
+void Z80::loadXorFlags()
+{
+    for (uint16_t a = 0; a < 0x100; ++a)
+    {
+        for (uint16_t b = 0; b < 0x100; ++b)
+        {
+            uint8_t sh = a ^ b;
+            uint8_t sl = a ^ b;
+            uint8_t f;
+
+            sh ^= sh >> 1; sh ^= sh >> 2; sh ^= sh >> 4;
+            f = (sh & 0x01) ? 0 : FLAG_PV;
+            f |= sl & (FLAG_S | FLAG_5 | FLAG_3);
+            f |= sl ? 0x00 : FLAG_Z;
+            xorFlags[a][b] = f;
+        }
+    }
+}
+
+void Z80::loadCpFlags()
+{
+    for (uint16_t a = 0; a < 0x100; ++a)
+    {
+        for (uint16_t b = 0; b < 0x100; ++b)
+        {
+            uint16_t s = a - b;
+            uint8_t sh = (s >> 8) & 0x00FF;
+            uint8_t sl = s & 0x00FF;
+
+            uint8_t f = b & (FLAG_5 | FLAG_3);
+            f |= sl & FLAG_S;
+            f |= sh & FLAG_C;
+            f |= FLAG_N;
+            f |= (sl ^ b ^ a) & FLAG_H;
+            f |= (((sl ^ b ^ a) >> 5) ^ (sh << 2)) & FLAG_PV;
+            f |= sl ? 0x00 : FLAG_Z;
+            cpFlags[a][b] = f;
         }
     }
 }

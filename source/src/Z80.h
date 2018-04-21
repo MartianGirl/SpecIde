@@ -43,8 +43,16 @@ class Z80
         intProcess(false),
         c_d(0xFFFF), iff_d(0x00), dout(0xFF)
         {
-            loadAddFlags();
-            loadAndFlags();
+            if (!flagsReady)
+            {
+                loadAddFlags();
+                loadSubFlags();
+                loadAndFlags();
+                loadOrFlags();
+                loadXorFlags();
+                loadCpFlags();
+                flagsReady = true;
+            }
         }
 
         void reset();
@@ -152,6 +160,7 @@ class Z80
         static uint8_t orFlags[256][256];
         static uint8_t xorFlags[256][256];
         static uint8_t cpFlags[256][256];
+        static bool flagsReady;
 
         void loadAddFlags();
         void loadSubFlags();
