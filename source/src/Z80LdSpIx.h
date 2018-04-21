@@ -15,14 +15,11 @@ bool z80LdSpIx()
     switch (executionStep)
     {
         case 0:
-            memAddrMode = 0x00000000;
-            return false;
-
         case 1:
-            sp.w = ix.w;
             return false;
 
         case 2:
+            sp.w = ix.w;
             prefix = PREFIX_NO;
             return true;
 

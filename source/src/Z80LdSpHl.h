@@ -15,14 +15,11 @@ bool z80LdSpHl()
     switch (executionStep)
     {
         case 0:
-            memAddrMode = 0x00000000;
-            return false;
-
         case 1:
-            sp.w = hl.w;
             return false;
 
         case 2:
+            sp.w = hl.w;
             prefix = PREFIX_NO;
             return true;
 
