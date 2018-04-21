@@ -6,6 +6,8 @@ uint8_t Z80::andFlags[256][256];
 uint8_t Z80::orFlags[256][256];
 uint8_t Z80::xorFlags[256][256];
 uint8_t Z80::cpFlags[256][256];
+uint8_t Z80::incFlags[256];
+uint8_t Z80::decFlags[256];
 bool Z80::flagsReady = false;
 
 
@@ -773,6 +775,39 @@ void Z80::loadCpFlags()
             f |= sl ? 0x00 : FLAG_Z;
             cpFlags[a][b] = f;
         }
+    }
+}
+
+void Z80::loadIncFlags()
+{
+    for (uint16_t a = 0; a < 0x100; ++a)
+    {
+        uint16_t s = a + 1;
+        uint8_t sh = (s >> 8) & 0x00FF;
+        uint8_t sl = s & 0x00FF;
+
+        uint8_t f = sl & (FLAG_S | FLAG_5 | FLAG_3);
+        f |= (sl ^ a) & FLAG_H;
+        f |= (((sl ^ a) >> 5) ^ (sh << 2)) & FLAG_PV;
+        f |= sl ? 0x00 : FLAG_Z;
+        incFlags[a] = f;
+    }
+}
+
+void Z80::loadDecFlags()
+{
+    for (uint16_t a = 0; a < 0x100; ++a)
+    {
+        uint16_t s = a - 1;
+        uint8_t sh = (s >> 8) & 0x00FF;
+        uint8_t sl = s & 0x00FF;
+
+        uint8_t f = sl & (FLAG_S | FLAG_5 | FLAG_3);
+        f |= (sl ^ a) & FLAG_H;
+        f |= (((sl ^ a) >> 5) ^ (sh << 2)) & FLAG_PV;
+        f |= sl ? 0x00 : FLAG_Z;
+        f |= FLAG_N;
+        decFlags[a] = f;
     }
 }
 // vim: et:sw=4:ts=4

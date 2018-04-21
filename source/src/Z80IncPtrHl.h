@@ -16,19 +16,13 @@ bool z80IncPtrHl()
             return true;
 
         case 1:
-            acc.w = iReg.h + 1;
-
             // Preserve carry flag.
             af.l &= FLAG_C;
-            af.l |= acc.l & (FLAG_S | FLAG_5 | FLAG_3);
-            af.l |= (acc.l ^ iReg.h) & FLAG_H;
-            af.l |= (((acc.l ^ iReg.h) >> 5) 
-                    ^ (acc.h << 2)) & FLAG_PV;
-            af.l |= (acc.l) ? 0x00 : FLAG_Z;          // SZ5H3V0.
+            af.l |= incFlags[iReg.h];
             return false;
 
         case 2:
-            oReg.l = acc.l;
+            oReg.l = iReg.h + 1;
             memWrCycles = 1;
             return true;
 
