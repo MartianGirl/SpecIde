@@ -62,7 +62,7 @@ void ULA::generateVideoControlSignals()
     {
         video = (scan < vBorderStart);
     }
-    if (pixel == hBorderStart)
+    else if (pixel == hBorderStart)
     {
         border = true;
     }
@@ -99,6 +99,12 @@ void ULA::generateVideoControlSignals()
         pixel = 0;
         border = (scan >= vBorderStart);
         ulaReset = false;
+        dataAddr = ((scan & 0x38) << 2)          // 00076210 54376540
+            | ((scan & 0x07) << 8)
+            | ((scan & 0xC0) << 5);
+
+        attrAddr = ((scan & 0xF8) << 2)          // 00000076 54376540
+            | 0x1800;
     }
     else
     {
@@ -159,25 +165,12 @@ void ULA::generateVideoDataUla()
         switch (pixel & 0x0F)
         {
             case 0x04:
-                // Generate addresses (which must be pair).
-                dataAddr = ((pixel & 0xF0) >> 3)    // 000SSSSS SSSPPPP0
-                    | ((scan & 0x38) << 2)          // 00076210 54376540
-                    | ((scan & 0x07) << 8)
-                    | ((scan & 0xC0) << 5);
-
-                attrAddr = ((pixel & 0xF0) >> 3)    // 000110SS SSSPPPP0
-                    | ((scan & 0xF8) << 2)          // 00000076 54376540
-                    | 0x1800;
-                a = dataAddr;
+            case 0x08:
+                a = dataAddr++;
                 break;
             case 0x06:
-                a = attrAddr;
-                break;
-            case 0x08:
-                a = dataAddr + 1;
-                break;
             case 0x0a:
-                a = attrAddr + 1;
+                a = attrAddr++;
                 break;
             case 0x05:
             case 0x09:
@@ -228,25 +221,12 @@ void ULA::generateVideoDataGa()
         switch (pixel & 0x0F)
         {
             case 0x08:
-                // Generate addresses (which must be pair).
-                dataAddr = ((pixel & 0xF0) >> 3)    // 000SSSSS SSSPPPP0
-                    | ((scan & 0x38) << 2)          // 00076210 54376540
-                    | ((scan & 0x07) << 8)
-                    | ((scan & 0xC0) << 5);
-
-                attrAddr = ((pixel & 0xF0) >> 3)    // 000110SS SSSPPPP0
-                    | ((scan & 0xF8) << 2)          // 00000076 54376540
-                    | 0x1800;
-                a = dataAddr;
+            case 0x0c:
+                a = dataAddr++;
                 break;
             case 0x0a:
-                a = attrAddr;
-                break;
-            case 0x0c:
-                a = dataAddr + 1;
-                break;
             case 0x0e:
-                a = attrAddr + 1;
+                a = attrAddr++;
                 break;
             case 0x09:
             case 0x0d:
