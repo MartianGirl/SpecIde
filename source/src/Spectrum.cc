@@ -315,7 +315,8 @@ void Spectrum::clock()
                     bus = z80.d;
             }
             else if (romPage[memArea] == false && wr_ == false)
-                map[memArea][z80.a & 0x3FFF] = z80.d;
+                if (z80.state == Z80State::ST_MEMWR_T3H_DATAWR)
+                    map[memArea][z80.a & 0x3FFF] = z80.d;
         }
         else
         {
