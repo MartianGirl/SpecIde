@@ -16,6 +16,9 @@ using namespace std::this_thread;
 using namespace std::chrono;
 #endif
 
+#include <cfenv>
+#include <cmath>
+
 using namespace std;
 using namespace sf;
 
@@ -284,8 +287,9 @@ void Screen::setFullScreen(bool fs)
     if (fs)
     {
         // Use best mode available.
+        fesetround(FE_TONEAREST);
         xScale = bestMode.width / static_cast<float>(xSize);
-        yScale = bestMode.height / static_cast<float>(suggestedScans);
+        yScale = nearbyintf(bestMode.height / static_cast<float>(suggestedScans));
 
         // Adjust depending on the vertical scale.
         sScale = yScale;
