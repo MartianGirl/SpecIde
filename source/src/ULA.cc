@@ -188,25 +188,26 @@ void ULA::generateVideoDataUla()
 
     if ((pixel & 0x07) == 0x07)
     {
+        if (!blanking)
+        {
+            xPos += 8;
+            uint32_t *ptr = &pixels[(yPos * xSize) + xPos];
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+        }
+
         data = video ? dataLatch : 0xFF;
         attr = video ? attrLatch : borderAttr;
         dataLatch = dataReg;
         attrLatch = attrReg;
         colour[0] = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
         colour[1] = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-
-        if (!blanking)
-        {
-            pixels[(yPos * xSize) + xPos + 7] = colour[data & 0x01]; data >>= 1;
-            pixels[(yPos * xSize) + xPos + 6] = colour[data & 0x01]; data >>= 1;
-            pixels[(yPos * xSize) + xPos + 5] = colour[data & 0x01]; data >>= 1;
-            pixels[(yPos * xSize) + xPos + 4] = colour[data & 0x01]; data >>= 1;
-            pixels[(yPos * xSize) + xPos + 3] = colour[data & 0x01]; data >>= 1;
-            pixels[(yPos * xSize) + xPos + 2] = colour[data & 0x01]; data >>= 1;
-            pixels[(yPos * xSize) + xPos + 1] = colour[data & 0x01]; data >>= 1;
-            pixels[(yPos * xSize) + xPos + 0] = colour[data & 0x01];
-            xPos += 8;
-        }
     }
 }
 
@@ -258,23 +259,24 @@ void ULA::generateVideoDataGa()
 
     if ((pixel & 0x07) == 0x03)
     {
+        if (!blanking)
+        {
+            xPos += 8;
+            uint32_t *ptr = &pixels[(yPos * xSize) + xPos];
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+            *(--ptr) = colour[data & 0x01]; data >>= 1;
+        }
+
         data = video ? dataReg : 0xFF;
         attr = video ? attrReg : borderAttr;
         colour[0] = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
         colour[1] = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-
-        if (!blanking)
-        {
-            pixels[(yPos * xSize) + xPos + 7] = colour[data & 0x01]; data >>= 1;
-            pixels[(yPos * xSize) + xPos + 6] = colour[data & 0x01]; data >>= 1;
-            pixels[(yPos * xSize) + xPos + 5] = colour[data & 0x01]; data >>= 1;
-            pixels[(yPos * xSize) + xPos + 4] = colour[data & 0x01]; data >>= 1;
-            pixels[(yPos * xSize) + xPos + 3] = colour[data & 0x01]; data >>= 1;
-            pixels[(yPos * xSize) + xPos + 2] = colour[data & 0x01]; data >>= 1;
-            pixels[(yPos * xSize) + xPos + 1] = colour[data & 0x01]; data >>= 1;
-            pixels[(yPos * xSize) + xPos + 0] = colour[data & 0x01];
-            xPos += 8;
-        }
     }
 }
 
