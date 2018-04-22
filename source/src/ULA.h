@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <vector>
 
 #include "Z80Defs.h"
 
@@ -54,7 +55,11 @@ class ULA
         static bool memTable[16];
 
         static uint32_t colourTable[0x100];
-        uint32_t colour0, colour1;
+        uint32_t colour[2];
+        std::vector<uint32_t> pixels;
+        uint_fast32_t xSize, ySize;
+        uint_fast32_t xPos = 0;
+        uint_fast32_t yPos = 0;
 
         // These values depend on the model
         uint_fast8_t ulaVersion = 1;
@@ -103,8 +108,7 @@ class ULA
         bool mem = true;
 
         // Useful video signals
-        bool hSyncEdge;
-        bool vSyncEdge;
+        bool vSync;
         bool blanking;
         bool retrace;
 

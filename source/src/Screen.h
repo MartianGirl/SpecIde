@@ -51,7 +51,6 @@ class Screen : public GraphicWindow
 
         sf::Texture scrTexture;
         sf::Sprite scrSprite;
-        std::vector<sf::Uint32> pixels;
 
         sf::Font zxFont;
 
@@ -70,7 +69,7 @@ class Screen : public GraphicWindow
         void run();
 
         void clock();
-        bool update();
+        void update();
         void reopenWindow(bool fs);
         void setFullScreen(bool fs);
         void setSmooth(bool sm);

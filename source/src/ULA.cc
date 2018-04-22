@@ -29,7 +29,7 @@ bool ULA::memTable[16] =
 uint32_t ULA::colourTable[0x100];
 
 ULA::ULA() :
-    hSyncEdge(false), vSyncEdge(false), blanking(false), retrace(false),
+    vSync(false), blanking(false), retrace(false),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF)
 {
@@ -74,12 +74,16 @@ void ULA::generateVideoControlSignals()
     {
         blanking = true;
         ++scan;
-        vSyncEdge = (scan == vSyncEnd);
         retrace = (scan >= vSyncStart) && (scan < vSyncEnd);
 
         if (scan == vBlankEnd)
         {
             flash += 0x04;
+        }
+        else if (scan == vSyncEnd)
+        {
+            vSync = true;
+            yPos = 0;
         }
         else if (scan == maxScan)
         {
@@ -88,7 +92,9 @@ void ULA::generateVideoControlSignals()
     }
     else if (pixel == hSyncEnd)
     {
-        hSyncEdge = true;
+        xPos = 0;
+        if (retrace == false)
+            ++yPos;
     }
     else if (pixel == hBlankEnd)
     {
@@ -105,11 +111,6 @@ void ULA::generateVideoControlSignals()
 
         attrAddr = ((scan & 0xF8) << 2)          // 00000076 54376540
             | 0x1800;
-    }
-    else
-    {
-        hSyncEdge = false;
-        vSyncEdge = false;
     }
 }
 
@@ -185,18 +186,27 @@ void ULA::generateVideoDataUla()
         }
     }
 
-    // 4. Generate video signal. Generate colours.
-    rgba = (data & 0x80) ? colour1 : colour0;
-    data <<= 1;
-
     if ((pixel & 0x07) == 0x07)
     {
         data = video ? dataLatch : 0xFF;
         attr = video ? attrLatch : borderAttr;
         dataLatch = dataReg;
         attrLatch = attrReg;
-        colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-        colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+        colour[0] = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+        colour[1] = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+
+        if (!blanking)
+        {
+            pixels[(yPos * xSize) + xPos + 7] = colour[data & 0x01]; data >>= 1;
+            pixels[(yPos * xSize) + xPos + 6] = colour[data & 0x01]; data >>= 1;
+            pixels[(yPos * xSize) + xPos + 5] = colour[data & 0x01]; data >>= 1;
+            pixels[(yPos * xSize) + xPos + 4] = colour[data & 0x01]; data >>= 1;
+            pixels[(yPos * xSize) + xPos + 3] = colour[data & 0x01]; data >>= 1;
+            pixels[(yPos * xSize) + xPos + 2] = colour[data & 0x01]; data >>= 1;
+            pixels[(yPos * xSize) + xPos + 1] = colour[data & 0x01]; data >>= 1;
+            pixels[(yPos * xSize) + xPos + 0] = colour[data & 0x01];
+            xPos += 8;
+        }
     }
 }
 
@@ -246,16 +256,25 @@ void ULA::generateVideoDataGa()
             z80_c |= SIGNAL_WAIT_;
     }
 
-    // 4. Generate video signal. Generate colours.
-    rgba = (data & 0x80) ? colour1 : colour0;
-    data <<= 1;
-
     if ((pixel & 0x07) == 0x03)
     {
         data = video ? dataReg : 0xFF;
         attr = video ? attrReg : borderAttr;
-        colour0 = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-        colour1 = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+        colour[0] = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+        colour[1] = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+
+        if (!blanking)
+        {
+            pixels[(yPos * xSize) + xPos + 7] = colour[data & 0x01]; data >>= 1;
+            pixels[(yPos * xSize) + xPos + 6] = colour[data & 0x01]; data >>= 1;
+            pixels[(yPos * xSize) + xPos + 5] = colour[data & 0x01]; data >>= 1;
+            pixels[(yPos * xSize) + xPos + 4] = colour[data & 0x01]; data >>= 1;
+            pixels[(yPos * xSize) + xPos + 3] = colour[data & 0x01]; data >>= 1;
+            pixels[(yPos * xSize) + xPos + 2] = colour[data & 0x01]; data >>= 1;
+            pixels[(yPos * xSize) + xPos + 1] = colour[data & 0x01]; data >>= 1;
+            pixels[(yPos * xSize) + xPos + 0] = colour[data & 0x01];
+            xPos += 8;
+        }
     }
 }
 

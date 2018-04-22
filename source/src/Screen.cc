@@ -80,10 +80,12 @@ Screen::Screen(size_t scale, bool fullscreen) :
     setFullScreen(fullscreen);
 
     size_t vectorSize = xSize * (ySize + 8);    // Count blanking lines.
+    spectrum.ula.xSize = xSize;
+    spectrum.ula.ySize = ySize;
 #if SPECIDE_BYTE_ORDER == 1
-    pixels.assign(vectorSize, 0xFF000000);
+    spectrum.ula.pixels.assign(vectorSize, 0xFF000000);
 #else
-    pixels.assign(vectorSize, 0x000000FF);
+    spectrum.ula.pixels.assign(vectorSize, 0x000000FF);
 #endif
 
     channel.open(2, SAMPLE_RATE);
@@ -106,19 +108,20 @@ void Screen::run()
             // Update Spectrum hardware.
             clock();
 
-            // Update the screen.
-            if (update())
+            if (spectrum.ula.vSync)
             {
+                // Update the screen.
+                update();
 #ifdef USE_BOOST_THREADS
                 sleep_until(tick + boost::chrono::milliseconds(20));
 #else
                 sleep_until(tick + std::chrono::milliseconds(20));
 #endif
                 tick = steady_clock::now();
-            }
 
-            if (done) return;
-            if (menu) break;
+                if (done) return;
+                if (menu) break;
+            }
         }
         channel.stop();
 
@@ -188,55 +191,31 @@ void Screen::clock()
     }
 }
 
-bool Screen::update()
+void Screen::update()
 {
-    static uint_fast32_t xPos = 0;
-    static uint_fast32_t yPos = 0;
-
     // These conditions cannot happen at the same time:
     // - HSYNC and VSYNC only happen during the blanking interval.
     // - VSYNC happens at the end of blanking interval. (0x140)
     // - HSYNC happens at the beginning of HSYNC interval. (0x170-0x178)
     // If not blanking, draw.
-    if (spectrum.ula.blanking == false)
+    spectrum.ula.vSync = false;
+
+    scrTexture.update(reinterpret_cast<Uint8*>(&spectrum.ula.pixels[0]));
+    window.clear(Color::Black);
+    window.draw(scrSprite);
+    window.display();
+
+    if (tape.pulseData.size())
     {
-        pixels[(yPos * xSize) + xPos] = spectrum.ula.rgba;
-        ++xPos;
-    }
-    else if (spectrum.ula.hSyncEdge)
-    {
-        // HSYNC falling edge restores the beam to the beginning of
-        // the next line.
-        xPos = 0;
-        if (spectrum.ula.retrace == false)
-            ++yPos;
-    }
-    else if (spectrum.ula.vSyncEdge)
-    {
-        // VSYNC falling edge restores the beam to the top of the screen.
-        yPos = 0;
-
-        scrTexture.update(reinterpret_cast<Uint8*>(&pixels[0]));
-        window.clear(Color::Black);
-        window.draw(scrSprite);
-        window.display();
-
-        if (tape.pulseData.size())
-        {
-            char str[64];
-            size_t percent = 100 * tape.pointer / tape.pulseData.size();
-            snprintf(str, 64, "SpecIde [%03zu%%]", percent);
-            window.setTitle(str);
-        }
-
-        pollEvents();
-
-        tape.is48K = spectrum.set48;
-
-        return true;
+        char str[64];
+        size_t percent = 100 * tape.pointer / tape.pulseData.size();
+        snprintf(str, 64, "SpecIde [%03zu%%]", percent);
+        window.setTitle(str);
     }
 
-    return false;
+    pollEvents();
+
+    tape.is48K = spectrum.set48;
 }
 
 void Screen::updateMenu()
