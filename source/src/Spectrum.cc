@@ -178,7 +178,7 @@ void Spectrum::clock()
     bool io_ = ((z80.c & SIGNAL_IORQ_) == SIGNAL_IORQ_);
     bool rd_ = ((z80.c & SIGNAL_RD_) == SIGNAL_RD_);
     bool wr_ = ((z80.c & SIGNAL_WR_) == SIGNAL_WR_);
-    bool rf_ = ((z80.c & SIGNAL_RFSH_) == SIGNAL_RFSH_);
+    // bool rf_ = ((z80.c & SIGNAL_RFSH_) == SIGNAL_RFSH_);
     size_t memArea = (z80.a & 0xC000) >> 14;
     bool snow = (!spectrumPlus2A)
         && contendedPage[memArea]
