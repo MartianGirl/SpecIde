@@ -10,20 +10,20 @@ uint_fast32_t ULA::voltages[4][4] =
 
 bool ULA::delayTable[16] = 
 {
-    true, true, true, true, true, true, true, true,
-    true, true, true, true, false, false, false, false
+    false, false, false, false, true, true, true, true,
+    true, true, true, true, true, true, true, true
 };
 
 bool ULA::idleTable[16] =
 {
-    true, true, true, true, true, true, false, false,
-    false, false, false, false, false, false, true, true
+    false, false, true, true, true, true, true, true,
+    true, true, false, false, false, false, false, false
 };
 
 bool ULA::memTable[16] =
 {
-    true, true, true, true, false, false, false, false,
-    false, false, false, false, true, true, true, true
+    true, true, true, true, true, true, true, true,
+    false, true, false, true, false, true, false, true
 };
 
 uint32_t ULA::colourTable[0x100];
@@ -165,33 +165,35 @@ void ULA::generateVideoDataUla()
         // Read from memory.
         switch (pixel & 0x0F)
         {
-            case 0x04:
             case 0x08:
+            case 0x0C:
                 a = dataAddr++;
                 break;
-            case 0x06:
-            case 0x0a:
+            case 0x0A:
+            case 0x0E:
                 a = attrAddr++;
                 break;
-            case 0x05:
             case 0x09:
+            case 0x0D:
                 dataReg = d;
                 break;
-            case 0x07:
-            case 0x0b:
+            case 0x0B:
+            case 0x0F:
                 attrReg = d;
                 break;
             default:
                 break;
         }
     }
-
-    if ((pixel & 0x07) == 0x07)
+    else
     {
-        data = video ? dataLatch : 0xFF;
-        attr = video ? attrLatch : borderAttr;
-        dataLatch = dataReg;
-        attrLatch = attrReg;
+        idle = true;
+    }
+
+    if ((pixel & 0x07) == 0x03)
+    {
+        data = video ? dataReg : 0xFF;
+        attr = video ? attrReg : borderAttr;
         colour[0] = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
         colour[1] = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
 
@@ -284,7 +286,7 @@ void ULA::tapeEarMic()
 {
     // First attempt at MIC/EAR feedback loop.
     // Let's keep this here for the moment.
-    if (ulaVersion != 3)
+    if (ulaVersion < 2)
     {
         uint_fast32_t v = voltage[(ioPortOut & 0x18) >> 3];
 
@@ -411,22 +413,22 @@ void ULA::setUlaVersion(uint_fast8_t version)
         case 0: // 48K, Issue 2
             hSyncEnd = 0x170;
             maxPixel = 0x1C0;
-            interruptStart = 0x1BF;
-            interruptEnd = 0x03F;
+            interruptStart = 0x002;
+            interruptEnd = 0x042;
             maxScan = 0x138;
             break;
         case 1: // 48K, Issue 3
             hSyncEnd = 0x178;
             maxPixel = 0x1C0;
-            interruptStart = 0x1BF;
-            interruptEnd = 0x03F;
+            interruptStart = 0x002;
+            interruptEnd = 0x042;
             maxScan = 0x138;
             break;
         case 2: // 128K, +2
             hSyncEnd = 0x178;
             maxPixel = 0x1C8;
-            interruptStart = 0x002;
-            interruptEnd = 0x042;
+            interruptStart = 0x006;
+            interruptEnd = 0x046;
             maxScan = 0x137;
             break;
         case 3: // +2A, +3
@@ -452,27 +454,27 @@ void ULA::setUlaVersion(uint_fast8_t version)
         default:
             hSyncEnd = 0x178;
             maxPixel = 0x1C0;
-            interruptStart = 0x1BF;
-            interruptEnd = 0x03F;
+            interruptStart = 0x002;
+            interruptEnd = 0x042;
             maxScan = 0x138;
             break;
     }
 
     bool delayUla[16] = {
-        true, true, true, true, true, true, true, true,
-        true, true, true, true, false, false, false, false
+        false, false, false, true, true, true, true, true,
+        true, true, true, true, true, true, true, false
     };
     bool idleUla[16] = {
-        true, true, true, true, true, true, false, false,
-        false, false, false, false, false, false, true, true
+        true, true, true, true, true, true, true, true,
+        false, false, false, false, false, false, false, false
     };
     bool memUla[16] = {
-        false, false, false, false, false, false, false, false,
+        true, true, true, true, true, true, true, true,
         false, false, false, false, false, false, false, false
     };
 
     bool delayGa[16] = {
-        true, true, true, false, true, true, true, true,
+        true, true, false, false, true, true, true, true,
         true, true, true, true, true, true, true, true
     };
     bool idleGa[16] = {
