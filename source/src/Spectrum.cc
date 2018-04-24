@@ -181,9 +181,11 @@ void Spectrum::clock()
     bool rf_ = ((z80.c & SIGNAL_RFSH_) == SIGNAL_RFSH_);
     size_t memArea = (z80.a & 0xC000) >> 14;
     bool snow = (!spectrumPlus2A)
-        && (as_ == true && rf_ == false && contendedPage[memArea] == true)
-        && ((ula.a & 0x1800) != 0x1800)
-        && ((ula.a & 0x0001) != 0x0001);
+        && contendedPage[memArea]
+        && (z80.state == Z80State::ST_OCF_T3L_RFSH1 || z80.state == Z80State::ST_OCF_T4H_RFSH2);
+        // && rf_ == false;
+        // && ((ula.a & 0x1800) != 0x1800)
+        // && ((ula.a & 0x0001) != 0x0001);
 
     static uint_fast8_t count = 0;
 
