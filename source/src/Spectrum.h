@@ -32,7 +32,6 @@ class Spectrum
 
         uint_fast8_t bus;
         uint_fast8_t bus_1;
-        uint_fast8_t bus_2;
 
         // Kempston Joystick.
         uint_fast8_t joystick;

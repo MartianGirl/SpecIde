@@ -202,9 +202,13 @@ void Spectrum::clock()
     // ULA gets the data from memory or Z80, or outputs data to Z80.
     // I've found that separating both data buses is helpful for all
     // Speccies.
-    bus = ula.io = z80.d;
+    bus_1 = bus;
     if (ula.mem == false)
         bus = scr[snow ? (ula.a & 0x3F00) | z80.ir.l : ula.a];
+    else if (!spectrumPlus2A || contendedPage[memArea])
+        bus = z80.d;
+
+    ula.io = z80.d;
     ula.d = bus;
 
     ula.clock();
@@ -315,7 +319,6 @@ void Spectrum::clock()
             if (rd_ == false)
             {
                 z80.d = map[memArea][z80.a & 0x3FFF];
-                // if (contendedPage[memArea] == true && ula.mem == true)
             }
             else if (romPage[memArea] == false && wr_ == false)
             {
@@ -330,8 +333,6 @@ void Spectrum::clock()
 
         z80.clock();
     }
-
-    bus_1 = bus;
 }
 
 void Spectrum::updatePage(uint_fast8_t reg)
