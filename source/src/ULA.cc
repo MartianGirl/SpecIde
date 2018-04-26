@@ -470,7 +470,7 @@ void ULA::setUlaVersion(uint_fast8_t version)
     };
     bool memUla[16] = {
         true, true, true, true, true, true, true, true,
-        false, false, false, false, false, false, false, false
+        false, true, false, true, false, true, false, true
     };
 
     bool delayGa[16] = {
