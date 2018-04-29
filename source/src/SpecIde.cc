@@ -118,10 +118,10 @@ int main(int argc, char* argv[])
         }
 
         if (*it == "--psg")
+        {
             screen.spectrum.psg.playSound = true;
-
-        if (*it == "--nopsg")
-            screen.spectrum.psg.playSound = false;
+            screen.spectrum.hasPsg = true;
+        }
 
         if (*it == "--acb")
             screen.stereo = 1;

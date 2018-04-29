@@ -40,6 +40,7 @@ class Spectrum
         bool spectrumPlus2;
         bool spectrumPlus2A;
         bool spectrumPlus3;
+        bool hasPsg;
         uint_fast8_t idle;
         uint_fast16_t paging;
         uint_fast16_t mask;

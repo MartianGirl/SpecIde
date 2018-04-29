@@ -10,6 +10,8 @@ Spectrum::Spectrum() :
     spectrum128K(false),
     spectrumPlus2(false),
     spectrumPlus2A(false),
+    spectrumPlus3(false),
+    hasPsg(false),
     idle(0xFF),
     paging(0x0020), mask(0x0001),
     contendedPage{false, true, false, false},
@@ -126,6 +128,7 @@ void Spectrum::set128K()
     spectrumPlus2 = false;
     spectrumPlus2A = false;
     spectrumPlus3 = false;
+    hasPsg = true;
     mask = 0x0001;
     reset();
 }
@@ -136,6 +139,7 @@ void Spectrum::setPlus2()
     spectrumPlus2 = true;
     spectrumPlus2A = false;
     spectrumPlus3 = false;
+    hasPsg = true;
     mask = 0x0001;
     reset();
 }
@@ -146,6 +150,7 @@ void Spectrum::setPlus2A()
     spectrumPlus2 = false;
     spectrumPlus2A = true;
     spectrumPlus3 = false;
+    hasPsg = true;
     mask = 0x0004;
     reset();
 }
@@ -156,6 +161,7 @@ void Spectrum::setPlus3()
     spectrumPlus2 = false;
     spectrumPlus2A = true;
     spectrumPlus3 = true;
+    hasPsg = true;
     mask = 0x0004;
     reset();
 }
@@ -218,7 +224,7 @@ void Spectrum::clock()
     {
         count = 0;
         buzzer.update();
-        if (spectrum128K) psg.clock();
+        if (hasPsg) psg.clock();
     }
 
     // We clock the Z80 if the ULA allows.
@@ -227,26 +233,14 @@ void Spectrum::clock()
         // Z80 gets data from the ULA or memory, only when reading.
         if (io_ == false)
         {
+            // 48K/128K/Plus2 floating bus. Return idle status by default,
+            // or screen data, if the ULA is working.
             if (rd_ == false)
             {
-                if (kempston == true && ((z80.a & 0x00E0) == 0x0000))  // Kempston joystick.
-                {
-                    z80.d = joystick;
-                }
-                else if ((z80.a & 0x0001) == 0x0000)
-                {
-                    z80.d = ula.io;
-                }
-                else if (ula.idle == false)
-                {
-                    z80.d = bus & idle;  // Get the byte from the video memory.
-                }
-                else
-                {
-                    z80.d = idle;
-                }
+                z80.d = (ula.idle) ? idle : bus & idle;
             }
 
+            // 128K only ports (paging, disk)
             if (spectrum128K)
             {
                 switch (z80.a & 0xF002)
@@ -290,6 +284,16 @@ void Spectrum::clock()
                             updatePage(0);
                         break;
 
+                    default:
+                        break;
+                }
+            }
+
+            // AY-3-8912 ports.
+            if (hasPsg)
+            {
+                switch (z80.a & 0xF002)
+                {
                     case 0x8000: // fall-through
                     case 0x9000: // fall-through
                     case 0xA000: // fall-through
@@ -307,7 +311,22 @@ void Spectrum::clock()
                         else if (rd_ == false)
                             z80.d = psg.read();
                         break;
+
+                    default:
+                        break;
                 }
+            }
+
+            // Common ports.
+            if (kempston == true && ((z80.a & 0x00E0) == 0x0000))  // Kempston joystick.
+            {
+                if (rd_ == false)
+                    z80.d = joystick;
+            }
+            else if ((z80.a & 0x0001) == 0x0000)
+            {
+                if (rd_ == false)
+                    z80.d = ula.io;
             }
         }
         else if (as_ == false)
