@@ -27,6 +27,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
     skip(ULA_CLOCK_48 / SAMPLE_RATE),
     fullscreen(fullscreen), smooth(false),
     squareRootDac(true),
+    syncToVideo(false),
     scale(scale),
     xSize(352), ySize(304),
     stereo(0),
@@ -115,12 +116,15 @@ void Screen::run()
             {
                 // Update the screen.
                 update();
+                if (!syncToVideo)
+                {
 #ifdef USE_BOOST_THREADS
-                sleep_until(tick + boost::chrono::milliseconds(20));
+                    sleep_until(tick + boost::chrono::milliseconds(20));
 #else
-                sleep_until(tick + std::chrono::milliseconds(20));
+                    sleep_until(tick + std::chrono::milliseconds(20));
 #endif
-                tick = steady_clock::now();
+                    tick = steady_clock::now();
+                }
 
                 if (done) return;
                 if (menu) break;
@@ -132,12 +136,16 @@ void Screen::run()
         {
             // Menu thingy.
             updateMenu();
+
+            if (!syncToVideo)
+            {
 #ifdef USE_BOOST_THREADS
                 sleep_until(tick + boost::chrono::milliseconds(20));
 #else
                 sleep_until(tick + std::chrono::milliseconds(20));
 #endif
                 tick = steady_clock::now();
+            }
             if (done) return;
             if (!menu) break;
         }
@@ -317,6 +325,7 @@ void Screen::setFullScreen(bool fs)
     }
 
     // window.setFramerateLimit(50);
+    window.setVerticalSyncEnabled(syncToVideo);
     window.setKeyRepeatEnabled(false);
     window.setMouseCursorVisible(false);
     window.setJoystickThreshold(0.5);

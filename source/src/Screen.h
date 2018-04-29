@@ -43,6 +43,7 @@ class Screen : public GraphicWindow
         bool fullscreen;
         bool smooth;
         bool squareRootDac;
+        bool syncToVideo;
 
         size_t scale;
         size_t xSize, ySize;
