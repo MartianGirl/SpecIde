@@ -249,9 +249,9 @@ void Spectrum::clock()
 
             if (spectrum128K)
             {
-                switch (z80.a & 0xF003)
+                switch (z80.a & 0xF002)
                 {
-                    case 0x0001:    // In +2A/+3 this is the floating bus port.
+                    case 0x0000:    // In +2A/+3 this is the floating bus port.
                         if (spectrumPlus2A)
                         {
                             if (rd_ == false)
@@ -262,7 +262,7 @@ void Spectrum::clock()
                             break;
                         }
                         // fall-through
-                    case 0x1001:    // 0x1FFD (+3 Paging High)
+                    case 0x1000:    // 0x1FFD (+3 Paging High)
                         if (spectrumPlus2A)
                         {
                             if (wr_ == false)
@@ -270,38 +270,38 @@ void Spectrum::clock()
                             break;
                         }
                         // fall-through
-                    case 0x2001:    // 0x2FFD (+3 FDC Main Status)
+                    case 0x2000:    // 0x2FFD (+3 FDC Main Status)
                         if (spectrumPlus2A)
                         {
                             break;
                         }
                         // fall-through
-                    case 0x3001:    // 0x3FFD (+3 FDC Data)
+                    case 0x3000:    // 0x3FFD (+3 FDC Data)
                         if (spectrumPlus2A)
                         {
                             break;
                         }
                         // fall-through
-                    case 0x4001: // fall-through
-                    case 0x5001: // fall-through
-                    case 0x6001: // fall-through
-                    case 0x7001: // 0x7FFD (128K Paging / +3 Paging Low)
+                    case 0x4000: // fall-through
+                    case 0x5000: // fall-through
+                    case 0x6000: // fall-through
+                    case 0x7000: // 0x7FFD (128K Paging / +3 Paging Low)
                         if ((wr_ == false) || (spectrumPlus2A == false && rd_ == false))
                             updatePage(0);
                         break;
 
-                    case 0x8001: // fall-through
-                    case 0x9001: // fall-through
-                    case 0xA001: // fall-through
-                    case 0xB001: // 0xBFFD
+                    case 0x8000: // fall-through
+                    case 0x9000: // fall-through
+                    case 0xA000: // fall-through
+                    case 0xB000: // 0xBFFD
                         if (wr_ == false)
                             psg.write(z80.d);
                         break;
 
-                    case 0xC001: // fall-through
-                    case 0xD001: // fall-through
-                    case 0xE001: // fall-through
-                    case 0xF001: // 0xFFFD
+                    case 0xC000: // fall-through
+                    case 0xD000: // fall-through
+                    case 0xE000: // fall-through
+                    case 0xF000: // 0xFFFD
                         if (wr_ == false)
                             psg.addr(z80.d);
                         else if (rd_ == false)
