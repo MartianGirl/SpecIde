@@ -41,7 +41,7 @@ class DiskDrive
 
         DSKFile disk;
 
-        void readDiagnostic(uint_fast8_t* cmd, uint_fast8_t* res);
+        void readTrack(uint_fast8_t* cmd, uint_fast8_t* res);
         void specifySpeed(uint_fast8_t cmd);
         void senseStatus(uint_fast8_t* cmd, uint_fast8_t* res);
         void writeSector(uint_fast8_t* cmd, uint_fast8_t* res);
