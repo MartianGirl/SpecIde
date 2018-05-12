@@ -10,14 +10,14 @@ uint_fast32_t ULA::voltages[4][4] =
 
 bool ULA::delayTable[16] = 
 {
-    false, false, false, false, true, true, true, true,
-    true, true, true, true, true, true, true, true
+    false, false, false, true, true, true, true, true,
+    true, true, true, true, true, true, true, false
 };
 
 bool ULA::idleTable[16] =
 {
-    false, false, true, true, true, true, true, true,
-    true, true, false, false, false, false, false, false
+    true, true, true, true, true, true, true, true,
+    false, false, false, false, false, false, false, false
 };
 
 bool ULA::memTable[16] =
