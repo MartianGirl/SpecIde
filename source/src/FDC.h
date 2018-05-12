@@ -18,7 +18,16 @@ enum class FDCState
     FDC_STATE_IDLE,
     FDC_STATE_COMMAND,
     FDC_STATE_EXECUTION,
+    FDC_STATE_RCV_BYTES,
+    FDC_STATE_SND_BYTES,
     FDC_STATE_RESULT
+};
+
+enum class FDCMode
+{
+    FDC_MODE_NONE,
+    FDC_MODE_READ,
+    FDC_MODE_WRITE
 };
 
 constexpr uint_fast8_t SREG_DB0 = 1 << 0;
@@ -33,6 +42,11 @@ constexpr uint_fast8_t SREG_RQM = 1 << 7;
 class DiskDrive
 {
     public:
+        DiskDrive() :
+            busy(false),
+            disk(false),
+            prot(false) {}
+
         bool busy;
         bool disk;
         bool prot;
@@ -41,7 +55,10 @@ class DiskDrive
 
         DSKFile disk;
 
-        void readTrack(uint_fast8_t* cmd, uint_fast8_t* res);
+        void readTrack(uint_fast8_t* cmd, uint_fast8_t* res, uint_fast8_t* data)
+        {
+
+        }
         void specifySpeed(uint_fast8_t cmd);
         void senseStatus(uint_fast8_t* cmd, uint_fast8_t* res);
         void writeSector(uint_fast8_t* cmd, uint_fast8_t* res);
@@ -65,16 +82,24 @@ class FDC
 
         uint_fast8_t cmdBuffer[16];
         uint_fast8_t resBuffer[16];
+        uint_fast8_t dataBuffer[16384];
 
         unsigned int cmdIndex;
         unsigned int resIndex;
+        unsigned int rdDataIndex;
+        unsigned int wrDataIndex;
 
         unsigned int cmdBytes;
         unsigned int resBytes;
 
         bool byte = false;
 
+        bool multiTrackBit;
+        bool mfmModeBit;
+        bool skipDeletedBit;
+
         FDCState state;
+        FDCMode mode;
 
         DiskDrive drive[4];
 
@@ -102,7 +127,23 @@ class FDC
                     {
                         byte = false;
                         if (cmdIndex == cmdBytes)
-                            state = FDC_STATE_EXECUTION;
+                        {
+                            decodeParameters();
+                            switch (mode)
+                            {
+                                case FDC_MODE_READ:
+                                case FDC_MODE_NONE:
+                                    state = FDC_STATE_EXECUTION;
+                                    break;
+
+                                case FDC_MODE_WRITE:
+                                    state = FDC_STATE_RCV_BYTES;
+                                    break;
+
+                                default:
+                                    reset();
+                            }
+                        }
                         else if (cmdIndex > cmdBytes)
                             reset();
                     }
@@ -112,6 +153,14 @@ class FDC
                     statusReg = SREQ_EXM | SREQ_CB;
                     execute();
                     break;
+
+                case FDC_STATE_RCV_BYTES:
+                    statusReg = SREG_RQM | SREG_CB | SREG_EXM;
+                    if (byte)
+                    {
+                        byte = false;
+
+                    }
 
                 case FDC_STATE_RESULT:
                     statusReg = SREQ_RQM | SREQ_DIO | SREQ_CB;
@@ -132,88 +181,111 @@ class FDC
                 case 0x02:  // Read Track (Diagnostic)
                     cmdBytes = 9;   // 02+MF+SK    HU TR HD SC SZ NM GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD NM SZ
+                    mode = FDCMode::FDC_MODE_READ;
                     return true;
 
                 case 0x03:  // Specify SPD/DMA
                     cmdBytes = 3;   // 03          XX YY
                     resBytes = 0;   //
+                    mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x04:  // Sense drive state
                     cmdBytes = 2;   // 04          HU
                     resBytes = 1;   //             S3
+                    mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x05:  // Write sector(s)
                     cmdBytes = 9;   // 05+MT+MF    HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
+                    mode = FDCMode::FDC_MODE_WRITE;
                     return true;
 
                 case 0x06:  // Read sector(s)
                     cmdBytes = 9;   // 06+MT+MF+SK HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
+                    mode = FDCMode::FDC_MODE_READ;
                     return true;
 
                 case 0x07:  // Recalibrate and seek physical track 0
                     cmdBytes = 2;   // 07          HU
                     resBytes = 0;
+                    mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x08:  // Sense internal state
                     cmdBytes = 1;   // 08
                     resBytes = 2;   //             S0 TP
+                    mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x09:  // Write deleted sector(s)
                     cmdBytes = 9;   // 09+MT+MF    HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
+                    mode = FDCMode::FDC_MODE_WRITE;
                     return true;
 
                 case 0x0A:  // Read ID
                     cmdBytes = 2;   // 0A+MF       HU
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
+                    mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x0C:  // Read deleted sector(s)
                     cmdBytes = 9;   // 0C+MT+MF+SK HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
+                    mode = FDCMode::FDC_MODE_READ;
                     return true;
 
                 case 0x0D:  // Format track
                     cmdBytes = 6;   // 0D+MF       HU SZ NM GP FB
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
+                    mode = FDCMode::FDC_MODE_WRITE;
                     return true;
 
                 case 0x0F:  // Seek track N
                     cmdBytes = 3;   // 0F          HU TP
                     resBytes = 0;
+                    mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x11:  // Scan equal
                     cmdBytes = 9;   // 11+MT+MF+SK HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
+                    mode = FDCMode::FDC_MODE_WRITE;
                     return true;
 
                 case 0x19:  // Scan low or equal
                     cmdBytes = 9;   // 19+MT+MF+SK HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
+                    mode = FDCMode::FDC_MODE_WRITE;
                     return true;
 
                 case 0x1D:  // Scan high or equal
                     cmdBytes = 9;   // 1D+MT+MF+SK HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
+                    mode = FDCMode::FDC_MODE_WRITE;
                     return true;
 
                 default:
                     cmdBytes = 0;
                     resBytes = 0;
+                    mode = FDCMode::FDC_MODE_NONE;
                     return false;
             }
         }
 
+        void decodeParameters()
+        {
+            // Get special bits from command byte
+            multiTrackBit = ((cmdBuffer[0] & 0x80) == 0x80);
+            mfmModeBit = ((cmdBuffer[0] & 0x40) == 0x40);
+            skipDeletedBit = ((cmdBuffer[0] & 0x20) == 0x20);
+        }
+
         void execute()
         {
-
         }
 
         void reset()
@@ -222,6 +294,8 @@ class FDC
             byte = false;
             cmdIndex = resIndex = 0;
             cmdBytes = resBytes = 0;
+            rdDataIndex = 0;
+            wrDataIndex = 0;
             statusReg = SREG_RQM;
         }
 
