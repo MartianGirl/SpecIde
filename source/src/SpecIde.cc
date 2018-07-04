@@ -74,11 +74,29 @@ int main(int argc, char* argv[])
             useDefaultModel = false;
             screen.spectrum.ula.setUlaVersion(2);
         }
+
+        if (*it == "--plus2sp")
+        {
+            screen.set128K(true);
+            screen.spectrum.loadRoms(5);
+            screen.spectrum.setPlus2();
+            useDefaultModel = false;
+            screen.spectrum.ula.setUlaVersion(2);
+        }
         
         if (*it == "--plus2a")
         {
             screen.set128K(true);
             screen.spectrum.loadRoms(3);
+            screen.spectrum.setPlus2A();
+            useDefaultModel = false;
+            screen.spectrum.ula.setUlaVersion(3);
+        }
+
+        if (*it == "--plus2asp")
+        {
+            screen.set128K(true);
+            screen.spectrum.loadRoms(6);
             screen.spectrum.setPlus2A();
             useDefaultModel = false;
             screen.spectrum.ula.setUlaVersion(3);

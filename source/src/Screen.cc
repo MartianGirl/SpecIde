@@ -23,7 +23,7 @@ using namespace std;
 using namespace sf;
 
 Screen::Screen(size_t scale, bool fullscreen) :
-    GraphicWindow(344 * scale, 288 * scale, "SpecIde", fullscreen),
+    GraphicWindow(352 * scale, 288 * scale, "SpecIde", fullscreen),
     skip(ULA_CLOCK_48 / SAMPLE_RATE),
     fullscreen(fullscreen), smooth(false),
     squareRootDac(true),
@@ -301,7 +301,7 @@ void Screen::setFullScreen(bool fs)
 
         // Adjust depending on the vertical scale.
         sScale = yScale;
-        xOffset = (bestMode.width - ((xSize - 8) * sScale)) / 2;
+        xOffset = (bestMode.width - (xSize * sScale)) / 2;
         yOffset = 0;
 
         printf("XScale %.3f YScale %.3f\n", xScale, yScale);
@@ -312,14 +312,14 @@ void Screen::setFullScreen(bool fs)
 
         scrSprite.setTexture(scrTexture);
         scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
-                    static_cast<uint_fast32_t>(xSize - 8), static_cast<uint_fast32_t>(lines)));
+                    static_cast<uint_fast32_t>(xSize), static_cast<uint_fast32_t>(lines)));
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(sScale, sScale));
     }
     else
     {
         scrSprite.setTexture(scrTexture);
-        scrSprite.setTextureRect(sf::IntRect(0, 8, 344, 288));
+        scrSprite.setTextureRect(sf::IntRect(0, 8, 352, 288));
         scrSprite.setPosition(0, 0);
         scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
     }

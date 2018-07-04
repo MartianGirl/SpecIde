@@ -89,6 +89,18 @@ void Spectrum::loadRoms(size_t model)
             romNames.push_back("128-spanish-1.rom");
             break;
 
+        case 5:
+            romNames.push_back("plus2-spanish-0.rom");
+            romNames.push_back("plus2-spanish-1.rom");
+            break;
+
+        case 6:
+            romNames.push_back("plus3-spanish-0.rom");
+            romNames.push_back("plus3-spanish-1.rom");
+            romNames.push_back("plus3-spanish-2.rom");
+            romNames.push_back("plus3-spanish-3.rom");
+            break;
+
         default:
             romNames.push_back("48.rom");
             break;
@@ -300,6 +312,8 @@ void Spectrum::clock()
                     case 0xB000: // 0xBFFD
                         if (wr_ == false)
                             psg.write(z80.d);
+                        else if (rd_ == false && spectrumPlus2A == true)
+                            z80.d = psg.read();
                         break;
 
                     case 0xC000: // fall-through
