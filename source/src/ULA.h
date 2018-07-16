@@ -21,6 +21,7 @@ class ULA
 
         void clock();
         void reset();
+        void paint();
 
         void generateVideoControlSignals();
         void generateInterrupt();
@@ -31,6 +32,8 @@ class ULA
         void start();
 
         void setUlaVersion(uint_fast8_t version);
+
+        uint32_t averageColour(uint32_t last, uint32_t curr);
 
         uint_fast16_t videoStart;
         uint_fast16_t videoEnd;
@@ -128,5 +131,7 @@ class ULA
         uint_fast16_t interruptStart;
         uint_fast16_t interruptEnd;
 
+        // Average colours.
+        bool average = false;
 };
 // vim: et:sw=4:ts=4

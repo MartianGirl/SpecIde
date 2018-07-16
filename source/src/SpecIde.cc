@@ -159,6 +159,11 @@ int main(int argc, char* argv[])
             screen.window.setVerticalSyncEnabled(true);
         }
 
+        if (*it == "--average")
+        {
+            screen.spectrum.ula.average = true;
+        }
+
         // SD1 was a protection device used in Camelot Warriors. It simply
         // forced bit 5 low for any port read, if the device didn't force
         // this bit high.

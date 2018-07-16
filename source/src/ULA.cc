@@ -56,6 +56,26 @@ ULA::ULA() :
     }
 }
 
+uint32_t ULA::averageColour(uint32_t last, uint32_t curr)
+{
+    uint32_t res;
+    uint8_t *pRes = reinterpret_cast<uint8_t*>(&res);
+    uint8_t *pLast = reinterpret_cast<uint8_t*>(&last);
+    uint8_t *pCurr = reinterpret_cast<uint8_t*>(&curr);
+#if SPECIDE_BYTE_ORDER == 1
+    pRes[0] = 0xFF;
+    pRes[1] = ((pLast[1] >> 1) + (pCurr[1] >> 1));
+    pRes[2] = ((pLast[2] >> 1) + (pCurr[2] >> 1));
+    pRes[3] = ((pLast[3] >> 1) + (pCurr[3] >> 1));
+#else
+    pRes[0] = ((pLast[0] >> 1) + (pCurr[0] >> 1));
+    pRes[1] = ((pLast[1] >> 1) + (pCurr[1] >> 1));
+    pRes[2] = ((pLast[2] >> 1) + (pCurr[2] >> 1));
+    pRes[3] = 0xFF;
+#endif
+    return res;
+}
+
 void ULA::generateVideoControlSignals()
 {
     if (pixel == videoStart)
@@ -116,15 +136,16 @@ void ULA::generateVideoControlSignals()
 
 void ULA::generateInterrupt()
 {
-    if (pixel == interruptStart)
-        interrupt = true;
-    else if (pixel == interruptEnd)
-        interrupt = false;
 
     if (interrupt)
         z80_c &= ~SIGNAL_INT_;
     else
         z80_c |= SIGNAL_INT_;
+
+    if (pixel == interruptStart)
+        interrupt = true;
+    else if (pixel == interruptEnd)
+        interrupt = false;
 }
 
 void ULA::generateVideoDataUla()
@@ -189,28 +210,6 @@ void ULA::generateVideoDataUla()
     {
         idle = true;
     }
-
-    if ((pixel & 0x07) == 0x03)
-    {
-        data = video ? dataReg : 0xFF;
-        attr = video ? attrReg : borderAttr;
-        colour[0] = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-        colour[1] = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-
-        if (!blanking)
-        {
-            xPos += 8;
-            uint32_t *ptr = &pixels[(yPos * xSize) + xPos];
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
-        }
-    }
 }
 
 void ULA::generateVideoDataGa()
@@ -258,7 +257,10 @@ void ULA::generateVideoDataGa()
         if (delayTable[pixel & 0x0F] == false)
             z80_c |= SIGNAL_WAIT_;
     }
+}
 
+void ULA::paint()
+{
     if ((pixel & 0x07) == 0x03)
     {
         data = video ? dataReg : 0xFF;
@@ -270,14 +272,28 @@ void ULA::generateVideoDataGa()
         {
             xPos += 8;
             uint32_t *ptr = &pixels[(yPos * xSize) + xPos];
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
-            *(--ptr) = colour[data & 0x01]; data >>= 1;
+            if (average)
+            {
+                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
+                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
+                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
+                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
+                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
+                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
+                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
+                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
+            }
+            else
+            {
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+            }
         }
     }
 }
@@ -368,6 +384,8 @@ void ULA::clock()
     if (cpuClock == true && (z80_c & SIGNAL_WAIT_) == SIGNAL_WAIT_)
         ioPort();
 
+    paint();
+
     ++pixel;
 
     if (ulaReset)
@@ -413,29 +431,29 @@ void ULA::setUlaVersion(uint_fast8_t version)
         case 0: // 48K, Issue 2
             hSyncEnd = 0x170;
             maxPixel = 0x1C0;
-            interruptStart = 0x002;
-            interruptEnd = 0x042;
+            interruptStart = 0x000;
+            interruptEnd = 0x040;
             maxScan = 0x138;
             break;
         case 1: // 48K, Issue 3
             hSyncEnd = 0x178;
             maxPixel = 0x1C0;
-            interruptStart = 0x002;
-            interruptEnd = 0x042;
+            interruptStart = 0x000;
+            interruptEnd = 0x040;
             maxScan = 0x138;
             break;
         case 2: // 128K, +2
             hSyncEnd = 0x178;
             maxPixel = 0x1C8;
-            interruptStart = 0x006;
-            interruptEnd = 0x046;
+            interruptStart = 0x004;
+            interruptEnd = 0x044;
             maxScan = 0x137;
             break;
         case 3: // +2A, +3
             hSyncEnd = 0x178;
             maxPixel = 0x1C8;
-            interruptStart = 0x002;
-            interruptEnd = 0x042;
+            interruptStart = 0x000;
+            interruptEnd = 0x040;
             maxScan = 0x137;
             cpuClock = true;
             break;
@@ -454,8 +472,8 @@ void ULA::setUlaVersion(uint_fast8_t version)
         default:
             hSyncEnd = 0x178;
             maxPixel = 0x1C0;
-            interruptStart = 0x002;
-            interruptEnd = 0x042;
+            interruptStart = 0x000;
+            interruptEnd = 0x040;
             maxScan = 0x138;
             break;
     }
