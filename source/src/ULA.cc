@@ -335,11 +335,9 @@ void ULA::ioPort()
     {
         if ((z80_c & SIGNAL_RD_) == 0x0000)
         {
-            ++rdWait;
-
-            if (rdWait == 5)
+            if (++ioWait == 5)
             {
-                rdWait = 0;
+                ioWait = 0;
                 ioPortIn = inMask;
                 ioPortIn |= (ear < 700) ? 0x00 : 0x40;
                 if ((z80_a & 0x8000) == 0x0000) ioPortIn &= keys[0];
@@ -353,18 +351,20 @@ void ULA::ioPort()
                 io = ioPortIn;
             }
         }
-
-        if ((z80_c & SIGNAL_WR_) == 0x0000)
+        else if ((z80_c & SIGNAL_WR_) == 0x0000)
         {
-            ioPortOut = io;
-            borderAttr = ioPortOut & 0x07;
+            ++ioWait;
+            if (ioWait == 1)
+            {
+                ioPortOut = io;
+                borderAttr = ioPortOut & 0x07;
+            }
+            else if (ioWait == 5)
+            {
+                ioWait = 0;
+            }
         }
     }
-
-    z80_c_2 = z80_c_1;
-    z80_c_1 = z80_c;
-
-    z80Clk = !z80Clk;
 }
 
 void ULA::clock()
@@ -380,9 +380,15 @@ void ULA::clock()
         generateVideoDataUla();
     tapeEarMic();
 
-    // Port access is contended.
+    // Contention affects to Z80 phase change and to when the I/O operation
+    // actually happens.
     if (cpuClock == true && (z80_c & SIGNAL_WAIT_) == SIGNAL_WAIT_)
+    {
         ioPort();
+        z80_c_2 = z80_c_1;
+        z80_c_1 = z80_c;
+        z80Clk = !z80Clk;
+    }
 
     paint();
 

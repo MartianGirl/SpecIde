@@ -73,7 +73,7 @@ class ULA
         uint_fast8_t flash = 0;
         bool z80Clk = false;
 
-        uint_fast8_t rdWait = 0;
+        uint_fast8_t ioWait = 0;
         uint_fast16_t z80_c_1 = 0xFFFF;
         uint_fast16_t z80_c_2 = 0xFFFF;
 
