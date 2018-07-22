@@ -1,5 +1,5 @@
 @echo off
-set BOOST_ROOT=C:\libs\boost_1_66_0
+set BOOST_ROOT=C:\libs\boost_1_67_0
 set Boost_NO_BOOST_CMAKE=TRUE
 
 if .%1.==.. goto USAGE
