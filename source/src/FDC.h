@@ -8,8 +8,11 @@
  *   which is needed for Spectrum +3 and Amstrad CPC 6128.
  */
 
+#include "DSKFile.h"
+
 #include <cassert>
 #include <cstdint>
+// #include <cstdio>
 
 using namespace std;
 
@@ -18,8 +21,7 @@ enum class FDCState
     FDC_STATE_IDLE,
     FDC_STATE_COMMAND,
     FDC_STATE_EXECUTION,
-    FDC_STATE_RCV_BYTES,
-    FDC_STATE_SND_BYTES,
+    FDC_STATE_RECEIVE,
     FDC_STATE_RESULT
 };
 
@@ -39,28 +41,39 @@ constexpr uint_fast8_t SREG_EXM = 1 << 5;
 constexpr uint_fast8_t SREG_DIO = 1 << 6;
 constexpr uint_fast8_t SREG_RQM = 1 << 7;
 
+constexpr uint_fast32_t DELAY_10us = 70;    // @ 7MHz
+
 class DiskDrive
 {
     public:
-        DiskDrive() :
-            busy(false),
-            disk(false),
-            prot(false) {}
+        DiskDrive() {}
 
-        bool busy;
-        bool disk;
-        bool prot;
+        bool track0 = true;
+        bool fault = false;
+        bool disk = false;
+        bool writeprot = false;
+        bool present = false;
+        bool ready = false;
 
         int head[2];
 
-        DSKFile disk;
+        DSKFile image;
 
         void readTrack(uint_fast8_t* cmd, uint_fast8_t* res, uint_fast8_t* data)
         {
 
         }
         void specifySpeed(uint_fast8_t cmd);
-        void senseStatus(uint_fast8_t* cmd, uint_fast8_t* res);
+
+        void senseStatus(uint_fast8_t* cmd, uint_fast8_t* res)
+        {
+            res[0] = (cmd[1] & 0x07)            // Not setting two-side ever?
+                | (track0 ? 0x10 : 0x00)
+                | (ready ? 0x20 : 0x00)
+                | (writeprot ? 0x40 : 0x00)
+                | (fault ? 0x80 : 0x00);        // Don't really know...
+        }
+
         void writeSector(uint_fast8_t* cmd, uint_fast8_t* res);
         void readSector(uint_fast8_t* cmd, uint_fast8_t* res);
         void recalibrate(uint_fast8_t* cmd);
@@ -103,25 +116,43 @@ class FDC
 
         DiskDrive drive[4];
 
+        uint_fast32_t delay = 0;
+        
+        uint_fast8_t headUnloadTime;
+        uint_fast8_t stepRateTime;
+        uint_fast8_t headLoadTime;
+        bool useDma;
+
         FDC() {}
 
         void clock()
         {
+            if (delay)
+            {
+                --delay;
+                statusReg &= SREG_RQM;
+                return;
+            }
+
             switch (state)
             {
-                case FDC_STATE_IDLE:
+                case FDCState::FDC_STATE_IDLE:
                     statusReg = SREG_RQM;
                     if (byte)
                     {
                         byte = false;
+                        printf("Command: ");
                         if (checkCommand())
-                            state = FDC_STATE_COMMAND;
+                        {
+                            printf("Expecting %x bytes.\n", cmdBytes);
+                            state = FDCState::FDC_STATE_COMMAND;
+                        }
                         else
                             reset();
                     }
                     break;
 
-                case FDC_STATE_COMMAND:
+                case FDCState::FDC_STATE_COMMAND:
                     statusReg = SREG_RQM | SREG_CB;
                     if (byte)
                     {
@@ -131,13 +162,13 @@ class FDC
                             decodeParameters();
                             switch (mode)
                             {
-                                case FDC_MODE_READ:
-                                case FDC_MODE_NONE:
-                                    state = FDC_STATE_EXECUTION;
+                                case FDCMode::FDC_MODE_READ:
+                                case FDCMode::FDC_MODE_NONE:
+                                    state = FDCState::FDC_STATE_EXECUTION;
                                     break;
 
-                                case FDC_MODE_WRITE:
-                                    state = FDC_STATE_RCV_BYTES;
+                                case FDCMode::FDC_MODE_WRITE:
+                                    state = FDCState::FDC_STATE_RECEIVE;
                                     break;
 
                                 default:
@@ -149,23 +180,24 @@ class FDC
                     }
                     break;
 
-                case FDC_STATE_EXECUTION:
-                    statusReg = SREQ_EXM | SREQ_CB;
+                case FDCState::FDC_STATE_EXECUTION:
+                    statusReg = SREG_EXM | SREG_CB;
                     execute();
                     break;
 
-                case FDC_STATE_RCV_BYTES:
+                case FDCState::FDC_STATE_RECEIVE:
                     statusReg = SREG_RQM | SREG_CB | SREG_EXM;
                     if (byte)
                     {
                         byte = false;
-
                     }
+                    break;
 
-                case FDC_STATE_RESULT:
-                    statusReg = SREQ_RQM | SREQ_DIO | SREQ_CB;
+                case FDCState::FDC_STATE_RESULT:
+                    statusReg = SREG_RQM | SREG_DIO | SREG_CB;
                     if (byte)
                     {
+                        // Maybe put a delay here?
                         byte = false;
                         if (resIndex >= resBytes)
                             reset();
@@ -179,96 +211,112 @@ class FDC
             switch (cmdBuffer[0] & 0x1F)
             {
                 case 0x02:  // Read Track (Diagnostic)
+                    printf("Read Track (Diagnostic).\n");
                     cmdBytes = 9;   // 02+MF+SK    HU TR HD SC SZ NM GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD NM SZ
                     mode = FDCMode::FDC_MODE_READ;
                     return true;
 
                 case 0x03:  // Specify SPD/DMA
+                    printf("Specify SPD/DMA.\n");
                     cmdBytes = 3;   // 03          XX YY
                     resBytes = 0;   //
                     mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x04:  // Sense drive state
+                    printf("Sense drive state.\n");
                     cmdBytes = 2;   // 04          HU
                     resBytes = 1;   //             S3
                     mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x05:  // Write sector(s)
+                    printf("Write sector(s).\n");
                     cmdBytes = 9;   // 05+MT+MF    HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
                     mode = FDCMode::FDC_MODE_WRITE;
                     return true;
 
                 case 0x06:  // Read sector(s)
+                    printf("Read sector(s).\n");
                     cmdBytes = 9;   // 06+MT+MF+SK HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
                     mode = FDCMode::FDC_MODE_READ;
                     return true;
 
                 case 0x07:  // Recalibrate and seek physical track 0
+                    printf("Recalibrate and seek physical track 0.\n");
                     cmdBytes = 2;   // 07          HU
                     resBytes = 0;
                     mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x08:  // Sense internal state
+                    printf("Sense internal state.\n");
                     cmdBytes = 1;   // 08
                     resBytes = 2;   //             S0 TP
                     mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x09:  // Write deleted sector(s)
+                    printf("Write deleted sector(s).\n");
                     cmdBytes = 9;   // 09+MT+MF    HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
                     mode = FDCMode::FDC_MODE_WRITE;
                     return true;
 
                 case 0x0A:  // Read ID
+                    printf("Read ID.\n");
                     cmdBytes = 2;   // 0A+MF       HU
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
                     mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x0C:  // Read deleted sector(s)
+                    printf("Read deleted sector(s).\n");
                     cmdBytes = 9;   // 0C+MT+MF+SK HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
                     mode = FDCMode::FDC_MODE_READ;
                     return true;
 
                 case 0x0D:  // Format track
+                    printf("Format track.\n");
                     cmdBytes = 6;   // 0D+MF       HU SZ NM GP FB
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
                     mode = FDCMode::FDC_MODE_WRITE;
                     return true;
 
                 case 0x0F:  // Seek track N
+                    printf("Seek track.\n");
                     cmdBytes = 3;   // 0F          HU TP
                     resBytes = 0;
                     mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x11:  // Scan equal
+                    printf("Scan equal.\n");
                     cmdBytes = 9;   // 11+MT+MF+SK HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
                     mode = FDCMode::FDC_MODE_WRITE;
                     return true;
 
                 case 0x19:  // Scan low or equal
+                    printf("Scan low or equal.\n");
                     cmdBytes = 9;   // 19+MT+MF+SK HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
                     mode = FDCMode::FDC_MODE_WRITE;
                     return true;
 
                 case 0x1D:  // Scan high or equal
+                    printf("Scan high or equal.\n");
                     cmdBytes = 9;   // 1D+MT+MF+SK HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
                     mode = FDCMode::FDC_MODE_WRITE;
                     return true;
 
                 default:
+                    printf("Wrong command.\n");
                     cmdBytes = 0;
                     resBytes = 0;
                     mode = FDCMode::FDC_MODE_NONE;
@@ -282,15 +330,133 @@ class FDC
             multiTrackBit = ((cmdBuffer[0] & 0x80) == 0x80);
             mfmModeBit = ((cmdBuffer[0] & 0x40) == 0x40);
             skipDeletedBit = ((cmdBuffer[0] & 0x20) == 0x20);
+
+            switch (cmdBuffer[0] & 0x1F)
+            {
+                case 0x02:  // Read Track (Diagnostic)
+                    break;
+
+                case 0x03:  // Specify SPD/DMA
+                    headUnloadTime = cmdBuffer[1] & 0x0F;
+                    stepRateTime = (cmdBuffer[1] & 0xF0) >> 4;
+                    headLoadTime = cmdBuffer[2] >> 1;
+                    useDma = ((cmdBuffer[2] & 0x01) == 0x00);
+                    printf("Head Unload Time: %d\n"
+                            "Head Load Time: %d\n"
+                            "Step Rate Time: %d\n"
+                            "Use DMA: %s\n",
+                            headUnloadTime, headLoadTime, stepRateTime,
+                            useDma ? "TRUE" : "FALSE");
+                    break;
+
+                case 0x04:  // Sense drive state
+                    printf("Sense drive: %d\n"
+                            "Sense head: %d\n",
+                            (cmdBuffer[1] & 0x03), (cmdBuffer[1] & 0x04) >> 2);
+                    break;
+
+                case 0x05:  // Write sector(s)
+                    break;
+
+                case 0x06:  // Read sector(s)
+                    break;
+
+                case 0x07:  // Recalibrate and seek physical track 0
+                    break;
+
+                case 0x08:  // Sense internal state
+                    break;
+
+                case 0x09:  // Write deleted sector(s)
+                    break;
+
+                case 0x0A:  // Read ID
+                    break;
+
+                case 0x0C:  // Read deleted sector(s)
+                    break;
+
+                case 0x0D:  // Format track
+                    break;
+
+                case 0x0F:  // Seek track N
+                    break;
+
+                case 0x11:  // Scan equal
+                    break;
+
+                case 0x19:  // Scan low or equal
+                    break;
+
+                case 0x1D:  // Scan high or equal
+                    break;
+
+                default:
+                    break;
+            }
         }
 
         void execute()
         {
+            switch (cmdBuffer[0] & 0x1F)
+            {
+                case 0x02:  // Read Track (Diagnostic)
+                    break;
+
+                case 0x03:  // Specify SPD/DMA
+                    reset();
+                    break;
+
+                case 0x04:  // Sense drive state
+                    drive[(cmdBuffer[1] & 0x03)].senseStatus(cmdBuffer, resBuffer);
+                    state = FDCState::FDC_STATE_RESULT;
+                    break;
+
+                case 0x05:  // Write sector(s)
+                    break;
+
+                case 0x06:  // Read sector(s)
+                    break;
+
+                case 0x07:  // Recalibrate and seek physical track 0
+                    break;
+
+                case 0x08:  // Sense internal state
+                    break;
+
+                case 0x09:  // Write deleted sector(s)
+                    break;
+
+                case 0x0A:  // Read ID
+                    break;
+
+                case 0x0C:  // Read deleted sector(s)
+                    break;
+
+                case 0x0D:  // Format track
+                    break;
+
+                case 0x0F:  // Seek track N
+                    break;
+
+                case 0x11:  // Scan equal
+                    break;
+
+                case 0x19:  // Scan low or equal
+                    break;
+
+                case 0x1D:  // Scan high or equal
+                    break;
+
+                default:
+                    break;
+            }
         }
 
         void reset()
         {
-            state = FDC_STATE_IDLE;
+            printf("FDC reset or idle.\n");
+            state = FDCState::FDC_STATE_IDLE;
             byte = false;
             cmdIndex = resIndex = 0;
             cmdBytes = resBytes = 0;
@@ -299,14 +465,30 @@ class FDC
             statusReg = SREG_RQM;
         }
 
-        uint_fast8_t status() { return statusReg; }
+        uint_fast8_t status()
+        {
+            /*
+            // Uncomment for debugging
+            static uint_fast8_t wait = 0;
+            
+            if (++wait == 5)
+            {
+                wait = 0;
+                printf("FDC status: %02x\n", statusReg);
+            }
+            */
+            return statusReg;
+        }
 
         uint_fast8_t read()
         {
-            static uint_fast8_t retval;
+            static uint_fast8_t retval = 0x00;
+            static uint_fast8_t wait = 0;
 
-            if (byte == false)
+            if (++wait == 5 && byte == false)
             {
+                // printf("Cycle %d: Read byte: %02x\n", wait, retval);
+                wait = 0;
                 retval = resBuffer[resIndex++];
                 byte = true;
             }
@@ -314,14 +496,15 @@ class FDC
             return retval;
         }
 
-        void write(uint_fast8_t byte)
+        void write(uint_fast8_t value)
         {
             static uint_fast8_t wait = 0;
 
-            if (byte == false && ++wait == 5)
+            if (++wait == 5 && byte == false)
             {
+                // printf("Cycle %d: Write byte: %02x\n", wait, value);
                 wait = 0;
-                cmdBuffer[cmdIndex++] = byte;
+                cmdBuffer[cmdIndex++] = value;
                 byte = true;
             }
         }

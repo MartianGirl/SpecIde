@@ -102,6 +102,24 @@ int main(int argc, char* argv[])
             screen.spectrum.ula.setUlaVersion(3);
         }
 
+        if (*it == "--plus3")
+        {
+            screen.set128K(true);
+            screen.spectrum.loadRoms(3);
+            screen.spectrum.setPlus3();
+            useDefaultModel = false;
+            screen.spectrum.ula.setUlaVersion(3);
+        }
+
+        if (*it == "--plus3sp")
+        {
+            screen.set128K(true);
+            screen.spectrum.loadRoms(6);
+            screen.spectrum.setPlus3();
+            useDefaultModel = false;
+            screen.spectrum.ula.setUlaVersion(3);
+        }
+
         // I'm putting both set and unset flags in case I implement loading
         // default parameters from a config file, which would override the
         // emulator's defaults.

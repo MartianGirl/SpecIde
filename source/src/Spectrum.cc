@@ -239,6 +239,12 @@ void Spectrum::clock()
         if (hasPsg) psg.clock();
     }
 
+    // For the moment, I'm clocking this at 7MHz. In a real Spectrum +3, the
+    // FDC is clocked at 8MHz. I'm changing this only if it is really necessary.
+    // (One easy way would be clocking twice every seven clocks... It's not like
+    // we're interfacing with a real disk drive...)
+    if (spectrumPlus3) fdc.clock();
+
     // We clock the Z80 if the ULA allows.
     if (ula.cpuClock)
     {
@@ -279,12 +285,24 @@ void Spectrum::clock()
                     case 0x2000:    // 0x2FFD (+3 FDC Main Status)
                         if (spectrumPlus2A)
                         {
+                            if (spectrumPlus3)
+                            {
+                                if (rd_ == false)
+                                    z80.d = fdc.status();
+                            }
                             break;
                         }
                         // fall-through
                     case 0x3000:    // 0x3FFD (+3 FDC Data)
                         if (spectrumPlus2A)
                         {
+                            if (spectrumPlus3)
+                            {
+                                if (wr_ == false)
+                                    fdc.write(z80.d);
+                                else if (rd_ == false)
+                                    z80.d = fdc.read();
+                            }
                             break;
                         }
                         // fall-through
@@ -292,7 +310,8 @@ void Spectrum::clock()
                     case 0x5000: // fall-through
                     case 0x6000: // fall-through
                     case 0x7000: // 0x7FFD (128K Paging / +3 Paging Low)
-                        if ((wr_ == false) || (spectrumPlus2A == false && rd_ == false))
+                        if ((wr_ == false)
+                                || (rd_ == false && spectrumPlus2A == false))
                             updatePage(0);
                         break;
 
@@ -439,6 +458,7 @@ void Spectrum::reset()
     ula.reset();    // Synchronize clock level.
     z80.reset();
     psg.reset();
+    fdc.reset();
 
     if (spectrum128K)
     {
