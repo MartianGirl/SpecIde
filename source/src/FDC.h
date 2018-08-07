@@ -41,6 +41,7 @@ constexpr uint_fast8_t SREG_EXM = 1 << 5;
 constexpr uint_fast8_t SREG_DIO = 1 << 6;
 constexpr uint_fast8_t SREG_RQM = 1 << 7;
 
+
 constexpr uint_fast32_t DELAY_10us = 70;    // @ 7MHz
 
 class DiskDrive
@@ -55,7 +56,8 @@ class DiskDrive
         bool present = false;
         bool ready = false;
 
-        int head[2];
+        int cylinder = 0;
+        int sector = 0;
 
         DSKFile image;
 
@@ -65,10 +67,9 @@ class DiskDrive
         }
         void specifySpeed(uint_fast8_t cmd);
 
-        void senseStatus(uint_fast8_t* cmd, uint_fast8_t* res)
+        uint_fast8_t senseStatus()
         {
-            res[0] = (cmd[1] & 0x07)            // Not setting two-side ever?
-                | (track0 ? 0x10 : 0x00)
+            return (track0 ? 0x10 : 0x00)
                 | (ready ? 0x20 : 0x00)
                 | (writeprot ? 0x40 : 0x00)
                 | (fault ? 0x80 : 0x00);        // Don't really know...
@@ -76,9 +77,50 @@ class DiskDrive
 
         void writeSector(uint_fast8_t* cmd, uint_fast8_t* res);
         void readSector(uint_fast8_t* cmd, uint_fast8_t* res);
-        void recalibrate(uint_fast8_t* cmd);
+
+        void recalibrate()
+        {
+            // Maybe put here a delay.
+            if (cylinder < 78)
+            {
+                cylinder = 0;
+                track0 = true;
+            }
+            else
+            {
+                cylinder -= 77;
+            }
+        }
+
         void writeDeleted(uint_fast8_t* cmd, uint_fast8_t* res);
-        void readId(uint_fast8_t* cmd, uint_fast8_t* res);
+
+        uint_fast8_t readId(uint_fast8_t* cmd, uint_fast8_t* res, uint_fast8_t* data)
+        {
+            uint_fast8_t head = (cmd[1] & 0x04) >> 2;
+            if (disk)
+            {
+                if (cylinder < image.numTracks)
+                {
+                    if (head < numSides)
+                    {
+                        int index = (image.numSides * cylinder) + head;
+                        if (sector < tracks[index].numSectors)
+                        {
+                            data[0] = tracks[index].sectors[sector].sectorId;
+                            res[0] = cmd[1] & 0x07;
+                            res[1] = tracks[index].sectors[sector].fdcStatusReg1;
+                            res[2] = tracks[index].sectors[sector].fdcStatusReg2;
+                            res[3] = cylinder;
+                            res[4] = head;
+                            res[5] = sector;
+                            res[6] = tracks[index].sectors[sector].sectorLength;
+                            ++sector;
+                        }
+                    }
+                }
+            }
+        }
+
         void readDeleted(uint_fast8_t* cmd, uint_fast8_t* res);
         void formatTrack(uint_fast8_t* cmd, uint_fast8_t* res);
         void seekTrack(uint_fast8_t* cmd, uint_fast8_t* res);
@@ -91,7 +133,9 @@ class FDC
 {
     public:
         uint_fast8_t statusReg = 0x00;
-        uint_fast8_t sRegs[4];
+        uint_fast8_t sReg[4];
+
+        uint_fast8_t presCylinder = 0;
 
         uint_fast8_t cmdBuffer[16];
         uint_fast8_t resBuffer[16];
@@ -106,6 +150,7 @@ class FDC
         unsigned int resBytes;
 
         bool byte = false;
+        bool interrupt = false;
 
         bool multiTrackBit;
         bool mfmModeBit;
@@ -117,7 +162,7 @@ class FDC
         DiskDrive drive[4];
 
         uint_fast32_t delay = 0;
-        
+
         uint_fast8_t headUnloadTime;
         uint_fast8_t stepRateTime;
         uint_fast8_t headLoadTime;
@@ -140,7 +185,7 @@ class FDC
                     statusReg = SREG_RQM;
                     if (byte)
                     {
-                        byte = false;
+                        // byte = false;
                         printf("Command: ");
                         if (checkCommand())
                         {
@@ -224,8 +269,8 @@ class FDC
                     mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
-                case 0x04:  // Sense drive state
-                    printf("Sense drive state.\n");
+                case 0x04:  // Sense drive status
+                    printf("Sense drive status.\n");
                     cmdBytes = 2;   // 04          HU
                     resBytes = 1;   //             S3
                     mode = FDCMode::FDC_MODE_NONE;
@@ -252,8 +297,8 @@ class FDC
                     mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
-                case 0x08:  // Sense internal state
-                    printf("Sense internal state.\n");
+                case 0x08:  // Sense interrupt status
+                    printf("Sense interrupt status.\n");
                     cmdBytes = 1;   // 08
                     resBytes = 2;   //             S0 TP
                     mode = FDCMode::FDC_MODE_NONE;
@@ -337,19 +382,9 @@ class FDC
                     break;
 
                 case 0x03:  // Specify SPD/DMA
-                    headUnloadTime = cmdBuffer[1] & 0x0F;
-                    stepRateTime = (cmdBuffer[1] & 0xF0) >> 4;
-                    headLoadTime = cmdBuffer[2] >> 1;
-                    useDma = ((cmdBuffer[2] & 0x01) == 0x00);
-                    printf("Head Unload Time: %d\n"
-                            "Head Load Time: %d\n"
-                            "Step Rate Time: %d\n"
-                            "Use DMA: %s\n",
-                            headUnloadTime, headLoadTime, stepRateTime,
-                            useDma ? "TRUE" : "FALSE");
                     break;
 
-                case 0x04:  // Sense drive state
+                case 0x04:  // Sense drive status
                     printf("Sense drive: %d\n"
                             "Sense head: %d\n",
                             (cmdBuffer[1] & 0x03), (cmdBuffer[1] & 0x04) >> 2);
@@ -362,15 +397,19 @@ class FDC
                     break;
 
                 case 0x07:  // Recalibrate and seek physical track 0
+                    printf("Recalibrate drive: %d\n", (cmdBuffer[1] & 0x03));
                     break;
 
-                case 0x08:  // Sense internal state
+                case 0x08:  // Sense interrupt status
                     break;
 
                 case 0x09:  // Write deleted sector(s)
                     break;
 
                 case 0x0A:  // Read ID
+                    printf("Read ID from drive: %d\n"
+                            "Read ID from head: %d\n",
+                            (cmdBuffer[1] & 0x03), (cmdBuffer[1] & 0x04) >> 2);
                     break;
 
                 case 0x0C:  // Read deleted sector(s)
@@ -404,11 +443,23 @@ class FDC
                     break;
 
                 case 0x03:  // Specify SPD/DMA
+                    headUnloadTime = cmdBuffer[1] & 0x0F;
+                    stepRateTime = (cmdBuffer[1] & 0xF0) >> 4;
+                    headLoadTime = cmdBuffer[2] >> 1;
+                    useDma = ((cmdBuffer[2] & 0x01) == 0x00);
+                    printf("Head Unload Time: %d\n"
+                            "Head Load Time: %d\n"
+                            "Step Rate Time: %d\n"
+                            "Use DMA: %s\n",
+                            headUnloadTime, headLoadTime, stepRateTime,
+                            useDma ? "TRUE" : "FALSE");
                     reset();
                     break;
 
-                case 0x04:  // Sense drive state
-                    drive[(cmdBuffer[1] & 0x03)].senseStatus(cmdBuffer, resBuffer);
+                case 0x04:  // Sense drive status
+                    sReg[3] = cmdBuffer[1] & 0x07;
+                    sReg[3] |= drive[(cmdBuffer[1] & 0x03)].senseStatus();
+                    resBuffer[0] = sReg[3];
                     state = FDCState::FDC_STATE_RESULT;
                     break;
 
@@ -419,9 +470,26 @@ class FDC
                     break;
 
                 case 0x07:  // Recalibrate and seek physical track 0
+                    sReg[0] = cmdBuffer[1] & 0x07;
+                    drive[(cmdBuffer[1] & 0x03)].recalibrate();
+                    presCylinder = 0;
+                    if (drive[(cmdBuffer[1] & 0x03)].track0)
+                        sReg[0] |= 0x20;    // 00100HUU - NT, SE.
+                    else
+                        sReg[0] |= 0x70;    // 01110HUU - AT, SE, EC.
+                    interrupt = true;
+                    reset();
                     break;
 
-                case 0x08:  // Sense internal state
+                case 0x08:  // Sense interrupt status
+                    if (!interrupt)
+                        sReg[0] = 0x80;
+
+                    resBuffer[0] = sReg[0];
+                    resBuffer[1] = presCylinder;
+                    interrupt = false;
+                    printf("ST0: %0x\nPCN: %0x\n", resBuffer[0], resBuffer[1]);
+                    state = FDCState::FDC_STATE_RESULT;
                     break;
 
                 case 0x09:  // Write deleted sector(s)
@@ -467,16 +535,16 @@ class FDC
 
         uint_fast8_t status()
         {
-            /*
+
             // Uncomment for debugging
             static uint_fast8_t wait = 0;
-            
+
             if (++wait == 5)
             {
                 wait = 0;
                 printf("FDC status: %02x\n", statusReg);
             }
-            */
+
             return statusReg;
         }
 
@@ -487,10 +555,10 @@ class FDC
 
             if (++wait == 5 && byte == false)
             {
-                // printf("Cycle %d: Read byte: %02x\n", wait, retval);
                 wait = 0;
                 retval = resBuffer[resIndex++];
                 byte = true;
+                printf("Cycle %d: Read byte: %02x\n", wait, retval);
             }
 
             return retval;
@@ -502,10 +570,10 @@ class FDC
 
             if (++wait == 5 && byte == false)
             {
-                // printf("Cycle %d: Write byte: %02x\n", wait, value);
                 wait = 0;
                 cmdBuffer[cmdIndex++] = value;
                 byte = true;
+                printf("Cycle %d: Write byte: %02x\n", wait, value);
             }
         }
 };
