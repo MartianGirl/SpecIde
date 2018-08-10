@@ -101,19 +101,19 @@ class DiskDrive
             {
                 if (cylinder < image.numTracks)
                 {
-                    if (head < numSides)
+                    if (head < image.numSides)
                     {
                         int index = (image.numSides * cylinder) + head;
-                        if (sector < tracks[index].numSectors)
+                        if (sector < image.tracks[index].numSectors)
                         {
-                            data[0] = tracks[index].sectors[sector].sectorId;
+                            data[0] = image.tracks[index].sectors[sector].sectorId;
                             res[0] = cmd[1] & 0x07;
-                            res[1] = tracks[index].sectors[sector].fdcStatusReg1;
-                            res[2] = tracks[index].sectors[sector].fdcStatusReg2;
+                            res[1] = image.tracks[index].sectors[sector].fdcStatusReg1;
+                            res[2] = image.tracks[index].sectors[sector].fdcStatusReg2;
                             res[3] = cylinder;
                             res[4] = head;
                             res[5] = sector;
-                            res[6] = tracks[index].sectors[sector].sectorLength;
+                            res[6] = image.tracks[index].sectors[sector].sectorLength;
                             ++sector;
                         }
                     }
