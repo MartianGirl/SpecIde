@@ -23,13 +23,13 @@ using namespace std;
 using namespace sf;
 
 Screen::Screen(size_t scale, bool fullscreen) :
-    GraphicWindow(352 * scale, 288 * scale, "SpecIde", fullscreen),
+    GraphicWindow(704 * scale, 576 * scale, "SpecIde", fullscreen),
     skip(ULA_CLOCK_48 / SAMPLE_RATE),
     fullscreen(fullscreen), smooth(false),
     squareRootDac(true),
     syncToVideo(false),
     scale(scale),
-    xSize(352), ySize(304),
+    xSize(360), ySize(624),
     stereo(0),
     pad(false),
     flashTap(false)
@@ -83,7 +83,7 @@ Screen::Screen(size_t scale, bool fullscreen) :
 
     setFullScreen(fullscreen);
 
-    size_t vectorSize = xSize * (ySize + 8);    // Count blanking lines.
+    size_t vectorSize = xSize * ySize;    // Including blanking lines.
     spectrum.ula.xSize = xSize;
     spectrum.ula.ySize = ySize;
 #if SPECIDE_BYTE_ORDER == 1
@@ -301,27 +301,27 @@ void Screen::setFullScreen(bool fs)
 
         // Adjust depending on the vertical scale.
         sScale = yScale;
-        xOffset = (bestMode.width - (xSize * sScale)) / 2;
+        xOffset = (bestMode.width - (2 * xSize * sScale)) / 2;
         yOffset = 0;
 
         printf("XScale %.3f YScale %.3f\n", xScale, yScale);
         printf("Using scale %.3f\n", sScale);
 
-        size_t start = (312 - suggestedScans) / 2;
+        size_t start = (625 - suggestedScans) / 2;
         size_t lines = bestMode.height;
 
         scrSprite.setTexture(scrTexture);
         scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
-                    static_cast<uint_fast32_t>(xSize), static_cast<uint_fast32_t>(lines)));
+                    static_cast<uint_fast32_t>(xSize - 8), static_cast<uint_fast32_t>(lines)));
         scrSprite.setPosition(xOffset, yOffset);
-        scrSprite.setScale(Vector2f(sScale, sScale));
+        scrSprite.setScale(Vector2f(2 * sScale, sScale));
     }
     else
     {
         scrSprite.setTexture(scrTexture);
-        scrSprite.setTextureRect(sf::IntRect(0, 8, 352, 288));
+        scrSprite.setTextureRect(sf::IntRect(0, 16, 352, 588));
         scrSprite.setPosition(0, 0);
-        scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
+        scrSprite.setScale(Vector2f(2 * static_cast<float>(scale), static_cast<float>(scale)));
     }
 
     // window.setFramerateLimit(50);

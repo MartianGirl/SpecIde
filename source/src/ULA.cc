@@ -103,6 +103,7 @@ void ULA::generateVideoControlSignals()
         else if (scan == vSyncEnd)
         {
             vSync = true;
+            frame = 1 - frame;
             yPos = 0;
         }
         else if (scan == maxScan)
@@ -114,7 +115,7 @@ void ULA::generateVideoControlSignals()
     {
         xPos = 0;
         if (retrace == false)
-            ++yPos;
+            yPos += 2;
     }
     else if (pixel == hBlankEnd)
     {
@@ -271,28 +272,43 @@ void ULA::paint()
         if (!blanking)
         {
             xPos += 8;
-            uint32_t *ptr = &pixels[(yPos * xSize) + xPos];
-            if (average)
+            uint32_t *ptr1 = &pixels[((yPos + frame) * xSize) + xPos];
+            uint32_t *ptr2 = &pixels[((yPos + (1 - frame)) * xSize) + xPos];
+
+            switch (scanlines)
             {
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-            }
-            else
-            {
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                case 1:     // Scanlines
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    break;
+
+                case 2:     // Averaged scanlines
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    break;
+
+                default:    // No scanlines
+                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
+                    break;
             }
         }
     }

@@ -63,6 +63,7 @@ class ULA
         uint_fast32_t xSize, ySize;
         uint_fast32_t xPos = 0;
         uint_fast32_t yPos = 0;
+        uint_fast32_t frame = 0;
 
         // These values depend on the model
         uint_fast8_t ulaVersion = 1;
@@ -131,7 +132,7 @@ class ULA
         uint_fast16_t interruptStart;
         uint_fast16_t interruptEnd;
 
-        // Average colours.
-        bool average = false;
+        // Scanline modes.
+        uint_fast32_t scanlines = 0;
 };
 // vim: et:sw=4:ts=4

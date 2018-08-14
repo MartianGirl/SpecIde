@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 
     // The Screen class is now actually more of a "console".
     // We create the instance, and load the given tape (if any).
-    Screen screen(2, true);
+    Screen screen(1, true);
     bool useDefaultModel = true;
 
     vector<string> params(argv, argv + argc);
@@ -177,9 +177,14 @@ int main(int argc, char* argv[])
             screen.window.setVerticalSyncEnabled(true);
         }
 
+        if (*it == "--scanlines")
+        {
+            screen.spectrum.ula.scanlines = 1;
+        }
+
         if (*it == "--average")
         {
-            screen.spectrum.ula.average = true;
+            screen.spectrum.ula.scanlines = 2;
         }
 
         // SD1 was a protection device used in Camelot Warriors. It simply

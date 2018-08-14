@@ -42,7 +42,7 @@ void GraphicWindow::adjust()
     {
         ++divider;
         suggestedScans = bestMode.height / divider;
-    } while (suggestedScans > 304); // 312 - 8 VBlank lines.
+    } while (suggestedScans > 608); // 312 - 8 VBlank lines.
 }
 
 GraphicWindow::~GraphicWindow()
