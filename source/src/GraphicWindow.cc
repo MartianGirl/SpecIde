@@ -2,47 +2,38 @@
 
 using namespace std;
 
-GraphicWindow::GraphicWindow(size_t x, size_t y, 
-        std::string const& title,
-        bool fullscreen) :
+GraphicWindow::GraphicWindow(size_t x, size_t y) :
     w(x), h(y),
-    window(
-        fullscreen ?
-        sf::VideoMode::getDesktopMode() :
-        sf::VideoMode(static_cast<sf::Uint32>(x), static_cast<sf::Uint32>(y)),
-        title,
-        fullscreen ?
-        sf::Style::Fullscreen :
-        sf::Style::Close | sf::Style::Titlebar),
+    window(),
     modes(sf::VideoMode::getFullscreenModes()),
     bestMode(sf::VideoMode::getDesktopMode())
 {
-    init();
-
-    cout << "Selecting Full Screen Mode: "
-        << bestMode.width << "x" << bestMode.height << " - "
-        << bestMode.bitsPerPixel << "bpp" << endl;
+    cout << "Selected Full Screen Mode: " << bestMode.width
+        << "x" << bestMode.height << "-" << bestMode.bitsPerPixel << endl;
 
     adjust();
-}
-
-void GraphicWindow::init()
-{
-    // window.setFramerateLimit(50);
-    window.setKeyRepeatEnabled(false);
-    window.setMouseCursorVisible(false);
-    window.clear();
-    window.display();
 }
 
 void GraphicWindow::adjust()
 {
     size_t divider = 0;
+
     do
     {
         ++divider;
-        suggestedScans = bestMode.height / divider;
-    } while (suggestedScans > 608); // 312 - 8 VBlank lines.
+        suggestedScansSingle = bestMode.height / divider;
+    } while (suggestedScansSingle > 304); // 312 - 8 VBlank lines.
+    cout << "Selected " << suggestedScansSingle
+        << " scans for single scan mode." << endl;
+
+    divider = 0;
+    do
+    {
+        ++divider;
+        suggestedScansDouble = bestMode.height / divider;
+    } while (suggestedScansDouble > 608); // 624 - 16 VBlank lines.
+    cout << "Selected " << suggestedScansDouble
+        << " scans for double scan mode." << endl;
 }
 
 GraphicWindow::~GraphicWindow()

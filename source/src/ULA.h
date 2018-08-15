@@ -63,6 +63,7 @@ class ULA
         uint_fast32_t xSize, ySize;
         uint_fast32_t xPos = 0;
         uint_fast32_t yPos = 0;
+        uint_fast32_t yInc = 1;
         uint_fast32_t frame = 0;
 
         // These values depend on the model

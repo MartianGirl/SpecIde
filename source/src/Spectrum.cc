@@ -116,7 +116,7 @@ void Spectrum::loadRoms(size_t model)
             size_t pos = 0;
 
             romName = romPaths[j] + romNames[i];
-            printf("Trying ROM: %s\n", romName.c_str());
+            cout << "Trying ROM: " << romName << endl;
             ifs.open(romName, ifstream::binary);
 
             // If it fails, try the ROM in /usr/share/spectrum-roms

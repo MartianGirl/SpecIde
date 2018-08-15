@@ -12,25 +12,81 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    printf("SpecIde Version %d.%d\n",
-            SPECIDE_VERSION_MAJOR, SPECIDE_VERSION_MINOR);
-
-    // The Screen class is now actually more of a "console".
-    // We create the instance, and load the given tape (if any).
-    Screen screen(1, true);
-    bool useDefaultModel = true;
-
     vector<string> params(argv, argv + argc);
     vector<string> tapes;
+
+    cout << "SpecIde Version " << SPECIDE_VERSION_MAJOR
+        << "." << SPECIDE_VERSION_MINOR << endl << endl;
+
     for (vector<string>::iterator it = params.begin(); it != params.end(); ++it)
     {
         if (*it == "--help" || *it == "-h")
         {
-            printf("Show some help.\n");
-
-            screen.done = true;
+            cout << "Usage: SpecIde [options] [tapefiles]" << endl;
+            cout << endl;
+            cout << "Supported formats are TAP and TZX." << endl;
+            cout << endl;
+            cout << "Options:" << endl;
+            cout << endl;
+            cout << "Model selection options:" << endl;
+            cout << "--issue2:          Spectrum 48K, issue 2." << endl;
+            cout << "--issue3 | --48:   Spectrum 48K, issue 3. (Default)" << endl;
+            cout << "--128:             Spectrum 128K." << endl;
+            cout << "--128sp:           Spectrum 128K. (Spanish ROM)" << endl;
+            cout << "--plus2            Spectrum +2." << endl;
+            cout << "--plus2sp          Spectrum +2. (Spanish ROM)" << endl;
+            cout << "--plus2a           Spectrum +2A." << endl;
+            cout << "--plus2asp         Spectrum +2A. (Spanish ROM)" << endl;
+            // cout << "--plus3           Spectrum +3." << endl;
+            // cout << "--plus3sp         Spectrum +3. (Spanish ROM)" << endl;
+            cout << endl;
+            cout << "Hardware options:" << endl;
+            cout << "--kempston:        Map joystick to Kempston interface." << endl;
+            cout << "--sinclair:        Map joystick to Sinclair interface. (Default)" << endl;
+            cout << "--pad:             Map joystick extra buttons to keys." << endl;
+            cout << "--psg:             Emulate AY chip. (Default for 128K models)" << endl;
+            cout << "--abc|--acb:       Select ABC|ACB stereo modes." << endl;
+            cout << "--sd1:             Emulate Dinamic SD1 dongle. (for Camelot Warriors)" << endl;
+            cout << endl;
+            cout << "Video options:" << endl;
+            cout << "--fullscreen       Start SpecIde in full screen mode." << endl;
+            cout << "--scanlines        Render PAL double scan mode." << endl;
+            cout << "--average          Render PAL double scan mode, averaging scanlines." << endl;
+            cout << "--sync             Synchronize emulation to PC video refresh rate." << endl;
+            cout << endl;
+            cout << "Emulation options:" << endl;
+            cout << "--nosound          Disable all sound." << endl;
+            cout << "--notapesound      Disable tape sounds." << endl;
+            cout << "--flashtap         Enable ROM traps for LOAD and SAVE." << endl;
+            cout << endl;
+            cout << "Function keys:" << endl;
+            // cout << "F1:                Display menu." << endl;
+            cout << "F2:                Turn fullscreen mode on / off." << endl;
+            cout << "Shift + F2:        Turn antialiasing on / off." << endl;
+            cout << "F5:                Reset emulated Spectrum." << endl;
+            cout << "F7:                Append LOAD FlashTAP data to SAVE FlashTAP data." << endl;
+            cout << "Shift + F7:        Clear SAVE FlashTAP data." << endl;
+            cout << "F8:                Use SAVE FlashTAP data as LOAD FlashTAP data." << endl;
+            cout << "Shift + F8:        Write SAVE FlashTAP data to disk as 'savetapeXX.tap'." << endl;
+            cout << "F9:                Turn sound on / off." << endl;
+            cout << "Shift + F9:        Turn tape sound on / off." << endl;
+            cout << "F10:               Exit emulator." << endl;
+            cout << "F11:               Play / stop tape." << endl;
+            cout << "Shift + F11:       Set mark in tape." << endl;
+            cout << "F12:               Rewind tape to the beginning." << endl;
+            cout << "Shift + F12:       Rewind tape to mark." << endl;
+            cout << endl;
+            exit(0);
         }
+    }
 
+    // The Screen class is now actually more of a "console".
+    // We create the instance, and load the given tape (if any).
+    Screen screen(1);
+    bool useDefaultModel = true;
+
+    for (vector<string>::iterator it = params.begin(); it != params.end(); ++it)
+    {
         // Model selection.
         if (*it == "--issue2")
         {
@@ -179,12 +235,21 @@ int main(int argc, char* argv[])
 
         if (*it == "--scanlines")
         {
+            screen.doubleScanMode = true;
             screen.spectrum.ula.scanlines = 1;
+            screen.spectrum.ula.yInc = 2;
         }
 
         if (*it == "--average")
         {
+            screen.doubleScanMode = true;
             screen.spectrum.ula.scanlines = 2;
+            screen.spectrum.ula.yInc = 2;
+        }
+
+        if (*it == "--fullscreen")
+        {
+            screen.fullscreen = true;
         }
 
         // SD1 was a protection device used in Camelot Warriors. It simply
@@ -210,6 +275,8 @@ int main(int argc, char* argv[])
     for (vector<string>::iterator it = tapes.begin(); it != tapes.end(); ++it)
         screen.tape.load(*it);
 
+    screen.reopenWindow(screen.fullscreen);
+    screen.setFullScreen(screen.fullscreen);
     screen.run();
 }
 

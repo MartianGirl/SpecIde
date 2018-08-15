@@ -115,7 +115,7 @@ void ULA::generateVideoControlSignals()
     {
         xPos = 0;
         if (retrace == false)
-            yPos += 2;
+            yPos += yInc;
     }
     else if (pixel == hBlankEnd)
     {
@@ -274,6 +274,7 @@ void ULA::paint()
             xPos += 8;
             uint32_t *ptr1 = &pixels[((yPos + frame) * xSize) + xPos];
             uint32_t *ptr2 = &pixels[((yPos + (1 - frame)) * xSize) + xPos];
+            uint32_t *ptr = &pixels[(yPos * xSize) + xPos];
 
             switch (scanlines)
             {
@@ -300,14 +301,14 @@ void ULA::paint()
                     break;
 
                 default:    // No scanlines
-                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr1; --ptr2; *ptr2 = *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
                     break;
             }
         }
