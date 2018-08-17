@@ -76,11 +76,10 @@ void Z80::clock()
         case Z80State::ST_OCF_T3H_RFSH1:
             c |= (SIGNAL_IORQ_ | SIGNAL_RD_ | SIGNAL_M1_);
             a = ir.w;
+            ir.l = (ir.l & 0x80) | ((ir.l + 1) & 0x7F);
             if (!(iff_d & HALT))
                 decode(d);
             startInstruction();
-            ir.l = (ir.l & 0x80) 
-                | ((ir.l + 1) & 0x7F);
             state = Z80State::ST_OCF_T3L_RFSH1;
             return;
 

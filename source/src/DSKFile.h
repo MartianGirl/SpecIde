@@ -59,7 +59,7 @@ class DSKFile
 
                 bool magicOk;
 
-                bool load( vector<uint8_t> const& data, uint_fast32_t offset)
+                bool load(vector<uint8_t> const& data, uint_fast32_t offset)
                 {
                     magicOk = false;
 
@@ -110,6 +110,18 @@ class DSKFile
 
                     return true;
                 }
+
+                void readSector(vector<uint8_t>& data, uint_fast8_t id)
+                {
+                    for (vector<Sector>::iterator it = sectors.begin();
+                            it != sectors.end();
+                            ++it)
+                    {
+                        if (it->sectorId == id)
+                            data.insert(data.end(), it->data.begin(), it->data.end());
+                    }
+                }
+
         };
 
         DSKFile() :

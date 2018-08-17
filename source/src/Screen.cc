@@ -22,14 +22,14 @@ using namespace std::chrono;
 using namespace std;
 using namespace sf;
 
-Screen::Screen(size_t scale, bool fullscreen) :
-    GraphicWindow(352 * scale, 288 * scale, "SpecIde", fullscreen),
+Screen::Screen(size_t scale) :
+    GraphicWindow(704 * scale, 576 * scale),
     skip(ULA_CLOCK_48 / SAMPLE_RATE),
-    fullscreen(fullscreen), smooth(false),
+    fullscreen(false), doubleScanMode(false), smooth(false),
     squareRootDac(true),
     syncToVideo(false),
     scale(scale),
-    xSize(352), ySize(304),
+    xSize(360), ySize(624),
     stereo(0),
     pad(false),
     flashTap(false)
@@ -70,20 +70,18 @@ Screen::Screen(size_t scale, bool fullscreen) :
     do
     {
         string font = fontPaths[j] + fontName;
-        printf("Trying font: %s\n", font.c_str());
+        cout << "Trying font: " << font << endl;
         success = zxFont.loadFromFile(font);
         ++j;
     } while (!success && j < fontPaths.size());
 
     if (!success)
     {
-        printf("Could not load menu font.\n");
+        cout << "Could not load menu font." << endl;
         assert(false);
     }
 
-    setFullScreen(fullscreen);
-
-    size_t vectorSize = xSize * (ySize + 8);    // Count blanking lines.
+    size_t vectorSize = xSize * ySize;    // Including blanking lines.
     spectrum.ula.xSize = xSize;
     spectrum.ula.ySize = ySize;
 #if SPECIDE_BYTE_ORDER == 1
@@ -292,6 +290,10 @@ void Screen::reopenWindow(bool fs)
 
 void Screen::setFullScreen(bool fs)
 {
+    size_t suggestedScans = doubleScanMode ? suggestedScansDouble : suggestedScansSingle;
+    size_t xModifier = doubleScanMode ? 2 : 1;
+    size_t yModifier = doubleScanMode ? 1 : 2;
+    size_t totalScans = doubleScanMode ? 625 : 312;
     if (fs)
     {
         // Use best mode available.
@@ -301,27 +303,28 @@ void Screen::setFullScreen(bool fs)
 
         // Adjust depending on the vertical scale.
         sScale = yScale;
-        xOffset = (bestMode.width - (xSize * sScale)) / 2;
+        xOffset = (bestMode.width - (xModifier * xSize * sScale)) / 2;
         yOffset = 0;
 
-        printf("XScale %.3f YScale %.3f\n", xScale, yScale);
-        printf("Using scale %.3f\n", sScale);
+        cout << "XScale: " << fixed << setprecision(3) << xScale << " ";
+        cout << "YScale: " << fixed << setprecision(3) << yScale << endl;
+        cout << "Using scale " << fixed << setprecision(3) << sScale << endl;
 
-        size_t start = (312 - suggestedScans) / 2;
+        size_t start = (totalScans - suggestedScans) / 2;
         size_t lines = bestMode.height;
 
         scrSprite.setTexture(scrTexture);
         scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
-                    static_cast<uint_fast32_t>(xSize), static_cast<uint_fast32_t>(lines)));
+                    static_cast<uint_fast32_t>(xSize - 8), static_cast<uint_fast32_t>(lines)));
         scrSprite.setPosition(xOffset, yOffset);
-        scrSprite.setScale(Vector2f(sScale, sScale));
+        scrSprite.setScale(Vector2f(xModifier * sScale, sScale));
     }
     else
     {
         scrSprite.setTexture(scrTexture);
-        scrSprite.setTextureRect(sf::IntRect(0, 8, 352, 288));
+        scrSprite.setTextureRect(sf::IntRect(0, 16 / yModifier, 352, 588 / yModifier));
         scrSprite.setPosition(0, 0);
-        scrSprite.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
+        scrSprite.setScale(Vector2f(2 * static_cast<float>(scale), yModifier * static_cast<float>(scale)));
     }
 
     // window.setFramerateLimit(50);
@@ -784,7 +787,7 @@ void Screen::texture(size_t x, size_t y)
 void Screen::set128K(bool is128K)
 {
     skip = ((is128K) ? ULA_CLOCK_128 : ULA_CLOCK_48) / SAMPLE_RATE + 1;
-    printf("Skipping %lu samples.\n", skip);
+    cout << "Skipping " << skip << " samples." << endl;
 }
 
 bool Screen::cpuInRefresh()

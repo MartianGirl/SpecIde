@@ -103,6 +103,7 @@ void ULA::generateVideoControlSignals()
         else if (scan == vSyncEnd)
         {
             vSync = true;
+            frame = 1 - frame;
             yPos = 0;
         }
         else if (scan == maxScan)
@@ -114,7 +115,7 @@ void ULA::generateVideoControlSignals()
     {
         xPos = 0;
         if (retrace == false)
-            ++yPos;
+            yPos += yInc;
     }
     else if (pixel == hBlankEnd)
     {
@@ -271,28 +272,46 @@ void ULA::paint()
         if (!blanking)
         {
             xPos += 8;
-            uint32_t *ptr = &pixels[(yPos * xSize) + xPos];
-            if (average)
+
+            uint32_t *ptr1, *ptr2;
+            switch (scanlines)
             {
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-                --ptr; *ptr = averageColour(*ptr, colour[data & 0x01]); data >>= 1;
-            }
-            else
-            {
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                case 1:     // Scanlines
+                    ptr1 = &pixels[((yPos + frame) * xSize) + xPos];
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    break;
+
+                case 2:     // Averaged scanlines
+                    ptr1 = &pixels[((yPos + frame) * xSize) + xPos];
+                    ptr2 = &pixels[((yPos + (1 - frame)) * xSize) + xPos];
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    --ptr2; --ptr1; *ptr1 = averageColour(*ptr2, colour[data & 0x01]); data >>= 1;
+                    break;
+
+                default:    // No scanlines
+                    ptr1 = &pixels[(yPos * xSize) + xPos];
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    break;
             }
         }
     }
@@ -335,11 +354,9 @@ void ULA::ioPort()
     {
         if ((z80_c & SIGNAL_RD_) == 0x0000)
         {
-            ++rdWait;
-
-            if (rdWait == 5)
+            if (++ioWait == 5)
             {
-                rdWait = 0;
+                ioWait = 0;
                 ioPortIn = inMask;
                 ioPortIn |= (ear < 700) ? 0x00 : 0x40;
                 if ((z80_a & 0x8000) == 0x0000) ioPortIn &= keys[0];
@@ -353,18 +370,20 @@ void ULA::ioPort()
                 io = ioPortIn;
             }
         }
-
-        if ((z80_c & SIGNAL_WR_) == 0x0000)
+        else if ((z80_c & SIGNAL_WR_) == 0x0000)
         {
-            ioPortOut = io;
-            borderAttr = ioPortOut & 0x07;
+            ++ioWait;
+            if (ioWait == 1)
+            {
+                ioPortOut = io;
+                borderAttr = ioPortOut & 0x07;
+            }
+            else if (ioWait == 5)
+            {
+                ioWait = 0;
+            }
         }
     }
-
-    z80_c_2 = z80_c_1;
-    z80_c_1 = z80_c;
-
-    z80Clk = !z80Clk;
 }
 
 void ULA::clock()
@@ -380,9 +399,15 @@ void ULA::clock()
         generateVideoDataUla();
     tapeEarMic();
 
-    // Port access is contended.
+    // Contention affects to Z80 phase change and to when the I/O operation
+    // actually happens.
     if (cpuClock == true && (z80_c & SIGNAL_WAIT_) == SIGNAL_WAIT_)
+    {
         ioPort();
+        z80_c_2 = z80_c_1;
+        z80_c_1 = z80_c;
+        z80Clk = !z80Clk;
+    }
 
     paint();
 

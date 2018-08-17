@@ -17,18 +17,17 @@
 class GraphicWindow
 {
     public:
-        GraphicWindow(size_t x, size_t y,
-                std::string const& title, bool fullscreen);
+        GraphicWindow(size_t x, size_t y);
         virtual ~GraphicWindow();
 
-        void init();
         void adjust();
 
         size_t w, h;
         sf::RenderWindow window;
         std::vector<sf::VideoMode> modes;
         sf::VideoMode bestMode;
-        size_t suggestedScans;
+        size_t suggestedScansSingle;
+        size_t suggestedScansDouble;
 };
 
 // vim: et:sw=4:ts=4

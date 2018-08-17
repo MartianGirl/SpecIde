@@ -29,7 +29,7 @@
 class Screen : public GraphicWindow
 {
     public:
-        Screen(size_t scale, bool fullscreen);
+        Screen(size_t scale);
 
         Spectrum spectrum;
         Tape tape;
@@ -41,6 +41,7 @@ class Screen : public GraphicWindow
         bool done = false;
         bool menu = false;
         bool fullscreen;
+        bool doubleScanMode;
         bool smooth;
         bool squareRootDac;
         bool syncToVideo;
