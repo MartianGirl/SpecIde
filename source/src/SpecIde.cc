@@ -64,10 +64,10 @@ int main(int argc, char* argv[])
             cout << "F2:                Turn fullscreen mode on / off." << endl;
             cout << "Shift + F2:        Turn antialiasing on / off." << endl;
             cout << "F5:                Reset emulated Spectrum." << endl;
-            cout << "F7:                Append LOAD FlashTAP data to SAVE FlashTAP data." << endl;
-            cout << "Shift + F7:        Clear SAVE FlashTAP data." << endl;
-            cout << "F8:                Use SAVE FlashTAP data as LOAD FlashTAP data." << endl;
-            cout << "Shift + F8:        Write SAVE FlashTAP data to disk as 'savetapeXX.tap'." << endl;
+            cout << "F7:                Append LOAD FlashTAP data to SAVE buffer." << endl;
+            cout << "Shift + F7:        Clear SAVE buffer." << endl;
+            cout << "F8:                Write SAVE buffer to disk as 'savetapeXX.tap'." << endl;
+            cout << "Shift + F8:        Use SAVE buffer as LOAD FlashTAP buffer." << endl;
             cout << "F9:                Turn sound on / off." << endl;
             cout << "Shift + F9:        Turn tape sound on / off." << endl;
             cout << "F10:               Exit emulator." << endl;

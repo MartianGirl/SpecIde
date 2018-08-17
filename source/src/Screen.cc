@@ -217,8 +217,8 @@ void Screen::update()
     if (tape.pulseData.size())
     {
         char str[64];
-        size_t percent = 100 * tape.pointer / tape.pulseData.size();
-        snprintf(str, 64, "SpecIde [%03zu%%]", percent);
+        unsigned int percent = 100 * tape.pointer / tape.pulseData.size();
+        snprintf(str, 64, "SpecIde [%03u%%]", percent);
         window.setTitle(str);
     }
 

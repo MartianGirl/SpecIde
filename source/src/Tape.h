@@ -33,7 +33,7 @@ class Tape
         vector<uint8_t> saveData;
         vector<uint8_t> loadData;
         bool useSaveData;
-        size_t tapes;
+        unsigned int tapes;
 
         size_t pointer;         // Index to pulse data.
         size_t index;           // Last reached index in the tape.
@@ -58,22 +58,22 @@ class Tape
             playing = !playing;
             level ^= 0x80;
             if (playing)
-                printf("Playing.\n");
+                cout << "Playing." << endl;
             else
-                printf("Stopped.\n");
+                cout << "Stopped." << endl;
         }
 
         void rewind(size_t position = 0)
         {
             playing = false; sample = 0; pointer = position; level = 0x00;
             if (position == 0) tapPointer = 0;
-            printf("Rewind to %zu...\n", position);
+            cout << "Rewind to " << position << "..." << endl;
         }
 
         void resetCounter()
         {
             counter = pointer + 1;
-            printf("Set counter at %zu...\n", pointer);
+            cout << "Set counter at " << pointer << "..." << endl;
         }
 
         uint_fast8_t advance();
@@ -91,17 +91,17 @@ class Tape
             bool res;
             if (getBlockByte(2) == flag)
             {
-                printf("Loading - ");
+                cout << "Loading - ";
                 res = true;
             }
             else
             {
-                printf("Found   - ");
+                cout << "Found   - ";
                 res = false;
             }
 
-            printf("Flag: %3u  Length: %5u\n",
-                    getBlockByte(2), getBlockLength());
+            cout << "Flag: " << setw(3) << getBlockByte(2)
+                << "  Length: " << setw(5) << getBlockLength() << endl;
             return res;
         }
 
@@ -124,12 +124,12 @@ class Tape
         {
             if (useSaveData)
             {
-                printf("FlashTAP is save tape.\n");
+                cout << "FlashTAP is save tape." << endl;
                 tapData.assign(saveData.begin(), saveData.end());
             }
             else
             {
-                printf("FlashTAP is load tape.\n");
+                cout << "FlashTAP is load tape." << endl;
                 tapData.assign(loadData.begin(), loadData.end());
             }
 
@@ -138,28 +138,28 @@ class Tape
 
         void writeSaveData()
         {
-            ++tapes;
-
             char name[256];
-            snprintf(name, 256, "savetape%02zu.tap", tapes);
-            printf("Saving to %s\n", name);
+            snprintf(name, 256, "savetape%02u.tap", tapes);
+            cout << "Saving to " << name << endl;
 
             char *data = reinterpret_cast<char*>(&saveData[0]);
             size_t size = saveData.size();
             ofstream ofs(name, std::ofstream::binary);
             ofs.write(data, size);
             ofs.close();
+
+            tapes = (tapes + 1) % 100;
         }
 
         void clearSaveData()
         {
-            printf("Clearing save buffer.\n");
+            cout << "Clearing save buffer." << endl;
             saveData.clear();
         }
 
         void appendLoadData()
         {
-            printf("Dumping FlashTAP to save buffer.\n");
+            cout << "Dumping FlashTAP to save buffer." << endl;
             saveData.insert(saveData.end(), tapData.begin(), tapData.end());
         }
 };
