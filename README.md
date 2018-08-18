@@ -4,14 +4,18 @@ This is an attempt at writing a ZX Spectrum emulator using SFML for video, audio
 
 Currently, the emulator is functional and is quite accurate. Some of the supported features are:
 
-- Emulation of ZX Spectrum 48K (Issue 2 and Issue 3), 128K, +2 and +2A.
+- Emulation of ZX Spectrum 48K (Issue 2 and Issue 3), 128K, +2, and +2A.
+- Emulation of Spanish 128K, +2, and +2A.
 - AY-3-8912 sound emulation.
 - Loading of tapes via .tap and .tzx tape images.
 - Flashloading of .tap files and .tzx that use the ROM routines.
 - Saving of .tap files.
 - Full screen video mode detection.
+- Double Scan interlaced modes for flawless demo watching.
 - Kempston/Sinclair joystick emulation from the PC joystick/gamepad.
 - Works in GNU/Linux, Windows, and MacOS.
+
+Windows 32-bit binaries here: https://drive.google.com/open?id=1C5zRcY8itrvP9hKJsIniFWSGP1Zs-3NC
 
 Credits and acknowledgements:
 David Garijo for helping with the MacOS build process.
