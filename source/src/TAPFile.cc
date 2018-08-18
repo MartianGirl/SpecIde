@@ -53,8 +53,8 @@ void TAPFile::parse(
         dataLength = fileData[pointer + 1] * 0x100 + fileData[pointer];
         flagByte = fileData[pointer + 2];
 
-        cout << "Block Length: " << dataLength << endl;
-        cout << "Flag: " << static_cast<size_t>(flagByte) << endl;
+        cout << "Flag: " << static_cast<size_t>(flagByte) << "  ";
+        cout << "Length: " << dataLength << endl;
 
         // Insert the pilot tone.
         pulseData.insert(pulseData.end(),

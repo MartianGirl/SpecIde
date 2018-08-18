@@ -100,7 +100,7 @@ class Tape
                 res = false;
             }
 
-            cout << "Flag: " << setw(3) << getBlockByte(2)
+            cout << "Flag: " << setw(3) << static_cast<size_t>(getBlockByte(2))
                 << "  Length: " << setw(5) << getBlockLength() << endl;
             return res;
         }
