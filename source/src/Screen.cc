@@ -30,6 +30,7 @@ Screen::Screen(size_t scale) :
     syncToVideo(false),
     scale(scale),
     xSize(360), ySize(624),
+    delay(19968),
     stereo(0),
     pad(false),
     flashTap(false)
@@ -117,9 +118,9 @@ void Screen::run()
                 if (!syncToVideo)
                 {
 #ifdef USE_BOOST_THREADS
-                    sleep_until(tick + boost::chrono::milliseconds(20));
+                    sleep_until(tick + boost::chrono::microseconds(delay));
 #else
-                    sleep_until(tick + std::chrono::milliseconds(20));
+                    sleep_until(tick + std::chrono::microseconds(delay));
 #endif
                     tick = steady_clock::now();
                 }
@@ -138,9 +139,9 @@ void Screen::run()
             if (!syncToVideo)
             {
 #ifdef USE_BOOST_THREADS
-                sleep_until(tick + boost::chrono::milliseconds(20));
+                sleep_until(tick + boost::chrono::microseconds(delay));
 #else
-                sleep_until(tick + std::chrono::milliseconds(20));
+                sleep_until(tick + std::chrono::microseconds(delay));
 #endif
                 tick = steady_clock::now();
             }
@@ -788,6 +789,7 @@ void Screen::set128K(bool is128K)
 {
     skip = ((is128K) ? ULA_CLOCK_128 : ULA_CLOCK_48) / SAMPLE_RATE + 1;
     cout << "Skipping " << skip << " samples." << endl;
+    delay = is128K ? 19992 : 19968;
 }
 
 bool Screen::cpuInRefresh()

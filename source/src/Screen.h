@@ -51,6 +51,8 @@ class Screen : public GraphicWindow
         float xOffset, yOffset;
         float xScale, yScale, sScale;
 
+        int delay;
+
         sf::Texture scrTexture;
         sf::Sprite scrSprite;
 
