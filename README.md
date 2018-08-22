@@ -11,7 +11,7 @@ Currently, the emulator is functional and is quite accurate. Some of the support
 - Flashloading of .tap files and .tzx that use the ROM routines.
 - Saving of .tap files.
 - Full screen video mode detection.
-- Double Scan interlaced modes for flawless demo watching.
+- Double scan interlaced modes (a.k.a. Gigascreen).
 - Kempston/Sinclair joystick emulation from the PC joystick/gamepad.
 - Works in GNU/Linux, Windows, and MacOS.
 
