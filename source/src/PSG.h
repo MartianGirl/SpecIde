@@ -61,16 +61,16 @@ class PSG
             noise(0), seed(0xFFFF),
             volumeA(0), volumeB(0), volumeC(0),
             waveA(1), waveB(1), waveC(1),
-            // out{0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
-            //    0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF},
+            out{0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
+                0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF},
             // out{0x000, 0x020, 0x033, 0x04d, 0x078, 0x0ca, 0x133, 0x239,
             //    0x286, 0x45d, 0x606, 0x76e, 0x97b, 0xb8a, 0xdc5, 0xfff},
-            out{0x000, 0x034, 0x04B, 0x06E, 0x0A3, 0x0F2, 0x151, 0x227,
-                0x289, 0x414, 0x5B2, 0x726, 0x906, 0xB55, 0xD79, 0xFFF},
+            // out{0x000, 0x034, 0x04B, 0x06E, 0x0A3, 0x0F2, 0x151, 0x227,
+            //    0x289, 0x414, 0x5B2, 0x726, 0x906, 0xB55, 0xD79, 0xFFF},
             envSlope(1), envLevel(0), envStep(0), envHold(false),
             envA(false), envB(false), envC(false),
             counterA(0), counterB(0), counterC(0), counterN(0), counterE(0),
-            periodA(1), periodB(1), periodC(1), periodN(1), periodE(1),
+            periodA(0), periodB(0), periodC(0), periodN(0), periodE(1),
             playSound(true) {}
             // gen(rd()), uniform(0, 1) {} 
 
@@ -117,29 +117,26 @@ class PSG
 
                     case 010:
                         // Update volume for channel A.
-                        if ((r[8] & 0x10) == 0x00)
-                            volumeA = r[8] & 0x0F;
+                        volumeA = r[8] & 0x0F;
                         envA = ((r[8] & 0x10) == 0x10);
                         break;
 
                     case 011:
                         // Update volume for channel B.
-                        if ((r[9] & 0x10) == 0x00)
-                            volumeB = r[9] & 0x0F;
+                        volumeB = r[9] & 0x0F;
                         envB = ((r[9] & 0x10) == 0x10);
                         break;
 
                     case 012:
                         // Update volume for channel C.
-                        if ((r[10] & 0x10) == 0x00)
-                            volumeC = r[10] & 0x0F;
+                        volumeC = r[10] & 0x0F;
                         envC = ((r[10] & 0x10) == 0x10);
                         break;
 
                     case 013:
                     case 014:
                         // Update period for Envelope generator.
-                        periodE = ((r[12] << 8) + r[11]);
+                        periodE = ((r[12] * 0x100) + r[11]);
                         break;
 
                     case 015:
@@ -205,7 +202,7 @@ class PSG
 
                                 // If Alternate != Hold, change slope. :)
                                 if (((r[13] & 0x02) >> 1) != (r[13] & 0x01))
-                                        envSlope = -envSlope;
+                                    envSlope = -envSlope;
                             }
                             else
                             {
@@ -219,10 +216,6 @@ class PSG
                         envLevel = (envSlope > 0) ? envStep : (0x0F - envStep);
                     }
                 }
-
-                if (envA) volumeA = envLevel;
-                if (envB) volumeB = envLevel;
-                if (envC) volumeC = envLevel;
             }
 
             signalA = signalB = signalC = 1;
@@ -235,9 +228,9 @@ class PSG
                 if ((r[7] & 0x08) == 0) signalA += noise;
                 if ((r[7] & 0x10) == 0) signalB += noise;
                 if ((r[7] & 0x20) == 0) signalC += noise;
-                signalA *= out[volumeA];
-                signalB *= out[volumeB];
-                signalC *= out[volumeC];
+                signalA *= out[envA ? envLevel : volumeA];
+                signalB *= out[envB ? envLevel : volumeB];
+                signalC *= out[envC ? envLevel : volumeC];
             }
 
             filterA[index] = signalA;
@@ -293,14 +286,14 @@ class PSG
             {
                 int arr[16] = {
                 // These are my values.
-                // {0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
-                // 0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF};
+                    0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
+                    0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF};
                 // These values are from Lion 17 and V_Soft.
-                // {0x000, 0x020, 0x033, 0x04d, 0x078, 0x0ca, 0x133, 0x239,
+                // 0x000, 0x020, 0x033, 0x04d, 0x078, 0x0ca, 0x133, 0x239,
                 // 0x286, 0x45d, 0x606, 0x76e, 0x97b, 0xb8a, 0xdc5, 0xfff};
                 // These are from Hacker Kay
-                    0x000, 0x034, 0x04B, 0x06E, 0x0A3, 0x0F2, 0x151, 0x227,
-                    0x289, 0x414, 0x5B2, 0x726, 0x906, 0xB55, 0xD79, 0xFFF};
+                // 0x000, 0x034, 0x04B, 0x06E, 0x0A3, 0x0F2, 0x151, 0x227,
+                // 0x289, 0x414, 0x5B2, 0x726, 0x906, 0xB55, 0xD79, 0xFFF};
 
                 for (uint_fast8_t i = 0; i < 16; ++i)
                     out[i] = arr[i];
@@ -317,9 +310,9 @@ class PSG
             for (uint_fast8_t i = 0; i < 16; ++i)
                 r[i] = 0;
 
-            periodA = periodB = periodC = 1;
-            periodE = 1;
-            periodN = 1;
+            periodA = periodB = periodC = 0;
+            periodE = 0;
+            periodN = 0;
             volumeA = volumeB = volumeC = 0;
             seed = 0xFFFF;
         }
@@ -328,7 +321,7 @@ class PSG
         {
             envStep = 0;
             envHold = false;
-            counterE = periodE;
+            counterE = 2 * periodE;
         }
 
         int generateNoise()
