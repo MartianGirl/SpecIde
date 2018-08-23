@@ -242,9 +242,9 @@ int main(int argc, char* argv[])
 
         if (*it == "--average")
         {
-            screen.doubleScanMode = true;
+            screen.doubleScanMode = false;
             screen.spectrum.ula.scanlines = 2;
-            screen.spectrum.ula.yInc = 2;
+            screen.spectrum.ula.yInc = 1;
         }
 
         if (*it == "--fullscreen")
@@ -275,6 +275,7 @@ int main(int argc, char* argv[])
     for (vector<string>::iterator it = tapes.begin(); it != tapes.end(); ++it)
         screen.tape.load(*it);
 
+    screen.selectPixBuf();
     screen.reopenWindow(screen.fullscreen);
     screen.setFullScreen(screen.fullscreen);
     screen.run();

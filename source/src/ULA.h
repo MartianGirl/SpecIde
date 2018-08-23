@@ -59,7 +59,8 @@ class ULA
 
         static uint32_t colourTable[0x100];
         uint32_t colour[2];
-        std::vector<uint32_t> pixels;
+        std::vector<uint32_t> pixelsX1;
+        std::vector<uint32_t> pixelsX2;
         uint_fast32_t xSize, ySize;
         uint_fast32_t xPos = 0;
         uint_fast32_t yPos = 0;

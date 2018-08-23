@@ -55,6 +55,7 @@ class Screen : public GraphicWindow
 
         sf::Texture scrTexture;
         sf::Sprite scrSprite;
+        sf::Uint8* pixbuf;
 
         sf::Font zxFont;
 
@@ -87,6 +88,7 @@ class Screen : public GraphicWindow
         uint_fast8_t keyboardMask[8];
 
         void texture(size_t x, size_t y);
+        void selectPixBuf();
 };
 
 // vim: et:sw=4:ts=4
