@@ -1,6 +1,9 @@
 #include "ULA.h"
 
+#include <cassert>
 #include <cmath>
+
+using namespace std;
 
 uint_fast32_t ULA::voltages[4][4] =
 {
@@ -62,7 +65,7 @@ ULA::ULA() :
     {
         for (size_t j = 0x00; j < 0x100; ++j)
             averageTable[i][j] =
-                static_cast<uint8_t>(std::sqrt(((i * i) + (j * j)) / 2));
+                static_cast<uint8_t>(sqrt(((i * i) + (j * j)) / 2));
     }
 }
 
@@ -287,6 +290,7 @@ void ULA::paint()
             switch (scanlines)
             {
                 case 1:     // Scanlines
+                    assert((((yPos + frame) * xSize) + xPos) < pixelsX2.size());
                     ptr1 = &pixelsX2[((yPos + frame) * xSize) + xPos];
                     --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
                     --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
@@ -299,6 +303,9 @@ void ULA::paint()
                     break;
 
                 case 2:     // Averaged scanlines
+                    assert(((yPos * xSize) + xPos) < pixelsX1.size());
+                    assert((((2 * yPos + frame) * xSize) + xPos) < pixelsX2.size());
+                    assert((((2 * yPos + (1 - frame)) * xSize) + xPos) < pixelsX2.size());
                     ptr = &pixelsX1[(yPos * xSize) + xPos];
                     ptr1 = &pixelsX2[((2 * yPos + frame) * xSize) + xPos];
                     ptr2 = &pixelsX2[((2 * yPos + (1 - frame)) * xSize) + xPos];
@@ -321,6 +328,7 @@ void ULA::paint()
                     break;
 
                 default:    // No scanlines
+                    assert(((yPos * xSize) + xPos) < pixelsX1.size());
                     ptr = &pixelsX1[(yPos * xSize) + xPos];
                     --ptr; *ptr = colour[data & 0x01]; data >>= 1;
                     --ptr; *ptr = colour[data & 0x01]; data >>= 1;
