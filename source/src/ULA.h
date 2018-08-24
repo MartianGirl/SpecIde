@@ -33,7 +33,7 @@ class ULA
 
         void setUlaVersion(uint_fast8_t version);
 
-        uint32_t averageColour(uint32_t last, uint32_t curr);
+        uint32_t average(uint32_t a, uint32_t b);
 
         uint_fast16_t videoStart;
         uint_fast16_t videoEnd;
@@ -59,6 +59,7 @@ class ULA
 
         static uint32_t colourTable[0x100];
         uint32_t colour[2];
+        static uint8_t averageTable[0x100][0x100];
         std::vector<uint32_t> pixelsX1;
         std::vector<uint32_t> pixelsX2;
         uint_fast32_t xSize, ySize;

@@ -1,5 +1,7 @@
 #include "ULA.h"
 
+#include <cmath>
+
 uint_fast32_t ULA::voltages[4][4] =
 {
     {391, 728, 3653, 3790}, // ULA 5C (Issue 2)
@@ -27,6 +29,7 @@ bool ULA::memTable[16] =
 };
 
 uint32_t ULA::colourTable[0x100];
+uint8_t ULA::averageTable[0x100][0x100];
 
 ULA::ULA() :
     vSync(false), blanking(false), retrace(false),
@@ -54,23 +57,30 @@ ULA::ULA() :
 #endif
         colourTable[i] = colour;
     }
+
+    for (size_t i = 0x00; i < 0x100; ++i)
+    {
+        for (size_t j = 0x00; j < 0x100; ++j)
+            averageTable[i][j] =
+                static_cast<uint8_t>(std::sqrt(((i * i) + (j * j)) / 2));
+    }
 }
 
-uint32_t ULA::averageColour(uint32_t last, uint32_t curr)
+uint32_t ULA::average(uint32_t a, uint32_t b)
 {
     uint32_t res;
     uint8_t *pRes = reinterpret_cast<uint8_t*>(&res);
-    uint8_t *pLast = reinterpret_cast<uint8_t*>(&last);
-    uint8_t *pCurr = reinterpret_cast<uint8_t*>(&curr);
+    uint8_t *pa = reinterpret_cast<uint8_t*>(&a);
+    uint8_t *pb = reinterpret_cast<uint8_t*>(&b);
 #if SPECIDE_BYTE_ORDER == 1
     pRes[0] = 0xFF;
-    pRes[1] = ((pLast[1] >> 1) + (pCurr[1] >> 1));
-    pRes[2] = ((pLast[2] >> 1) + (pCurr[2] >> 1));
-    pRes[3] = ((pLast[3] >> 1) + (pCurr[3] >> 1));
+    pRes[1] = averageTable[pa[1]][pb[1]];
+    pRes[2] = averageTable[pa[2]][pb[2]];
+    pRes[3] = averageTable[pa[3]][pb[3]];
 #else
-    pRes[0] = ((pLast[0] >> 1) + (pCurr[0] >> 1));
-    pRes[1] = ((pLast[1] >> 1) + (pCurr[1] >> 1));
-    pRes[2] = ((pLast[2] >> 1) + (pCurr[2] >> 1));
+    pRes[0] = averageTable[pa[0]][pb[0]];
+    pRes[1] = averageTable[pa[1]][pb[1]];
+    pRes[2] = averageTable[pa[2]][pb[2]];
     pRes[3] = 0xFF;
 #endif
     return res;
@@ -292,22 +302,22 @@ void ULA::paint()
                     ptr = &pixelsX1[(yPos * xSize) + xPos];
                     ptr1 = &pixelsX2[((2 * yPos + frame) * xSize) + xPos];
                     ptr2 = &pixelsX2[((2 * yPos + (1 - frame)) * xSize) + xPos];
-                    --ptr2; --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr;  *ptr = averageColour(*ptr2, *ptr1);
-                    --ptr2; --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr;  *ptr = averageColour(*ptr2, *ptr1);
-                    --ptr2; --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr;  *ptr = averageColour(*ptr2, *ptr1);
-                    --ptr2; --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr;  *ptr = averageColour(*ptr2, *ptr1);
-                    --ptr2; --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr;  *ptr = averageColour(*ptr2, *ptr1);
-                    --ptr2; --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr;  *ptr = averageColour(*ptr2, *ptr1);
-                    --ptr2; --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr;  *ptr = averageColour(*ptr2, *ptr1);
-                    --ptr2; --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr;  *ptr = averageColour(*ptr2, *ptr1);
+                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    *ptr = average(*ptr2, *ptr1);
+                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    *ptr = average(*ptr2, *ptr1);
+                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    *ptr = average(*ptr2, *ptr1);
+                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    *ptr = average(*ptr2, *ptr1);
+                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    *ptr = average(*ptr2, *ptr1);
+                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    *ptr = average(*ptr2, *ptr1);
+                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    *ptr = average(*ptr2, *ptr1);
+                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
+                    *ptr = average(*ptr2, *ptr1);
                     break;
 
                 default:    // No scanlines

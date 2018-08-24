@@ -29,7 +29,7 @@ Screen::Screen(size_t scale) :
     squareRootDac(true),
     syncToVideo(false),
     scale(scale),
-    xSize(360), ySize(624),
+    xSize(360), ySize(625),
     delay(19968),
     stereo(0),
     pad(false),
@@ -86,10 +86,10 @@ Screen::Screen(size_t scale) :
     spectrum.ula.xSize = xSize;
     spectrum.ula.ySize = ySize;
 #if SPECIDE_BYTE_ORDER == 1
-    spectrum.ula.pixelsX1.assign(vectorSize, 0xFF000000);
+    spectrum.ula.pixelsX1.assign(vectorSize / 2, 0xFF000000);
     spectrum.ula.pixelsX2.assign(vectorSize, 0xFF000000);
 #else
-    spectrum.ula.pixelsX1.assign(vectorSize, 0x000000FF);
+    spectrum.ula.pixelsX1.assign(vectorSize / 2, 0x000000FF);
     spectrum.ula.pixelsX2.assign(vectorSize, 0x000000FF);
 #endif
 
