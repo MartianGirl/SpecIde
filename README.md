@@ -43,8 +43,7 @@ MacOS: (Thanks to David Garijo for taking the time of making this work and for p
 3. Install boost: brew install boost
 4. Install sfml: brew install sfml
 5. Install pkgconfig: brew install pkgconfig
-6. Move /usr/local/Cellar/sfml/2.4.2/share/SFML/cmake/Modules/FindSFML.cmake 
-   to /usr/local/Cellar/cmake/3.8.2/share/cmake/Modules
+6. Simlink FindSFML.cmake in cmake modules `ln -s $(brew --prefix sfml)/share/SFML/cmake/Modules/FindSFML.cmake $(brew --prefix cmake)/share/cmake/Modules/FindSFML.cmake`
 7. Run: cmake -DCMAKE_BUILD_TYPE=Release .
 8. Run: make clean && make install
 8. To run it: Copy the roms from the spectrum-roms package (or find it online)
