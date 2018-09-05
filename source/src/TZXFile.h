@@ -1,11 +1,14 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
+#include <cmath>
 #include <cstdint>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <set>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -41,6 +44,8 @@ class TZXFile
         size_t loopStart;
         size_t loopCounter;
 
+        std::stringstream ss;   // For reporting.
+
         void load(string const& fileName);
         void parse(
                 vector<size_t> &pulseData,
@@ -50,6 +55,17 @@ class TZXFile
 
         size_t dumpArchiveInfo();
         size_t dumpComment();
+        size_t dumpMessage();
+
+        void loadSymbolData(size_t base,
+                size_t& numSym, size_t& maxLen, size_t& alphaSize);
+        size_t loadSymbolAlphabet(size_t base, size_t numSym, size_t maxLen,
+                vector<size_t>& data);
+        size_t dumpPilotStream(size_t base, size_t numSym, size_t maxLen,
+                vector<size_t>& alphabet, vector<size_t>& data);
+        size_t dumpDataStream(size_t base, size_t numSym, size_t bps, size_t maxLen,
+                vector<size_t>& alphabet, vector<size_t>& data);
+
 };
 
 // vim: et:sw=4:ts=4:

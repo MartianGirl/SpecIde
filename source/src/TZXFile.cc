@@ -54,7 +54,21 @@ void TZXFile::parse(
     size_t bitsInLastByte;
     size_t bitsInByte;
 
+    size_t symbolsInPilot;
+    size_t maxPilotSymLen;
+    size_t pilotAlphabetSize;
+    size_t symbolsInData;
+    size_t bitsPerDataSymbol;
+    size_t maxDataSymLen;
+    size_t dataAlphabetSize;
+
+    vector<size_t> pilotAlphabet;
+    vector<size_t> dataAlphabet;
+
+    size_t tableIndex;
+
     string blockName;
+    ss.str("");
 
     if (magicIsOk)
     {
@@ -290,7 +304,7 @@ void TZXFile::parse(
                 break;
 
             case 0x15:
-                blockName = "Direct Recording";
+                blockName = "Direct Recording (Not implemented yet)";
                 // Skipped for the moment.
                 dataLength = fileData[pointer + 8] * 0x10000
                     + fileData[pointer + 7] * 0x100
@@ -299,8 +313,16 @@ void TZXFile::parse(
                 break;
 
             case 0x16:
+                blockName = "C64 ROM Type Data (Deprecated)";
+                dataLength = fileData[pointer + 4] * 0x1000000
+                    + fileData[pointer + 3] * 0x10000
+                    + fileData[pointer + 2] * 0x100
+                    + fileData[pointer + 1];
+                pointer += dataLength + 1;
+                break;
+
             case 0x17:
-                blockName = "C64 Data";
+                blockName = "C64 Turbo Tape Data (Deprecated)";
                 // Skipped for the moment.
                 dataLength = fileData[pointer + 4] * 0x1000000
                     + fileData[pointer + 3] * 0x10000
@@ -310,13 +332,52 @@ void TZXFile::parse(
                 break;
 
             case 0x18:
-            case 0x19:
-                blockName = "CSW/Generalized Data";
+                blockName = "CSW Recording (Not implemented yet)";
                 dataLength = fileData[pointer + 4] * 0x1000000
                     + fileData[pointer + 3] * 0x10000
                     + fileData[pointer + 2] * 0x100
                     + fileData[pointer + 1];
+                pause = fileData[pointer + 6] * 0x100 + fileData[pointer + 5];
                 pointer += dataLength + 5;
+                break;
+
+            case 0x19:
+                blockName = "Generalized Data";
+                dataLength = fileData[pointer + 4] * 0x1000000
+                    + fileData[pointer + 3] * 0x10000
+                    + fileData[pointer + 2] * 0x100
+                    + fileData[pointer + 1];
+                pause = fileData[pointer + 6] * 0x100 + fileData[pointer + 5];
+
+                loadSymbolData(pointer + 7,
+                        symbolsInPilot, maxPilotSymLen, pilotAlphabetSize);
+                loadSymbolData(pointer + 13,
+                        symbolsInData, maxDataSymLen, dataAlphabetSize);
+                bitsPerDataSymbol = ceil(log10(dataAlphabetSize) / log10(10));
+
+                tableIndex = pointer + 19;
+                if (symbolsInPilot > 0)
+                {
+                    tableIndex += loadSymbolAlphabet(tableIndex,
+                            pilotAlphabetSize, maxPilotSymLen,
+                            pilotAlphabet);
+
+                    tableIndex += dumpPilotStream(tableIndex,
+                            symbolsInPilot, maxPilotSymLen, pilotAlphabet,
+                            pulseData);
+                }
+
+                if (symbolsInData > 0)
+                {
+                    tableIndex += loadSymbolAlphabet(tableIndex,
+                            dataAlphabetSize, maxDataSymLen, dataAlphabet);
+                    tableIndex += dumpDataStream(tableIndex,
+                            symbolsInData, bitsPerDataSymbol, maxDataSymLen,
+                            dataAlphabet, pulseData);
+                }
+
+                pointer += dataLength + 5;
+                assert(pointer == tableIndex);
                 break;
 
             case 0x20:
@@ -358,6 +419,11 @@ void TZXFile::parse(
                 ++pointer;
                 break;
 
+            case 0x23:
+                blockName = "Jump To Block (Not implemented yet)";
+                pointer += 3;
+                break;
+
             case 0x24:
                 blockName = "Loop Start";
                 loopCounter = fileData[pointer + 2] * 0x100
@@ -385,6 +451,11 @@ void TZXFile::parse(
             case 0x30:
                 blockName = "Text Description";
                 pointer += dumpComment() + 2;
+                break;
+
+            case 0x31:
+                blockName = "Message";
+                pointer += dumpMessage() + 2;
                 break;
 
             case 0x32:
@@ -416,6 +487,8 @@ void TZXFile::parse(
         }
         
         cout << "Found " << blockName << " block." << endl;
+        cout << ss.str();
+        ss.str("");
     }
 
     cout << "Got " << pulseData.size() << " pulses." << endl;
@@ -431,7 +504,7 @@ size_t TZXFile::dumpArchiveInfo()
     size_t numStrings = fileData[pointer + 3];
     size_t index = 4;
 
-    cout << "--- Archive info block ---" << endl;
+    ss << "--- Archive info block ---" << endl;
     for (size_t ii = 0; ii < numStrings; ++ii)
     {
         switch (fileData[pointer + index])
@@ -453,7 +526,7 @@ size_t TZXFile::dumpArchiveInfo()
         for (size_t jj = 0; jj < len; ++jj)
             text.push_back(static_cast<char>(fileData[pointer + index + 2 + jj]));
 
-        cout << tag << text << endl;
+        ss << tag << text << endl;
         index += len + 2;
     }
     return length;
@@ -465,10 +538,148 @@ size_t TZXFile::dumpComment()
     size_t length = fileData[pointer + 1];
 
     for (size_t i = 0; i < length; ++i)
+    {
         text.push_back(static_cast<char>(fileData[pointer + 2 + i]));
-    cout << "Comment: " << text << endl;
+        if (fileData[pointer + 3 + i] == 0x0D) text.push_back(0x0A);
+    }
+    ss << "--- Comment block ---" << endl << text << endl;
+    ss << "---------------------" << endl;
 
     return length;
+}
+
+size_t TZXFile::dumpMessage()
+{
+    string text;
+    // size_t time = fileData[pointer + 1];
+    size_t length = fileData[pointer + 2];
+
+    for (size_t i = 0; i < length; ++i)
+    {
+        text.push_back(static_cast<char>(fileData[pointer + 3 + i]));
+        if (fileData[pointer + 3 + i] == 0x0D) text.push_back(0x0A);
+    }
+    ss << "--- Message block ---" << endl << text << endl;
+    ss << "---------------------" << endl;
+
+    return length;
+}
+
+void TZXFile::loadSymbolData(size_t base,
+        size_t& numSym, size_t& maxLen, size_t& alphaSize)
+{
+    numSym = fileData[base + 3] * 0x1000000
+        + fileData[base + 2] * 0x10000
+        + fileData[base + 1] * 0x100
+        + fileData[base];
+    maxLen = fileData[base + 4];
+    alphaSize = fileData[base + 5];
+}
+
+size_t TZXFile::loadSymbolAlphabet(size_t base, size_t numSym, size_t maxLen,
+        vector<size_t>& data)
+{
+    size_t index = base;
+    size_t size = maxLen + 1;
+    data.assign(numSym * size, 0);   // Symbol type, pulses
+    for (size_t i = 0; i < numSym; ++i)
+    {
+        ss << "Symbol: " << i << "  ";
+        data[i * size] = fileData[index];
+        ++index;
+        ss << "Type: " << data[i * size] << "  Values:";
+        for (size_t j = 0; j < maxLen; ++j)
+        {
+            data[i * size + j + 1] =
+                fileData[index + 2 * j + 1] * 0x100 + fileData[index + 2 * j];
+            ss << " " << data[i * size + j];
+        }
+        index += 2 * maxLen;
+        ss << endl;
+    }
+
+    return index - base;
+}
+
+size_t TZXFile::dumpPilotStream(size_t base, size_t numSym, size_t maxLen,
+        vector<size_t>& alphabet, vector<size_t>& data)
+{
+    size_t rep;
+    size_t sym;
+    size_t type;
+    size_t size = maxLen + 1;
+    size_t index = base;
+    size_t *first, *last;
+
+    ss << "Pilot:";
+    for (size_t i = 0; i < numSym; ++i)
+    {
+        sym = fileData[index];
+        rep = fileData[index + 2] * 0x100 + fileData[index + 1];
+        index += 3;
+        ss << " [" << sym << " * " << rep << "]";
+
+        type = alphabet[sym * size];
+        first = &alphabet[sym * size + 1];
+        last = &alphabet[(sym + 1) * size];
+        last = find(first, last, 0x00);
+
+        switch (type)
+        {
+            case 0x00:  // Edge
+                for (size_t i = 0; i < rep; ++i)
+                    data.insert(data.end(), first, last);
+                break;
+
+            case 0x01:  // Continue
+            case 0x02:  // Force low
+            case 0x03:  // Force high
+                break;
+        }
+    }
+    ss << endl;
+
+    return index - base;
+}
+
+size_t TZXFile::dumpDataStream(size_t base, size_t numSym, size_t bps, size_t maxLen,
+        vector<size_t>& alphabet, vector<size_t>& data)
+{
+    size_t bit = 0;
+    size_t mask = (1 << bps) - 1;
+    size_t index;
+    size_t sym;
+    size_t type;
+    size_t size = maxLen + 1;
+    size_t *first, *last;
+
+    ss << "Data: " << numSym << " " << bps << "-bit symbols ";
+    for (size_t i = 0; i < numSym; ++i)
+    {
+        index = base + (bit >> 3);
+        sym = (fileData[index] >> (7 - (bit % 8))) & mask;
+        bit += bps;
+
+        type = alphabet[sym * size];
+        first = &alphabet[sym * size + 1];
+        last = &alphabet[(sym + 1) * size];
+        last = find(first, last, 0);
+
+        switch (type)
+        {
+            case 0x00:  // Edge
+                data.insert(data.end(), first, last);
+                break;
+
+            case 0x01:  // Continue
+            case 0x02:  // Force low
+            case 0x03:  // Force high
+                break;
+        }
+    }
+    ss << endl;
+
+    return bit >> 8;
 }
 
 // vim: et:sw=4:ts=4
