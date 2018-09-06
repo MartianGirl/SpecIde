@@ -60,11 +60,14 @@ class TZXFile
         void loadSymbolData(size_t base,
                 size_t& numSym, size_t& maxLen, size_t& alphaSize);
         size_t loadSymbolAlphabet(size_t base, size_t numSym, size_t maxLen,
-                vector<size_t>& data);
-        size_t dumpPilotStream(size_t base, size_t numSym, size_t maxLen,
-                vector<size_t>& alphabet, vector<size_t>& data);
-        size_t dumpDataStream(size_t base, size_t numSym, size_t bps, size_t maxLen,
-                vector<size_t>& alphabet, vector<size_t>& data);
+                vector<size_t>& alphabet);
+        size_t dumpPilotStream(size_t base, size_t numSym,
+                vector<size_t> const& alphabet, vector<size_t>& data);
+        size_t dumpDataStream(size_t base, size_t numSym, size_t bps,
+                vector<size_t> const& alphabet, vector<size_t>& data);
+        void pushSymbol(size_t rep, size_t sym,
+                vector<size_t> const& alphabet, vector<size_t>& data);
+        void addPause(size_t pause, vector<size_t>& data);
 
 };
 

@@ -138,20 +138,8 @@ void TZXFile::parse(
                     }
                 }
 
-                // Pause. Add index always.
-                if (pause)
-                {
-                    indexData.insert(pulseData.size());
-                    if ((pulseData.size() % 2) == 0)
-                    {
-                        pulseData.push_back(3500);
-                        pulseData.push_back(3500 * (pause - 1));
-                    }
-                    else
-                    {
-                        pulseData.push_back(3500 * pause);
-                    }
-                }
+                indexData.insert(pulseData.size());
+                addPause(pause, pulseData);
 
                 pointer += dataLength + 5;
                 break;
@@ -205,20 +193,8 @@ void TZXFile::parse(
                     }
                 }
 
-                // Pause. Add index always.
-                if (pause)
-                {
-                    indexData.insert(pulseData.size());
-                    if ((pulseData.size() % 2) == 0)
-                    {
-                        pulseData.push_back(3500);
-                        pulseData.push_back(3500 * (pause - 1));
-                    }
-                    else
-                    {
-                        pulseData.push_back(3500 * pause);
-                    }
-                }
+                indexData.insert(pulseData.size());
+                addPause(pause, pulseData);
 
                 pointer += dataLength + 19;
                 break;
@@ -284,21 +260,11 @@ void TZXFile::parse(
                 }
 
                 // Pause. Add index only if there is a pause.
-                // (You usually don't want to start in the middle of 
+                // (You usually don't want to start in the middle of
                 // a SpeedLock block...)
                 if (pause)
-                {
                     indexData.insert(pulseData.size());
-                    if ((pulseData.size() % 2) == 0)
-                    {
-                        pulseData.push_back(3500);
-                        pulseData.push_back(3500 * (pause - 1));
-                    }
-                    else
-                    {
-                        pulseData.push_back(3500 * pause);
-                    }
-                }
+                addPause(pause, pulseData);
 
                 pointer += dataLength + 11;
                 break;
@@ -363,8 +329,7 @@ void TZXFile::parse(
                             pilotAlphabet);
 
                     tableIndex += dumpPilotStream(tableIndex,
-                            symbolsInPilot, maxPilotSymLen, pilotAlphabet,
-                            pulseData);
+                            symbolsInPilot, pilotAlphabet, pulseData);
                 }
 
                 if (symbolsInData > 0)
@@ -372,9 +337,16 @@ void TZXFile::parse(
                     tableIndex += loadSymbolAlphabet(tableIndex,
                             dataAlphabetSize, maxDataSymLen, dataAlphabet);
                     tableIndex += dumpDataStream(tableIndex,
-                            symbolsInData, bitsPerDataSymbol, maxDataSymLen,
+                            symbolsInData, bitsPerDataSymbol,
                             dataAlphabet, pulseData);
                 }
+
+                // Pause. Add index only if there is a pause.
+                // (You usually don't want to start in the middle of
+                // a SpeedLock block...)
+                if (pause)
+                    indexData.insert(pulseData.size());
+                addPause(pause, pulseData);
 
                 pointer += dataLength + 5;
                 assert(pointer == tableIndex);
@@ -387,21 +359,13 @@ void TZXFile::parse(
                 // Pause = 0 means Stop The Tape. However, we'll insert
                 // one second pause to properly end the block.
                 indexData.insert(pulseData.size());
-                {
-                    size_t delay = (pause != 0) ? pause : 1000;
-                    if ((pulseData.size() % 2) == 0)
-                    {
-                        pulseData.push_back(3500);
-                        pulseData.push_back(3500 * (delay - 1));
-                    }
-                    else
-                    {
-                        pulseData.push_back(3500 * delay);
-                    }
-                }
-
                 if (pause == 0)
+                {
+                    addPause(1000, pulseData);
                     stopData.insert(pulseData.size());
+                }
+                else
+                    addPause(pause, pulseData);
 
                 pointer += 3;
                 break;
@@ -485,7 +449,7 @@ void TZXFile::parse(
             default:
                 break;
         }
-        
+
         cout << "Found " << blockName << " block." << endl;
         cout << ss.str();
         ss.str("");
@@ -577,22 +541,23 @@ void TZXFile::loadSymbolData(size_t base,
 }
 
 size_t TZXFile::loadSymbolAlphabet(size_t base, size_t numSym, size_t maxLen,
-        vector<size_t>& data)
+        vector<size_t>& alphabet)
 {
     size_t index = base;
     size_t size = maxLen + 1;
-    data.assign(numSym * size, 0);   // Symbol type, pulses
+    alphabet.assign(numSym * size + 1, 0);   // Symbol Size, n * (Symbol type, pulses)
+    alphabet[0] = size;
     for (size_t i = 0; i < numSym; ++i)
     {
         ss << "Symbol: " << i << "  ";
-        data[i * size] = fileData[index];
+        alphabet[i * size + 1] = fileData[index];
         ++index;
-        ss << "Type: " << data[i * size] << "  Values:";
+        ss << "Type: " << alphabet[i * size + 1] << "  Values:";
         for (size_t j = 0; j < maxLen; ++j)
         {
-            data[i * size + j + 1] =
+            alphabet[i * size + j + 2] =
                 fileData[index + 2 * j + 1] * 0x100 + fileData[index + 2 * j];
-            ss << " " << data[i * size + j];
+            ss << " " << alphabet[i * size + j + 2];
         }
         index += 2 * maxLen;
         ss << endl;
@@ -601,15 +566,12 @@ size_t TZXFile::loadSymbolAlphabet(size_t base, size_t numSym, size_t maxLen,
     return index - base;
 }
 
-size_t TZXFile::dumpPilotStream(size_t base, size_t numSym, size_t maxLen,
-        vector<size_t>& alphabet, vector<size_t>& data)
+size_t TZXFile::dumpPilotStream(size_t base, size_t numSym,
+        vector<size_t> const& alphabet, vector<size_t>& data)
 {
     size_t rep;
     size_t sym;
-    size_t type;
-    size_t size = maxLen + 1;
     size_t index = base;
-    size_t *first, *last;
 
     ss << "Pilot:";
     for (size_t i = 0; i < numSym; ++i)
@@ -619,39 +581,20 @@ size_t TZXFile::dumpPilotStream(size_t base, size_t numSym, size_t maxLen,
         index += 3;
         ss << " [" << sym << " * " << rep << "]";
 
-        type = alphabet[sym * size];
-        first = &alphabet[sym * size + 1];
-        last = &alphabet[(sym + 1) * size];
-        last = find(first, last, 0x00);
-
-        switch (type)
-        {
-            case 0x00:  // Edge
-                for (size_t i = 0; i < rep; ++i)
-                    data.insert(data.end(), first, last);
-                break;
-
-            case 0x01:  // Continue
-            case 0x02:  // Force low
-            case 0x03:  // Force high
-                break;
-        }
+        pushSymbol(rep, sym, alphabet, data);
     }
     ss << endl;
 
     return index - base;
 }
 
-size_t TZXFile::dumpDataStream(size_t base, size_t numSym, size_t bps, size_t maxLen,
-        vector<size_t>& alphabet, vector<size_t>& data)
+size_t TZXFile::dumpDataStream(size_t base, size_t numSym, size_t bps,
+        vector<size_t> const& alphabet, vector<size_t>& data)
 {
     size_t bit = 0;
     size_t mask = (1 << bps) - 1;
-    size_t index;
+    size_t index = base;
     size_t sym;
-    size_t type;
-    size_t size = maxLen + 1;
-    size_t *first, *last;
 
     ss << "Data: " << numSym << " " << bps << "-bit symbols ";
     for (size_t i = 0; i < numSym; ++i)
@@ -660,26 +603,66 @@ size_t TZXFile::dumpDataStream(size_t base, size_t numSym, size_t bps, size_t ma
         sym = (fileData[index] >> (7 - (bit % 8))) & mask;
         bit += bps;
 
-        type = alphabet[sym * size];
-        first = &alphabet[sym * size + 1];
-        last = &alphabet[(sym + 1) * size];
-        last = find(first, last, 0);
-
-        switch (type)
-        {
-            case 0x00:  // Edge
-                data.insert(data.end(), first, last);
-                break;
-
-            case 0x01:  // Continue
-            case 0x02:  // Force low
-            case 0x03:  // Force high
-                break;
-        }
+        pushSymbol(1, sym, alphabet, data);
     }
     ss << endl;
 
-    return bit >> 8;
+    return index - base;
 }
 
+void TZXFile::pushSymbol(size_t rep, size_t sym,
+        vector<size_t> const& alphabet, vector<size_t>& data)
+{
+    size_t size = alphabet[0];
+    size_t type = alphabet[sym * size + 1];
+    size_t const* first = &alphabet[sym * size + 2];
+    size_t const* last = &alphabet[(sym + 1) * size + 1];
+    last = find(first, last, 0);
+
+    switch (type)
+    {
+        case 0x00:  // Edge
+            for (size_t i = 0; i < rep; ++i)
+                data.insert(data.end(), first, last);
+            break;
+
+        case 0x01:  // Continue
+            for (size_t i = 0; i < rep; ++i)
+            {
+                data.back() += *first;
+                data.insert(data.end(), first + 1, last);
+            }
+            break;
+        case 0x02:  // Force low
+        case 0x03:  // Force high
+            if ((data.size() % 2) != (type % 2))
+            {
+                data.insert(data.end(), first, last);
+            }
+            else
+            {
+                data.back() += *first;
+                data.insert(data.end(), first + 1, last);
+            }
+            break;
+        default:
+            assert(false);
+    }
+}
+
+void TZXFile::addPause(size_t pause, vector<size_t>& data)
+{
+    if (pause)
+    {
+        if ((data.size() % 2) == 0)
+        {
+            data.push_back(3500);
+            data.push_back(3500 * (pause - 1));
+        }
+        else
+        {
+            data.push_back(3500 * pause);
+        }
+    }
+}
 // vim: et:sw=4:ts=4
