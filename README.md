@@ -1,6 +1,11 @@
 # SpecIde
 
-This is an attempt at writing a ZX Spectrum emulator using SFML for video, audio and user interface.
+This is an attempt at writing a ZX Spectrum emulator using SFML for video, audio and user interface. The goals I set for myself were:
+- Accuracy. The emulator should work as much as possible like a real Spectrum. It should be easy to start in full screen mode, without having to select a video mode or care about difficult settings.
+- Simplicity. The UI should be as simple as possible, and the emulator should operate only with the function keys as much as possible.
+- Reliability. The emulator should never crash.
+- Portability. The emulator should be easy to run in different platforms.
+
 
 Currently, the emulator is functional and is quite accurate. Some of the supported features are:
 
