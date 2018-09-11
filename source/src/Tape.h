@@ -66,7 +66,9 @@ class Tape
             pointer(0), index(0), sample(0),
             playing(false), clock(false), level(0x00), is48K(true) {}
 
-        void load(string const& fileName);
+        void loadTzx(string const& fileName);
+        void loadTap(string const& fileName);
+        void updateFlashTap();
 
         void play()
         {

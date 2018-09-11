@@ -31,7 +31,9 @@ enum class FileTypes
     FILETYPE_DSK,
     FILETYPE_TRD,
     FILETYPE_Z80,
-    FILETYPE_SNA
+    FILETYPE_SNA,
+    FILETYPE_ERR
+
 };
 
 using namespace std;
@@ -351,6 +353,8 @@ FileTypes guessFileType(string const& fileName)
         return FileTypes::FILETYPE_TAP;
     else if (extension == ".dsk")
         return FileTypes::FILETYPE_DSK;
+
+    return FileTypes::FILETYPE_ERR;
 }
 
 void displayLicense()
@@ -361,13 +365,14 @@ void displayLicense()
     cout << "This program is free software: you can redistribute it and/or modify" << endl;
     cout << "it under the terms of the GNU General Public License as published by" << endl;
     cout << "the Free Software Foundation, version 3." << endl;
-
+    cout << endl;
     cout << "This program is distributed in the hope that it will be useful," << endl;
     cout << "but WITHOUT ANY WARRANTY; without even the implied warranty of" << endl;
     cout << "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the" << endl;
     cout << "GNU General Public License for more details." << endl;
-
+    cout << endl;
     cout << "You should have received a copy of the GNU General Public License" << endl;
     cout << "along with this program.  If not, see <https://www.gnu.org/licenses/>." << endl;
+    cout << endl;
 }
 // vim: et:sw=4:ts=4
