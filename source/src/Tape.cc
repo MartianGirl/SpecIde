@@ -15,44 +15,34 @@
 
 #include "Tape.h"
 
-void Tape::load(string const& fileName)
+void Tape::loadTzx(string const& fileName)
 {
-    // Parse the file name, find the extension. We'll decide what to do
-    // based on this.
-    size_t dot = fileName.find_last_of('.');
-    string extension;
-    if (dot != string::npos)
-    {
-        // Get the extension in lowercase characters.
-        extension = fileName.substr(dot);
-        for (size_t ii = 0; ii < extension.size(); ++ii)
-        {
-            if (extension[ii] >= 'A' && extension[ii] <= 'Z')
-                extension[ii] += ('a' - 'A');
-        }
-    }
+    counter = pulseData.size();
 
-    if (extension == ".tzx")
-    {
-        counter = pulseData.size();
+    // Create a .tzx object, load its contents in pulseData.
+    TZXFile tzx;
+    tzx.load(fileName);
+    tzx.parse(pulseData, indexData, stopData, stopIf48K);
+    loadData.insert(loadData.end(), tzx.romData.begin(), tzx.romData.end());
 
-        // Create a .tzx object, load its contents in pulseData.
-        TZXFile tzx;
-        tzx.load(fileName);
-        tzx.parse(pulseData, indexData, stopData, stopIf48K);
-        loadData.insert(loadData.end(), tzx.romData.begin(), tzx.romData.end());
-    }
-    else if (extension == ".tap")
-    {
-        counter = pulseData.size();
+    updateFlashTap();
+}
 
-        // Create a .tap object, load its contents in pulseData.
-        TAPFile tap;
-        tap.load(fileName);
-        loadData.insert(loadData.end(), tap.fileData.begin(), tap.fileData.end());
-        tap.parse(pulseData, indexData, stopData);
-    }
+void Tape::loadTap(string const& fileName)
+{
+    counter = pulseData.size();
 
+    // Create a .tap object, load its contents in pulseData.
+    TAPFile tap;
+    tap.load(fileName);
+    loadData.insert(loadData.end(), tap.fileData.begin(), tap.fileData.end());
+    tap.parse(pulseData, indexData, stopData);
+
+    updateFlashTap();
+}
+
+void Tape::updateFlashTap()
+{
     cout << "FlashTAP: " << loadData.size() << " bytes." << endl;
     cout << "FlashTAP is load tape." << endl;
     tapData.assign(loadData.begin(), loadData.end());

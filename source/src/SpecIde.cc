@@ -23,15 +23,29 @@
 
 #include "config.h"
 
+enum class FileTypes
+{
+    FILETYPE_TAP,
+    FILETYPE_TZX,
+    FILETYPE_PZX,
+    FILETYPE_DSK,
+    FILETYPE_TRD,
+    FILETYPE_Z80,
+    FILETYPE_SNA
+};
+
 using namespace std;
+
+FileTypes guessFileType(string const& fileName);
+
+void displayLicense();
 
 int main(int argc, char* argv[])
 {
     vector<string> params(argv, argv + argc);
-    vector<string> tapes;
+    vector<string> files;
 
-    cout << "SpecIde Version " << SPECIDE_VERSION_MAJOR
-        << "." << SPECIDE_VERSION_MINOR << endl << endl;
+    displayLicense();
 
     for (vector<string>::iterator it = params.begin(); it != params.end(); ++it)
     {
@@ -277,7 +291,7 @@ int main(int argc, char* argv[])
         }
 
         if (it->find('.') != string::npos)
-            tapes.push_back(*it);
+            files.push_back(*it);
     }
 
     if (useDefaultModel)
@@ -287,8 +301,26 @@ int main(int argc, char* argv[])
         screen.spectrum.ula.setUlaVersion(1);
     }
 
-    for (vector<string>::iterator it = tapes.begin(); it != tapes.end(); ++it)
-        screen.tape.load(*it);
+    for (vector<string>::iterator it = files.begin(); it != files.end(); ++it)
+    {
+        switch (guessFileType(*it))
+        {
+            case FileTypes::FILETYPE_TZX:
+                screen.tape.loadTzx(*it);
+                break;
+
+            case FileTypes::FILETYPE_TAP:
+                screen.tape.loadTap(*it);
+                break;
+
+            // case FileTypes::FILETYPE_DSK:
+                // screen.spectrum.fdc.
+
+            default:
+                cout << "Unknown file type: " << *it << endl;
+                break;
+        }
+    }
 
     screen.selectPixBuf();
     screen.reopenWindow(screen.fullscreen);
@@ -296,4 +328,46 @@ int main(int argc, char* argv[])
     screen.run();
 }
 
+FileTypes guessFileType(string const& fileName)
+{
+    // Parse the file name, find the extension. We'll decide what to do
+    // based on this.
+    size_t dot = fileName.find_last_of('.');
+    string extension;
+    if (dot != string::npos)
+    {
+        // Get the extension in lowercase characters.
+        extension = fileName.substr(dot);
+        for (size_t ii = 0; ii < extension.size(); ++ii)
+        {
+            if (extension[ii] >= 'A' && extension[ii] <= 'Z')
+                extension[ii] += ('a' - 'A');
+        }
+    }
+
+    if (extension == ".tzx")
+        return FileTypes::FILETYPE_TZX;
+    else if (extension == ".tap")
+        return FileTypes::FILETYPE_TAP;
+    else if (extension == ".dsk")
+        return FileTypes::FILETYPE_DSK;
+}
+
+void displayLicense()
+{
+    cout << "SpecIde Version " << SPECIDE_VERSION_MAJOR
+        << "." << SPECIDE_VERSION_MINOR << endl << endl;
+    cout << "(c) 2016-2018 Marta Sevillano Mancilla." << endl << endl;
+    cout << "This program is free software: you can redistribute it and/or modify" << endl;
+    cout << "it under the terms of the GNU General Public License as published by" << endl;
+    cout << "the Free Software Foundation, version 3." << endl;
+
+    cout << "This program is distributed in the hope that it will be useful," << endl;
+    cout << "but WITHOUT ANY WARRANTY; without even the implied warranty of" << endl;
+    cout << "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the" << endl;
+    cout << "GNU General Public License for more details." << endl;
+
+    cout << "You should have received a copy of the GNU General Public License" << endl;
+    cout << "along with this program.  If not, see <https://www.gnu.org/licenses/>." << endl;
+}
 // vim: et:sw=4:ts=4
