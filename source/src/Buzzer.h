@@ -68,7 +68,7 @@ class Buzzer
                 if (tapeSound)
                 {
                     filter[index] += 
-                        + ((*source & 0x18) ? SAVE_VOLUME : 0)
+                        + (((*source & 0x18) == 0x18) ? SAVE_VOLUME : 0)
                         + ((*tapeIn & 0x40) ? LOAD_VOLUME : 0);
                 }
             }
