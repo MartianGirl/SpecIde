@@ -23,7 +23,6 @@
 
 #include <cstdint>
 #include <cstddef>
-#include <vector>
 
 #include "Z80Defs.h"
 
@@ -50,23 +49,22 @@ class ULA
 
         uint32_t average(uint32_t a, uint32_t b);
 
-        uint_fast16_t videoStart;
-        uint_fast16_t videoEnd;
-        uint_fast16_t hBorderStart;
-        uint_fast16_t hBlankStart;
-        uint_fast16_t hBlankEnd;
-        uint_fast16_t hSyncEnd;
-        uint_fast16_t maxPixel;
+        uint_fast16_t videoStart = 0x008;
+        uint_fast16_t videoEnd = 0x108;
+        uint_fast16_t hBorderStart = 0x100;
+        uint_fast16_t hBlankStart = 0x140;
+        uint_fast16_t hBlankEnd = 0x19F;
+        uint_fast16_t hSyncEnd = 0x178;
+        uint_fast16_t maxPixel = 0x1C0;
 
-        uint_fast16_t vBorderStart;
-        uint_fast16_t vBlankStart;
-        uint_fast16_t vBlankEnd;
-        uint_fast16_t vSyncStart;
-        uint_fast16_t vSyncEnd;
-        uint_fast16_t maxScan;
+        uint_fast16_t vBorderStart = 0x0C0;
+        uint_fast16_t vBlankStart = 0x0F8;
+        uint_fast16_t vBlankEnd = 0x0FF;
+        uint_fast16_t vSyncStart = 0x0F8;
+        uint_fast16_t vSyncEnd = 0x0FC;
+        uint_fast16_t maxScan = 0x138;
 
         uint_fast32_t voltage[4];
-
         static uint_fast32_t voltages[4][4];
         static bool delayTable[16];
         static bool idleTable[16];
@@ -75,8 +73,8 @@ class ULA
         static uint32_t colourTable[0x100];
         uint32_t colour[2];
         static uint8_t averageTable[0x100][0x100];
-        std::vector<uint32_t> pixelsX1;
-        std::vector<uint32_t> pixelsX2;
+        static uint32_t pixelsX1[0x38000];
+        static uint32_t pixelsX2[0x38000];
         uint_fast32_t xSize, ySize;
         uint_fast32_t xPos = 0;
         uint_fast32_t yPos = 0;

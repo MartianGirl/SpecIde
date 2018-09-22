@@ -103,7 +103,6 @@ class Screen : public GraphicWindow
         uint_fast8_t keyboardMask[8];
 
         void texture(size_t x, size_t y);
-        void selectPixBuf();
 };
 
 // vim: et:sw=4:ts=4

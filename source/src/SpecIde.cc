@@ -324,7 +324,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    screen.selectPixBuf();
     screen.reopenWindow(screen.fullscreen);
     screen.setFullScreen(screen.fullscreen);
     screen.run();

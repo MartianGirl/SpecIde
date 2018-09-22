@@ -15,7 +15,6 @@
 
 #include "ULA.h"
 
-#include <cassert>
 #include <cmath>
 
 using namespace std;
@@ -48,6 +47,8 @@ bool ULA::memTable[16] =
 
 uint32_t ULA::colourTable[0x100];
 uint8_t ULA::averageTable[0x100][0x100];
+uint32_t ULA::pixelsX1[0x38000];
+uint32_t ULA::pixelsX2[0x38000];
 
 ULA::ULA() :
     vSync(false), blanking(false), retrace(false),
@@ -305,8 +306,7 @@ void ULA::paint()
             switch (scanlines)
             {
                 case 1:     // Scanlines
-                    assert((((yPos + frame) * xSize) + xPos) < pixelsX2.size());
-                    ptr1 = &pixelsX2[((yPos + frame) * xSize) + xPos];
+                    ptr1 = pixelsX2 + ((yPos + frame) * xSize) + xPos;
                     --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
                     --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
                     --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
@@ -318,12 +318,9 @@ void ULA::paint()
                     break;
 
                 case 2:     // Averaged scanlines
-                    assert(((yPos * xSize) + xPos) < pixelsX1.size());
-                    assert((((2 * yPos + frame) * xSize) + xPos) < pixelsX2.size());
-                    assert((((2 * yPos + (1 - frame)) * xSize) + xPos) < pixelsX2.size());
-                    ptr = &pixelsX1[(yPos * xSize) + xPos];
-                    ptr1 = &pixelsX2[((2 * yPos + frame) * xSize) + xPos];
-                    ptr2 = &pixelsX2[((2 * yPos + (1 - frame)) * xSize) + xPos];
+                    ptr = pixelsX1 + (yPos * xSize) + xPos;
+                    ptr1 = pixelsX2 + ((2 * yPos + frame) * xSize) + xPos;
+                    ptr2 = pixelsX2 + ((2 * yPos + (1 - frame)) * xSize) + xPos;
                     --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
                     *ptr = average(*ptr2, *ptr1);
                     --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
@@ -343,8 +340,7 @@ void ULA::paint()
                     break;
 
                 default:    // No scanlines
-                    assert(((yPos * xSize) + xPos) < pixelsX1.size());
-                    ptr = &pixelsX1[(yPos * xSize) + xPos];
+                    ptr = pixelsX1 + (yPos * xSize) + xPos;
                     --ptr; *ptr = colour[data & 0x01]; data >>= 1;
                     --ptr; *ptr = colour[data & 0x01]; data >>= 1;
                     --ptr; *ptr = colour[data & 0x01]; data >>= 1;

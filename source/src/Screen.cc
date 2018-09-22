@@ -50,8 +50,7 @@ Screen::Screen(size_t scale) :
     pad(false),
     flashTap(false)
 {
-    // Create a texture. It'll be 352x304, which holds the entire Spectrum
-    // screen.
+    // Create a texture.
     texture(xSize, ySize);
 
     // Load the ZX font, for the menu.
@@ -97,16 +96,8 @@ Screen::Screen(size_t scale) :
         assert(false);
     }
 
-    size_t vectorSize = xSize * ySize;    // Including blanking lines.
     spectrum.ula.xSize = xSize;
     spectrum.ula.ySize = ySize;
-#if SPECIDE_BYTE_ORDER == 1
-    spectrum.ula.pixelsX1.assign(vectorSize / 2, 0xFF000000);
-    spectrum.ula.pixelsX2.assign(vectorSize, 0xFF000000);
-#else
-    spectrum.ula.pixelsX1.assign(vectorSize / 2, 0x000000FF);
-    spectrum.ula.pixelsX2.assign(vectorSize, 0x000000FF);
-#endif
 
     channel.open(2, SAMPLE_RATE);
 }
@@ -227,7 +218,8 @@ void Screen::update()
     // If not blanking, draw.
     spectrum.ula.vSync = false;
 
-    scrTexture.update(pixbuf);
+    scrTexture.update(reinterpret_cast<Uint8*>(doubleScanMode ?
+                spectrum.ula.pixelsX2 : spectrum.ula.pixelsX1));
     window.clear(Color::Black);
     window.draw(scrSprite);
     window.display();
@@ -796,16 +788,11 @@ void Screen::scanKeys(Event const& event)
 
 void Screen::texture(size_t x, size_t y)
 {
+    cout << "Allocating texture..." << endl;
     if (!scrTexture.create(static_cast<Uint32>(x), static_cast<Uint32>(y)))
         assert(false);
     scrTexture.setRepeated(false);
     scrTexture.setSmooth(false);
-}
-
-void Screen::selectPixBuf()
-{
-    pixbuf = reinterpret_cast<Uint8*>(doubleScanMode ?
-            &spectrum.ula.pixelsX2[0] : &spectrum.ula.pixelsX1[0]);
 }
 
 void Screen::set128K(bool is128K)
