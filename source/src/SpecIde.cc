@@ -13,6 +13,9 @@
  * along with SpecIde.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
+#include <fstream>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -39,15 +42,17 @@ enum class FileTypes
 using namespace std;
 
 FileTypes guessFileType(string const& fileName);
-
 void displayLicense();
+void readOptions(map<string, string>& options);
 
 int main(int argc, char* argv[])
 {
     vector<string> params(argv, argv + argc);
     vector<string> files;
+    map<string, string> options;
 
     displayLicense();
+    readOptions(options);
 
     for (vector<string>::iterator it = params.begin(); it != params.end(); ++it)
     {
@@ -60,52 +65,39 @@ int main(int argc, char* argv[])
             cout << "Options:" << endl;
             cout << endl;
             cout << "Model selection options:" << endl;
-            cout << "--issue2:          Spectrum 48K, issue 2." << endl;
-            cout << "--issue3 | --48:   Spectrum 48K, issue 3. (Default)" << endl;
-            cout << "--128:             Spectrum 128K." << endl;
-            cout << "--128sp:           Spectrum 128K. (Spanish ROM)" << endl;
-            cout << "--plus2            Spectrum +2." << endl;
-            cout << "--plus2sp          Spectrum +2. (Spanish ROM)" << endl;
-            cout << "--plus2a           Spectrum +2A." << endl;
-            cout << "--plus2asp         Spectrum +2A. (Spanish ROM)" << endl;
-            // cout << "--plus3           Spectrum +3." << endl;
-            // cout << "--plus3sp         Spectrum +3. (Spanish ROM)" << endl;
+            cout << "--issue2:              Spectrum 48K, issue 2." << endl;
+            cout << "--issue3 | --48:       Spectrum 48K, issue 3. (Default)" << endl;
+            cout << "--128:                 Spectrum 128K." << endl;
+            cout << "--128sp:               Spectrum 128K. (Spanish ROM)" << endl;
+            cout << "--plus2                Spectrum +2." << endl;
+            cout << "--plus2sp              Spectrum +2. (Spanish ROM)" << endl;
+            cout << "--plus2a               Spectrum +2A." << endl;
+            cout << "--plus2asp             Spectrum +2A. (Spanish ROM)" << endl;
+            // cout << "--plus3               Spectrum +3." << endl;
+            // cout << "--plus3sp             Spectrum +3. (Spanish ROM)" << endl;
             cout << endl;
             cout << "Hardware options:" << endl;
-            cout << "--kempston:        Map joystick to Kempston interface." << endl;
-            cout << "--sinclair:        Map joystick to Sinclair interface. (Default)" << endl;
-            cout << "--pad:             Map joystick extra buttons to keys." << endl;
-            cout << "--psg:             Emulate AY chip. (Default for 128K models)" << endl;
-            cout << "--abc|--acb:       Select ABC|ACB stereo modes." << endl;
-            cout << "--sd1:             Emulate Dinamic SD1 dongle. (for Camelot Warriors)" << endl;
+            cout << "--kempston:            Map joystick to Kempston interface." << endl;
+            cout << "--sinclair:            Map joystick to Sinclair interface. (Default)" << endl;
+            cout << "--pad|--nopad:         Map pad extra buttons to keys." << endl;
+            cout << "--psg|--nopsg:         Emulate AY chip in 48K Spectrum." << endl;
+            cout << "--abc|--acb|--mono:    Select stereo mode." << endl;
+            cout << "--sd1:                 Emulate Dinamic SD1 dongle." << endl;
             cout << endl;
             cout << "Video options:" << endl;
-            cout << "--fullscreen       Start SpecIde in full screen mode." << endl;
-            cout << "--scanlines        Render PAL double scan mode." << endl;
-            cout << "--average          Render PAL double scan mode, averaging scanlines." << endl;
-            cout << "--sync             Synchronize emulation to PC video refresh rate." << endl;
+            cout << "--fullscreen           Start SpecIde in full screen mode." << endl;
+            cout << "--window               Start SpecIde in windowed mode." << endl;
+            cout << "--scanlines            Render PAL double scan mode." << endl;
+            cout << "--average              Render PAL double scan mode, averaging scanlines." << endl;
+            cout << "--nodoublescan         Single scan mode. (Default)" << endl;
+            cout << "--sync                 Sync emulation to PC video refresh rate." << endl;
             cout << endl;
-            cout << "Emulation options:" << endl;
-            cout << "--nosound          Disable all sound." << endl;
-            cout << "--notapesound      Disable tape sounds." << endl;
+            cout << "Sound options (add prefix 'no' to disable. Eg. --nosound):" << endl;
+            cout << "--sound                Enable buzzer/PSG sound. (Default)" << endl;
+            cout << "--tapesound            Enable tape sound." << endl;
+            cout << endl;
+            cout << "Emulation options (add prefix 'no' to disable. Eg. --noflashtap):" << endl;
             cout << "--flashtap         Enable ROM traps for LOAD and SAVE." << endl;
-            cout << endl;
-            cout << "Function keys:" << endl;
-            // cout << "F1:                Display menu." << endl;
-            cout << "F2:                Turn fullscreen mode on / off." << endl;
-            cout << "Shift + F2:        Turn antialiasing on / off." << endl;
-            cout << "F5:                Reset emulated Spectrum." << endl;
-            cout << "F7:                Append LOAD FlashTAP data to SAVE buffer." << endl;
-            cout << "Shift + F7:        Clear SAVE buffer." << endl;
-            cout << "F8:                Write SAVE buffer to disk as 'savetapeXX.tap'." << endl;
-            cout << "Shift + F8:        Use SAVE buffer as LOAD FlashTAP buffer." << endl;
-            cout << "F9:                Turn sound on / off." << endl;
-            cout << "Shift + F9:        Turn tape sound on / off." << endl;
-            cout << "F10:               Exit emulator." << endl;
-            cout << "F11:               Play / stop tape." << endl;
-            cout << "Shift + F11:       Set mark in tape." << endl;
-            cout << "F12:               Rewind tape to the beginning." << endl;
-            cout << "Shift + F12:       Rewind tape to mark." << endl;
             cout << endl;
             exit(0);
         }
@@ -114,193 +106,257 @@ int main(int argc, char* argv[])
     // The Screen class is now actually more of a "console".
     // We create the instance, and load the given tape (if any).
     Screen screen(1);
-    bool useDefaultModel = true;
 
     for (vector<string>::iterator it = params.begin(); it != params.end(); ++it)
     {
-        // Model selection.
+        // Model selection
         if (*it == "--issue2")
-        {
-            screen.set128K(false);
-            screen.spectrum.loadRoms(0);
-            useDefaultModel = false;
-            screen.spectrum.ula.setUlaVersion(0);
-        }
-
+            options["model"] = "issue2";
         if (*it == "--issue3" || *it == "--48")
-        {
-            screen.set128K(false);
-            screen.spectrum.loadRoms(0);
-            useDefaultModel = false;
-            screen.spectrum.ula.setUlaVersion(1);
-        }
-
+            options["model"] = "issue3";
         if (*it == "--128")
-        {
-            screen.set128K(true);
-            screen.spectrum.loadRoms(1);
-            screen.spectrum.set128K();
-            useDefaultModel = false;
-            screen.spectrum.ula.setUlaVersion(2);
-        }
-
+            options["model"] = "128";
         if (*it == "--128sp")
-        {
-            screen.set128K(true);
-            screen.spectrum.loadRoms(4);
-            screen.spectrum.set128K();
-            useDefaultModel = false;
-            screen.spectrum.ula.setUlaVersion(2);
-        }
-
+            options["model"] = "128sp";
         if (*it == "--plus2")
-        {
-            screen.set128K(true);
-            screen.spectrum.loadRoms(2);
-            screen.spectrum.setPlus2();
-            useDefaultModel = false;
-            screen.spectrum.ula.setUlaVersion(2);
-        }
-
+            options["model"] = "plus2";
         if (*it == "--plus2sp")
-        {
-            screen.set128K(true);
-            screen.spectrum.loadRoms(5);
-            screen.spectrum.setPlus2();
-            useDefaultModel = false;
-            screen.spectrum.ula.setUlaVersion(2);
-        }
-        
+            options["model"] = "plus2sp";
         if (*it == "--plus2a")
-        {
-            screen.set128K(true);
-            screen.spectrum.loadRoms(3);
-            screen.spectrum.setPlus2A();
-            useDefaultModel = false;
-            screen.spectrum.ula.setUlaVersion(3);
-        }
-
+            options["model"] = "plus2a";
         if (*it == "--plus2asp")
-        {
-            screen.set128K(true);
-            screen.spectrum.loadRoms(6);
-            screen.spectrum.setPlus2A();
-            useDefaultModel = false;
-            screen.spectrum.ula.setUlaVersion(3);
-        }
-
+            options["model"] = "plus2asp";
         if (*it == "--plus3")
-        {
-            screen.set128K(true);
-            screen.spectrum.loadRoms(3);
-            screen.spectrum.setPlus3();
-            useDefaultModel = false;
-            screen.spectrum.ula.setUlaVersion(3);
-        }
-
+            options["model"] = "plus3";
         if (*it == "--plus3sp")
-        {
-            screen.set128K(true);
-            screen.spectrum.loadRoms(6);
-            screen.spectrum.setPlus3();
-            useDefaultModel = false;
-            screen.spectrum.ula.setUlaVersion(3);
-        }
+            options["model"] = "plus3sp";
 
-        // I'm putting both set and unset flags in case I implement loading
-        // default parameters from a config file, which would override the
-        // emulator's defaults.
+        // Joystick options
         if (*it == "--kempston")
-            screen.spectrum.kempston = true;
-
+            options["joystick"] = "kempston";
         if (*it == "--sinclair")
-            screen.spectrum.kempston = false;
+            options["joystick"] = "sinclair";
 
         if (*it == "--pad")
-            screen.pad = true;
-
+            options["pad"] = "yes";
         if (*it == "--nopad")
-            screen.pad = false;
+            options["pad"] = "no";
 
+        // Sound options
         if (*it == "--notapesound")
-            screen.spectrum.buzzer.tapeSound = false;
-
+            options["tapesound"] = "no";
         if (*it == "--tapesound")
-            screen.spectrum.buzzer.tapeSound = true;
+            options["tapesound"] = "yes";
 
         if (*it == "--nosound")
-        {
-            screen.spectrum.buzzer.playSound = false;
-            screen.spectrum.psg.playSound = false;
-        }
-
+            options["sound"] = "no";
         if (*it == "--sound")
-        {
-            screen.spectrum.buzzer.playSound = true;
-            screen.spectrum.psg.playSound = true;
-        }
+            options["sound"] = "yes";
 
+        // PSG options
+        if (*it == "--nopsg")
+            options["forcepsg"] = "no";
         if (*it == "--psg")
-        {
-            screen.spectrum.psg.playSound = true;
-            screen.spectrum.hasPsg = true;
-        }
-
-        if (*it == "--acb")
-            screen.stereo = 1;
+            options["forcepsg"] = "yes";
 
         if (*it == "--abc")
-            screen.stereo = 2;
+            options["stereo"] = "abc";
+        if (*it == "--acb")
+            options["stereo"] = "acb";
+        if (*it == "--mono")
+            options["stereo"] = "none";
 
         if (*it == "--psglinear")
-            screen.spectrum.psg.setVolumeLevels(false);
+            options["psgtype"] = "linear";
+        if (*it == "--psglog")
+            options["psgtype"] = "logarithmic";
 
+        // FlashTAP
+        if (*it == "--noflashtap")
+            options["flashtap"] = "no";
         if (*it == "--flashtap")
-            screen.flashTap = true;
+            options["flashtap"] = "yes";
+
+        // Screen options
+        if (*it == "--average")
+            options["scanmode"] = "average";
+        if (*it == "--scanlines")
+            options["scanmode"] = "scanlines";
+        if (*it == "--nodoublescan")
+            options["scanmode"] = "normal";
+
+        if (*it == "--window")
+            options["fullscreen"] = "no";
+        if (*it == "--fullscreen")
+            options["fullscreen"] = "yes";
 
         if (*it == "--sync")
-        {
-            screen.syncToVideo = true;
-            screen.window.setVerticalSyncEnabled(true);
-        }
-
-        if (*it == "--scanlines")
-        {
-            screen.doubleScanMode = true;
-            screen.spectrum.ula.scanlines = 1;
-            screen.spectrum.ula.yInc = 2;
-        }
-
-        if (*it == "--average")
-        {
-            screen.doubleScanMode = false;
-            screen.spectrum.ula.scanlines = 2;
-            screen.spectrum.ula.yInc = 1;
-        }
-
-        if (*it == "--fullscreen")
-        {
-            screen.fullscreen = true;
-        }
+            options["sync"] = "yes";
+        if (*it == "--nosync")
+            options["sync"] = "no";
 
         // SD1 was a protection device used in Camelot Warriors. It simply
         // forced bit 5 low for any port read, if the device didn't force
         // this bit high.
         if (*it == "--sd1")
-        {
-            screen.spectrum.idle = 0xDF;
-            screen.spectrum.ula.inMask = 0x9F;
-        }
+            options["sd1"] = "yes";
+        if (*it == "--nosd1")
+            options["sd1"] = "no";
 
         if (it->find('.') != string::npos)
             files.push_back(*it);
     }
 
-    if (useDefaultModel)
+    // Model selection
+    if (options["model"] == "issue2")
+    {
+        screen.set128K(false);
+        screen.spectrum.loadRoms(0);
+        screen.spectrum.ula.setUlaVersion(0);
+    }
+    else if (options["model"] == "issue3")
     {
         screen.set128K(false);
         screen.spectrum.loadRoms(0);
         screen.spectrum.ula.setUlaVersion(1);
+    }
+    else if (options["model"] == "128")
+    {
+        screen.set128K(true);
+        screen.spectrum.loadRoms(1);
+        screen.spectrum.set128K();
+        screen.spectrum.ula.setUlaVersion(2);
+    }
+    else if (options["model"] == "128sp")
+    {
+        screen.set128K(true);
+        screen.spectrum.loadRoms(4);
+        screen.spectrum.set128K();
+        screen.spectrum.ula.setUlaVersion(2);
+    }
+    else if (options["model"] == "plus2")
+    {
+        screen.set128K(true);
+        screen.spectrum.loadRoms(2);
+        screen.spectrum.setPlus2();
+        screen.spectrum.ula.setUlaVersion(2);
+    }
+    else if (options["model"] == "plus2sp")
+    {
+        screen.set128K(true);
+        screen.spectrum.loadRoms(5);
+        screen.spectrum.setPlus2();
+        screen.spectrum.ula.setUlaVersion(2);
+    }
+    else if (options["model"] == "plus2a")
+    {
+        screen.set128K(true);
+        screen.spectrum.loadRoms(3);
+        screen.spectrum.setPlus2A();
+        screen.spectrum.ula.setUlaVersion(3);
+    }
+    else if (options["model"] == "plus2asp")
+    {
+        screen.set128K(true);
+        screen.spectrum.loadRoms(6);
+        screen.spectrum.setPlus2A();
+        screen.spectrum.ula.setUlaVersion(3);
+    }
+    else if (options["model"] == "plus3")
+    {
+        screen.set128K(true);
+        screen.spectrum.loadRoms(3);
+        screen.spectrum.setPlus3();
+        screen.spectrum.ula.setUlaVersion(3);
+    }
+    else if (options["model"] == "plus3sp")
+    {
+        screen.set128K(true);
+        screen.spectrum.loadRoms(6);
+        screen.spectrum.setPlus3();
+        screen.spectrum.ula.setUlaVersion(3);
+    }
+    else
+    {
+        options["model"] = "default";
+        screen.set128K(false);
+        screen.spectrum.loadRoms(0);
+        screen.spectrum.ula.setUlaVersion(1);
+    }
+    cout << "Model: " << options["model"] << endl;
+
+    // Joystick and pad settings.
+    screen.spectrum.kempston = (options["joystick"] == "kempston");
+    cout << "Joystick type: " << options["joystick"] << endl;
+
+    screen.pad = (options["pad"] == "yes");
+    cout << "Map game pad extra buttons to keys: " << options["pad"] << endl;
+
+    // Sound settings.
+    screen.spectrum.buzzer.tapeSound = (options["tapesound"] != "no");
+    cout << "Play tape sound: " << options["tapesound"] << endl;
+
+    screen.spectrum.buzzer.playSound = (options["sound"] != "no");
+    screen.spectrum.psg.playSound = (options["sound"] != "no");
+    cout << "Play sound: " << options["sound"] << endl;
+
+    if (options["forcepsg"] == "yes")
+    {
+        screen.spectrum.psg.playSound = true;
+        screen.spectrum.hasPsg = true;
+        cout << "Enable AY interface on 128K ports: " << options["forcepsg"] << endl;
+    }
+
+    if (options["stereo"] == "acb")
+        screen.stereo = 1;
+    else if (options["stereo"] == "abc")
+        screen.stereo = 2;
+    else
+        screen.stereo = 0;
+    cout << "Stereo type: " << options["stereo"] << endl;
+
+    screen.spectrum.psg.setVolumeLevels(options["psgtype"] != "linear");
+    cout << "PSG DAC type: " << options["psgtype"] << endl;
+
+    // Screen settings.
+    if (options["scanmode"] == "scanlines")
+    {
+        screen.doubleScanMode = true;
+        screen.spectrum.ula.scanlines = 1;
+        screen.spectrum.ula.yInc = 2;
+    }
+    else if (options["scanmode"] == "average")
+    {
+        screen.doubleScanMode = false;
+        screen.spectrum.ula.scanlines = 2;
+        screen.spectrum.ula.yInc = 1;
+    }
+    else
+    {
+        screen.doubleScanMode = false;
+        screen.spectrum.ula.scanlines = 0;
+        screen.spectrum.ula.yInc = 1;
+    }
+    cout << "Scan mode: " << options["scanmode"] << endl;
+
+    screen.fullscreen = (options["fullscreen"] == "yes");
+    cout << "Full screen mode: " << options["fullscreen"] << endl;
+
+    screen.flashTap = (options["flashtap"] == "yes");
+    cout << "FlashTAP: " << options["flashtap"] << endl;
+
+    if (options["sync"] == "yes")
+    {
+        screen.syncToVideo = true;
+        screen.window.setVerticalSyncEnabled(true);
+        cout << "Sync to video: " << options["sync"] << endl;
+    }
+
+    if (options["sd1"] == "yes")
+    {
+        screen.spectrum.idle = 0xDF;
+        screen.spectrum.ula.inMask = 0x9F;
+        cout << "SD1 dongle: " << options["sd1"] << endl;
     }
 
     for (vector<string>::iterator it = files.begin(); it != files.end(); ++it)
@@ -315,7 +371,7 @@ int main(int argc, char* argv[])
                 screen.tape.loadTap(*it);
                 break;
 
-            // case FileTypes::FILETYPE_DSK:
+                // case FileTypes::FILETYPE_DSK:
                 // screen.spectrum.fdc.
 
             default:
@@ -373,5 +429,68 @@ void displayLicense()
     cout << "You should have received a copy of the GNU General Public License" << endl;
     cout << "along with this program.  If not, see <https://www.gnu.org/licenses/>." << endl;
     cout << endl;
+}
+
+void readOptions(map<string, string>& options)
+{
+    char* pHome = getenv(SPECIDE_HOME_ENV);
+    ifstream ifs;
+    string entry, key, val;
+    size_t pos;
+
+    options["model"] = "default";
+    options["joystick"] = "sinclair";
+    options["pad"] = "no";
+    options["tapesound"] = "yes";
+    options["sound"] = "yes";
+    options["forcepsg"] = "no";
+    options["stereo"] = "none";
+    options["psgtype"] = "logarithmic";
+    options["scanmode"] = "normal";
+    options["fullscreen"] = "no";
+    options["flashtap"] = "no";
+    options["sync"] = "no";
+    options["sd1"] = "no";
+
+    if (pHome != nullptr)
+    {
+        string cfgPath(pHome);
+#if (SPECIDE_ON_UNIX==1)
+        cfgPath += string("/") + string(SPECIDE_CONF_DIR) + string("/");
+#else
+        cfgPath += string("\\") + string(SPECIDE_CONF_DIR) + string("\\");
+#endif
+        string cfgFile = cfgPath + string("SpecIde.cfg");
+
+        bool fail = true;
+        ifs.open(cfgFile);
+        fail = ifs.fail();
+        if (fail)
+            return;
+
+        while (ifs.good())
+        {
+            ifs >> entry;
+
+            // Remove comments with #
+            pos = entry.find("#");
+            if (pos != string::npos)
+                entry = entry.substr(0, pos);
+
+            // Find if there is a key and value. Otherwise, skip.
+            pos = entry.find("=");
+            if (pos != string::npos)
+            {
+                key = entry.substr(0, pos);
+                val = entry.substr(pos + 1);
+
+                key.erase(remove_if(key.begin(), key.end(), ::isspace), key.end());
+                val.erase(remove_if(val.begin(), val.end(), ::isspace), val.end());
+
+                options[key] = val;
+            }
+        }
+        ifs.close();
+    }
 }
 // vim: et:sw=4:ts=4

@@ -258,12 +258,31 @@ void Screen::updateMenu()
     Text text;
     text.setFont(zxFont);
     text.setFillColor(Color::Black);
-    text.setString("SpecIDE Menu");
+
+    stringstream ss;
+    ss << "Function keys:" << endl;
+    ss << "F1:    This help." << endl;
+    ss << "F2:    Fullscreen." << endl;
+    ss << "S-F2:  Antialiasing." << endl;
+    ss << "F5:    Reset." << endl;
+    ss << "F7:    Add FlashTAP to SAVE buffer." << endl;
+    ss << "S-F7:  Clear SAVE buffer." << endl;
+    ss << "F8:    Write SAVE buffer to disk." << endl;
+    ss << "S-F8:  Use SAVE buffer as FlashTAP." << endl;
+    ss << "F9:    Sound on / off." << endl;
+    ss << "S-F9:  Tape sound on / off." << endl;
+    ss << "F10:   Exit emulator." << endl;
+    ss << "F11:   Play / stop tape." << endl;
+    ss << "S-F11: Set mark in tape." << endl;
+    ss << "F12:   Rewind tape to start." << endl;
+    ss << "S-F12: Rewind tape to mark." << endl;
+    ss << endl;
+    text.setString(ss.str());
 
     if (fullscreen)
     {
         text.setPosition(xOffset + 36, yOffset + 36);
-        text.setCharacterSize(8 * sScale);
+        text.setCharacterSize(4 * sScale);
     }
     else
     {
