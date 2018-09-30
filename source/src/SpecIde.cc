@@ -433,11 +433,7 @@ void displayLicense()
 
 void readOptions(map<string, string>& options)
 {
-    char* pHome = getenv(SPECIDE_HOME_ENV);
-    ifstream ifs;
-    string entry, key, val;
-    size_t pos;
-
+    // Set default values first
     options["model"] = "default";
     options["joystick"] = "sinclair";
     options["pad"] = "no";
@@ -452,6 +448,11 @@ void readOptions(map<string, string>& options)
     options["sync"] = "no";
     options["sd1"] = "no";
 
+    vector<string> cfgPaths;
+    string cfgName("SpecIde.cfg");
+    char* pHome = getenv(SPECIDE_HOME_ENV);
+
+    cfgPaths.push_back("");
     if (pHome != nullptr)
     {
         string cfgPath(pHome);
@@ -460,37 +461,53 @@ void readOptions(map<string, string>& options)
 #else
         cfgPath += string("\\") + string(SPECIDE_CONF_DIR) + string("\\");
 #endif
-        string cfgFile = cfgPath + string("SpecIde.cfg");
-
-        bool fail = true;
-        ifs.open(cfgFile);
-        fail = ifs.fail();
-        if (fail)
-            return;
-
-        while (ifs.good())
-        {
-            ifs >> entry;
-
-            // Remove comments with #
-            pos = entry.find("#");
-            if (pos != string::npos)
-                entry = entry.substr(0, pos);
-
-            // Find if there is a key and value. Otherwise, skip.
-            pos = entry.find("=");
-            if (pos != string::npos)
-            {
-                key = entry.substr(0, pos);
-                val = entry.substr(pos + 1);
-
-                key.erase(remove_if(key.begin(), key.end(), ::isspace), key.end());
-                val.erase(remove_if(val.begin(), val.end(), ::isspace), val.end());
-
-                options[key] = val;
-            }
-        }
-        ifs.close();
+        cfgPaths.push_back(cfgPath);
     }
+
+    ifstream ifs;
+
+    size_t j = 0;
+    bool fail = true;
+    do
+    {
+        string cfg = cfgPaths[j] + cfgName;
+        cout << "Trying config file: " << cfg << endl;
+        ifs.open(cfg);
+        fail = ifs.fail();
+        ++j;
+    } while (fail && j < cfgPaths.size());
+
+    if (fail)
+    {
+        cout << "Config file SpecIde.cfg not found." << endl;
+        return;
+    }
+
+    string entry;
+    string key, val;
+    size_t pos;
+    while (ifs.good())
+    {
+        getline(ifs, entry);
+
+        // Remove comments with #
+        pos = entry.find("#");
+        if (pos != string::npos)
+            entry = entry.substr(0, pos);
+
+        // Find if there is a key and value. Otherwise, skip.
+        pos = entry.find("=");
+        if (pos != string::npos)
+        {
+            key = entry.substr(0, pos);
+            val = entry.substr(pos + 1);
+
+            key.erase(remove_if(key.begin(), key.end(), ::isspace), key.end());
+            val.erase(remove_if(val.begin(), val.end(), ::isspace), val.end());
+
+            options[key] = val;
+        }
+    }
+    ifs.close();
 }
 // vim: et:sw=4:ts=4
