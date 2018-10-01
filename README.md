@@ -20,7 +20,8 @@ Currently, the emulator is functional and is quite accurate. Some of the support
 - Kempston/Sinclair joystick emulation from the PC joystick/gamepad.
 - Works in GNU/Linux, Windows, and MacOS.
 
-Windows 32-bit binaries here: https://drive.google.com/open?id=1C5zRcY8itrvP9hKJsIniFWSGP1Zs-3NC
+Windows 32-bit binaries (Visual C++ 2017) here: https://drive.google.com/open?id=1C5zRcY8itrvP9hKJsIniFWSGP1Zs-3NC
+Windows 64-bit binaries (Visual C++ 2017) here: https://drive.google.com/open?id=1X-eZrQ7BfX1SP4DVdLrDT94rwOLgmoQX
 
 Credits and acknowledgements:
 David Garijo for helping with the MacOS build process.
