@@ -47,7 +47,7 @@ void readOptions(map<string, string>& options);
 
 int main(int argc, char* argv[])
 {
-    vector<string> params(argv, argv + argc);
+    vector<string> params(argv + 1, argv + argc);
     vector<string> files;
     map<string, string> options;
 
@@ -414,8 +414,10 @@ FileTypes guessFileType(string const& fileName)
 
 void displayLicense()
 {
-    cout << "SpecIde Version " << SPECIDE_VERSION_MAJOR
-        << "." << SPECIDE_VERSION_MINOR << endl << endl;
+    cout << "SpecIde Version ";
+    cout << SPECIDE_VERSION_MAJOR << ".";
+    cout << SPECIDE_VERSION_MINOR << ".";
+    cout << SPECIDE_VERSION_TWEAK << endl << endl;
     cout << "(c) 2016-2018 Marta Sevillano Mancilla." << endl << endl;
     cout << "This program is free software: you can redistribute it and/or modify" << endl;
     cout << "it under the terms of the GNU General Public License as published by" << endl;

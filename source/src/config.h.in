@@ -1,6 +1,7 @@
 // SpecIde version.
 #define SPECIDE_VERSION_MAJOR @SpecIde_VERSION_MAJOR@
 #define SPECIDE_VERSION_MINOR @SpecIde_VERSION_MINOR@
+#define SPECIDE_VERSION_TWEAK @SpecIde_VERSION_TWEAK@
 
 // System config.
 #define SPECIDE_BIG_ENDIAN @SpecIde_BIG_ENDIAN@
