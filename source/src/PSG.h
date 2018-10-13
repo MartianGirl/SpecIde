@@ -85,7 +85,7 @@ class PSG
             envSlope(1), envLevel(0), envStep(0), envHold(false),
             envA(false), envB(false), envC(false),
             counterA(0), counterB(0), counterC(0), counterN(0), counterE(0),
-            periodA(0), periodB(0), periodC(0), periodN(0), periodE(1),
+            periodA(0), periodB(0), periodC(0), periodN(0), periodE(0),
             playSound(true) {}
             // gen(rd()), uniform(0, 1) {} 
 
@@ -174,33 +174,33 @@ class PSG
             // Because period means a complete wave cycle (high/low)
             if ((count & 0x07) == 0x00)
             {
-                if (counterA-- == 0)
+                if (++counterA >= periodA)
                 {
                     waveA = 1 - waveA;
-                    counterA = periodA;
+                    counterA = 0;
                 }
 
-                if (counterB-- == 0)
+                if (++counterB >= periodB)
                 {
                     waveB = 1 - waveB;
-                    counterB = periodB;
+                    counterB = 0;
                 }
 
-                if (counterC-- == 0)
+                if (++counterC >= periodC)
                 {
                     waveC = 1 - waveC;
-                    counterC = periodC;
+                    counterC = 0;
                 }
 
-                if (counterN-- == 0)
+                if (++counterN >= 2 * periodN)
                 {
                     noise = generateNoise();
-                    counterN = 2 * periodN;
+                    counterN = 0;
                 }
 
-                if (counterE-- == 0)
+                if (++counterE >= 2 * periodE)
                 {
-                    counterE = 2 * periodE;
+                    counterE = 0;
 
                     if (envHold == false)
                     {
@@ -336,7 +336,7 @@ class PSG
         {
             envStep = 0;
             envHold = false;
-            counterE = 2 * periodE;
+            counterE = 0;
         }
 
         int generateNoise()
