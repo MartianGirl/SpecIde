@@ -212,9 +212,7 @@ void Spectrum::clock()
     bool rd_ = ((z80.c & SIGNAL_RD_) == SIGNAL_RD_);
     bool wr_ = ((z80.c & SIGNAL_WR_) == SIGNAL_WR_);
     size_t memArea = (z80.a & 0xC000) >> 14;
-    bool snow = (!spectrumPlus2A)
-        && contendedPage[memArea]
-        && (z80.state == Z80State::ST_OCF_T3L_RFSH1);
+    bool snow = contendedPage[memArea] && ula.snow && !as_;
 
     static uint_fast8_t count = 0;
 
@@ -231,7 +229,12 @@ void Spectrum::clock()
     // Speccies.
     bus_1 = bus;
     if (ula.mem == false)
-        bus = scr[snow ? (ula.a & 0x3F00) | z80.ir.l : ula.a];
+    {
+        if (snow)
+            bus = map[memArea][(ula.a & 0x3f80) | z80.ir.l];
+        else
+            bus = scr[ula.a];
+    }
     else if (!spectrumPlus2A || contendedPage[memArea])
         bus = z80.d;
 

@@ -69,6 +69,7 @@ class ULA
         static bool delayTable[16];
         static bool idleTable[16];
         static bool memTable[16];
+        static bool snowTable[16];
 
         static uint32_t colourTable[0x100];
         uint32_t colour[2];
@@ -115,10 +116,10 @@ class ULA
         uint_fast16_t z80_a = 0xFFFF;
         uint_fast16_t z80_c = 0xFFFF;
         bool contendedBank = false;
-        bool mreq_ = true;
         bool cpuClock = false;
         bool ulaReset = true;
         bool contention = false;
+        bool snow = false;
 
         // Video signals
         uint32_t rgba;

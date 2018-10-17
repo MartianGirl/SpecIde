@@ -45,6 +45,12 @@ bool ULA::memTable[16] =
     false, true, false, true, false, true, false, true
 };
 
+bool ULA::snowTable[16] =
+{
+    false, false, false, false, false, false, false, false,
+    false, false, false, false, true, true, true, true
+};
+
 uint32_t ULA::colourTable[0x100];
 uint8_t ULA::averageTable[0x100][0x100];
 uint32_t ULA::pixelsX1[0x38000];
@@ -185,6 +191,7 @@ void ULA::generateVideoDataUla()
         // Check for contended memory or I/O accesses.
         idle = idleTable[pixel & 0x0F];
         mem = memTable[pixel & 0x0F];
+        snow = snowTable[pixel & 0x0F];
 
         // Memory Contention
         // We detect memory contended states whenever the address is in the
