@@ -231,7 +231,7 @@ void Spectrum::clock()
     if (ula.mem == false)
     {
         if (snow)
-            bus = map[memArea][(ula.a & 0x3f80) | z80.ir.l];
+            bus = map[memArea][(ula.a & 0x3f80) | (z80.a & 0x007f)];
         else
             bus = scr[ula.a];
     }
