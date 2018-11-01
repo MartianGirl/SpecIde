@@ -91,7 +91,7 @@ class DSKFile
                         gapLength = data[offset + 0x16];
                         fillerByte = data[offset + 0x17];
 
-                        if ((offset + 0x18 + 8 * numSectors) > 0x100)
+                        if ((0x18 + 8 * numSectors) > 0x100)
                             return false;
 
                         sectors.clear();

@@ -371,8 +371,10 @@ int main(int argc, char* argv[])
                 screen.tape.loadTap(*it);
                 break;
 
-                // case FileTypes::FILETYPE_DSK:
-                // screen.spectrum.fdc.
+            case FileTypes::FILETYPE_DSK:
+                screen.spectrum.fdc.drive[0].image.load(*it);
+                screen.spectrum.fdc.drive[0].disk = true;
+                break;
 
             default:
                 cout << "Unknown file type: " << *it << endl;
