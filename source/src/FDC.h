@@ -103,7 +103,9 @@ class DiskDrive
         uint_fast16_t length;
         vector<uint8_t> buffer;
 
-        DSKFile image;
+        vector<DSKFile> images;
+        vector<string> imagenames;
+        size_t currentImage;
 
         /**
          * Advance disk to next sector.
@@ -113,9 +115,9 @@ class DiskDrive
             ++sector;
             if (disk)
             {
-                size_t tr = (image.numSides * cylinder);
-                for (size_t ii = 0; ii < image.numSides; ++ii)
-                    next[ii] = sector % image.tracks[tr + ii].numSectors;
+                size_t tr = (images[currentImage].numSides * cylinder);
+                for (size_t ii = 0; ii < images[currentImage].numSides; ++ii)
+                    next[ii] = sector % images[currentImage].tracks[tr + ii].numSectors;
             }
 
             if (next[0] == 0)
@@ -127,7 +129,7 @@ class DiskDrive
          */
         void nextTrack()
         {
-            size_t limit = disk ? image.numTracks : 99;
+            size_t limit = disk ? images[currentImage].numTracks : 99;
             if (++cylinder > limit)
                 cylinder = limit;
             track0 = (cylinder == 0);
@@ -163,14 +165,14 @@ class DiskDrive
          */
         void writeSector(int head)
         {
-            if (disk && head < image.numSides)
+            if (disk && head < images[currentImage].numSides)
             {
-                size_t tr = (image.numSides * cylinder) + head;
-                size_t sc = sector % image.tracks[tr].numSectors;
+                size_t tr = (images[currentImage].numSides * cylinder) + head;
+                size_t sc = sector % images[currentImage].tracks[tr].numSectors;
                 if (sc == 0)
                     countHole();
 
-                image.tracks[tr].sectors[sc].data = buffer;
+                images[currentImage].tracks[tr].sectors[sc].data = buffer;
             }
         }
 
@@ -183,19 +185,19 @@ class DiskDrive
          */
         void readSector(int head)
         {
-            if (disk && head < image.numSides)
+            if (disk && head < images[currentImage].numSides)
             {
-                size_t tr = (image.numSides * cylinder) + head;
-                size_t sc = sector % image.tracks[tr].numSectors;
+                size_t tr = (images[currentImage].numSides * cylinder) + head;
+                size_t sc = sector % images[currentImage].tracks[tr].numSectors;
 
-                idTrack = image.tracks[tr].sectors[sc].track;
-                idHead = image.tracks[tr].sectors[sc].side;
-                idSector = image.tracks[tr].sectors[sc].sectorId;
-                idSize = image.tracks[tr].sectors[sc].sectorSize;
-                statusReg1 = image.tracks[tr].sectors[sc].fdcStatusReg1;
-                statusReg2 = image.tracks[tr].sectors[sc].fdcStatusReg2;
-                buffer = image.tracks[tr].sectors[sc].data;
-                length = image.tracks[tr].sectors[sc].sectorLength;
+                idTrack = images[currentImage].tracks[tr].sectors[sc].track;
+                idHead = images[currentImage].tracks[tr].sectors[sc].side;
+                idSector = images[currentImage].tracks[tr].sectors[sc].sectorId;
+                idSize = images[currentImage].tracks[tr].sectors[sc].sectorSize;
+                statusReg1 = images[currentImage].tracks[tr].sectors[sc].fdcStatusReg1;
+                statusReg2 = images[currentImage].tracks[tr].sectors[sc].fdcStatusReg2;
+                buffer = images[currentImage].tracks[tr].sectors[sc].data;
+                length = images[currentImage].tracks[tr].sectors[sc].sectorLength;
             }
             // Should plan for no disk or wrong head.
         }
@@ -205,19 +207,19 @@ class DiskDrive
                 uint_fast8_t sectorSize, uint_fast8_t numSectors,
                 uint_fast8_t gapLength, uint_fast8_t fillerByte)
         {
-            size_t tr = (image.numSides * cylinder) + head;
+            size_t tr = (images[currentImage].numSides * cylinder) + head;
 
-            if (tr >= image.tracks.size())
-                image.tracks.insert(image.tracks.end(),
-                        tr - image.tracks.size() + 1, DSKFile::Track());
+            if (tr >= images[currentImage].tracks.size())
+                images[currentImage].tracks.insert(images[currentImage].tracks.end(),
+                        tr - images[currentImage].tracks.size() + 1, DSKFile::Track());
             
-            image.tracks[tr].trackNumber = trackNumber;
-            image.tracks[tr].sideNumber = sideNumber;
-            image.tracks[tr].sectorSize = sectorSize;
-            image.tracks[tr].numSectors = numSectors;
-            image.tracks[tr].gapLength = gapLength;
-            image.tracks[tr].fillerByte = fillerByte;
-            image.tracks[tr].sectors.assign(numSectors, DSKFile::Track::Sector());
+            images[currentImage].tracks[tr].trackNumber = trackNumber;
+            images[currentImage].tracks[tr].sideNumber = sideNumber;
+            images[currentImage].tracks[tr].sectorSize = sectorSize;
+            images[currentImage].tracks[tr].numSectors = numSectors;
+            images[currentImage].tracks[tr].gapLength = gapLength;
+            images[currentImage].tracks[tr].fillerByte = fillerByte;
+            images[currentImage].tracks[tr].sectors.assign(numSectors, DSKFile::Track::Sector());
         }
 
         void formatSector(int head,
@@ -225,19 +227,19 @@ class DiskDrive
                 uint_fast8_t idSc, uint_fast8_t idSz,
                 uint_fast8_t byte)
         {
-            if (disk && head < image.numSides)
+            if (disk && head < images[currentImage].numSides)
             {
-                size_t tr = (image.numSides * cylinder) + head;
-                size_t sc = sector % image.tracks[tr].numSectors;
+                size_t tr = (images[currentImage].numSides * cylinder) + head;
+                size_t sc = sector % images[currentImage].tracks[tr].numSectors;
                 if (sc == 0)
                     countHole();
 
-                image.tracks[tr].sectors[sc].track = idTr;
-                image.tracks[tr].sectors[sc].side = idHd;
-                image.tracks[tr].sectors[sc].sectorId = idSc;
-                image.tracks[tr].sectors[sc].sectorSize = idSz;
-                image.tracks[tr].sectors[sc].sectorLength = idSz;
-                image.tracks[tr].sectors[sc].data.assign(idSz, byte);
+                images[currentImage].tracks[tr].sectors[sc].track = idTr;
+                images[currentImage].tracks[tr].sectors[sc].side = idHd;
+                images[currentImage].tracks[tr].sectors[sc].sectorId = idSc;
+                images[currentImage].tracks[tr].sectors[sc].sectorSize = idSz;
+                images[currentImage].tracks[tr].sectors[sc].sectorLength = idSz;
+                images[currentImage].tracks[tr].sectors[sc].data.assign(idSz, byte);
             }
         }
 
@@ -271,6 +273,27 @@ class DiskDrive
             ++hole;
         }
 
+        void nextDisk()
+        {
+            if (images.size() > 0)
+            {
+                ++currentImage;
+                if (currentImage == images.size())
+                    currentImage = 0;
+                cout << "Currently inserted disk: " << imagenames[currentImage] << endl;
+            }
+        }
+
+        void prevDisk()
+        {
+            if (images.size() > 0)
+            {
+                if (currentImage == 0)
+                    currentImage = images.size();
+                --currentImage;
+                cout << "Currently inserted disk: " << imagenames[currentImage] << endl;
+            }
+        }
 };
 
 class FDC
@@ -686,6 +709,7 @@ class FDC
                     break;
 
                 case 0x06:  // Read sector(s)
+                    checkDrive();
                     readCmd();
                     break;
 
@@ -727,6 +751,7 @@ class FDC
                     break;
 
                 case 0x0C:  // Read deleted sector(s)
+                    checkDrive();
                     readCmd();
                     break;
 
@@ -786,7 +811,7 @@ class FDC
             currSector = drive[cmdDrive()].idSector;
             cout << " Found sector: " << currSector << endl;
 
-            if ((currSector & 0x3F) != firstSector)
+            if ((currSector & 0x3F) != (firstSector & 0x3F))
             {
                 drive[cmdDrive()].nextSector();
                 return false;
@@ -821,9 +846,10 @@ class FDC
 
             // Double check that the intended data length does
             // not exceed the ACTUAL data length.
-            if (outlen > drive[cmdDrive()].length)
+            size_t actlen = drive[cmdDrive()].length;
+            if (actlen != 0 && outlen > actlen)
             {
-                outlen = drive[cmdDrive()].length;
+                outlen = actlen;
                 cout << "Warning: Sector only has " << outlen << " bytes." << endl;
             }
 
@@ -832,31 +858,33 @@ class FDC
             {
                 if (!skipDeletedBit)  // Not skipping: Dump entire sector and finish.
                 {
-                    uint_fast16_t slen = drive[cmdDrive()].length;
+                    if (actlen != 0)
+                        outlen = actlen;
+
                     if (((sReg[1] & 0x20) == 0x20)          // CRC error in ID.
                             || ((sReg[2] & 0x20) == 0x20))  // CRC error in DATA.
                     {
                         cout << " CRC error..." << endl;
                         // Return first 0x150 bytes from disk
-                        if (slen > 0x150)
+                        if (outlen > 0x150)
                         {
                             copy(&drive[cmdDrive()].buffer[0],
                                     &drive[cmdDrive()].buffer[0x150],
                                     &dataBuffer[dataBytes]);
                             dataBytes += 0x150;
-                            slen -= 0x150;
+                            outlen -= 0x150;
                         }
                         // Return random data.
-                        for (size_t ii = 0; ii < slen; ++ii)
+                        for (size_t ii = 0; ii < outlen; ++ii)
                             dataBuffer[dataBytes++] = rand() & 0xFF;
                         sReg[0] |= 0x40;    // 01000HUU - AT
                     }
                     else
                     {
                         copy(&drive[cmdDrive()].buffer[0],
-                                &drive[cmdDrive()].buffer[slen],
+                                &drive[cmdDrive()].buffer[outlen],
                                 &dataBuffer[dataBytes]);
-                        dataBytes += slen;
+                        dataBytes += outlen;
                     }
                     drive[cmdDrive()].readSector(cmdHead());
                     resSector = drive[cmdDrive()].idSector;
@@ -895,7 +923,7 @@ class FDC
             dataBytes += outlen;
 
             // Now we check EOT.
-            bool end = ((currSector & 0x3F) == lastSector);
+            bool end = ((currSector & 0x3F) == (lastSector & 0x3F));
             drive[cmdDrive()].readSector(cmdHead());
             resSector = end ? 1 : drive[cmdDrive()].idSector;
             resTrack = drive[cmdDrive()].idTrack;
@@ -1075,6 +1103,15 @@ class FDC
 
         size_t cmdDrive() { return (cmdBuffer[1] & 0x03); }
         size_t cmdHead() { return ((cmdBuffer[1] & 0x04) >> 2); }
+        void checkDrive()
+        {
+            if (cmdDrive() > 1 || cmdHead() > 0)
+            {
+                sReg[0] = cmdBuffer[0];
+                sReg[0] |= 0xC4;    // 01..1HUU: AT, NR
+                stage = FDCAccess::FDC_ACCESS_END;
+            }
+        }
 };
 
 

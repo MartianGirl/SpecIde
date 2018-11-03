@@ -401,6 +401,16 @@ void Screen::pollEvents()
                             setFullScreen(fullscreen);
                         }
                         break;
+                    case Keyboard::F6:
+                        if (event.key.shift)
+                        {
+                            spectrum.fdc.drive[0].prevDisk();
+                        }
+                        else
+                        {
+                            spectrum.fdc.drive[0].nextDisk();
+                        }
+                        break;
                     case Keyboard::F7:
                         if (event.key.shift)
                         {

@@ -372,8 +372,15 @@ int main(int argc, char* argv[])
                 break;
 
             case FileTypes::FILETYPE_DSK:
-                screen.spectrum.fdc.drive[0].image.load(*it);
-                screen.spectrum.fdc.drive[0].disk = true;
+                {
+                    DSKFile dsk;
+                    dsk.load(*it);
+
+                    screen.spectrum.fdc.drive[0].images.push_back(dsk);
+                    screen.spectrum.fdc.drive[0].imagenames.push_back(*it);
+                    screen.spectrum.fdc.drive[0].disk = true;
+                    cout << "Adding DSK file: " << *it << endl;
+                }
                 break;
 
             default:
