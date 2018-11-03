@@ -112,7 +112,7 @@ class DSKFile
                                 + data[secEntry + 6];
 
                             uint_fast16_t size =
-                                (s.sectorLength) ? s.sectorLength : sectorSize;
+                                (s.sectorLength) ? s.sectorLength : (0x80 << s.sectorSize);
 
                             s.data.assign(
                                         &data[dataOffset],

@@ -49,6 +49,22 @@ enum class FDCMode
     FDC_MODE_WRITE
 };
 
+enum class FDCAccess
+{
+    FDC_ACCESS_SEEK,
+    FDC_ACCESS_DATA,
+    FDC_ACCESS_END,
+    FDC_ACCESS_NONE
+};
+
+enum class FDCScan
+{
+    FDC_SCAN_EQUAL,
+    FDC_SCAN_LOW,
+    FDC_SCAN_HIGH,
+    FDC_SCAN_ERROR
+};
+
 constexpr uint_fast8_t SREG_DB0 = 1 << 0;
 constexpr uint_fast8_t SREG_DB1 = 1 << 1;
 constexpr uint_fast8_t SREG_DB2 = 1 << 2;
@@ -76,6 +92,7 @@ class DiskDrive
         size_t cylinder = 0;
         size_t sector = 0;
         size_t hole = 0;
+        size_t next[2];
 
         uint_fast8_t idTrack;
         uint_fast8_t idHead;
@@ -91,7 +108,19 @@ class DiskDrive
         /**
          * Advance disk to next sector.
          */
-        void nextSector() { ++sector; }
+        void nextSector()
+        {
+            ++sector;
+            if (disk)
+            {
+                size_t tr = (image.numSides * cylinder);
+                for (size_t ii = 0; ii < image.numSides; ++ii)
+                    next[ii] = sector % image.tracks[tr + ii].numSectors;
+            }
+
+            if (next[0] == 0)
+                countHole();
+        }
 
         /**
          * Seek next track.
@@ -158,8 +187,6 @@ class DiskDrive
             {
                 size_t tr = (image.numSides * cylinder) + head;
                 size_t sc = sector % image.tracks[tr].numSectors;
-                if (sc == 0)
-                    countHole();
 
                 idTrack = image.tracks[tr].sectors[sc].track;
                 idHead = image.tracks[tr].sectors[sc].side;
@@ -269,15 +296,25 @@ class FDC
         bool multiTrackBit;
         bool mfmModeBit;
         bool skipDeletedBit;
+        bool useDeletedDAM;
+
+        bool idmFound;
+        bool ddmFound;
 
         FDCState state;
         FDCMode mode;
+        FDCAccess stage;
 
         DiskDrive drive[4];
         uint_fast8_t presCylNum[4];
         uint_fast8_t sReg[4];
 
         size_t lastDrive;
+        size_t firstSector = 0x00;
+        size_t currSector = 0x00;
+        size_t lastSector = 0x00;
+        size_t resTrack = 0x00;
+        size_t resSector = 0x00;
 
         uint_fast32_t delay = 0;
 
@@ -526,11 +563,29 @@ class FDC
                     break;
 
                 case 0x06:  // Read sector(s)
-                    cout << "Read sector: ";
-                    for (size_t ii = 0; ii < 9; ++ii)
-                        cout << hex << setw(2) << setfill('0') << static_cast<size_t>(cmdBuffer[ii]) << " ";
-                    cout << endl;
+                    cout << "Read sector(s): " << endl;
+                    cout << "Drive: " << hex << setw(2) << setfill('0') << cmdDrive() << " ";
+                    cout << "Head: " << hex << setw(2) << setfill('0') << cmdHead() << " ";
+                    cout << "Track: " << hex << setw(2) << setfill('0');
+                    cout << static_cast<size_t>(cmdBuffer[2]) << " ";
+                    cout << "Head: " << hex << setw(2) << setfill('0');
+                    cout << static_cast<size_t>(cmdBuffer[3]) << " ";
+                    cout << "From Sector: " << hex << setw(2) << setfill('0');
+                    cout << static_cast<size_t>(cmdBuffer[4]) << " ";
+                    cout << "Sector Size: " << hex << setw(2) << setfill('0');
+                    cout << static_cast<size_t>(cmdBuffer[5]) << " ";
+                    cout << "To Sector: " << hex << setw(2) << setfill('0');
+                    cout << static_cast<size_t>(cmdBuffer[6]) << " ";
+                    cout << "Gap Length: " << hex << setw(2) << setfill('0');
+                    cout << static_cast<size_t>(cmdBuffer[7]) << " ";
+                    cout << "Data Length: " << hex << setw(2) << setfill('0');
+                    cout << static_cast<size_t>(cmdBuffer[8]) << endl;
+
                     drive[cmdDrive()].hole = 0;
+                    firstSector = cmdBuffer[4];
+                    lastSector = cmdBuffer[6];
+                    useDeletedDAM = false;
+                    stage = FDCAccess::FDC_ACCESS_SEEK;
                     break;
 
                 case 0x07:  // Recalibrate and seek physical track 0
@@ -546,9 +601,36 @@ class FDC
                 case 0x0A:  // Read ID
                     cout << "Read ID from drive " << cmdDrive() << " - ";
                     cout << "head " << cmdHead() << endl;
+
+                    drive[cmdDrive()].hole = 0;
+                    ddmFound = false;
+                    idmFound = false;
                     break;
 
                 case 0x0C:  // Read deleted sector(s)
+                    cout << "Read deleted sector(s): " << endl;
+                    cout << "Drive: " << hex << setw(2) << setfill('0') << cmdDrive() << " ";
+                    cout << "Head: " << hex << setw(2) << setfill('0') << cmdHead() << " ";
+                    cout << "Track: " << hex << setw(2) << setfill('0');
+                    cout << static_cast<size_t>(cmdBuffer[2]) << " ";
+                    cout << "Head: " << hex << setw(2) << setfill('0');
+                    cout << static_cast<size_t>(cmdBuffer[3]) << " ";
+                    cout << "From Sector: " << hex << setw(2) << setfill('0');
+                    cout << static_cast<size_t>(cmdBuffer[4]) << " ";
+                    cout << "Sector Size: " << hex << setw(2) << setfill('0');
+                    cout << static_cast<size_t>(cmdBuffer[5]) << " ";
+                    cout << "To Sector: " << hex << setw(2) << setfill('0');
+                    cout << static_cast<size_t>(cmdBuffer[6]) << " ";
+                    cout << "Gap Length: " << hex << setw(2) << setfill('0');
+                    cout << static_cast<size_t>(cmdBuffer[7]) << " ";
+                    cout << "Data Length: " << hex << setw(2) << setfill('0');
+                    cout << static_cast<size_t>(cmdBuffer[8]) << endl;
+
+                    drive[cmdDrive()].hole = 0;
+                    firstSector = cmdBuffer[4];
+                    lastSector = cmdBuffer[6];
+                    useDeletedDAM = true;
+                    stage = FDCAccess::FDC_ACCESS_SEEK;
                     break;
 
                 case 0x0D:  // Format track
@@ -604,115 +686,7 @@ class FDC
                     break;
 
                 case 0x06:  // Read sector(s)
-                    // A set of nine (9) byte words are required to place the
-                    // FDC into the Read Data Mode. After the Read Data command
-                    // has been issued the FDC loads the head (if it is in the
-                    // unloaded state), waits the specified head settling time
-                    // (defined in the Specify Command), and begins reading
-                    // Address Marks and ID fields. When the current 
-                    drive[cmdDrive()].readSector(cmdHead());
-                    drive[cmdDrive()].nextSector();
-                    sReg[0] = cmdBuffer[1] & 0x07;
-                    sReg[1] = drive[cmdDrive()].statusReg1;
-                    sReg[2] = drive[cmdDrive()].statusReg2;
-
-                    cout << "Reading... ";
-                    cout << "From: " << hex << setw(2) << setfill('0') << static_cast<size_t>(cmdBuffer[4]);
-                    cout << " - To: " << hex << setw(2) << setfill('0') << static_cast<size_t>(cmdBuffer[6]);
-                    cout << " -- Sector: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(drive[cmdDrive()].idSector) << endl;
-
-                    if (drive[cmdDrive()].idSector == cmdBuffer[4])
-                    {
-                        // Reset counter of "turns without finding sector."
-                        drive[cmdDrive()].hole = 0;
-
-                        // Determine how many bytes to read from this sector.
-                        size_t outlen;
-                        if (cmdBuffer[5] == 0x00)   // Use SL as sector length.
-                            outlen = cmdBuffer[8];
-                        else                        // Use SZ as sector length.
-                            outlen = 0x80 << cmdBuffer[5];
-
-                        // Double check that the intended data length does
-                        // not exceed the ACTUAL data length.
-                        if (outlen > drive[cmdDrive()].length)
-                        {
-                            outlen = drive[cmdDrive()].length;
-                            cout << "Warning: Sector only has " << outlen << " bytes." << endl;
-                        }
-
-                        if ((sReg[1] & 0x20) == 0x20)   // CRC error in ID.
-                            sReg[0] |= 0x40;    // 01000HUU - AT
-                        else if ((sReg[2] & 0x20) == 0x20)   // CRC error in Data.
-                            sReg[0] |= 0x40;    // 01000HUU - AT
-                        else if ((sReg[2] & 0x40) == 0x40)   // Deleted Address Mark.
-                        {
-                            if ((cmdBuffer[0] & 0x40) == 0x40)  // Skip
-                                break;
-                            else    // Return entire sector, and terminate.
-                            {
-                                uint_fast16_t slen = drive[cmdDrive()].length;
-                                copy(&drive[cmdDrive()].buffer[0],
-                                        &drive[cmdDrive()].buffer[slen],
-                                        &dataBuffer[dataBytes]);
-                                dataBytes += slen;
-                            }
-                        }
-                        else    // Normal read. Dump and continue.
-                        {
-                            copy(&drive[cmdDrive()].buffer[0],
-                                    &drive[cmdDrive()].buffer[outlen],
-                                    &dataBuffer[dataBytes]);
-                            dataBytes += outlen;
-                        }
-                    }
-                    else if (drive[cmdDrive()].hole > 1)
-                    {
-                        sReg[1] |= 0x04;    // xxxxx1xx - ND
-                        sReg[0] |= 0x40;    // 01000HUU - AT
-                    }
-                       
-                    // End conditions.
-                    if ((sReg[0] & 0xC0) != 0x00)   // Error happened.
-                    {
-                        resBuffer[0] = sReg[0];
-                        resBuffer[1] = sReg[1];
-                        resBuffer[2] = sReg[2];
-                        resBuffer[3] = cmdBuffer[2];
-                        resBuffer[4] = cmdBuffer[3];
-                        resBuffer[5] = cmdBuffer[4];
-                        resBuffer[6] = cmdBuffer[5];
-                        interrupt = true;
-                        state = FDCState::FDC_STATE_RESULT;
-                    }
-                    else if (((sReg[2] & 0x40) == 0x40) // DDAM & SK = 0.
-                            && ((cmdBuffer[0] & 0x40) == 0x00))
-                    {
-                        resBuffer[0] = sReg[0];
-                        resBuffer[1] = sReg[1];
-                        resBuffer[2] = sReg[2];
-                        resBuffer[3] = cmdBuffer[2];
-                        resBuffer[4] = cmdBuffer[3];
-                        resBuffer[5] = cmdBuffer[4] + 1;
-                        resBuffer[6] = cmdBuffer[5];
-                        interrupt = true;
-                        cout << "Transfer " << dec << dataBytes << " bytes." << endl;
-                        state = FDCState::FDC_STATE_TRANSMIT;
-                    }
-                    else if (drive[cmdDrive()].idSector == cmdBuffer[6]) // EOT
-                    {
-                        resBuffer[0] = sReg[0];
-                        resBuffer[1] = sReg[1];
-                        resBuffer[2] = sReg[2];
-                        resBuffer[3] = cmdBuffer[2] + 1;
-                        resBuffer[4] = cmdBuffer[3];
-                        resBuffer[5] = 0x01;
-                        resBuffer[6] = cmdBuffer[5];
-                        interrupt = true;
-                        cout << "Transfer " << dec << dataBytes << " bytes." << endl;
-                        state = FDCState::FDC_STATE_TRANSMIT;
-                    }
+                    readCmd();
                     break;
 
                 case 0x07:  // Recalibrate and seek physical track 0
@@ -749,22 +723,11 @@ class FDC
                     break;
 
                 case 0x0A:  // Read ID
-                    drive[cmdDrive()].readSector(cmdHead());
-                    dataBuffer[0] = drive[cmdDrive()].idSector;
-                    dataBytes = 1;
-                    resBuffer[0] = cmdBuffer[1] & 0x07;
-                    sReg[1] = resBuffer[1] = drive[cmdDrive()].statusReg1;
-                    sReg[2] = resBuffer[2] = drive[cmdDrive()].statusReg2;
-                    resBuffer[3] = drive[cmdDrive()].cylinder;
-                    resBuffer[4] = cmdHead();
-                    resBuffer[5] = drive[cmdDrive()].sector;
-                    resBuffer[6] = drive[cmdDrive()].idSize;
-                    drive[cmdDrive()].nextSector();
-                    interrupt = true;
-                    state = FDCState::FDC_STATE_RESULT;
+                    readIdCmd();
                     break;
 
                 case 0x0C:  // Read deleted sector(s)
+                    readCmd();
                     break;
 
                 case 0x0D:  // Format track
@@ -815,10 +778,230 @@ class FDC
             }
         }
 
+        bool seekOp()
+        {
+            cout << "Seeking sector: " << hex << setw(2) << setfill('0');
+            cout << firstSector;
+            drive[cmdDrive()].readSector(cmdHead());
+            currSector = drive[cmdDrive()].idSector;
+            cout << " Found sector: " << currSector << endl;
+
+            if ((currSector & 0x3F) != firstSector)
+            {
+                drive[cmdDrive()].nextSector();
+                return false;
+            }
+            else
+            {
+                drive[cmdDrive()].hole = 0;
+                return true;
+            }
+        }
+
+        bool readOp()
+        {
+            drive[cmdDrive()].readSector(cmdHead());
+            drive[cmdDrive()].nextSector();
+            sReg[0] = cmdBuffer[1] & 0x07;
+            sReg[1] = drive[cmdDrive()].statusReg1;
+            sReg[2] = drive[cmdDrive()].statusReg2;
+            currSector = drive[cmdDrive()].idSector;
+
+            cout << "Reading sector... ";
+            cout << hex << setw(2) << setfill('0') << currSector;
+            cout << " (Skip bit " << (skipDeletedBit ? "ON)" : "OFF) ... ");
+
+            // We determine how many bytes to read from this sector.
+            size_t outlen;
+            if (cmdBuffer[5] == 0x00)   // Use SL as sector length.
+                outlen = cmdBuffer[8];
+            else                        // Use SZ as sector length.
+                outlen = 0x80 << cmdBuffer[5];
+            cout << " (" << dec << outlen << " bytes)" << endl;
+
+            // Double check that the intended data length does
+            // not exceed the ACTUAL data length.
+            if (outlen > drive[cmdDrive()].length)
+            {
+                outlen = drive[cmdDrive()].length;
+                cout << "Warning: Sector only has " << outlen << " bytes." << endl;
+            }
+
+            // Now we look at the data mark.
+            if ((sReg[2] & 0x40) == (useDeletedDAM ? 0x00 : 0x40))
+            {
+                if (!skipDeletedBit)  // Not skipping: Dump entire sector and finish.
+                {
+                    uint_fast16_t slen = drive[cmdDrive()].length;
+                    if (((sReg[1] & 0x20) == 0x20)          // CRC error in ID.
+                            || ((sReg[2] & 0x20) == 0x20))  // CRC error in DATA.
+                    {
+                        cout << " CRC error..." << endl;
+                        // Return first 0x150 bytes from disk
+                        if (slen > 0x150)
+                        {
+                            copy(&drive[cmdDrive()].buffer[0],
+                                    &drive[cmdDrive()].buffer[0x150],
+                                    &dataBuffer[dataBytes]);
+                            dataBytes += 0x150;
+                            slen -= 0x150;
+                        }
+                        // Return random data.
+                        for (size_t ii = 0; ii < slen; ++ii)
+                            dataBuffer[dataBytes++] = rand() & 0xFF;
+                        sReg[0] |= 0x40;    // 01000HUU - AT
+                    }
+                    else
+                    {
+                        copy(&drive[cmdDrive()].buffer[0],
+                                &drive[cmdDrive()].buffer[slen],
+                                &dataBuffer[dataBytes]);
+                        dataBytes += slen;
+                    }
+                    drive[cmdDrive()].readSector(cmdHead());
+                    resSector = drive[cmdDrive()].idSector;
+                    resTrack = drive[cmdDrive()].idTrack;
+                    return true;
+                }
+                else        // Skipping.
+                    return false;
+            }
+
+            // Now we check CRC.
+            if ((sReg[1] & 0x20) == 0x20)   // CRC error in ID.
+            {
+                cout << " - CRC error reading ID..." << endl;
+                // Return random data.
+                for (size_t ii = 0; ii < outlen; ++ii)
+                    dataBuffer[dataBytes++] = rand() & 0xFF;
+                sReg[0] |= 0x40;    // 01000HUU - AT
+                return true;
+            }
+            else if ((sReg[2] & 0x20) == 0x20)   // CRC error in Data.
+            {
+                cout << " - CRC error reading DATA..." << endl;
+                // Return random data.
+                for (size_t ii = 0; ii < outlen; ++ii)
+                    dataBuffer[dataBytes++] = rand() & 0xFF;
+                dataBytes += outlen;
+                sReg[0] |= 0x40;    // 01000HUU - AT
+                return true;
+            }
+
+            // If we reach here, it is a normal data read. Dump and continue.
+            copy(&drive[cmdDrive()].buffer[0],
+                    &drive[cmdDrive()].buffer[outlen],
+                    &dataBuffer[dataBytes]);
+            dataBytes += outlen;
+
+            // Now we check EOT.
+            bool end = ((currSector & 0x3F) == lastSector);
+            drive[cmdDrive()].readSector(cmdHead());
+            resSector = end ? 1 : drive[cmdDrive()].idSector;
+            resTrack = drive[cmdDrive()].idTrack;
+            resTrack += end ? 1 : 0;
+            return end;
+        }
+
+        void readCmd()
+        {
+            switch (stage)
+            {
+                // Seek stage. Here we read all the sectors in the track,
+                // until we find one whose ID matches command parameter R.
+                // If during the seek we find the hole mark twice, this means
+                // that the sector we're looking for does not exist, and we
+                // end the operation with an error.
+                case FDCAccess::FDC_ACCESS_SEEK:
+                    if (seekOp())
+                        stage = FDCAccess::FDC_ACCESS_DATA;
+                    else if (drive[cmdDrive()].hole > 1)
+                    {
+                        cout << "Sector not found..." << endl;
+                        dataBytes = 0;
+                        sReg[1] |= 0x04;    // xxxxx1xx - ND
+                        sReg[0] |= 0x40;    // 01000HUU - AT
+                        stage = FDCAccess::FDC_ACCESS_END;
+                    }
+                    break;
+
+                case FDCAccess::FDC_ACCESS_DATA:
+                    if (readOp())
+                        stage = FDCAccess::FDC_ACCESS_END;
+                    else
+                    {
+                        // Sectors can be unordered.
+                        ++firstSector;
+                        stage = FDCAccess::FDC_ACCESS_SEEK;
+                    }
+                    break;
+
+                case FDCAccess::FDC_ACCESS_END:
+                    resBuffer[0] = sReg[0];
+                    resBuffer[1] = sReg[1];
+                    resBuffer[2] = sReg[2];
+                    resBuffer[3] = resTrack;
+                    resBuffer[4] = cmdBuffer[3];
+                    resBuffer[5] = resSector;
+                    resBuffer[6] = cmdBuffer[5];
+
+                    if (dataBytes)
+                    {
+                        cout << "Returning " << dataBytes << " bytes..." << endl;
+                        state = FDCState::FDC_STATE_TRANSMIT;
+                    }
+                    else
+                        state = FDCState::FDC_STATE_RESULT;
+                    interrupt = true;
+                    break;
+
+                case FDCAccess::FDC_ACCESS_NONE:
+                    reset();
+                    break;
+            }
+        }
+
+        void readIdCmd()
+        {
+            drive[cmdDrive()].readSector(cmdHead());
+            drive[cmdDrive()].nextSector();
+            sReg[0] = cmdBuffer[1] & 0x07;
+            sReg[1] = drive[cmdDrive()].statusReg1;
+            sReg[2] = drive[cmdDrive()].statusReg2;
+
+            if (drive[cmdDrive()].hole > 1)
+            {
+                if (idmFound == false) sReg[1] |= 0x01;     // xxxxxxx1 - MAD
+                if (ddmFound == false) sReg[1] |= 0x04;     // xxxxx1xx - ND
+                sReg[0] |= 0x40;    // 01000HUU - AT
+            }
+
+            // Check for Missing Address Mark or No Data.
+            if ((sReg[1] & 0x01) == 0x00)
+                idmFound = true;
+
+            if ((sReg[1] & 0x04) == 0x00)
+                ddmFound = true;
+
+            if (idmFound == false)
+                return;
+
+            resBuffer[0] = sReg[0];
+            resBuffer[1] = sReg[1];
+            resBuffer[2] = sReg[2];
+            resBuffer[3] = cmdBuffer[2];
+            resBuffer[4] = cmdBuffer[3];
+            resBuffer[5] = cmdBuffer[4];
+            resBuffer[6] = cmdBuffer[5];
+            interrupt = true;
+            state = FDCState::FDC_STATE_RESULT;
+        }
+
         void reset()
         {
             cout << "FDC reset or idle." << endl;
             state = FDCState::FDC_STATE_IDLE;
+            stage = FDCAccess::FDC_ACCESS_NONE;
             byte = false;
             cmdIndex = resIndex = dataIndex = 0;
             cmdBytes = resBytes = dataBytes = 0;
