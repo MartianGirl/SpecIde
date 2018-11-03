@@ -811,7 +811,7 @@ class FDC
             currSector = drive[cmdDrive()].idSector;
             cout << " Found sector: " << currSector << endl;
 
-            if ((currSector & 0x3F) != (firstSector & 0x3F))
+            if (currSector != firstSector)
             {
                 drive[cmdDrive()].nextSector();
                 return false;
@@ -923,7 +923,7 @@ class FDC
             dataBytes += outlen;
 
             // Now we check EOT.
-            bool end = ((currSector & 0x3F) == (lastSector & 0x3F));
+            bool end = (currSector == lastSector);
             drive[cmdDrive()].readSector(cmdHead());
             resSector = end ? 1 : drive[cmdDrive()].idSector;
             resTrack = drive[cmdDrive()].idTrack;
@@ -1017,10 +1017,10 @@ class FDC
             resBuffer[0] = sReg[0];
             resBuffer[1] = sReg[1];
             resBuffer[2] = sReg[2];
-            resBuffer[3] = cmdBuffer[2];
-            resBuffer[4] = cmdBuffer[3];
-            resBuffer[5] = cmdBuffer[4];
-            resBuffer[6] = cmdBuffer[5];
+            resBuffer[3] = drive[cmdDrive()].idTrack;
+            resBuffer[4] = drive[cmdDrive()].idHead;
+            resBuffer[5] = drive[cmdDrive()].idSector;
+            resBuffer[6] = drive[cmdDrive()].idSize;
             interrupt = true;
             state = FDCState::FDC_STATE_RESULT;
         }
