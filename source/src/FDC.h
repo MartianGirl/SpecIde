@@ -116,8 +116,17 @@ class DiskDrive
             if (disk)
             {
                 size_t tr = (images[currentImage].numSides * cylinder);
-                for (size_t ii = 0; ii < images[currentImage].numSides; ++ii)
-                    next[ii] = sector % images[currentImage].tracks[tr + ii].numSectors;
+
+                if (images[currentImage].tracks[tr].trackSize)
+                {
+                    for (size_t ii = 0; ii < images[currentImage].numSides; ++ii)
+                        next[ii] = sector % images[currentImage].tracks[tr + ii].numSectors;
+                }
+                else
+                {
+                    next[0] = 0;
+                    next[1] = 0;
+                }
             }
 
             if (next[0] == 0)
@@ -190,14 +199,28 @@ class DiskDrive
                 size_t tr = (images[currentImage].numSides * cylinder) + head;
                 size_t sc = sector % images[currentImage].tracks[tr].numSectors;
 
-                idTrack = images[currentImage].tracks[tr].sectors[sc].track;
-                idHead = images[currentImage].tracks[tr].sectors[sc].side;
-                idSector = images[currentImage].tracks[tr].sectors[sc].sectorId;
-                idSize = images[currentImage].tracks[tr].sectors[sc].sectorSize;
-                statusReg1 = images[currentImage].tracks[tr].sectors[sc].fdcStatusReg1;
-                statusReg2 = images[currentImage].tracks[tr].sectors[sc].fdcStatusReg2;
-                buffer = images[currentImage].tracks[tr].sectors[sc].data;
-                length = images[currentImage].tracks[tr].sectors[sc].sectorLength;
+                // If the track is formatted, read.
+                if (images[currentImage].tracks[tr].trackSize)
+                {
+                    idTrack = images[currentImage].tracks[tr].sectors[sc].track;
+                    idHead = images[currentImage].tracks[tr].sectors[sc].side;
+                    idSector = images[currentImage].tracks[tr].sectors[sc].sectorId;
+                    idSize = images[currentImage].tracks[tr].sectors[sc].sectorSize;
+                    statusReg1 = images[currentImage].tracks[tr].sectors[sc].fdcStatusReg1;
+                    statusReg2 = images[currentImage].tracks[tr].sectors[sc].fdcStatusReg2;
+                    buffer = images[currentImage].tracks[tr].sectors[sc].data;
+                    length = images[currentImage].tracks[tr].sectors[sc].sectorLength;
+                }
+                else
+                {
+                    idTrack = rand() & 0xFF;
+                    idHead = rand() & 0xFF;
+                    idSector = rand() & 0xFF;
+                    idSize = rand() & 0xFF;
+                    statusReg1 = 0x25;  // 00100101: DE, ND, MAM
+                    statusReg2 = 0x20;  // 00110011: DD, WC, BC, MD
+                    length = 0;
+                }
             }
             // Should plan for no disk or wrong head.
         }
@@ -808,6 +831,15 @@ class FDC
             cout << "Seeking sector: " << hex << setw(2) << setfill('0');
             cout << firstSector;
             drive[cmdDrive()].readSector(cmdHead());
+
+            // Check No Data (ND) condition.
+            if (((drive[cmdDrive()].statusReg1) & 0x04) == 0x04)
+            {
+                cout << "... Track contains no data." << endl;
+                drive[cmdDrive()].hole = 2;
+                return false;
+            }
+
             currSector = drive[cmdDrive()].idSector;
             cout << " Found sector: " << currSector << endl;
 
@@ -847,6 +879,7 @@ class FDC
             // Double check that the intended data length does
             // not exceed the ACTUAL data length.
             size_t actlen = drive[cmdDrive()].length;
+            size_t seclen = drive[cmdDrive()].idSize;
             if (actlen != 0 && outlen > actlen)
             {
                 outlen = actlen;
@@ -861,22 +894,32 @@ class FDC
                     if (actlen != 0)
                         outlen = actlen;
 
-                    if (((sReg[1] & 0x20) == 0x20)          // CRC error in ID.
-                            || ((sReg[2] & 0x20) == 0x20))  // CRC error in DATA.
+                    if (((sReg[1] & 0x20) == 0x20)  // CRC error in ID.
+                            || ((sReg[2] & 0x20) == 0x20)) // CRC error in DATA.
                     {
                         cout << " CRC error..." << endl;
                         // Return first 0x150 bytes from disk
-                        if (outlen > 0x150)
+                        if (seclen < 6)
+                        {
+                            if (outlen > 0x150)
+                            {
+                                copy(&drive[cmdDrive()].buffer[0],
+                                        &drive[cmdDrive()].buffer[0x150],
+                                        &dataBuffer[dataBytes]);
+                                dataBytes += 0x150;
+                                outlen -= 0x150;
+                            }
+                            // Return random data.
+                            for (size_t ii = 0; ii < outlen; ++ii)
+                                dataBuffer[dataBytes++] = rand() & 0xFF;
+                        }
+                        else
                         {
                             copy(&drive[cmdDrive()].buffer[0],
-                                    &drive[cmdDrive()].buffer[0x150],
+                                    &drive[cmdDrive()].buffer[outlen],
                                     &dataBuffer[dataBytes]);
-                            dataBytes += 0x150;
-                            outlen -= 0x150;
+                            dataBytes += outlen;
                         }
-                        // Return random data.
-                        for (size_t ii = 0; ii < outlen; ++ii)
-                            dataBuffer[dataBytes++] = rand() & 0xFF;
                         sReg[0] |= 0x40;    // 01000HUU - AT
                     }
                     else
@@ -896,21 +939,36 @@ class FDC
             }
 
             // Now we check CRC.
-            if ((sReg[1] & 0x20) == 0x20)   // CRC error in ID.
+            if (seclen < 6)
             {
-                cout << " - CRC error reading ID..." << endl;
-                // Return random data.
-                for (size_t ii = 0; ii < outlen; ++ii)
-                    dataBuffer[dataBytes++] = rand() & 0xFF;
-                sReg[0] |= 0x40;    // 01000HUU - AT
-                return true;
+                if ((sReg[1] & 0x20) == 0x20)   // CRC error in ID.
+                    cout << " - CRC error reading ID..." << endl;
+                else if ((sReg[2] & 0x20) == 0x20)   // CRC error in Data.
+                    cout << " - CRC error reading DATA..." << endl;
+
+                if (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20))
+                {
+                    // Return random data.
+                    if (outlen > 0x150)
+                    {
+                        copy(&drive[cmdDrive()].buffer[0],
+                                &drive[cmdDrive()].buffer[0x150],
+                                &dataBuffer[dataBytes]);
+                        dataBytes += 0x150;
+                        outlen -= 0x150;
+                    }
+                    // Return random data.
+                    for (size_t ii = 0; ii < outlen; ++ii)
+                        dataBuffer[dataBytes++] = rand() & 0xFF;
+                    sReg[0] |= 0x40;    // 01000HUU - AT
+                    return true;
+                }
             }
-            else if ((sReg[2] & 0x20) == 0x20)   // CRC error in Data.
+            else
             {
-                cout << " - CRC error reading DATA..." << endl;
-                // Return random data.
-                for (size_t ii = 0; ii < outlen; ++ii)
-                    dataBuffer[dataBytes++] = rand() & 0xFF;
+                copy(&drive[cmdDrive()].buffer[0],
+                        &drive[cmdDrive()].buffer[outlen],
+                        &dataBuffer[dataBytes]);
                 dataBytes += outlen;
                 sReg[0] |= 0x40;    // 01000HUU - AT
                 return true;
@@ -1003,16 +1061,18 @@ class FDC
                 if (ddmFound == false) sReg[1] |= 0x04;     // xxxxx1xx - ND
                 sReg[0] |= 0x40;    // 01000HUU - AT
             }
+            else
+            {
+                // Check for Missing Address Mark or No Data.
+                if ((sReg[1] & 0x01) == 0x00)
+                    idmFound = true;
 
-            // Check for Missing Address Mark or No Data.
-            if ((sReg[1] & 0x01) == 0x00)
-                idmFound = true;
+                if ((sReg[1] & 0x04) == 0x00)
+                    ddmFound = true;
 
-            if ((sReg[1] & 0x04) == 0x00)
-                ddmFound = true;
-
-            if (idmFound == false)
-                return;
+                if (idmFound == false)
+                    return;
+            }
 
             resBuffer[0] = sReg[0];
             resBuffer[1] = sReg[1];

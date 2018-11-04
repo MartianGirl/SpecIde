@@ -96,10 +96,11 @@ class DSKFile
 
                         sectors.clear();
                         uint_fast32_t dataOffset = offset + 0x100;
-                        for (uint_fast8_t sector = 0; sector < numSectors; ++sector)
+
+                        for (size_t ss = 0; ss < numSectors; ++ss)
                         {
                             Sector s;
-                            uint_fast32_t secEntry = offset + 0x18 + 8 * sector;
+                            uint_fast32_t secEntry = offset + 0x18 + 8 * ss;
 
                             s.track = data[secEntry];
                             s.side = data[secEntry + 1];
@@ -110,6 +111,15 @@ class DSKFile
                             s.sectorLength =
                                 data[secEntry + 7] * 0x100
                                 + data[secEntry + 6];
+
+                            cout << hex << setw(2) << setfill('0');
+                            cout << "Sector: " << ss << " ";
+                            cout << "Track: " << static_cast<size_t>(s.track) << " ";
+                            cout << "Id: " << static_cast<size_t>(s.sectorId) << " ";
+                            cout << "Size: " << static_cast<size_t>(0x80 << s.sectorSize) << " ";
+                            cout << "ST1: " << static_cast<size_t>(s.fdcStatusReg1) << " ";
+                            cout << "ST2: " << static_cast<size_t>(s.fdcStatusReg2) << " ";
+                            cout << "Actual len: " << static_cast<size_t>(s.sectorLength) << endl;
 
                             uint_fast16_t size =
                                 (s.sectorLength) ? s.sectorLength : (0x80 << s.sectorSize);
@@ -283,10 +293,20 @@ class DSKFile
             tracks.assign(totalTracks, Track());
 
             uint_fast32_t offset = 0x100;
-            for (uint_fast16_t track = 0; track < totalTracks; ++track)
+            for (size_t tt = 0; tt < totalTracks; ++tt)
             {
-                tracks[track].load(fileData, offset);
-                offset += trackSizeTable[track];
+                tracks[tt].trackSize = trackSizeTable[tt];
+
+                if (trackSizeTable[tt])
+                    tracks[tt].load(fileData, offset);
+
+                offset += trackSizeTable[tt];
+
+                cout << hex << setw(2) << setfill('0');
+                cout << "Track: " << static_cast<size_t>(tracks[tt].trackNumber) << " ";
+                cout << "Sector size: " << static_cast<size_t>(0x80 << tracks[tt].sectorSize) << " ";
+                cout << "Num sectors: " << static_cast<size_t>(tracks[tt].numSectors) << " ";
+                cout << "Track size: " << static_cast<size_t>(tracks[tt].trackSize) << endl;
             }
         }
 };
