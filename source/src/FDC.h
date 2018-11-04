@@ -868,8 +868,21 @@ class FDC
             cout << hex << setw(2) << setfill('0') << currSector;
             cout << " (Skip bit " << (skipDeletedBit ? "ON)" : "OFF) ... ");
 
-            // We determine how many bytes to read from this sector.
+            // Now we look at the data mark.
+            if ((sReg[2] & 0x40) == (useDeletedDAM ? 0x00 : 0x40))
+                return readDeletedDataOp();
+            else
+                return readRegularDataOp();
+        }
+
+        bool readRegularDataOp()
+        {
+            bool error = false;
+
+            size_t actlen = drive[cmdDrive()].length;
             size_t outlen;
+
+            // We determine how many bytes to read from this sector.
             if (cmdBuffer[5] == 0x00)   // Use SL as sector length.
                 outlen = cmdBuffer[8];
             else                        // Use SZ as sector length.
@@ -878,116 +891,75 @@ class FDC
 
             // Double check that the intended data length does
             // not exceed the ACTUAL data length.
-            size_t actlen = drive[cmdDrive()].length;
-            size_t seclen = drive[cmdDrive()].idSize;
             if (actlen != 0 && outlen > actlen)
             {
                 outlen = actlen;
                 cout << "Warning: Sector only has " << outlen << " bytes." << endl;
             }
 
-            // Now we look at the data mark.
-            if ((sReg[2] & 0x40) == (useDeletedDAM ? 0x00 : 0x40))
-            {
-                if (!skipDeletedBit)  // Not skipping: Dump entire sector and finish.
-                {
-                    if (actlen != 0)
-                        outlen = actlen;
+            vector<uint8_t> buf(outlen, 0x00);
+            buf.assign(&drive[cmdDrive()].buffer[0],
+                    &drive[cmdDrive()].buffer[outlen]);
 
-                    if (((sReg[1] & 0x20) == 0x20)  // CRC error in ID.
-                            || ((sReg[2] & 0x20) == 0x20)) // CRC error in DATA.
-                    {
-                        cout << " CRC error..." << endl;
-                        // Return first 0x150 bytes from disk
-                        if (seclen < 6)
-                        {
-                            if (outlen > 0x150)
-                            {
-                                copy(&drive[cmdDrive()].buffer[0],
-                                        &drive[cmdDrive()].buffer[0x150],
-                                        &dataBuffer[dataBytes]);
-                                dataBytes += 0x150;
-                                outlen -= 0x150;
-                            }
-                            // Return random data.
-                            for (size_t ii = 0; ii < outlen; ++ii)
-                                dataBuffer[dataBytes++] = rand() & 0xFF;
-                        }
-                        else
-                        {
-                            copy(&drive[cmdDrive()].buffer[0],
-                                    &drive[cmdDrive()].buffer[outlen],
-                                    &dataBuffer[dataBytes]);
-                            dataBytes += outlen;
-                        }
-                        sReg[0] |= 0x40;    // 01000HUU - AT
-                    }
-                    else
-                    {
-                        copy(&drive[cmdDrive()].buffer[0],
-                                &drive[cmdDrive()].buffer[outlen],
-                                &dataBuffer[dataBytes]);
-                        dataBytes += outlen;
-                    }
-                    drive[cmdDrive()].readSector(cmdHead());
-                    resSector = drive[cmdDrive()].idSector;
-                    resTrack = drive[cmdDrive()].idTrack;
-                    return true;
-                }
-                else        // Skipping.
-                    return false;
-            }
-
-            // Now we check CRC.
-            if (seclen < 6)
+            if ((drive[cmdDrive()].idSize < 6)
+                    && (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20)))
             {
-                if ((sReg[1] & 0x20) == 0x20)   // CRC error in ID.
-                    cout << " - CRC error reading ID..." << endl;
-                else if ((sReg[2] & 0x20) == 0x20)   // CRC error in Data.
-                    cout << " - CRC error reading DATA..." << endl;
-
-                if (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20))
-                {
-                    // Return random data.
-                    if (outlen > 0x150)
-                    {
-                        copy(&drive[cmdDrive()].buffer[0],
-                                &drive[cmdDrive()].buffer[0x150],
-                                &dataBuffer[dataBytes]);
-                        dataBytes += 0x150;
-                        outlen -= 0x150;
-                    }
-                    // Return random data.
-                    for (size_t ii = 0; ii < outlen; ++ii)
-                        dataBuffer[dataBytes++] = rand() & 0xFF;
-                    sReg[0] |= 0x40;    // 01000HUU - AT
-                    return true;
-                }
-            }
-            else
-            {
-                copy(&drive[cmdDrive()].buffer[0],
-                        &drive[cmdDrive()].buffer[outlen],
-                        &dataBuffer[dataBytes]);
-                dataBytes += outlen;
+                cout << " - CRC error..." << endl;
+                // Return random data.
+                buf.back() = rand() & 0xFF;
                 sReg[0] |= 0x40;    // 01000HUU - AT
-                return true;
+                error = true;
             }
 
             // If we reach here, it is a normal data read. Dump and continue.
-            copy(&drive[cmdDrive()].buffer[0],
-                    &drive[cmdDrive()].buffer[outlen],
-                    &dataBuffer[dataBytes]);
+            copy(buf.begin(), buf.end(), &dataBuffer[dataBytes]);
             dataBytes += outlen;
 
-            // Now we check EOT.
-            bool end = (currSector == lastSector);
+            // Update result info.
             drive[cmdDrive()].readSector(cmdHead());
-            resSector = end ? 1 : drive[cmdDrive()].idSector;
+            resSector = drive[cmdDrive()].idSector;
             resTrack = drive[cmdDrive()].idTrack;
-            resTrack += end ? 1 : 0;
-            return end;
+
+            return (error || currSector == lastSector);
         }
+
+        bool readDeletedDataOp()
+        {
+            // We determine how many bytes to read from this sector.
+            size_t outlen;
+            size_t actlen = drive[cmdDrive()].length;
+
+            if (skipDeletedBit)
+                return false;
+
+            // Not skipping: Dump entire sector and finish.
+            if (actlen != 0)
+                outlen = actlen;
+            else
+                outlen = 0x80 << drive[cmdDrive()].idSize;
+
+            vector<uint8_t> buf(outlen, 0x00);
+            buf.assign(&drive[cmdDrive()].buffer[0],
+                    &drive[cmdDrive()].buffer[outlen]);
+
+            if ((drive[cmdDrive()].idSize < 6)
+                    && (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20)))
+            {
+                cout << " CRC error..." << endl;
+                buf.back() = rand() & 0xFF;
+                sReg[0] |= 0x40;    // 01000HUU - AT
+            }
+
+            copy(buf.begin(), buf.end(), &dataBuffer[dataBytes]);
+            dataBytes += outlen;
+
+            drive[cmdDrive()].readSector(cmdHead());
+            resSector = drive[cmdDrive()].idSector;
+            resTrack = drive[cmdDrive()].idTrack;
+
+            return true;
+        }
+
 
         void readCmd()
         {

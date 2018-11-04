@@ -115,6 +115,7 @@ class DSKFile
                             cout << hex << setw(2) << setfill('0');
                             cout << "Sector: " << ss << " ";
                             cout << "Track: " << static_cast<size_t>(s.track) << " ";
+                            cout << "Side: " << static_cast<size_t>(s.side) << " ";
                             cout << "Id: " << static_cast<size_t>(s.sectorId) << " ";
                             cout << "Size: " << static_cast<size_t>(0x80 << s.sectorSize) << " ";
                             cout << "ST1: " << static_cast<size_t>(s.fdcStatusReg1) << " ";
