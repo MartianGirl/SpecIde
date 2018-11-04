@@ -1101,7 +1101,7 @@ class FDC
             }
         }
 
-        size_t cmdDrive() { return (cmdBuffer[1] & 0x03); }
+        size_t cmdDrive() { return (cmdBuffer[1] & 0x01); } // 2 drives max.
         size_t cmdHead() { return ((cmdBuffer[1] & 0x04) >> 2); }
         void checkDrive()
         {
