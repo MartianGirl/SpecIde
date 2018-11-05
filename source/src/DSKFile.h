@@ -305,8 +305,10 @@ class DSKFile
 
                 cout << hex << setw(2) << setfill('0');
                 cout << "Track: " << static_cast<size_t>(tracks[tt].trackNumber) << " ";
+                cout << "Side: " << static_cast<size_t>(tracks[tt].sideNumber) << " ";
                 cout << "Sector size: " << static_cast<size_t>(0x80 << tracks[tt].sectorSize) << " ";
                 cout << "Num sectors: " << static_cast<size_t>(tracks[tt].numSectors) << " ";
+                cout << "Gap length: " << static_cast<size_t>(tracks[tt].gapLength) << " ";
                 cout << "Track size: " << static_cast<size_t>(tracks[tt].trackSize) << endl;
             }
         }
