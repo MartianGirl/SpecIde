@@ -95,12 +95,12 @@ class DSKFile
                             return false;
 
                         sectors.clear();
-                        uint_fast32_t dataOffset = offset + 0x100;
+                        size_t dataOffset = offset + 0x100;
 
                         for (size_t ss = 0; ss < numSectors; ++ss)
                         {
                             Sector s;
-                            uint_fast32_t secEntry = offset + 0x18 + 8 * ss;
+                            size_t secEntry = offset + 0x18 + 8 * ss;
 
                             s.track = data[secEntry];
                             s.side = data[secEntry + 1];
@@ -122,13 +122,16 @@ class DSKFile
                             cout << "ST2: " << static_cast<size_t>(s.fdcStatusReg2) << " ";
                             cout << "Actual len: " << static_cast<size_t>(s.sectorLength) << endl;
 
-                            uint_fast16_t size =
+                            size_t size =
                                 (s.sectorLength) ? s.sectorLength : (0x80 << s.sectorSize);
 
-                            s.data.assign(
+                            if ((dataOffset + size) <= data.size())
+                            {
+                                s.data.assign(
                                         &data[dataOffset],
                                         &data[dataOffset + size]);
-                            dataOffset += size;
+                                dataOffset += size;
+                            }
 
                             sectors.push_back(s);
                         }
@@ -204,16 +207,16 @@ class DSKFile
                 if (equal(&stdMagic[0x00], &stdMagic[0x08], fileData.begin()))
                 {
                     stdMagicOk = true;
-                    printf("%s: Standard DSK image detected.\n", fileName.c_str());
+                    cout << fileName << ": Standard DSK image detected." << endl;
                 }
                 else if (equal(&extMagic[0x00], &extMagic[0x08], fileData.begin()))
                 {
                     extMagicOk = true;
-                    printf("%s: Extended DSK image detected.\n", fileName.c_str());
+                    cout << fileName << ": Extended DSK image detected." << endl;
                 }
                 else
                 {
-                    printf("%s: Not a DSK image file.\n", fileName.c_str());
+                    cout << fileName << ": Not a DSK image file." << endl;
                 }
             }
 
@@ -232,31 +235,31 @@ class DSKFile
         {
             copy(&fileData[0x22], &fileData[0x30], creator);
             creator[14] = creator[15] = '\0';
-            printf("Creator: %s\n", creator);
+            cout << "Creator: " << creator << endl;
         }
 
         void readNumberOfTracks()
         {
             numTracks = fileData[0x30];
-            printf("Number of tracks: %u\n", numTracks);
+            cout << "Number of tracks: " << numTracks << endl;
         }
 
         void readNumberOfSides()
         {
             numSides = fileData[0x31];
-            printf("Number of sides: %u\n", numSides);
+            cout << "Number of sides " << numSides << endl;
         }
 
         void buildTrackSizeTable()
         {
-            uint_fast16_t totalTracks = numTracks * numSides;
+            size_t totalTracks = numTracks * numSides;
             trackSizeTable.clear();
 
             // We can't have so many tracks that we exceed the
             // Disk Information Block size.
             if (extMagicOk && (totalTracks * 2 + 0x34) > 0x100)
             {
-                printf("Invalid DSK file: Too many tracks.\n");
+                cout << "Invalid DSK file: Too many tracks." << endl;
                 validFile = false;
                 return;
             }
@@ -277,23 +280,24 @@ class DSKFile
                 }
             }
 
-            for (unsigned int track = 0; track < numTracks; ++track)
+            for (size_t track = 0; track < numTracks; ++track)
             {
-                for (unsigned int side = 0; side < numSides; ++side)
+                for (size_t side = 0; side < numSides; ++side)
                 {
-                    unsigned int size = trackSizeTable[track * numSides + side];
-                    printf("Track %u, Side %u size: %u    ", track, side, size);
+                    size_t size = trackSizeTable[track * numSides + side];
+                    cout << "Track " << track << ", Side " << side;
+                    cout << " size: " << size << "    ";
                 }
-                printf("\n");
+                cout << endl;
             }
         }
 
         void loadTracks()
         {
-            uint_fast16_t totalTracks = numTracks * numSides;
+            size_t totalTracks = numTracks * numSides;
             tracks.assign(totalTracks, Track());
 
-            uint_fast32_t offset = 0x100;
+            size_t offset = 0x100;
             for (size_t tt = 0; tt < totalTracks; ++tt)
             {
                 tracks[tt].trackSize = trackSizeTable[tt];
