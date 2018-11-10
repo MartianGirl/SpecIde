@@ -264,7 +264,7 @@ void Screen::updateMenu()
     ss << "F1:    This help." << endl;
     ss << "F2:    Fullscreen." << endl;
     ss << "S-F2:  Antialiasing." << endl;
-    ss << "F4:    Toggle PSG: AY-3-8912/YM2914." << endl;
+    ss << "F4:    Toggle PSG: AY-3-8912/YM-2149." << endl;
     ss << "F5:    Reset." << endl;
     ss << "F7:    Add FlashTAP to SAVE buffer." << endl;
     ss << "S-F7:  Clear SAVE buffer." << endl;

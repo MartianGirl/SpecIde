@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
             cout << "--pad|--nopad          Map pad extra buttons to keys." << endl;
             cout << "--psg|--nopsg          Emulate AY chip in 48K Spectrum." << endl;
             cout << "--abc|--acb|--mono     Select stereo mode." << endl;
-            cout << "--ay|--ym              Select PSG: AY-3-8912/YM2914." << endl;
+            cout << "--ay|--ym              Select PSG: AY-3-8912/YM-2149." << endl;
             cout << "--sd1                  Emulate Dinamic SD1 dongle." << endl;
             cout << endl;
             cout << "Video options:" << endl;

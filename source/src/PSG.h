@@ -317,7 +317,7 @@ class PSG
 
                 for (uint_fast8_t i = 0; i < 32; ++i)
                     out[i] = arr[i];
-                cout << "PSG is YM-2914." << endl;
+                cout << "PSG is YM-2149." << endl;
             }
         }
 
