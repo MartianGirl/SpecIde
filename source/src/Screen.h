@@ -58,7 +58,7 @@ class Screen : public GraphicWindow
         bool fullscreen;
         bool doubleScanMode;
         bool smooth;
-        bool squareRootDac;
+        bool aychip;
         bool syncToVideo;
 
         size_t scale;

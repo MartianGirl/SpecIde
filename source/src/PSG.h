@@ -23,8 +23,8 @@
 
 #include <cassert>
 #include <cstdint>
+#include <iostream>
 // #include <random>
-#include <cstdio>
 
 #include "SoundDefs.h"
 
@@ -51,7 +51,7 @@ class PSG
         int volumeA, volumeB, volumeC;
         int waveA, waveB, waveC;
 
-        int out[16];
+        int out[32];
 
         int envSlope, envLevel;
         int envStep;
@@ -76,12 +76,10 @@ class PSG
             noise(0), seed(0xFFFF),
             volumeA(0), volumeB(0), volumeC(0),
             waveA(1), waveB(1), waveC(1),
-            out{0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
-                0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF},
-            // out{0x000, 0x020, 0x033, 0x04d, 0x078, 0x0ca, 0x133, 0x239,
-            //    0x286, 0x45d, 0x606, 0x76e, 0x97b, 0xb8a, 0xdc5, 0xfff},
-            // out{0x000, 0x034, 0x04B, 0x06E, 0x0A3, 0x0F2, 0x151, 0x227,
-            //    0x289, 0x414, 0x5B2, 0x726, 0x906, 0xB55, 0xD79, 0xFFF},
+            out{0x000, 0x000, 0x013, 0x013, 0x049, 0x049, 0x0A4, 0x0A4,
+                0x124, 0x124, 0x1C7, 0x1C7, 0x290, 0x290, 0x37C, 0x37C,
+                0x48D, 0x48D, 0x5C3, 0x5C3, 0x71C, 0x71C, 0x89B, 0x89B,
+                0xA3D, 0xA3D, 0xC04, 0xC04, 0xDF0, 0xDF0, 0xFFF, 0xFFF},
             envSlope(1), envLevel(0), envStep(0), envHold(false),
             envA(false), envB(false), envC(false),
             counterA(0), counterB(0), counterC(0), counterN(0), counterE(0),
@@ -132,19 +130,19 @@ class PSG
 
                     case 010:
                         // Update volume for channel A.
-                        volumeA = r[8] & 0x0F;
+                        volumeA = 2 * (r[8] & 0x0F) + 1;
                         envA = ((r[8] & 0x10) == 0x10);
                         break;
 
                     case 011:
                         // Update volume for channel B.
-                        volumeB = r[9] & 0x0F;
+                        volumeB = 2 * (r[9] & 0x0F) + 1;
                         envB = ((r[9] & 0x10) == 0x10);
                         break;
 
                     case 012:
                         // Update volume for channel C.
-                        volumeC = r[10] & 0x0F;
+                        volumeC = 2 * (r[10] & 0x0F) + 1;
                         envC = ((r[10] & 0x10) == 0x10);
                         break;
 
@@ -161,7 +159,7 @@ class PSG
                         if (r[13] != 0xFF)
                         {
                             envSlope = ((r[13] & 0x04) == 0x00) ? -1 : 1;
-                            envLevel = ((r[13] & 0x04) == 0x00) ? 0x0F : 0x00;
+                            envLevel = ((r[13] & 0x04) == 0x00) ? 0x1F : 0x00;
                             restartEnvelope();
                         }
                         break;
@@ -198,13 +196,13 @@ class PSG
                     counterN = 0;
                 }
 
-                if (++counterE >= 2 * periodE)
+                if (++counterE >= periodE)
                 {
                     counterE = 0;
 
                     if (envHold == false)
                     {
-                        if (++envStep >= 0x10)   // We've finished a cycle.
+                        if (++envStep >= 0x20)   // We've finished a cycle.
                         {
                             envStep = 0x00;
 
@@ -228,7 +226,7 @@ class PSG
                             }
                         }
 
-                        envLevel = (envSlope > 0) ? envStep : (0x0F - envStep);
+                        envLevel = (envSlope > 0) ? envStep : (0x1F - envStep);
                     }
                 }
             }
@@ -295,28 +293,31 @@ class PSG
             }
         }
 
-        void setVolumeLevels(bool sqr)
+        void setVolumeLevels(bool ay)
         {
-            if (sqr)    // Square root (quieter)
+            if (ay)    // AY-3-8912
             {
-                int arr[16] = {
-                // These are my values.
-                    0x000, 0x012, 0x049, 0x0A4, 0x123, 0x1C7, 0x28F, 0x37C,
-                    0x48D, 0x5C2, 0x71C, 0x89A, 0xA3D, 0xC04, 0xDEF, 0xFFF};
-                // These values are from Lion 17 and V_Soft.
-                // 0x000, 0x020, 0x033, 0x04d, 0x078, 0x0ca, 0x133, 0x239,
-                // 0x286, 0x45d, 0x606, 0x76e, 0x97b, 0xb8a, 0xdc5, 0xfff};
-                // These are from Hacker Kay
-                // 0x000, 0x034, 0x04B, 0x06E, 0x0A3, 0x0F2, 0x151, 0x227,
-                // 0x289, 0x414, 0x5B2, 0x726, 0x906, 0xB55, 0xD79, 0xFFF};
+                int arr[32] = {
+                    0x000, 0x000, 0x013, 0x013, 0x049, 0x049, 0x0A4, 0x0A4,
+                    0x124, 0x124, 0x1C7, 0x1C7, 0x290, 0x290, 0x37C, 0x37C,
+                    0x48D, 0x48D, 0x5C3, 0x5C3, 0x71C, 0x71C, 0x89B, 0x89B,
+                    0xA3D, 0xA3D, 0xC04, 0xC04, 0xDF0, 0xDF0, 0xFFF, 0xFFF};
 
-                for (uint_fast8_t i = 0; i < 16; ++i)
+                for (uint_fast8_t i = 0; i < 32; ++i)
                     out[i] = arr[i];
+                cout << "PSG is AY-3-8912." << endl;
             }
-            else        // Linear (louder)
+            else        // YM-2149
             {
-                for (uint_fast8_t i = 0; i < 16; ++i)
-                    out[i] = static_cast<int>(0x222 * i);
+                int arr[32] = {
+                    0x000, 0x005, 0x012, 0x027, 0x045, 0x06B, 0x09A, 0x0D1,
+                    0x111, 0x15A, 0x1AB, 0x204, 0x266, 0x2D1, 0x344, 0x3BF,
+                    0x443, 0x4D0, 0x565, 0x603, 0x6A9, 0x758, 0x80F, 0x8CF,
+                    0x997, 0xA68, 0xB41, 0xC23, 0xD0D, 0xE00, 0xEFC, 0xFFF};
+
+                for (uint_fast8_t i = 0; i < 32; ++i)
+                    out[i] = arr[i];
+                cout << "PSG is YM-2914." << endl;
             }
         }
 

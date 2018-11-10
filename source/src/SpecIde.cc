@@ -65,10 +65,10 @@ int main(int argc, char* argv[])
             cout << "Options:" << endl;
             cout << endl;
             cout << "Model selection options:" << endl;
-            cout << "--issue2:              Spectrum 48K, issue 2." << endl;
-            cout << "--issue3 | --48:       Spectrum 48K, issue 3. (Default)" << endl;
-            cout << "--128:                 Spectrum 128K." << endl;
-            cout << "--128sp:               Spectrum 128K. (Spanish ROM)" << endl;
+            cout << "--issue2               Spectrum 48K, issue 2." << endl;
+            cout << "--issue3 | --48        Spectrum 48K, issue 3. (Default)" << endl;
+            cout << "--128                  Spectrum 128K." << endl;
+            cout << "--128sp                Spectrum 128K. (Spanish ROM)" << endl;
             cout << "--plus2                Spectrum +2." << endl;
             cout << "--plus2sp              Spectrum +2. (Spanish ROM)" << endl;
             cout << "--plus2a               Spectrum +2A." << endl;
@@ -77,12 +77,13 @@ int main(int argc, char* argv[])
             // cout << "--plus3sp             Spectrum +3. (Spanish ROM)" << endl;
             cout << endl;
             cout << "Hardware options:" << endl;
-            cout << "--kempston:            Map joystick to Kempston interface." << endl;
-            cout << "--sinclair:            Map joystick to Sinclair interface. (Default)" << endl;
-            cout << "--pad|--nopad:         Map pad extra buttons to keys." << endl;
-            cout << "--psg|--nopsg:         Emulate AY chip in 48K Spectrum." << endl;
-            cout << "--abc|--acb|--mono:    Select stereo mode." << endl;
-            cout << "--sd1:                 Emulate Dinamic SD1 dongle." << endl;
+            cout << "--kempston             Map joystick to Kempston interface." << endl;
+            cout << "--sinclair             Map joystick to Sinclair interface. (Default)" << endl;
+            cout << "--pad|--nopad          Map pad extra buttons to keys." << endl;
+            cout << "--psg|--nopsg          Emulate AY chip in 48K Spectrum." << endl;
+            cout << "--abc|--acb|--mono     Select stereo mode." << endl;
+            cout << "--ay|--ym              Select PSG: AY-3-8912/YM2914." << endl;
+            cout << "--sd1                  Emulate Dinamic SD1 dongle." << endl;
             cout << endl;
             cout << "Video options:" << endl;
             cout << "--fullscreen           Start SpecIde in full screen mode." << endl;
@@ -166,10 +167,10 @@ int main(int argc, char* argv[])
         if (*it == "--mono")
             options["stereo"] = "none";
 
-        if (*it == "--psglinear")
-            options["psgtype"] = "linear";
-        if (*it == "--psglog")
-            options["psgtype"] = "logarithmic";
+        if (*it == "--ay")
+            options["psgtype"] = "ay";
+        if (*it == "--ym")
+            options["psgtype"] = "ym";
 
         // FlashTAP
         if (*it == "--noflashtap")
@@ -315,8 +316,9 @@ int main(int argc, char* argv[])
         screen.stereo = 0;
     cout << "Stereo type: " << options["stereo"] << endl;
 
-    screen.spectrum.psg.setVolumeLevels(options["psgtype"] != "linear");
-    cout << "PSG DAC type: " << options["psgtype"] << endl;
+    screen.aychip = (options["psgtype"] != "ym");
+    screen.spectrum.psg.setVolumeLevels(screen.aychip);
+    cout << "PSG chip: " << options["psgtype"] << endl;
 
     // Screen settings.
     if (options["scanmode"] == "scanlines")
@@ -452,7 +454,7 @@ void readOptions(map<string, string>& options)
     options["sound"] = "yes";
     options["forcepsg"] = "no";
     options["stereo"] = "none";
-    options["psgtype"] = "logarithmic";
+    options["psgtype"] = "ay";
     options["scanmode"] = "normal";
     options["fullscreen"] = "no";
     options["flashtap"] = "no";

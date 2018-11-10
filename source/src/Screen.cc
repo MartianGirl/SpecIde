@@ -41,7 +41,7 @@ Screen::Screen(size_t scale) :
     GraphicWindow(704 * scale, 576 * scale),
     skip(ULA_CLOCK_48 / SAMPLE_RATE),
     fullscreen(false), doubleScanMode(false), smooth(false),
-    squareRootDac(true),
+    aychip(true),
     syncToVideo(false),
     scale(scale),
     xSize(360), ySize(625),
@@ -264,6 +264,7 @@ void Screen::updateMenu()
     ss << "F1:    This help." << endl;
     ss << "F2:    Fullscreen." << endl;
     ss << "S-F2:  Antialiasing." << endl;
+    ss << "F4:    Toggle PSG: AY-3-8912/YM2914." << endl;
     ss << "F5:    Reset." << endl;
     ss << "F7:    Add FlashTAP to SAVE buffer." << endl;
     ss << "S-F7:  Clear SAVE buffer." << endl;
@@ -399,6 +400,12 @@ void Screen::pollEvents()
                             fullscreen = !fullscreen;
                             reopenWindow(fullscreen);
                             setFullScreen(fullscreen);
+                        }
+                        break;
+                    case Keyboard::F4:
+                        {
+                            aychip = !aychip;
+                            spectrum.psg.setVolumeLevels(aychip);
                         }
                         break;
                     case Keyboard::F6:
