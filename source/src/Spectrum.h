@@ -44,7 +44,7 @@ class Spectrum
         // Required hardware.
         Z80 z80;
         ULA ula;
-        PSG psg;
+        PSG psg[8];
         FDC fdc;
         Buzzer buzzer;
 
@@ -58,7 +58,8 @@ class Spectrum
         bool spectrumPlus2;
         bool spectrumPlus2A;
         bool spectrumPlus3;
-        bool hasPsg;
+        bool psgPresent[8];
+        size_t currentPsg;
         uint_fast8_t idle;
         uint_fast16_t paging;
         uint_fast16_t mask;
@@ -73,6 +74,9 @@ class Spectrum
 
         bool set48;
         bool rom48;
+
+        size_t count = 0;
+        size_t wait = 0;
 
         // This one is going to be called at 7MHz, and is going to:
         // 1. Clock the ULA. This starts the ULA counters.
@@ -103,6 +107,15 @@ class Spectrum
         {
             scr = &ram[page * (2 << 14)];
         }
+
+        void psgRead();
+        void psgWrite();
+        void psgAddr();
+        void psgReset();
+        void psgClock();
+        void psgSample();
+        void psgChip(bool play);
+        void psgPlaySound(bool play);
 };
 
 // vim: et:sw=4:ts=4

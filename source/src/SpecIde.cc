@@ -164,6 +164,14 @@ int main(int argc, char* argv[])
             options["stereo"] = "abc";
         if (*it == "--acb")
             options["stereo"] = "acb";
+        if (*it == "--turbo")
+            options["stereo"] = "turbo";
+        if (*it == "--turboacb")
+            options["stereo"] = "turboacb";
+        if (*it == "--turboabc")
+            options["stereo"] = "turboabc";
+        if (*it == "--turbonext")
+            options["stereo"] = "turbonext";
         if (*it == "--mono")
             options["stereo"] = "none";
 
@@ -298,26 +306,58 @@ int main(int argc, char* argv[])
     cout << "Play tape sound: " << options["tapesound"] << endl;
 
     screen.spectrum.buzzer.playSound = (options["sound"] != "no");
-    screen.spectrum.psg.playSound = (options["sound"] != "no");
+    screen.spectrum.psgPlaySound((options["sound"] != "no"));
     cout << "Play sound: " << options["sound"] << endl;
 
     if (options["forcepsg"] == "yes")
     {
-        screen.spectrum.psg.playSound = true;
-        screen.spectrum.hasPsg = true;
+        screen.spectrum.psgPlaySound(true);
+        screen.spectrum.psgPresent[0] = true;
         cout << "Enable AY interface on 128K ports: " << options["forcepsg"] << endl;
     }
 
+    if (options["stereo"] == "turbo"
+            || options["stereo"] == "turboacb"
+            || options["stereo"] == "turboabc")
+    {
+        screen.spectrum.psgPlaySound(true);
+        screen.spectrum.psgPresent[0] = true;
+        screen.spectrum.psgPresent[1] = true;
+        cout << "TurboSound (2 PSGs) active." << endl;
+    }
+
+    if (options["stereo"] == "turbonext")
+    {
+        screen.spectrum.psgPlaySound(true);
+        screen.spectrum.psgPresent[0] = true;
+        screen.spectrum.psgPresent[1] = true;
+        screen.spectrum.psgPresent[2] = true;
+        screen.spectrum.psgPresent[3] = true;
+        screen.spectrum.psgPresent[4] = true;
+        screen.spectrum.psgPresent[5] = true;
+        screen.spectrum.psgPresent[6] = true;
+        screen.spectrum.psgPresent[7] = true;
+        cout << "Generalized NEXT sound (8 PSGs) active." << endl;
+    }
+
     if (options["stereo"] == "acb")
-        screen.stereo = 1;
+        screen.stereo = StereoMode::STEREO_ACB;
     else if (options["stereo"] == "abc")
-        screen.stereo = 2;
+        screen.stereo = StereoMode::STEREO_ABC;
+    else if (options["stereo"] == "turbo")
+        screen.stereo = StereoMode::STEREO_TURBO_MONO;
+    else if (options["stereo"] == "turboabc")
+        screen.stereo = StereoMode::STEREO_TURBO_ABC;
+    else if (options["stereo"] == "turboacb")
+        screen.stereo = StereoMode::STEREO_TURBO_ACB;
+    else if (options["stereo"] == "turbonext")
+        screen.stereo = StereoMode::STEREO_NEXT;
     else
-        screen.stereo = 0;
+        screen.stereo = StereoMode::STEREO_MONO;
     cout << "Stereo type: " << options["stereo"] << endl;
 
     screen.aychip = (options["psgtype"] != "ym");
-    screen.spectrum.psg.setVolumeLevels(screen.aychip);
+    screen.spectrum.psgChip(screen.aychip);
     cout << "PSG chip: " << options["psgtype"] << endl;
 
     // Screen settings.

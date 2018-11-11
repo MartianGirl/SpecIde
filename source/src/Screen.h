@@ -41,6 +41,17 @@
 #include <queue>
 #include <vector>
 
+enum class StereoMode
+{
+    STEREO_MONO,
+    STEREO_ABC,
+    STEREO_ACB,
+    STEREO_TURBO_MONO,
+    STEREO_TURBO_ABC,
+    STEREO_TURBO_ACB,
+    STEREO_NEXT
+};
+
 class Screen : public GraphicWindow
 {
     public:
@@ -51,7 +62,9 @@ class Screen : public GraphicWindow
         SoundChannel channel;
 
         int samples[2];
-        uint_fast32_t skip;
+        size_t skip;
+        size_t count;
+        bool tapeTick = false;
 
         bool done = false;
         bool menu = false;
@@ -74,7 +87,7 @@ class Screen : public GraphicWindow
 
         sf::Font zxFont;
 
-        uint_fast8_t stereo;
+        StereoMode stereo;
 
         bool pad;
 

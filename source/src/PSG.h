@@ -58,10 +58,16 @@ class PSG
         bool envHold;
         bool envA, envB, envC;
 
-        uint_fast32_t counterA, counterB, counterC, counterN, counterE;
-        uint_fast32_t periodA, periodB, periodC, periodN, periodE;
+        size_t counterA, counterB, counterC, counterN, counterE;
+        size_t periodA, periodB, periodC, periodN, periodE;
+
+        size_t count = 0;
+        size_t index = 0;
+        size_t wait = 0;
 
         bool playSound;
+        bool lchan = false;
+        bool rchan = false;
 
         // random_device rd;
         // mt19937 gen;
@@ -89,9 +95,6 @@ class PSG
 
         void clock()
         {
-            static uint_fast32_t count = 0;
-            static uint_fast16_t index = 0;
-
             ++count;
 
             a = latch_a;
@@ -271,8 +274,6 @@ class PSG
 
         void write(uint_fast8_t byte)
         {
-            static uint_fast8_t wait = 0;
-
             if (++wait == 5)
             {
                 wait = 0;
@@ -283,8 +284,6 @@ class PSG
 
         void addr(uint_fast8_t byte)
         {
-            static uint_fast8_t wait = 0;
-
             if (++wait == 5)
             {
                 wait = 0;
@@ -305,7 +304,6 @@ class PSG
 
                 for (uint_fast8_t i = 0; i < 32; ++i)
                     out[i] = arr[i];
-                cout << "PSG is AY-3-8912." << endl;
             }
             else        // YM-2149
             {
@@ -317,7 +315,6 @@ class PSG
 
                 for (uint_fast8_t i = 0; i < 32; ++i)
                     out[i] = arr[i];
-                cout << "PSG is YM-2149." << endl;
             }
         }
 

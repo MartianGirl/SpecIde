@@ -26,7 +26,8 @@ Spectrum::Spectrum() :
     spectrumPlus2(false),
     spectrumPlus2A(false),
     spectrumPlus3(false),
-    hasPsg(false),
+    psgPresent{false, false, false, false, false, false, false, false},
+    currentPsg(0),
     idle(0xFF),
     paging(0x0020), mask(0x0001),
     contendedPage{false, true, false, false},
@@ -155,7 +156,7 @@ void Spectrum::set128K()
     spectrumPlus2 = false;
     spectrumPlus2A = false;
     spectrumPlus3 = false;
-    hasPsg = true;
+    psgPresent[0] = true;
     mask = 0x0001;
     reset();
 }
@@ -166,7 +167,7 @@ void Spectrum::setPlus2()
     spectrumPlus2 = true;
     spectrumPlus2A = false;
     spectrumPlus3 = false;
-    hasPsg = true;
+    psgPresent[0] = true;
     mask = 0x0001;
     reset();
 }
@@ -177,7 +178,7 @@ void Spectrum::setPlus2A()
     spectrumPlus2 = false;
     spectrumPlus2A = true;
     spectrumPlus3 = false;
-    hasPsg = true;
+    psgPresent[0] = true;
     mask = 0x0004;
     reset();
 }
@@ -188,7 +189,7 @@ void Spectrum::setPlus3()
     spectrumPlus2 = false;
     spectrumPlus2A = true;
     spectrumPlus3 = true;
-    hasPsg = true;
+    psgPresent[0] = true;
     mask = 0x0004;
     reset();
 }
@@ -213,8 +214,6 @@ void Spectrum::clock()
     bool wr_ = ((z80.c & SIGNAL_WR_) == SIGNAL_WR_);
     size_t memArea = (z80.a & 0xC000) >> 14;
     bool snow = contendedPage[memArea] && ula.snow && !as_;
-
-    static uint_fast8_t count = 0;
 
     // First we clock the ULA. This generates video and contention signals.
     // We need to provide the ULA with the Z80 address and control buses.
@@ -246,9 +245,8 @@ void Spectrum::clock()
 
     if ((++count & 0x03) == 0x00)
     {
-        count = 0;
         buzzer.update();
-        if (hasPsg) psg.clock();
+        psgClock();
     }
 
     // For the moment, I'm clocking this at 7MHz. In a real Spectrum +3, the
@@ -333,7 +331,7 @@ void Spectrum::clock()
             }
 
             // AY-3-8912 ports.
-            if (hasPsg)
+            if (psgPresent[0])  // If there are PSGs, there is a PSG 0
             {
                 switch (z80.a & 0xF002)
                 {
@@ -342,9 +340,9 @@ void Spectrum::clock()
                     case 0xA000: // fall-through
                     case 0xB000: // 0xBFFD
                         if (wr_ == false)
-                            psg.write(z80.d);
+                            psgWrite();
                         else if (rd_ == false && spectrumPlus2A == true)
-                            z80.d = psg.read();
+                            psgRead();
                         break;
 
                     case 0xC000: // fall-through
@@ -352,9 +350,17 @@ void Spectrum::clock()
                     case 0xE000: // fall-through
                     case 0xF000: // 0xFFFD
                         if (wr_ == false)
-                            psg.addr(z80.d);
+                        {
+                            if ((z80.d & 0x98) == 0x98)
+                            {
+                                currentPsg = (~z80.d) & 0x07;
+                                psg[currentPsg].lchan = ((z80.d & 0x40) == 0x40);
+                                psg[currentPsg].rchan = ((z80.d & 0x20) == 0x20);
+                            }
+                            psgAddr();
+                        }
                         else if (rd_ == false)
-                            z80.d = psg.read();
+                            psgRead();
                         break;
 
                     default:
@@ -401,12 +407,10 @@ void Spectrum::clock()
 
 void Spectrum::updatePage(uint_fast8_t reg)
 {
-    static size_t wrWait = 0;
-
-    ++wrWait;
-    if (wrWait == 5)
+    ++wait;
+    if (wait == 5)
     {
-        wrWait = 0;
+        wait = 0;
         if ((paging & 0x0020) == 0x0000)
         {
             if (reg == 1)
@@ -469,7 +473,7 @@ void Spectrum::reset()
 {
     ula.reset();    // Synchronize clock level.
     z80.reset();
-    psg.reset();
+    psgReset();
     fdc.reset();
 
     if (spectrum128K)
@@ -496,4 +500,81 @@ void Spectrum::reset()
     }
 }
 
+void Spectrum::psgRead()
+{
+    if (psgPresent[currentPsg])
+        z80.d = psg[currentPsg].read();
+}
+
+void Spectrum::psgWrite()
+{
+    if (psgPresent[currentPsg])
+        psg[currentPsg].write(z80.d);
+}
+
+void Spectrum::psgAddr()
+{
+    if (psgPresent[currentPsg])
+        psg[currentPsg].addr(z80.d);
+}
+
+void Spectrum::psgReset()
+{
+    psg[0].reset();
+    psg[1].reset();
+    psg[2].reset();
+    psg[3].reset();
+    psg[4].reset();
+    psg[5].reset();
+    psg[6].reset();
+    psg[7].reset();
+}
+
+void Spectrum::psgClock()
+{
+    if (psgPresent[0]) psg[0].clock();
+    if (psgPresent[1]) psg[1].clock();
+    if (psgPresent[2]) psg[2].clock();
+    if (psgPresent[3]) psg[3].clock();
+    if (psgPresent[4]) psg[4].clock();
+    if (psgPresent[5]) psg[5].clock();
+    if (psgPresent[6]) psg[6].clock();
+    if (psgPresent[7]) psg[7].clock();
+}
+
+void Spectrum::psgPlaySound(bool play)
+{
+    psg[0].playSound = play;
+    psg[1].playSound = play;
+    psg[2].playSound = play;
+    psg[3].playSound = play;
+    psg[4].playSound = play;
+    psg[5].playSound = play;
+    psg[6].playSound = play;
+    psg[7].playSound = play;
+}
+
+void Spectrum::psgSample()
+{
+    if (psgPresent[0]) psg[0].sample();
+    if (psgPresent[1]) psg[1].sample();
+    if (psgPresent[2]) psg[2].sample();
+    if (psgPresent[3]) psg[3].sample();
+    if (psgPresent[4]) psg[4].sample();
+    if (psgPresent[5]) psg[5].sample();
+    if (psgPresent[6]) psg[6].sample();
+    if (psgPresent[7]) psg[7].sample();
+}
+
+void Spectrum::psgChip(bool aychip)
+{
+    psg[0].setVolumeLevels(aychip);
+    psg[1].setVolumeLevels(aychip);
+    psg[2].setVolumeLevels(aychip);
+    psg[3].setVolumeLevels(aychip);
+    psg[4].setVolumeLevels(aychip);
+    psg[5].setVolumeLevels(aychip);
+    psg[6].setVolumeLevels(aychip);
+    psg[7].setVolumeLevels(aychip);
+}
 // vim: et:sw=4:ts=4

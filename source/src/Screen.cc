@@ -40,13 +40,14 @@ using namespace sf;
 Screen::Screen(size_t scale) :
     GraphicWindow(704 * scale, 576 * scale),
     skip(ULA_CLOCK_48 / SAMPLE_RATE),
+    count(skip),
     fullscreen(false), doubleScanMode(false), smooth(false),
     aychip(true),
     syncToVideo(false),
     scale(scale),
     xSize(360), ySize(625),
     delay(19968),
-    stereo(0),
+    stereo(StereoMode::STEREO_MONO),
     pad(false),
     flashTap(false)
 {
@@ -161,9 +162,6 @@ void Screen::run()
 
 void Screen::clock()
 {
-    static uint_fast32_t count = skip;
-    static bool tapeTick = false;
-
     spectrum.clock();
 
     if (tape.playing)
@@ -178,34 +176,95 @@ void Screen::clock()
     {
         count = skip;
         spectrum.buzzer.sample();
-        spectrum.psg.sample();
+        spectrum.psgSample();
+
+        int l = spectrum.buzzer.signal;
+        int r = spectrum.buzzer.signal;
 
         switch (stereo)
         {
-            case 1: // ACB
-                channel.push(
-                        spectrum.buzzer.signal
-                        + spectrum.psg.channelA + spectrum.psg.channelC,
-                        spectrum.buzzer.signal
-                        + spectrum.psg.channelB + spectrum.psg.channelC);
+            case StereoMode::STEREO_ACB: // ACB
+                l += spectrum.psg[0].channelA;
+                l += spectrum.psg[0].channelC;
+                r += spectrum.psg[0].channelB;
+                r += spectrum.psg[0].channelC;
                 break;
 
-            case 2: // ABC
-                channel.push(
-                        spectrum.buzzer.signal
-                        + spectrum.psg.channelA + spectrum.psg.channelB,
-                        spectrum.buzzer.signal
-                        + spectrum.psg.channelC + spectrum.psg.channelB);
+            case StereoMode::STEREO_ABC: // ABC
+                l += spectrum.psg[0].channelA;
+                l += spectrum.psg[0].channelB;
+                r += spectrum.psg[0].channelB;
+                r += spectrum.psg[0].channelC;
                 break;
 
-            default:
-                channel.push(
-                        spectrum.buzzer.signal + spectrum.psg.channelA
-                        + spectrum.psg.channelB + spectrum.psg.channelC,
-                        spectrum.buzzer.signal + spectrum.psg.channelA
-                        + spectrum.psg.channelB + spectrum.psg.channelC);
+            case StereoMode::STEREO_TURBO_MONO: // TurboSound with 2 PSGs, mono.
+                l += spectrum.psg[0].channelA;
+                l += spectrum.psg[0].channelB;
+                l += spectrum.psg[0].channelC;
+                r += spectrum.psg[0].channelA;
+                r += spectrum.psg[0].channelB;
+                r += spectrum.psg[0].channelC;
+
+                l += spectrum.psg[1].channelA;
+                l += spectrum.psg[1].channelB;
+                l += spectrum.psg[1].channelC;
+                r += spectrum.psg[1].channelA;
+                r += spectrum.psg[1].channelB;
+                r += spectrum.psg[1].channelC;
+                break;
+
+            case StereoMode::STEREO_TURBO_ACB:  // TurboSound with 2 PSGs, ACB
+                l += spectrum.psg[0].channelA;
+                l += spectrum.psg[0].channelC;
+                r += spectrum.psg[0].channelB;
+                r += spectrum.psg[0].channelC;
+
+                l += spectrum.psg[1].channelA;
+                l += spectrum.psg[1].channelC;
+                r += spectrum.psg[1].channelB;
+                r += spectrum.psg[1].channelC;
+                break;
+
+            case StereoMode::STEREO_TURBO_ABC: // TurboSound with 2 PSGs, ABC
+                l += spectrum.psg[0].channelA;
+                l += spectrum.psg[0].channelB;
+                r += spectrum.psg[0].channelB;
+                r += spectrum.psg[0].channelC;
+
+                l += spectrum.psg[1].channelA;
+                l += spectrum.psg[1].channelB;
+                r += spectrum.psg[1].channelB;
+                r += spectrum.psg[1].channelC;
+                break;
+
+            case StereoMode::STEREO_NEXT:
+                for (size_t ii = 0; ii < 8; ++ii)
+                {
+                    if (spectrum.psg[ii].lchan)
+                    {
+                        l += spectrum.psg[ii].channelA >> 1;
+                        l += spectrum.psg[ii].channelB >> 1;
+                        l += spectrum.psg[ii].channelC >> 1;
+                    }
+                    if (spectrum.psg[ii].rchan)
+                    {
+                        r += spectrum.psg[ii].channelA >> 1;
+                        r += spectrum.psg[ii].channelB >> 1;
+                        r += spectrum.psg[ii].channelC >> 1;
+                    }
+                }
+                break;
+
+            default:    // mono, all channels go through both sides.
+                l += spectrum.psg[0].channelA;
+                l += spectrum.psg[0].channelB;
+                l += spectrum.psg[0].channelC;
+                r += spectrum.psg[0].channelA;
+                r += spectrum.psg[0].channelB;
+                r += spectrum.psg[0].channelC;
                 break;
         }
+        channel.push(l, r);
     }
 }
 
@@ -405,7 +464,7 @@ void Screen::pollEvents()
                     case Keyboard::F4:
                         {
                             aychip = !aychip;
-                            spectrum.psg.setVolumeLevels(aychip);
+                            spectrum.psgChip(aychip);
                         }
                         break;
                     case Keyboard::F6:
@@ -447,7 +506,7 @@ void Screen::pollEvents()
                         else
                         {
                             spectrum.buzzer.playSound = !spectrum.buzzer.playSound;
-                            spectrum.psg.playSound = !spectrum.psg.playSound;
+                            spectrum.psgPlaySound(!spectrum.psg[0].playSound);
                         }
                         break;
                     case Keyboard::F5:
@@ -833,7 +892,7 @@ void Screen::texture(size_t x, size_t y)
 
 void Screen::set128K(bool is128K)
 {
-    skip = ((is128K) ? ULA_CLOCK_128 : ULA_CLOCK_48) / SAMPLE_RATE + 1;
+    count = skip = ((is128K) ? ULA_CLOCK_128 : ULA_CLOCK_48) / SAMPLE_RATE + 1;
     cout << "Skipping " << skip << " samples." << endl;
     delay = is128K ? 19992 : 19968;
 }
