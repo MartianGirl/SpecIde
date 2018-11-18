@@ -418,10 +418,13 @@ int main(int argc, char* argv[])
                     DSKFile dsk;
                     dsk.load(*it);
 
-                    screen.spectrum.fdc.drive[0].images.push_back(dsk);
-                    screen.spectrum.fdc.drive[0].imagenames.push_back(*it);
-                    screen.spectrum.fdc.drive[0].disk = true;
-                    cout << "Adding DSK file: " << *it << endl;
+                    if (dsk.validFile)
+                    {
+                        screen.spectrum.fdc.drive[0].images.push_back(dsk);
+                        screen.spectrum.fdc.drive[0].imagenames.push_back(*it);
+                        screen.spectrum.fdc.drive[0].disk = true;
+                        cout << "Adding DSK file: " << *it << endl;
+                    }
                 }
                 break;
 
