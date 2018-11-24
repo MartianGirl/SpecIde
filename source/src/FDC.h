@@ -88,6 +88,7 @@ class DiskDrive
         bool disk = false;      // Disk is in drive
         bool writeprot = false; // Disk is write protected
         bool ready = false;     // Drive exists
+        bool motor = false;     // Drive motor is spinning.
 
         size_t cylinder = 0;
         size_t sector = 0;
@@ -112,7 +113,7 @@ class DiskDrive
          */
         void nextSector()
         {
-            ++sector;
+            if (motor) ++sector;
             if (disk)
             {
                 size_t tr = (images[currentImage].numSides * cylinder);
@@ -351,8 +352,8 @@ class FDC
         FDCMode mode;
         FDCAccess stage;
 
-        DiskDrive drive[4];
-        uint_fast8_t presCylNum[4];
+        DiskDrive drive[2];
+        uint_fast8_t presCylNum[2];
         uint_fast8_t sReg[4];
 
         size_t lastDrive;
@@ -373,8 +374,8 @@ class FDC
         bool useDma;
 
         FDC() :
-            drive{DiskDrive(true), DiskDrive(false), DiskDrive(false), DiskDrive(false)},
-            presCylNum{0, 0, 0, 0} {}
+            drive{DiskDrive(true), DiskDrive(false)},
+            presCylNum{0, 0} {}
 
         void clock()
         {
@@ -1290,6 +1291,14 @@ class FDC
                 sReg[0] |= 0xC4;    // 01..1HUU: AT, NR
                 stage = FDCAccess::FDC_ACCESS_END;
             }
+        }
+
+        void motor(bool status)
+        {
+            if (drive[0].motor != status)
+                cout << "Disk drive motor is " << (status ? "ON" : "OFF") << "..." << endl;
+            for (size_t ii = 0; ii < 2; ++ii)
+                drive[ii].motor = status;
         }
 };
 

@@ -418,6 +418,9 @@ void Spectrum::updatePage(uint_fast8_t reg)
             else
                 paging = z80.d | (paging & 0xFF00);
 
+            // Update +3 disk drive(s) motor status.
+            fdc.motor(spectrumPlus3 && ((paging & 0x0800) == 0x0800));
+
             if ((paging & 0x0100) == 0x0100)    // Special paging mode.
             {
                 switch (paging & 0x0600)
