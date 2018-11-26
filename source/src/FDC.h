@@ -51,9 +51,10 @@ enum class FDCMode
 
 enum class FDCAccess
 {
+    FDC_ACCESS_LOAD,
     FDC_ACCESS_SEEK,
     FDC_ACCESS_DATA,
-    FDC_ACCESS_END,
+    FDC_ACCESS_UNLOAD,
     FDC_ACCESS_NONE
 };
 
@@ -75,7 +76,7 @@ constexpr uint_fast8_t SREG_DIO = 1 << 6;
 constexpr uint_fast8_t SREG_RQM = 1 << 7;
 
 
-constexpr uint_fast32_t DELAY_10us = 70;    // @ 7MHz
+constexpr size_t DELAY_1ms = 7000;          // @ 7MHz
 
 class DiskDrive
 {
@@ -102,6 +103,7 @@ class DiskDrive
         uint_fast8_t statusReg1;
         uint_fast8_t statusReg2;
         uint_fast16_t length;
+        uint_fast8_t filler;
         vector<uint8_t> buffer;
 
         vector<DSKFile> images;
@@ -211,6 +213,7 @@ class DiskDrive
                     statusReg2 = images[currentImage].tracks[tr].sectors[sc].fdcStatusReg2;
                     buffer = images[currentImage].tracks[tr].sectors[sc].data;
                     length = images[currentImage].tracks[tr].sectors[sc].sectorLength;
+                    filler = images[currentImage].tracks[tr].fillerByte;
                 }
                 else
                 {
@@ -221,6 +224,7 @@ class DiskDrive
                     statusReg1 = 0x25;  // 00100101: DE, ND, MAM
                     statusReg2 = 0x20;  // 00110011: DD, WC, BC, MD
                     length = 0;
+                    filler = 0;
                 }
             }
             // Should plan for no disk or wrong head.
@@ -347,6 +351,10 @@ class FDC
 
         bool idmFound;
         bool ddmFound;
+        bool loaded = false;
+        bool unload = false;
+        size_t loadTimer = 0;
+        size_t unloadTimer = 0;
 
         FDCState state;
         FDCMode mode;
@@ -366,7 +374,7 @@ class FDC
         size_t resSector = 0x00;
         size_t resSize = 0x00;
 
-        uint_fast32_t delay = 0;
+        size_t delay = 0;
 
         size_t headUnloadTime;
         size_t stepRateTime;
@@ -384,6 +392,18 @@ class FDC
                 --delay;
                 statusReg &= SREG_RQM;
                 return;
+            }
+
+            if (loaded && unload)
+            {
+                --unloadTimer;
+                if (unloadTimer == 0)
+                {
+                    unloadTimer = headUnloadTime;
+                    loaded = false;
+                    unload = false;
+                    cout << "Head unloaded..." << endl;
+                }
             }
 
             switch (state)
@@ -598,6 +618,7 @@ class FDC
                 case 0x02:  // Read Track (Diagnostic)
                     cout << "Read Track (Diagnostic): " << endl;
                     cout << "Drive: " << hex << setw(2) << setfill('0') << cmdDrive() << " ";
+                    cout << "Drive: " << hex << setw(2) << setfill('0') << static_cast<size_t>(cmdBuffer[0] & 0x03) << " ";
                     cout << "Head: " << hex << setw(2) << setfill('0') << cmdHead() << " ";
                     cout << "Track: " << hex << setw(2) << setfill('0');
                     cout << static_cast<size_t>(cmdBuffer[2]) << " ";
@@ -620,7 +641,7 @@ class FDC
                     lastSector = cmdBuffer[6];
                     currSector = 0;
                     drive[cmdDrive()].hole = 0;
-                    stage = FDCAccess::FDC_ACCESS_SEEK;
+                    stage = FDCAccess::FDC_ACCESS_LOAD;
                     break;
 
                 case 0x03:  // Specify SPD/DMA
@@ -640,6 +661,7 @@ class FDC
                 case 0x06:  // Read sector(s)
                     cout << "Read sector(s): " << endl;
                     cout << "Drive: " << hex << setw(2) << setfill('0') << cmdDrive() << " ";
+                    cout << "Drive: " << hex << setw(2) << setfill('0') << static_cast<size_t>(cmdBuffer[0] & 0x03) << " ";
                     cout << "Head: " << hex << setw(2) << setfill('0') << cmdHead() << " ";
                     cout << "Track: " << hex << setw(2) << setfill('0');
                     cout << static_cast<size_t>(cmdBuffer[2]) << " ";
@@ -660,7 +682,7 @@ class FDC
                     firstSector = cmdBuffer[4];
                     lastSector = cmdBuffer[6];
                     useDeletedDAM = false;
-                    stage = FDCAccess::FDC_ACCESS_SEEK;
+                    stage = FDCAccess::FDC_ACCESS_LOAD;
                     break;
 
                 case 0x07:  // Recalibrate and seek physical track 0
@@ -685,6 +707,7 @@ class FDC
                 case 0x0C:  // Read deleted sector(s)
                     cout << "Read deleted sector(s): " << endl;
                     cout << "Drive: " << hex << setw(2) << setfill('0') << cmdDrive() << " ";
+                    cout << "Drive: " << hex << setw(2) << setfill('0') << static_cast<size_t>(cmdBuffer[0] & 0x03) << " ";
                     cout << "Head: " << hex << setw(2) << setfill('0') << cmdHead() << " ";
                     cout << "Track: " << hex << setw(2) << setfill('0');
                     cout << static_cast<size_t>(cmdBuffer[2]) << " ";
@@ -705,7 +728,7 @@ class FDC
                     firstSector = cmdBuffer[4];
                     lastSector = cmdBuffer[6];
                     useDeletedDAM = true;
-                    stage = FDCAccess::FDC_ACCESS_SEEK;
+                    stage = FDCAccess::FDC_ACCESS_LOAD;
                     break;
 
                 case 0x0D:  // Format track
@@ -737,9 +760,9 @@ class FDC
                     break;
 
                 case 0x03:  // Specify SPD/DMA
-                    headUnloadTime = cmdBuffer[1] & 0x0F;
-                    stepRateTime = (cmdBuffer[1] & 0xF0) >> 4;
-                    headLoadTime = cmdBuffer[2] >> 1;
+                    headUnloadTime = (cmdBuffer[1] & 0x0F) * 32 * DELAY_1ms;
+                    stepRateTime = ((cmdBuffer[1] & 0xF0) >> 4) * 32 * DELAY_1ms;
+                    headLoadTime = (cmdBuffer[2] >> 1) * 4 * DELAY_1ms;
                     useDma = ((cmdBuffer[2] & 0x01) == 0x00);
                     cout << "Head Unload Time: ";
                     cout << hex << setw(2) << setfill('0') << headUnloadTime << endl;
@@ -748,6 +771,8 @@ class FDC
                     cout << "Step Rate Time: ";
                     cout << hex << setw(2) << setfill('0') << stepRateTime << endl;
                     cout << "Use DMA: " << (useDma ? "TRUE" : "FALSE") << endl;
+                    loadTimer = headLoadTime;
+                    unloadTimer = headUnloadTime;
                     reset();
                     break;
 
@@ -866,9 +891,7 @@ class FDC
             if (((drive[cmdDrive()].statusReg1) & 0x04) == 0x04)
             {
                 // Maybe check the whole track?
-                // cout << "... Track contains no data." << endl;
                 drive[cmdDrive()].nextSector();
-                // drive[cmdDrive()].hole = 2;
                 return false;
             }
 
@@ -925,19 +948,25 @@ class FDC
                 outlen = 0x80 << cmdBuffer[5];
             cout << " (" << dec << outlen << " bytes)" << endl;
 
-            vector<uint8_t> buf(outlen, 0x00);
+            cout << outlen << " - " << actlen << endl;
 
             if (actlen == 0)
                 actlen = outlen;
-            buf.assign(&drive[cmdDrive()].buffer[0],
-                    &drive[cmdDrive()].buffer[actlen]);
 
-            if ((drive[cmdDrive()].idSize < 6)
-                    && (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20)))
+            vector<uint8_t> buf(&drive[cmdDrive()].buffer[0],
+                    &drive[cmdDrive()].buffer[actlen]);
+            if (actlen < outlen)
+            {
+                for (size_t ii = actlen; ii < outlen; ++ii)
+                    buf.push_back(rand() & 0xFF);
+            }
+
+            if (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20))
             {
                 cout << " - CRC error..." << endl;
                 // Return random data.
-                buf.back() = rand() & 0xFF;
+                for (size_t ii = 0; ii < 128; ++ii)
+                    buf[buf.size() - ii - 1] = rand() & 0xFF;
                 sReg[0] |= 0x40;    // 01000HUU - AT
                 error = true;
             }
@@ -952,6 +981,9 @@ class FDC
             resSector = drive[cmdDrive()].idSector;
             resSize = drive[cmdDrive()].idSize;
 
+            // resTrack += (currSector == lastSector) ? 1 : 0;
+            // resSector = (currSector == lastSector) ? 1 : resSector + 1;
+
             return (error || currSector == lastSector);
         }
 
@@ -961,6 +993,8 @@ class FDC
             size_t outlen = 0x80 << drive[cmdDrive()].idSize;
             size_t actlen = drive[cmdDrive()].length;
 
+            cout << outlen << " - " << actlen << endl;
+
             if (skipDeletedBit)
                 return false;
 
@@ -968,15 +1002,19 @@ class FDC
             if (actlen == 0)
                 actlen = outlen;
 
-            vector<uint8_t> buf(outlen, 0x00);
-            buf.assign(&drive[cmdDrive()].buffer[0],
+            vector<uint8_t> buf(&drive[cmdDrive()].buffer[0],
                     &drive[cmdDrive()].buffer[actlen]);
+            if (actlen < outlen)
+            {
+                for (size_t ii = actlen; ii < outlen; ++ii)
+                    buf.push_back(rand() & 0xFF);
+            }
 
-            if ((drive[cmdDrive()].idSize < 6)
-                    && (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20)))
+            if (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20))
             {
                 cout << " CRC error..." << endl;
-                buf.back() = rand() & 0xFF;
+                for (size_t ii = 0; ii < 128; ++ii)
+                    buf[buf.size() - ii - 1] = rand() & 0xFF;
                 sReg[0] |= 0x40;    // 01000HUU - AT
             }
 
@@ -995,6 +1033,11 @@ class FDC
         {
             switch (stage)
             {
+                case FDCAccess::FDC_ACCESS_LOAD:
+                    if (headLoadOp())
+                        stage = FDCAccess::FDC_ACCESS_SEEK;
+                    break;
+
                 // Seek stage. Here we read all the sectors in the track,
                 // until we find one whose ID matches command parameter R.
                 // If during the seek we find the hole mark twice, this means
@@ -1009,13 +1052,13 @@ class FDC
                         dataBytes = 0;
                         sReg[1] |= 0x04;    // xxxxx1xx - ND
                         sReg[0] |= 0x40;    // 01000HUU - AT
-                        stage = FDCAccess::FDC_ACCESS_END;
+                        stage = FDCAccess::FDC_ACCESS_UNLOAD;
                     }
                     break;
 
                 case FDCAccess::FDC_ACCESS_DATA:
                     if (readOp())
-                        stage = FDCAccess::FDC_ACCESS_END;
+                        stage = FDCAccess::FDC_ACCESS_UNLOAD;
                     else
                     {
                         // Sectors can be unordered.
@@ -1024,7 +1067,7 @@ class FDC
                     }
                     break;
 
-                case FDCAccess::FDC_ACCESS_END:
+                case FDCAccess::FDC_ACCESS_UNLOAD:
                     resBuffer[0] = sReg[0];
                     resBuffer[1] = sReg[1];
                     resBuffer[2] = sReg[2];
@@ -1032,6 +1075,7 @@ class FDC
                     resBuffer[4] = resHead;;
                     resBuffer[5] = resSector;
                     resBuffer[6] = resSize;
+
 
                     if (dataBytes)
                     {
@@ -1041,6 +1085,7 @@ class FDC
                     else
                         state = FDCState::FDC_STATE_RESULT;
                     interrupt = true;
+                    unload = true;
                     break;
 
                 case FDCAccess::FDC_ACCESS_NONE:
@@ -1062,6 +1107,11 @@ class FDC
                 if (idmFound == false) sReg[1] |= 0x01;     // xxxxxxx1 - MAD
                 if (ddmFound == false) sReg[1] |= 0x04;     // xxxxx1xx - ND
                 sReg[0] |= 0x40;    // 01000HUU - AT
+
+                drive[cmdDrive()].idTrack = rand() & 0xFF;
+                drive[cmdDrive()].idHead = rand() & 0xFF;
+                drive[cmdDrive()].idSector = rand() & 0xFF;
+                drive[cmdDrive()].idSize = rand() & 0xFF;
             }
             else
             {
@@ -1072,7 +1122,7 @@ class FDC
                 if ((sReg[1] & 0x04) == 0x00)
                     ddmFound = true;
 
-                if (idmFound == false)
+                if (idmFound == false || ddmFound == false)
                     return;
             }
 
@@ -1087,10 +1137,27 @@ class FDC
             state = FDCState::FDC_STATE_RESULT;
         }
 
+        bool headLoadOp()
+        {
+            --loadTimer;
+            if (loadTimer == 0)
+            {
+                loadTimer = headLoadTime;
+                loaded = true;
+                cout << "Head loaded..." << endl;
+            }
+
+            return loaded;
+        }
+
         void readTrackCmd()
         {
             switch (stage)
             {
+                case FDCAccess::FDC_ACCESS_LOAD:
+                    if (headLoadOp())
+                        stage = FDCAccess::FDC_ACCESS_SEEK;
+                    break;
                 // Seek stage. Here we try to find the disk hole.
                 case FDCAccess::FDC_ACCESS_SEEK:
                     if (findHoleOp())
@@ -1101,10 +1168,10 @@ class FDC
 
                 case FDCAccess::FDC_ACCESS_DATA:
                     if (readTrackOp())
-                        stage = FDCAccess::FDC_ACCESS_END;
+                        stage = FDCAccess::FDC_ACCESS_UNLOAD;
                     break;
 
-                case FDCAccess::FDC_ACCESS_END:
+                case FDCAccess::FDC_ACCESS_UNLOAD:
                     if (idmFound == false)
                         sReg[1] |= 0x04;
                     if (ddmFound == false)
@@ -1128,6 +1195,7 @@ class FDC
                     }
                     else
                         state = FDCState::FDC_STATE_RESULT;
+                    unload = true;
                     interrupt = true;
                     break;
 
@@ -1289,7 +1357,7 @@ class FDC
             {
                 sReg[0] = cmdBuffer[0];
                 sReg[0] |= 0xC4;    // 01..1HUU: AT, NR
-                stage = FDCAccess::FDC_ACCESS_END;
+                stage = FDCAccess::FDC_ACCESS_UNLOAD;
             }
         }
 
