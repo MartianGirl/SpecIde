@@ -331,7 +331,7 @@ class FDC
 
         uint_fast8_t cmdBuffer[16];
         uint_fast8_t resBuffer[16];
-        uint_fast8_t dataBuffer[16384];
+        uint_fast8_t dataBuffer[65536];
 
         unsigned int cmdIndex;
         unsigned int resIndex;
@@ -948,25 +948,21 @@ class FDC
                 outlen = 0x80 << cmdBuffer[5];
             cout << " (" << dec << outlen << " bytes)" << endl;
 
-            cout << outlen << " - " << actlen << endl;
-
             if (actlen == 0)
                 actlen = outlen;
 
             vector<uint8_t> buf(&drive[cmdDrive()].buffer[0],
                     &drive[cmdDrive()].buffer[actlen]);
-            if (actlen < outlen)
-            {
-                for (size_t ii = actlen; ii < outlen; ++ii)
-                    buf.push_back(rand() & 0xFF);
-            }
+
+            for (size_t ii = actlen; ii < outlen; ++ii)
+                buf.push_back(rand() & 0xFF);
 
             if (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20))
             {
                 cout << " - CRC error..." << endl;
                 // Return random data.
-                for (size_t ii = 0; ii < 128; ++ii)
-                    buf[buf.size() - ii - 1] = rand() & 0xFF;
+                for (size_t ii = (buf.size() - 0x80); ii < buf.size(); ++ii)
+                    buf[ii] = rand() & 0xFF;
                 sReg[0] |= 0x40;    // 01000HUU - AT
                 error = true;
             }
@@ -981,8 +977,8 @@ class FDC
             resSector = drive[cmdDrive()].idSector;
             resSize = drive[cmdDrive()].idSize;
 
-            // resTrack += (currSector == lastSector) ? 1 : 0;
-            // resSector = (currSector == lastSector) ? 1 : resSector + 1;
+            resTrack += (currSector == lastSector) ? 1 : 0;
+            resSector = (currSector == lastSector) ? 1 : resSector + 1;
 
             return (error || currSector == lastSector);
         }
@@ -993,8 +989,6 @@ class FDC
             size_t outlen = 0x80 << drive[cmdDrive()].idSize;
             size_t actlen = drive[cmdDrive()].length;
 
-            cout << outlen << " - " << actlen << endl;
-
             if (skipDeletedBit)
                 return false;
 
@@ -1004,17 +998,15 @@ class FDC
 
             vector<uint8_t> buf(&drive[cmdDrive()].buffer[0],
                     &drive[cmdDrive()].buffer[actlen]);
-            if (actlen < outlen)
-            {
-                for (size_t ii = actlen; ii < outlen; ++ii)
-                    buf.push_back(rand() & 0xFF);
-            }
+
+            for (size_t ii = actlen; ii < outlen; ++ii)
+                buf.push_back(rand() & 0xFF);
 
             if (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20))
             {
                 cout << " CRC error..." << endl;
-                for (size_t ii = 0; ii < 128; ++ii)
-                    buf[buf.size() - ii - 1] = rand() & 0xFF;
+                for (size_t ii = (buf.size() - 0x80); ii < buf.size(); ++ii)
+                    buf[ii] = rand() & 0xFF;
                 sReg[0] |= 0x40;    // 01000HUU - AT
             }
 
