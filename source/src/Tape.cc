@@ -54,9 +54,6 @@ uint_fast8_t Tape::advance()
 
     if (pointer < pulseData.size())
     {
-        sample = pulseData[pointer];
-        ++pointer;
-
         // If we reach an index, we mark it.
         if (indexData.find(pointer) != indexData.end())
         {
@@ -79,6 +76,11 @@ uint_fast8_t Tape::advance()
             level = 0x00;
         }
 
+        if (pointer < pulseData.size())
+        {
+            sample = pulseData[pointer];
+            ++pointer;
+        }
     }
     else
         // If we reach the end of the tape, stop, rewind

@@ -199,7 +199,6 @@ void TZXFile::parse(
                     romData.push_back(byte);
 
                     bitsInByte = (ii == (dataLength - 1)) ? bitsInLastByte : 8;
-                    // byte &= (0xFF << (8 - bitsInByte));
                     for (size_t jj = 0; jj < bitsInByte; ++jj)
                     {
                         pulseData.insert(pulseData.end(),
@@ -265,7 +264,6 @@ void TZXFile::parse(
                     byte = fileData[pointer + 11 + ii];
 
                     bitsInByte = (ii == (dataLength - 1)) ? bitsInLastByte : 8;
-                    // byte &= (0xFF << (8 . bitsInByte));
                     for (size_t jj = 0; jj < bitsInByte; ++jj)
                     {
                         pulseData.insert(pulseData.end(),
@@ -671,8 +669,8 @@ void TZXFile::addPause(size_t pause, vector<size_t>& data)
     {
         if ((data.size() % 2) == 0)
         {
-            data.push_back(3500);
             data.push_back(3500 * (pause - 1));
+            data.push_back(3500);
         }
         else
         {
