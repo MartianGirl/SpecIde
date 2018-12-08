@@ -76,16 +76,12 @@ uint_fast8_t Tape::advance()
             level = 0x00;
         }
 
-        if (pointer < pulseData.size())
-        {
-            sample = pulseData[pointer];
-            ++pointer;
-        }
+        sample = pulseData[pointer];
+        ++pointer;
     }
     else
-        // If we reach the end of the tape, stop, rewind
-        // and reset level.
     {
+        // If we reach the end of the tape, stop, rewind and reset level.
         cout << "End of tape." << endl;
         pointer = 0;
         sample = 0;
