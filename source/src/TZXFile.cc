@@ -374,8 +374,12 @@ void TZXFile::parse(
                 indexData.insert(pulseData.size());
                 if (pause == 0)
                 {
+                    // This pause will consist of one or two pulses, ensuring
+                    // that the level is low at the end. Stop Data will also
+                    // force a low level, so it must happen at the last pulse
+                    // so far.
                     addPause(1000, pulseData);
-                    stopData.insert(pulseData.size());
+                    stopData.insert(pulseData.size() - 1);
                 }
                 else
                     addPause(pause, pulseData);
@@ -667,10 +671,10 @@ void TZXFile::addPause(size_t pause, vector<size_t>& data)
 {
     if (pause)
     {
-        if ((data.size() % 2) == 1)
+        if ((data.size() % 2) == 0)
         {
-            data.push_back(3500);
             data.push_back(3500 * (pause - 1));
+            data.push_back(3500);
         }
         else
         {
