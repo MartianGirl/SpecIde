@@ -64,7 +64,6 @@ class Screen : public GraphicWindow
         int samples[2];
         size_t skip;
         size_t count;
-        bool tapeTick = false;
 
         bool done = false;
         bool menu = false;

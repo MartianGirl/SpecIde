@@ -55,7 +55,6 @@ class Tape
         size_t index;           // Last reached index in the tape.
         size_t sample;          // Sample counter.
         bool playing;
-        bool clock;
         uint8_t level;          // Tape output level.
         size_t counter;         // Cassette counter :-)
 
@@ -65,7 +64,8 @@ class Tape
             tapPointer(0),
             useSaveData(false), tapes(0),
             pointer(0), index(0), sample(0),
-            playing(false), clock(false), level(0x00), is48K(true) {}
+            playing(false),
+            level(0x00), is48K(true) {}
 
         void loadTzx(string const& fileName);
         void loadTap(string const& fileName);
@@ -74,11 +74,7 @@ class Tape
         void play()
         {
             playing = !playing;
-            level ^= 0x80;
-            if (playing)
-                cout << "Playing." << endl;
-            else
-                cout << "Stopped." << endl;
+            cout << (playing ? "Playing." : "Stopped.") << endl;
         }
 
         void rewind(size_t position = 0)

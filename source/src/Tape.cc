@@ -50,8 +50,6 @@ void Tape::updateFlashTap()
 
 uint_fast8_t Tape::advance()
 {
-    level ^= 0x7F;
-
     if (pointer < pulseData.size())
     {
         // If we reach an index, we mark it.
@@ -66,17 +64,16 @@ uint_fast8_t Tape::advance()
         {
             cout << "Stopped." << endl;
             playing = false;
-            level = 0x00;
         }
 
         if (is48K && stopIf48K.find(pointer) != stopIf48K.end())
         {
             cout << "Stopped in 48K mode." << endl;
             playing = false;
-            level = 0x00;
         }
 
-        sample = pulseData[pointer];
+        level ^= 0x7F;
+        sample = 2 * pulseData[pointer];
         ++pointer;
     }
     else
@@ -86,7 +83,7 @@ uint_fast8_t Tape::advance()
         pointer = 0;
         sample = 0;
         playing = false;
-        level = 0x00;
+        level &= 0x80;
     }
 
     return level;

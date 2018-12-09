@@ -164,12 +164,15 @@ void Screen::clock()
 {
     spectrum.clock();
 
-    if (tape.playing)
+    if (tape.sample == 0)
     {
-        tapeTick = !tapeTick;
-        if (tapeTick == true && tape.sample-- == 0)
-            spectrum.ula.tapeIn = tape.advance();
+        if (tape.playing)   // Next pulse & keep controlling ULA pin.
+            spectrum.ula.tapeIn = tape.advance() | 0x80;
+        else                // Release ULA pin, keep pulse.
+            spectrum.ula.tapeIn &= 0x7F;
     }
+    else
+        --tape.sample;
 
     // Generate sound
     if (--count == 0)
