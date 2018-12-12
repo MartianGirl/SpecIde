@@ -154,7 +154,10 @@ void TZXFile::parse(
                 }
 
                 indexData.insert(pulseData.size());
-                addPause(pause, pulseData);
+                if (pause)
+                    addPause(pause, pulseData);
+                else
+                    addEdge(pulseData);
 
                 pointer += dataLength + 5;
                 break;
@@ -208,7 +211,10 @@ void TZXFile::parse(
                 }
 
                 indexData.insert(pulseData.size());
-                addPause(pause, pulseData);
+                if (pause)
+                    addPause(pause, pulseData);
+                else
+                    addEdge(pulseData);
 
                 pointer += dataLength + 19;
                 break;
@@ -276,8 +282,10 @@ void TZXFile::parse(
                 // (You usually don't want to start in the middle of
                 // a SpeedLock block...)
                 if (pause)
+                {
                     indexData.insert(pulseData.size());
-                addPause(pause, pulseData);
+                    addPause(pause, pulseData);
+                }
 
                 pointer += dataLength + 11;
                 break;
@@ -358,8 +366,10 @@ void TZXFile::parse(
                 // (You usually don't want to start in the middle of
                 // a SpeedLock block...)
                 if (pause)
+                {
                     indexData.insert(pulseData.size());
-                addPause(pause, pulseData);
+                    addPause(pause, pulseData);
+                }
 
                 pointer += dataLength + 5;
                 assert(pointer == tableIndex);
@@ -669,17 +679,19 @@ void TZXFile::pushSymbol(size_t rep, size_t sym,
 
 void TZXFile::addPause(size_t pause, vector<size_t>& data)
 {
-    if (pause)
+    if ((data.size() % 2) == 0)
     {
-        if ((data.size() % 2) == 0)
-        {
-            data.push_back(3500 * (pause - 1));
-            data.push_back(3500);
-        }
-        else
-        {
-            data.push_back(3500 * pause);
-        }
+        data.push_back(3500 * (pause - 1));
+        data.push_back(3500);
     }
+    else
+    {
+        data.push_back(3500 * pause);
+    }
+}
+
+void TZXFile::addEdge(vector<size_t>& data)
+{
+    data.push_back(3500);
 }
 // vim: et:sw=4:ts=4

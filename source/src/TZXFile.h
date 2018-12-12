@@ -83,6 +83,7 @@ class TZXFile
         void pushSymbol(size_t rep, size_t sym,
                 vector<size_t> const& alphabet, vector<size_t>& data);
         void addPause(size_t pause, vector<size_t>& data);
+        void addEdge(vector<size_t>& data);
 
 };
 
