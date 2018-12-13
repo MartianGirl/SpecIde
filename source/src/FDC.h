@@ -23,12 +23,10 @@
  *   which is needed for Spectrum +3 and Amstrad CPC 6128.
  */
 
-#include "DSKFile.h"
+#include "DiskDrive.h"
 
 #include <algorithm>
-#include <cassert>
 #include <cstdint>
-
 
 using namespace std;
 
@@ -77,252 +75,6 @@ constexpr uint_fast8_t SREG_RQM = 1 << 7;
 
 
 constexpr size_t DELAY_1ms = 7000;          // @ 7MHz
-
-class DiskDrive
-{
-    public:
-        DiskDrive(bool ready = false) :
-            ready(ready) {}
-
-        bool track0 = true;     // Head is at track 0 (center of the disk)
-        bool fault = false;     // Error
-        bool disk = false;      // Disk is in drive
-        bool writeprot = false; // Disk is write protected
-        bool ready = false;     // Drive exists
-        bool motor = false;     // Drive motor is spinning.
-
-        size_t cylinder = 0;
-        size_t sector = 0;
-        size_t hole = 0;
-        size_t next[2];
-
-        uint_fast8_t idTrack;
-        uint_fast8_t idHead;
-        uint_fast8_t idSector;
-        uint_fast8_t idSize;
-        uint_fast8_t statusReg1;
-        uint_fast8_t statusReg2;
-        uint_fast16_t length;
-        uint_fast8_t filler;
-        vector<uint8_t> buffer;
-
-        vector<DSKFile> images;
-        vector<string> imagenames;
-        size_t currentImage;
-
-        /**
-         * Advance disk to next sector.
-         */
-        void nextSector()
-        {
-            if (motor) ++sector;
-            if (disk)
-            {
-                size_t tr = (images[currentImage].numSides * cylinder);
-
-                if (images[currentImage].tracks[tr].trackSize)
-                {
-                    for (size_t ii = 0; ii < images[currentImage].numSides; ++ii)
-                        next[ii] = sector % images[currentImage].tracks[tr + ii].numSectors;
-                }
-                else
-                {
-                    next[0] = 0;
-                    next[1] = 0;
-                }
-            }
-
-            if (next[0] == 0)
-                countHole();
-        }
-
-        /**
-         * Seek next track.
-         */
-        void nextTrack()
-        {
-            size_t limit = disk ? images[currentImage].numTracks : 76;
-            if (++cylinder > limit)
-                cylinder = limit;
-            track0 = (cylinder == 0);
-        }
-
-        /**
-         * Seek previous track.
-         */
-        void prevTrack()
-        {
-            if (cylinder > 0)
-                --cylinder;
-            track0 = (cylinder == 0);
-        }
-
-        /**
-         * Return disk drive status byte.
-         */
-        uint_fast8_t senseStatus()
-        {
-            return (track0 ? 0x10 : 0x00)
-                | (ready ? 0x20 : 0x00)
-                | (writeprot ? 0x40 : 0x00)
-                | (fault ? 0x80 : 0x00);        // Don't really know...
-        }
-
-        /**
-         * Write sector data to disk.
-         *
-         * This function writes data from the disk drive buffer to
-         * the disk. It also checks if the disk hole has been detected.
-         *
-         */
-        void writeSector(int head)
-        {
-            if (disk && head < images[currentImage].numSides)
-            {
-                size_t tr = (images[currentImage].numSides * cylinder) + head;
-                size_t sc = sector % images[currentImage].tracks[tr].numSectors;
-                if (sc == 0)
-                    countHole();
-
-                images[currentImage].tracks[tr].sectors[sc].data = buffer;
-            }
-        }
-
-        /**
-         * Read sector data into buffer.
-         *
-         * This function reads the data from the current sector, and
-         * copies it to the disk drive buffer. It also checks if the
-         * disk hole has been detected.
-         */
-        void readSector(int head)
-        {
-            if (disk && head < images[currentImage].numSides)
-            {
-                size_t tr = (images[currentImage].numSides * cylinder) + head;
-                size_t sc = sector % images[currentImage].tracks[tr].numSectors;
-
-                // If the track is formatted, read.
-                if (images[currentImage].tracks[tr].trackSize)
-                {
-                    idTrack = images[currentImage].tracks[tr].sectors[sc].track;
-                    idHead = images[currentImage].tracks[tr].sectors[sc].side;
-                    idSector = images[currentImage].tracks[tr].sectors[sc].sectorId;
-                    idSize = images[currentImage].tracks[tr].sectors[sc].sectorSize;
-                    statusReg1 = images[currentImage].tracks[tr].sectors[sc].fdcStatusReg1;
-                    statusReg2 = images[currentImage].tracks[tr].sectors[sc].fdcStatusReg2;
-                    buffer = images[currentImage].tracks[tr].sectors[sc].data;
-                    length = images[currentImage].tracks[tr].sectors[sc].sectorLength;
-                    filler = images[currentImage].tracks[tr].fillerByte;
-                }
-                else
-                {
-                    idTrack = rand() & 0xFF;
-                    idHead = rand() & 0xFF;
-                    idSector = rand() & 0xFF;
-                    idSize = rand() & 0xFF;
-                    statusReg1 = 0x25;  // 00100101: DE, ND, MAM
-                    statusReg2 = 0x20;  // 00110011: DD, WC, BC, MD
-                    length = 0;
-                    filler = 0;
-                }
-            }
-            // Should plan for no disk or wrong head.
-        }
-
-        void formatTrack(int head,
-                uint_fast8_t trackNumber, uint_fast8_t sideNumber,
-                uint_fast8_t sectorSize, uint_fast8_t numSectors,
-                uint_fast8_t gapLength, uint_fast8_t fillerByte)
-        {
-            size_t tr = (images[currentImage].numSides * cylinder) + head;
-
-            if (tr >= images[currentImage].tracks.size())
-                images[currentImage].tracks.insert(images[currentImage].tracks.end(),
-                        tr - images[currentImage].tracks.size() + 1, DSKFile::Track());
-            
-            images[currentImage].tracks[tr].trackNumber = trackNumber;
-            images[currentImage].tracks[tr].sideNumber = sideNumber;
-            images[currentImage].tracks[tr].sectorSize = sectorSize;
-            images[currentImage].tracks[tr].numSectors = numSectors;
-            images[currentImage].tracks[tr].gapLength = gapLength;
-            images[currentImage].tracks[tr].fillerByte = fillerByte;
-            images[currentImage].tracks[tr].sectors.assign(numSectors, DSKFile::Track::Sector());
-        }
-
-        void formatSector(int head,
-                uint_fast8_t idTr, uint_fast8_t idHd,
-                uint_fast8_t idSc, uint_fast8_t idSz,
-                uint_fast8_t byte)
-        {
-            if (disk && head < images[currentImage].numSides)
-            {
-                size_t tr = (images[currentImage].numSides * cylinder) + head;
-                size_t sc = sector % images[currentImage].tracks[tr].numSectors;
-                if (sc == 0)
-                    countHole();
-
-                images[currentImage].tracks[tr].sectors[sc].track = idTr;
-                images[currentImage].tracks[tr].sectors[sc].side = idHd;
-                images[currentImage].tracks[tr].sectors[sc].sectorId = idSc;
-                images[currentImage].tracks[tr].sectors[sc].sectorSize = idSz;
-                images[currentImage].tracks[tr].sectors[sc].sectorLength = idSz;
-                images[currentImage].tracks[tr].sectors[sc].data.assign(idSz, byte);
-            }
-        }
-
-        void recalibrate()
-        {
-            // Maybe put here a delay.
-            if (cylinder < 78)
-            {
-                cylinder = 0;
-                track0 = true;
-            }
-            else
-            {
-                cylinder -= 77;
-            }
-        }
-
-        /**
-         * Increase the counter of hole sightings.
-         *
-         * Disks have a small hole near the center of the magnetic surface
-         * that is used by disk drives for counting entire turns. Operations
-         * that must be performed along an entire track finish when the hole
-         * has been detected twice, which ensures that a track has been
-         * under the writing head from beginning to end.
-         *
-         */
-        void countHole()
-        {
-            sector = 0;
-            ++hole;
-        }
-
-        void nextDisk()
-        {
-            if (images.size() > 0)
-            {
-                ++currentImage;
-                if (currentImage == images.size())
-                    currentImage = 0;
-                cout << "Currently inserted disk: " << imagenames[currentImage] << endl;
-            }
-        }
-
-        void prevDisk()
-        {
-            if (images.size() > 0)
-            {
-                if (currentImage == 0)
-                    currentImage = images.size();
-                --currentImage;
-                cout << "Currently inserted disk: " << imagenames[currentImage] << endl;
-            }
-        }
-};
 
 class FDC
 {
@@ -618,7 +370,6 @@ class FDC
                 case 0x02:  // Read Track (Diagnostic)
                     cout << "Read Track (Diagnostic): " << endl;
                     cout << "Drive: " << hex << setw(2) << setfill('0') << cmdDrive() << " ";
-                    cout << "Drive: " << hex << setw(2) << setfill('0') << static_cast<size_t>(cmdBuffer[0] & 0x03) << " ";
                     cout << "Head: " << hex << setw(2) << setfill('0') << cmdHead() << " ";
                     cout << "Track: " << hex << setw(2) << setfill('0');
                     cout << static_cast<size_t>(cmdBuffer[2]) << " ";
@@ -661,7 +412,6 @@ class FDC
                 case 0x06:  // Read sector(s)
                     cout << "Read sector(s): " << endl;
                     cout << "Drive: " << hex << setw(2) << setfill('0') << cmdDrive() << " ";
-                    cout << "Drive: " << hex << setw(2) << setfill('0') << static_cast<size_t>(cmdBuffer[0] & 0x03) << " ";
                     cout << "Head: " << hex << setw(2) << setfill('0') << cmdHead() << " ";
                     cout << "Track: " << hex << setw(2) << setfill('0');
                     cout << static_cast<size_t>(cmdBuffer[2]) << " ";
@@ -702,12 +452,12 @@ class FDC
                     drive[cmdDrive()].hole = 0;
                     ddmFound = false;
                     idmFound = false;
+                    stage = FDCAccess::FDC_ACCESS_LOAD;
                     break;
 
                 case 0x0C:  // Read deleted sector(s)
                     cout << "Read deleted sector(s): " << endl;
                     cout << "Drive: " << hex << setw(2) << setfill('0') << cmdDrive() << " ";
-                    cout << "Drive: " << hex << setw(2) << setfill('0') << static_cast<size_t>(cmdBuffer[0] & 0x03) << " ";
                     cout << "Head: " << hex << setw(2) << setfill('0') << cmdHead() << " ";
                     cout << "Track: " << hex << setw(2) << setfill('0');
                     cout << static_cast<size_t>(cmdBuffer[2]) << " ";
@@ -787,7 +537,6 @@ class FDC
                     break;
 
                 case 0x06:  // Read sector(s)
-                    // checkDrive();
                     readCmd();
                     break;
 
@@ -829,7 +578,6 @@ class FDC
                     break;
 
                 case 0x0C:  // Read deleted sector(s)
-                    // checkDrive();
                     readCmd();
                     break;
 
@@ -1088,45 +836,64 @@ class FDC
 
         void readIdCmd()
         {
-            drive[cmdDrive()].readSector(cmdHead());
-            drive[cmdDrive()].nextSector();
-            sReg[0] = cmdBuffer[1] & 0x07;
-            sReg[1] = drive[cmdDrive()].statusReg1;
-            sReg[2] = drive[cmdDrive()].statusReg2;
-
-            if (drive[cmdDrive()].hole > 1)
+            switch (stage)
             {
-                if (idmFound == false) sReg[1] |= 0x01;     // xxxxxxx1 - MAD
-                if (ddmFound == false) sReg[1] |= 0x04;     // xxxxx1xx - ND
-                sReg[0] |= 0x40;    // 01000HUU - AT
+                case FDCAccess::FDC_ACCESS_LOAD:
+                    if (headLoadOp())
+                        stage = FDCAccess::FDC_ACCESS_DATA;
+                    break;
 
-                drive[cmdDrive()].idTrack = rand() & 0xFF;
-                drive[cmdDrive()].idHead = rand() & 0xFF;
-                drive[cmdDrive()].idSector = rand() & 0xFF;
-                drive[cmdDrive()].idSize = rand() & 0xFF;
+                case FDCAccess::FDC_ACCESS_DATA:
+                    drive[cmdDrive()].readSector(cmdHead());
+                    drive[cmdDrive()].nextSector();
+                    sReg[0] = cmdBuffer[1] & 0x07;
+                    sReg[1] = drive[cmdDrive()].statusReg1;
+                    sReg[2] = drive[cmdDrive()].statusReg2;
+
+                    if (drive[cmdDrive()].hole > 1)
+                    {
+                        if (idmFound == false) sReg[1] |= 0x01;     // xxxxxxx1 - MAD
+                        if (ddmFound == false) sReg[1] |= 0x04;     // xxxxx1xx - ND
+                        sReg[0] |= 0x40;    // 01000HUU - AT
+
+                        drive[cmdDrive()].idTrack = rand() & 0xFF;
+                        drive[cmdDrive()].idHead = rand() & 0xFF;
+                        drive[cmdDrive()].idSector = rand() & 0xFF;
+                        drive[cmdDrive()].idSize = rand() & 0xFF;
+                    }
+                    else
+                    {
+                        // Check for Missing Address Mark or No Data.
+                        if ((sReg[1] & 0x01) == 0x00)
+                            idmFound = true;
+
+                        if ((sReg[1] & 0x04) == 0x00)
+                            ddmFound = true;
+
+                        if (idmFound == false || ddmFound == false)
+                            return;
+                    }
+
+                    stage = FDCAccess::FDC_ACCESS_UNLOAD;
+                    break;
+
+                case FDCAccess::FDC_ACCESS_UNLOAD:
+                    resBuffer[0] = sReg[0];
+                    resBuffer[1] = sReg[1];
+                    resBuffer[2] = sReg[2];
+                    resBuffer[3] = drive[cmdDrive()].idTrack;
+                    resBuffer[4] = drive[cmdDrive()].idHead;
+                    resBuffer[5] = drive[cmdDrive()].idSector;
+                    resBuffer[6] = drive[cmdDrive()].idSize;
+                    interrupt = true;
+                    unload = true;
+                    state = FDCState::FDC_STATE_RESULT;
+                    break;
+
+                default:
+                    reset();
+                    break;
             }
-            else
-            {
-                // Check for Missing Address Mark or No Data.
-                if ((sReg[1] & 0x01) == 0x00)
-                    idmFound = true;
-
-                if ((sReg[1] & 0x04) == 0x00)
-                    ddmFound = true;
-
-                if (idmFound == false || ddmFound == false)
-                    return;
-            }
-
-            resBuffer[0] = sReg[0];
-            resBuffer[1] = sReg[1];
-            resBuffer[2] = sReg[2];
-            resBuffer[3] = drive[cmdDrive()].idTrack;
-            resBuffer[4] = drive[cmdDrive()].idHead;
-            resBuffer[5] = drive[cmdDrive()].idSector;
-            resBuffer[6] = drive[cmdDrive()].idSize;
-            interrupt = true;
-            state = FDCState::FDC_STATE_RESULT;
         }
 
         bool headLoadOp()
@@ -1361,6 +1128,5 @@ class FDC
                 drive[ii].motor = status;
         }
 };
-
 
 // vim: et:sw=4:ts=4
