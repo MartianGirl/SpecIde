@@ -74,7 +74,9 @@ constexpr uint_fast8_t SREG_DIO = 1 << 6;
 constexpr uint_fast8_t SREG_RQM = 1 << 7;
 
 
-constexpr size_t DELAY_1ms = 7000;          // @ 7MHz
+constexpr size_t DELAY_1ms = 7000;     // @ 7MHz
+constexpr size_t SERVICE_MFM = 364;
+constexpr size_t SERVICE_FM = 756;
 
 class FDC
 {
@@ -105,8 +107,10 @@ class FDC
         bool ddmFound;
         bool loaded = false;
         bool unload = false;
+        bool transfer = false;
         size_t loadTimer = 0;
         size_t unloadTimer = 0;
+        size_t serviceTimer = 0;
 
         FDCState state;
         FDCMode mode;
@@ -164,7 +168,6 @@ class FDC
                     statusReg = SREG_RQM;
                     if (byte)
                     {
-                        // byte = false;
                         cout << "Command: ";
                         if (checkCommand())
                         {
@@ -211,6 +214,7 @@ class FDC
 
                 case FDCState::FDC_STATE_RECEIVE:
                     statusReg = SREG_RQM | SREG_CB | SREG_EXM;
+
                     if (byte)
                     {
                         byte = false;
@@ -219,11 +223,30 @@ class FDC
 
                 case FDCState::FDC_STATE_TRANSMIT:
                     statusReg = SREG_RQM | SREG_DIO | SREG_CB | SREG_EXM;
+
+                    if (transfer) serviceTimer--;
+
                     if (byte)
                     {
                         byte = false;
+                        transfer = true;
+                        serviceTimer = (mfmModeBit) ? SERVICE_MFM : SERVICE_FM;
+
                         if (dataIndex >= dataBytes)
+                        {
+                            transfer = false;
                             state = FDCState::FDC_STATE_RESULT;
+                        }
+                    }
+
+                    // Signal Over Run if FDC is not serviced quickly enough.
+                    if (serviceTimer == 0)
+                    {
+                        transfer = false;
+                        sReg[1] |= 0x10;    // OR
+                        sReg[0] |= 0x40;    // AT
+                        interrupt = true;
+                        state = FDCState::FDC_STATE_RESULT;
                     }
                     break;
 
@@ -364,6 +387,7 @@ class FDC
             multiTrackBit = ((cmdBuffer[0] & 0x80) == 0x80);
             mfmModeBit = ((cmdBuffer[0] & 0x40) == 0x40);
             skipDeletedBit = ((cmdBuffer[0] & 0x20) == 0x20);
+            serviceTimer = (mfmModeBit) ? SERVICE_MFM : SERVICE_FM;
 
             switch (cmdBuffer[0] & 0x1F)
             {
@@ -664,8 +688,9 @@ class FDC
 
         bool readOp()
         {
+            bool done = false;
+
             drive[cmdDrive()].readSector(cmdHead());
-            drive[cmdDrive()].nextSector();
             sReg[0] = cmdBuffer[1] & 0x07;
             sReg[1] = drive[cmdDrive()].statusReg1;
             sReg[2] = drive[cmdDrive()].statusReg2;
@@ -677,9 +702,29 @@ class FDC
 
             // Now we look at the data mark.
             if ((sReg[2] & 0x40) == (useDeletedDAM ? 0x00 : 0x40))
-                return readDeletedDataOp();
+                done = readDeletedDataOp();
             else
-                return readRegularDataOp();
+                done = readRegularDataOp();
+
+            if (done)
+            {
+                drive[cmdDrive()].nextSector();
+                drive[cmdDrive()].readSector(cmdHead());
+
+                // Update result info.
+                resTrack = drive[cmdDrive()].idTrack;
+                resHead = drive[cmdDrive()].idHead;
+                resSector = drive[cmdDrive()].idSector;
+                resSize = drive[cmdDrive()].idSize;
+
+                if (currSector == lastSector)
+                {
+                    resTrack++;
+                    resSector = 0;
+                }
+            }
+
+            return done;
         }
 
         bool readRegularDataOp()
@@ -694,7 +739,6 @@ class FDC
                 outlen = cmdBuffer[8];
             else                        // Use SZ as sector length.
                 outlen = 0x80 << cmdBuffer[5];
-            cout << " (" << dec << outlen << " bytes)" << endl;
 
             if (actlen == 0)
                 actlen = outlen;
@@ -718,15 +762,6 @@ class FDC
             // If we reach here, it is a normal data read. Dump and continue.
             copy(buf.begin(), buf.end(), &dataBuffer[dataBytes]);
             dataBytes += outlen;
-
-            // Update result info.
-            resTrack = drive[cmdDrive()].idTrack;
-            resHead = drive[cmdDrive()].idHead;
-            resSector = drive[cmdDrive()].idSector;
-            resSize = drive[cmdDrive()].idSize;
-
-            resTrack += (currSector == lastSector) ? 1 : 0;
-            resSector = (currSector == lastSector) ? 1 : resSector + 1;
 
             return (error || currSector == lastSector);
         }
@@ -760,11 +795,6 @@ class FDC
 
             copy(buf.begin(), buf.end(), &dataBuffer[dataBytes]);
             dataBytes += outlen;
-
-            resTrack = drive[cmdDrive()].idTrack;
-            resHead = drive[cmdDrive()].idHead;
-            resSector = drive[cmdDrive()].idSector;
-            resSize = drive[cmdDrive()].idSize;
 
             return true;
         }
@@ -979,9 +1009,6 @@ class FDC
             sReg[2] = drive[cmdDrive()].statusReg2;
             ++currSector;
 
-            // cout << "Sectors read: ";
-            // cout << hex << setw(2) << setfill('0') << currSector << endl;
-
             size_t actlen = drive[cmdDrive()].length;
             size_t outlen;
 
@@ -990,7 +1017,6 @@ class FDC
                 outlen = cmdBuffer[8];
             else                        // Use SZ as sector length.
                 outlen = 0x80 << cmdBuffer[5];
-            // cout << " (" << dec << outlen << " bytes)" << endl;
 
             // Double check that the intended data length does
             // not exceed the ACTUAL data length.
