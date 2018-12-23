@@ -120,6 +120,9 @@ class FDC
         uint_fast8_t presCylNum[2];
         uint_fast8_t sReg[4];
 
+        uint_fast8_t access[2][4];
+        bool weak = false;
+
         size_t lastDrive;
         size_t firstSector = 0x00;
         size_t currSector = 0x00;
@@ -389,6 +392,8 @@ class FDC
             skipDeletedBit = ((cmdBuffer[0] & 0x20) == 0x20);
             serviceTimer = (mfmModeBit) ? SERVICE_MFM : SERVICE_FM;
 
+            checkAccess();
+
             switch (cmdBuffer[0] & 0x1F)
             {
                 case 0x02:  // Read Track (Diagnostic)
@@ -655,8 +660,6 @@ class FDC
 
         bool seekOp()
         {
-            cout << "Seeking sector: " << hex << setw(2) << setfill('0');
-            cout << firstSector;
             drive[cmdDrive()].readSector(cmdHead());
 
             // Check No Data (ND) condition.
@@ -709,20 +712,16 @@ class FDC
             if (done)
             {
                 drive[cmdDrive()].nextSector();
-                drive[cmdDrive()].readSector(cmdHead());
 
                 // Update result info.
                 resTrack = drive[cmdDrive()].idTrack;
                 resHead = drive[cmdDrive()].idHead;
                 resSector = drive[cmdDrive()].idSector;
                 resSize = drive[cmdDrive()].idSize;
-
-                if (currSector == lastSector)
-                {
-                    resTrack++;
-                    resSector = 0;
-                }
             }
+
+            if (drive[cmdDrive()].hole)
+                sReg[1] |= 0x80;    // EN
 
             return done;
         }
@@ -752,9 +751,21 @@ class FDC
             if (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20))
             {
                 cout << " - CRC error..." << endl;
-                // Return random data.
-                for (size_t ii = (buf.size() - 0x80); ii < buf.size(); ++ii)
-                    buf[ii] = rand() & 0xFF;
+                dumpSector(buf);
+                randomizeSector(buf);
+
+                sReg[0] |= 0x40;    // 01000HUU - AT
+                error = true;
+            }
+
+            if (weak)
+            {
+                cout << "Weak sector..." << endl;
+                dumpSector(buf);
+                // randomizeSector(buf);
+
+                sReg[1] |= 0x20;
+                sReg[2] |= 0x20;
                 sReg[0] |= 0x40;    // 01000HUU - AT
                 error = true;
             }
@@ -763,6 +774,8 @@ class FDC
             copy(buf.begin(), buf.end(), &dataBuffer[dataBytes]);
             dataBytes += outlen;
 
+            // We must signal the CM.
+            sReg[2] &= 0xBF;
             return (error || currSector == lastSector);
         }
 
@@ -788,14 +801,27 @@ class FDC
             if (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20))
             {
                 cout << " CRC error..." << endl;
-                for (size_t ii = (buf.size() - 0x80); ii < buf.size(); ++ii)
-                    buf[ii] = rand() & 0xFF;
+                dumpSector(buf);
+                randomizeSector(buf);
+                sReg[0] |= 0x40;    // 01000HUU - AT
+            }
+
+            if (weak)
+            {
+                cout << "Weak sector..." << endl;
+                dumpSector(buf);
+                // randomizeSector(buf);
+
+                sReg[1] |= 0x20;
+                sReg[2] |= 0x20;
                 sReg[0] |= 0x40;    // 01000HUU - AT
             }
 
             copy(buf.begin(), buf.end(), &dataBuffer[dataBytes]);
             dataBytes += outlen;
 
+            // We must signal the CM.
+            sReg[2] |= 0x40;
             return true;
         }
 
@@ -988,7 +1014,7 @@ class FDC
                     interrupt = true;
                     break;
 
-                case FDCAccess::FDC_ACCESS_NONE:
+                default:
                     reset();
                     break;
             }
@@ -1153,6 +1179,63 @@ class FDC
             for (size_t ii = 0; ii < 2; ++ii)
                 drive[ii].motor = status;
         }
+
+        void checkAccess()
+        {
+            size_t equal = 0;
+
+            size_t command = cmdBuffer[0] & 0x1F;
+
+            if (command != 0x06 && command != 0x0C)
+            {
+                for (size_t ii = 0; ii < 4; ++ii)
+                {
+                    access[0][ii] = 0xFF;
+                    access[1][ii] = 0xFF;
+                }
+            }
+            else
+            {
+                for (size_t ii = 0; ii < 4; ++ii)
+                {
+                    if (access[0][ii] == cmdBuffer[ii + 2]
+                            && access[1][ii] == cmdBuffer[ii + 2])
+                        ++equal;
+
+                    access[1][ii] = access[0][ii];
+                    access[0][ii] = cmdBuffer[ii + 2];
+                }
+            }
+
+            weak = (equal == 4);
+        }
+
+        void dumpSector(vector<uint8_t> const& buf)
+        {
+            for (size_t ii = 0; ii < buf.size(); ++ii)
+            {
+                cout << hex << setw(2) << setfill('0');
+                cout << static_cast<size_t>(buf[ii]) << " ";
+                if (ii % 0x10 == 0x0F)
+                {
+                    for (size_t jj = ii - 0x0F; jj <= ii; ++jj)
+                        cout << (((buf[jj] < 0x7F) && (buf[jj] > 0x1F)) ?
+                                static_cast<char>(buf[jj]) : '?');
+                    cout << " - " << static_cast<size_t>(ii & 0xFFF0) << endl;
+                }
+
+            }
+        }
+
+        void randomizeSector(vector<uint8_t>& buf)
+        {
+            for (size_t ii = 0; ii < 0xB0; ++ii)
+                buf[buf.size() - ii - 1] &= rand() & 0xFF;
+
+            for (size_t ii = 0; ii < 0x20; ++ii)
+                buf[buf.size() - ii - 0xE1] &= rand() & 0xFF;
+        }
+
 };
 
 // vim: et:sw=4:ts=4
