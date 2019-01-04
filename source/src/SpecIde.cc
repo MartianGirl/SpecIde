@@ -73,8 +73,8 @@ int main(int argc, char* argv[])
             cout << "--plus2sp              Spectrum +2. (Spanish ROM)" << endl;
             cout << "--plus2a               Spectrum +2A." << endl;
             cout << "--plus2asp             Spectrum +2A. (Spanish ROM)" << endl;
-            // cout << "--plus3               Spectrum +3." << endl;
-            // cout << "--plus3sp             Spectrum +3. (Spanish ROM)" << endl;
+            cout << "--plus3                Spectrum +3." << endl;
+            cout << "--plus3sp              Spectrum +3. (Spanish ROM)" << endl;
             cout << endl;
             cout << "Hardware options:" << endl;
             cout << "--kempston             Map joystick to Kempston interface." << endl;

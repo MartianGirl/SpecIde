@@ -226,7 +226,6 @@ void Spectrum::clock()
     // ULA gets the data from memory or Z80, or outputs data to Z80.
     // I've found that separating both data buses is helpful for all
     // Speccies.
-    bus_1 = bus;
     if (ula.mem == false)
     {
         if (snow)
@@ -279,7 +278,7 @@ void Spectrum::clock()
                             if (rd_ == false)
                             {
                                 if ((paging & 0x0020) == 0x0000)
-                                    z80.d = (bus_1 & idle) | 0x01;
+                                    z80.d = (bus & idle) | 0x01;
                             }
                             break;
                         }
@@ -421,6 +420,9 @@ void Spectrum::updatePage(uint_fast8_t reg)
             // Update +3 disk drive(s) motor status.
             fdc.motor(spectrumPlus3 && ((paging & 0x0800) == 0x0800));
 
+            // Select screen to display.
+            setScreen(((paging & 0x0008) >> 2) | 0x05);
+
             if ((paging & 0x0100) == 0x0100)    // Special paging mode.
             {
                 switch (paging & 0x0600)
@@ -449,6 +451,9 @@ void Spectrum::updatePage(uint_fast8_t reg)
                         setPage(2, 6, false, true);
                         setPage(3, 3, false, false);
                         break;
+
+                    default:
+                        assert(false);
                 }
             }
             else                                // Normal paging mode.
@@ -456,8 +461,6 @@ void Spectrum::updatePage(uint_fast8_t reg)
                 size_t ramBank = paging & 0x0007;
                 size_t romBank =
                     ((paging & 0x0010) >> 4) | ((paging & 0x0400) >> 9);
-
-                setScreen(((paging & 0x0008) >> 2) | 0x05);
 
                 setPage(0, romBank, true, false);
                 setPage(1, 5, false, true);
