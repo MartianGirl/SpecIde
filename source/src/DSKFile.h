@@ -120,7 +120,7 @@ class DSKFile
                             cout << "Size: " << static_cast<size_t>(0x80 << s.sectorSize) << " ";
                             cout << "ST1: " << static_cast<size_t>(s.fdcStatusReg1) << " ";
                             cout << "ST2: " << static_cast<size_t>(s.fdcStatusReg2) << " ";
-                            cout << "Actual len: " << static_cast<size_t>(s.sectorLength) << endl;
+                            cout << "Actual len: " << static_cast<size_t>(s.sectorLength) << " ";
 
                             size_t size =
                                 (s.sectorLength) ? s.sectorLength : (0x80 << s.sectorSize);
@@ -132,6 +132,23 @@ class DSKFile
                                         &data[dataOffset + size]);
                                 dataOffset += size;
                             }
+                            else
+                            {
+                                cout << "No data. ";
+                            }
+
+                            // Opera 32K protection hack.
+                            if (s.sectorLength == 0 && s.sectorSize == 0x08
+                                    && s.track == 0x28 && s.sectorId == 0x08)
+                            {
+                                cout << "Opera 32K sector detected. ";
+                                s.data.assign(0x2000, 0x00);
+                                for (size_t ii = 0; ii < 0x2000; ++ii)
+                                    s.data[ii] = rand() & 0xFF;
+                                for (size_t ii = 0; ii < sectors.back().sectorLength; ++ii)
+                                    s.data[ii + 0x512] = sectors.back().data[ii];
+                            }
+                            cout << endl;
 
                             sectors.push_back(s);
                         }
