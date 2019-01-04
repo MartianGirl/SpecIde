@@ -226,6 +226,7 @@ void Spectrum::clock()
     // ULA gets the data from memory or Z80, or outputs data to Z80.
     // I've found that separating both data buses is helpful for all
     // Speccies.
+    bus_1 = bus;
     if (ula.mem == false)
     {
         if (snow)
@@ -278,7 +279,7 @@ void Spectrum::clock()
                             if (rd_ == false)
                             {
                                 if ((paging & 0x0020) == 0x0000)
-                                    z80.d = (bus & idle) | 0x01;
+                                    z80.d = (bus_1 & idle) | 0x01;
                             }
                             break;
                         }
