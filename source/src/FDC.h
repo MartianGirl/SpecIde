@@ -676,6 +676,7 @@ class FDC
 
             size_t mfmIndex = mfmModeBit ? 1 : 0;
             size_t sizeIndex = drive[cmdDrive()].idSize;
+            sizeIndex = (sizeIndex > 8) ? 8 : sizeIndex;
             size_t maxSector = maxSectors[mfmIndex][sizeIndex];
             size_t presSector = drive[cmdDrive()].idSector;
             if (currSector > maxSector || currSector > presSector)
