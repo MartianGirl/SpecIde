@@ -112,15 +112,15 @@ class DSKFile
                                 data[secEntry + 7] * 0x100
                                 + data[secEntry + 6];
 
-                            cout << hex << setw(2) << setfill('0');
-                            cout << "Sector: " << ss << " ";
-                            cout << "Track: " << static_cast<size_t>(s.track) << " ";
-                            cout << "Side: " << static_cast<size_t>(s.side) << " ";
-                            cout << "Id: " << static_cast<size_t>(s.sectorId) << " ";
-                            cout << "Size: " << static_cast<size_t>(0x80 << s.sectorSize) << " ";
-                            cout << "ST1: " << static_cast<size_t>(s.fdcStatusReg1) << " ";
-                            cout << "ST2: " << static_cast<size_t>(s.fdcStatusReg2) << " ";
-                            cout << "Actual len: " << static_cast<size_t>(s.sectorLength) << " ";
+                            // cout << hex << setw(2) << setfill('0');
+                            // cout << "Sector: " << ss << " ";
+                            // cout << "Track: " << static_cast<size_t>(s.track) << " ";
+                            // cout << "Side: " << static_cast<size_t>(s.side) << " ";
+                            // cout << "Id: " << static_cast<size_t>(s.sectorId) << " ";
+                            // cout << "Size: " << static_cast<size_t>(0x80 << s.sectorSize) << " ";
+                            // cout << "ST1: " << static_cast<size_t>(s.fdcStatusReg1) << " ";
+                            // cout << "ST2: " << static_cast<size_t>(s.fdcStatusReg2) << " ";
+                            // cout << "Actual len: " << static_cast<size_t>(s.sectorLength) << " ";
 
                             size_t size =
                                 (s.sectorLength) ? s.sectorLength : (0x80 << s.sectorSize);
@@ -132,23 +132,23 @@ class DSKFile
                                         &data[dataOffset + size]);
                                 dataOffset += size;
                             }
-                            else
-                            {
-                                cout << "No data. ";
-                            }
+                            // else
+                            // {
+                                // cout << "No data. ";
+                            // }
 
                             // Opera 32K protection hack.
                             if (s.sectorLength == 0 && s.sectorSize == 0x08
                                     && s.track == 0x28 && s.sectorId == 0x08)
                             {
-                                cout << "Opera 32K sector detected. ";
+                                // cout << "Opera 32K sector detected. ";
                                 s.data.assign(0x2000, 0x00);
                                 for (size_t ii = 0; ii < 0x2000; ++ii)
                                     s.data[ii] = rand() & 0xFF;
                                 for (size_t ii = 0; ii < sectors.back().sectorLength; ++ii)
                                     s.data[ii + 0x512] = sectors.back().data[ii];
                             }
-                            cout << endl;
+                            // cout << endl;
 
                             sectors.push_back(s);
                         }
@@ -258,13 +258,13 @@ class DSKFile
         void readNumberOfTracks()
         {
             numTracks = fileData[0x30];
-            cout << "Number of tracks: " << numTracks << endl;
+            cout << "Number of tracks: " << static_cast<size_t>(numTracks) << endl;
         }
 
         void readNumberOfSides()
         {
             numSides = fileData[0x31];
-            cout << "Number of sides " << numSides << endl;
+            cout << "Number of sides " << static_cast<size_t>(numSides) << endl;
         }
 
         void buildTrackSizeTable()
@@ -297,16 +297,16 @@ class DSKFile
                 }
             }
 
-            for (size_t track = 0; track < numTracks; ++track)
-            {
-                for (size_t side = 0; side < numSides; ++side)
-                {
-                    size_t size = trackSizeTable[track * numSides + side];
-                    cout << "Track " << track << ", Side " << side;
-                    cout << " size: " << size << "    ";
-                }
-                cout << endl;
-            }
+            // for (size_t track = 0; track < numTracks; ++track)
+            // {
+                // for (size_t side = 0; side < numSides; ++side)
+                // {
+                    // size_t size = trackSizeTable[track * numSides + side];
+                    // cout << "Track " << track << ", Side " << side;
+                    // cout << " size: " << size << "    ";
+                // }
+                // cout << endl;
+            // }
         }
 
         void loadTracks()
@@ -324,13 +324,13 @@ class DSKFile
 
                 offset += trackSizeTable[tt];
 
-                cout << hex << setw(2) << setfill('0');
-                cout << "Track: " << static_cast<size_t>(tracks[tt].trackNumber) << " ";
-                cout << "Side: " << static_cast<size_t>(tracks[tt].sideNumber) << " ";
-                cout << "Sector size: " << static_cast<size_t>(0x80 << tracks[tt].sectorSize) << " ";
-                cout << "Num sectors: " << static_cast<size_t>(tracks[tt].numSectors) << " ";
-                cout << "Gap length: " << static_cast<size_t>(tracks[tt].gapLength) << " ";
-                cout << "Track size: " << static_cast<size_t>(tracks[tt].trackSize) << endl;
+                // cout << hex << setw(2) << setfill('0');
+                // cout << "Track: " << static_cast<size_t>(tracks[tt].trackNumber) << " ";
+                // cout << "Side: " << static_cast<size_t>(tracks[tt].sideNumber) << " ";
+                // cout << "Sector size: " << static_cast<size_t>(0x80 << tracks[tt].sectorSize) << " ";
+                // cout << "Num sectors: " << static_cast<size_t>(tracks[tt].numSectors) << " ";
+                // cout << "Gap length: " << static_cast<size_t>(tracks[tt].gapLength) << " ";
+                // cout << "Track size: " << static_cast<size_t>(tracks[tt].trackSize) << endl;
             }
         }
 };

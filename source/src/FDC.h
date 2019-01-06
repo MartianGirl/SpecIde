@@ -81,6 +81,8 @@ constexpr size_t SERVICE_FM = 756;
 class FDC
 {
     public:
+        size_t maxSectors[2][10];
+
         uint_fast8_t statusReg = 0x00;
 
         uint_fast8_t cmdBuffer[16];
@@ -105,6 +107,7 @@ class FDC
 
         bool idmFound;
         bool ddmFound;
+        bool eocFound;
         bool loaded = false;
         bool unload = false;
         bool transfer = false;
@@ -119,9 +122,6 @@ class FDC
         DiskDrive drive[2];
         uint_fast8_t presCylNum[2];
         uint_fast8_t sReg[4];
-
-        uint_fast8_t access[2][4];
-        bool weak = false;
 
         size_t lastDrive;
         size_t firstSector = 0x00;
@@ -141,8 +141,12 @@ class FDC
         bool useDma;
 
         FDC() :
+            maxSectors{
+                {0x1A, 0x0F, 0x08, 0x04, 0x02, 0x01, 0x01, 0x01, 0x01, 0x01},   // FM
+                {0x3F, 0x1A, 0x0F, 0x08, 0x04, 0x02, 0x01, 0x01, 0x01, 0x01}},  // MFM
             drive{DiskDrive(true), DiskDrive(false)},
-            presCylNum{0, 0} {}
+            presCylNum{0, 0}
+        {}
 
         void clock()
         {
@@ -174,7 +178,7 @@ class FDC
                         cout << "Command: ";
                         if (checkCommand())
                         {
-                            cout << "Expecting " << hex << cmdBytes << " bytes." << endl;
+                            // cout << "Expecting " << hex << cmdBytes << " bytes." << endl;
                             state = FDCState::FDC_STATE_COMMAND;
                         }
                         else
@@ -219,9 +223,7 @@ class FDC
                     statusReg = SREG_RQM | SREG_CB | SREG_EXM;
 
                     if (byte)
-                    {
                         byte = false;
-                    }
                     break;
 
                 case FDCState::FDC_STATE_TRANSMIT:
@@ -392,33 +394,32 @@ class FDC
             skipDeletedBit = ((cmdBuffer[0] & 0x20) == 0x20);
             serviceTimer = (mfmModeBit) ? SERVICE_MFM : SERVICE_FM;
 
-            checkAccess();
-
-            cout << "Command byte: ";
-            cout << hex << setw(2) << setfill('0') << static_cast<size_t>(cmdBuffer[0]) << " ";
+            // cout << "Command byte: ";
+            // cout << hex << setw(2) << setfill('0') << static_cast<size_t>(cmdBuffer[0]) << " ";
 
             switch (cmdBuffer[0] & 0x1F)
             {
                 case 0x02:  // Read Track (Diagnostic)
-                    cout << "Drive: " << hex << setw(2) << setfill('0') << cmdDrive() << " ";
-                    cout << "Head: " << hex << setw(2) << setfill('0') << cmdHead() << " ";
-                    cout << "Track: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[2]) << " ";
-                    cout << "Head: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[3]) << " ";
-                    cout << "From Sector: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[4]) << " ";
-                    cout << "Sector Size: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[5]) << " ";
-                    cout << "To Sector: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[6]) << " ";
-                    cout << "Gap Length: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[7]) << " ";
-                    cout << "Data Length: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[8]) << endl;
+                    // cout << "Drive: " << hex << setw(2) << setfill('0') << cmdDrive() << " ";
+                    // cout << "Head: " << hex << setw(2) << setfill('0') << cmdHead() << " ";
+                    // cout << "Track: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[2]) << " ";
+                    // cout << "Head: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[3]) << " ";
+                    // cout << "From Sector: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[4]) << " ";
+                    // cout << "Sector Size: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[5]) << " ";
+                    // cout << "To Sector: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[6]) << " ";
+                    // cout << "Gap Length: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[7]) << " ";
+                    // cout << "Data Length: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[8]) << endl;
 
                     idmFound = false;
                     ddmFound = false;
+                    eocFound = false;
                     firstSector = cmdBuffer[4];
                     lastSector = cmdBuffer[6];
                     currSector = 0;
@@ -430,10 +431,10 @@ class FDC
                     break;
 
                 case 0x04:  // Sense drive status
-                    cout << "Sense drive: ";
-                    cout << hex << setw(2) << setfill('0') << cmdDrive() << endl;
-                    cout << "Sense head: ";
-                    cout << hex << setw(2) << setfill('0') << cmdHead() << endl;
+                    // cout << "Sense drive: ";
+                    // cout << hex << setw(2) << setfill('0') << cmdDrive() << endl;
+                    // cout << "Sense head: ";
+                    // cout << hex << setw(2) << setfill('0') << cmdHead() << endl;
                     break;
 
                 case 0x05:  // Write sector(s)
@@ -441,23 +442,24 @@ class FDC
                     break;
 
                 case 0x06:  // Read sector(s)
-                    cout << "Drive: " << hex << setw(2) << setfill('0') << cmdDrive() << " ";
-                    cout << "Head: " << hex << setw(2) << setfill('0') << cmdHead() << " ";
-                    cout << "Track: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[2]) << " ";
-                    cout << "Head: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[3]) << " ";
-                    cout << "From Sector: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[4]) << " ";
-                    cout << "Sector Size: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[5]) << " ";
-                    cout << "To Sector: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[6]) << " ";
-                    cout << "Gap Length: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[7]) << " ";
-                    cout << "Data Length: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[8]) << endl;
+                    // cout << "Drive: " << hex << setw(2) << setfill('0') << cmdDrive() << " ";
+                    // cout << "Head: " << hex << setw(2) << setfill('0') << cmdHead() << " ";
+                    // cout << "Track: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[2]) << " ";
+                    // cout << "Head: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[3]) << " ";
+                    // cout << "From Sector: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[4]) << " ";
+                    // cout << "Sector Size: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[5]) << " ";
+                    // cout << "To Sector: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[6]) << " ";
+                    // cout << "Gap Length: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[7]) << " ";
+                    // cout << "Data Length: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[8]) << endl;
 
+                    eocFound = false;
                     drive[cmdDrive()].hole = 0;
                     firstSector = cmdBuffer[4];
                     lastSector = cmdBuffer[6];
@@ -466,7 +468,7 @@ class FDC
                     break;
 
                 case 0x07:  // Recalibrate and seek physical track 0
-                    cout << "Recalibrate drive: " << cmdDrive() << endl;
+                    // cout << "Recalibrate drive: " << cmdDrive() << endl;
                     break;
 
                 case 0x08:  // Sense interrupt status
@@ -476,33 +478,35 @@ class FDC
                     break;
 
                 case 0x0A:  // Read ID
-                    cout << "Read ID from drive " << cmdDrive() << " - ";
-                    cout << "head " << cmdHead() << endl;
+                    // cout << "Read ID from drive " << cmdDrive() << " - ";
+                    // cout << "head " << cmdHead() << endl;
 
                     drive[cmdDrive()].hole = 0;
+                    eocFound = false;
                     ddmFound = false;
                     idmFound = false;
                     stage = FDCAccess::FDC_ACCESS_LOAD;
                     break;
 
                 case 0x0C:  // Read deleted sector(s)
-                    cout << "Drive: " << hex << setw(2) << setfill('0') << cmdDrive() << " ";
-                    cout << "Head: " << hex << setw(2) << setfill('0') << cmdHead() << " ";
-                    cout << "Track: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[2]) << " ";
-                    cout << "Head: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[3]) << " ";
-                    cout << "From Sector: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[4]) << " ";
-                    cout << "Sector Size: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[5]) << " ";
-                    cout << "To Sector: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[6]) << " ";
-                    cout << "Gap Length: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[7]) << " ";
-                    cout << "Data Length: " << hex << setw(2) << setfill('0');
-                    cout << static_cast<size_t>(cmdBuffer[8]) << endl;
+                    // cout << "Drive: " << hex << setw(2) << setfill('0') << cmdDrive() << " ";
+                    // cout << "Head: " << hex << setw(2) << setfill('0') << cmdHead() << " ";
+                    // cout << "Track: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[2]) << " ";
+                    // cout << "Head: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[3]) << " ";
+                    // cout << "From Sector: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[4]) << " ";
+                    // cout << "Sector Size: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[5]) << " ";
+                    // cout << "To Sector: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[6]) << " ";
+                    // cout << "Gap Length: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[7]) << " ";
+                    // cout << "Data Length: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(cmdBuffer[8]) << endl;
 
+                    eocFound = false;
                     drive[cmdDrive()].hole = 0;
                     firstSector = cmdBuffer[4];
                     lastSector = cmdBuffer[6];
@@ -543,13 +547,13 @@ class FDC
                     stepRateTime = ((cmdBuffer[1] & 0xF0) >> 4) * 32 * DELAY_1ms;
                     headLoadTime = (cmdBuffer[2] >> 1) * 4 * DELAY_1ms;
                     useDma = ((cmdBuffer[2] & 0x01) == 0x00);
-                    cout << "Head Unload Time: ";
-                    cout << hex << setw(2) << setfill('0') << headUnloadTime << endl;
-                    cout << "Head Load Time: ";
-                    cout << hex << setw(2) << setfill('0') << headLoadTime << endl;
-                    cout << "Step Rate Time: ";
-                    cout << hex << setw(2) << setfill('0') << stepRateTime << endl;
-                    cout << "Use DMA: " << (useDma ? "TRUE" : "FALSE") << endl;
+                    // cout << "Head Unload Time: ";
+                    // cout << hex << setw(2) << setfill('0') << headUnloadTime << endl;
+                    // cout << "Head Load Time: ";
+                    // cout << hex << setw(2) << setfill('0') << headLoadTime << endl;
+                    // cout << "Step Rate Time: ";
+                    // cout << hex << setw(2) << setfill('0') << stepRateTime << endl;
+                    // cout << "Use DMA: " << (useDma ? "TRUE" : "FALSE") << endl;
                     loadTimer = headLoadTime;
                     unloadTimer = headUnloadTime;
                     reset();
@@ -592,10 +596,10 @@ class FDC
                     resBuffer[1] = presCylNum[lastDrive];
                     interrupt = false;
                     statusReg &= ~(SREG_DB0 | SREG_DB1 | SREG_DB2 | SREG_DB3);
-                    cout << "ST0: ";
-                    cout << hex << setw(2) << setfill('0') << static_cast<size_t>(resBuffer[0]) << endl;
-                    cout << "PCN: ";
-                    cout << hex << setw(2) << setfill('0') << static_cast<size_t>(resBuffer[1]) << endl;
+                    // cout << "ST0: ";
+                    // cout << hex << setw(2) << setfill('0') << static_cast<size_t>(resBuffer[0]) << endl;
+                    // cout << "PCN: ";
+                    // cout << hex << setw(2) << setfill('0') << static_cast<size_t>(resBuffer[1]) << endl;
                     state = FDCState::FDC_STATE_RESULT;
                     break;
 
@@ -641,7 +645,7 @@ class FDC
                         drive[cmdDrive()].nextTrack();
                         ++presCylNum[cmdDrive()];
                     }
-                    cout << "Current track: " << static_cast<size_t>(presCylNum[cmdDrive()]) << endl;
+                    // cout << "Current track: " << static_cast<size_t>(presCylNum[cmdDrive()]) << endl;
                     break;
 
                 case 0x11:  // Scan equal
@@ -670,8 +674,14 @@ class FDC
                 return false;
             }
 
+            size_t mfmIndex = mfmModeBit ? 1 : 0;
+            size_t sizeIndex = drive[cmdDrive()].idSize;
+            size_t maxSector = maxSectors[mfmIndex][sizeIndex];
+            size_t presSector = drive[cmdDrive()].idSector;
+            if (currSector > maxSector || currSector > presSector)
+                eocFound = true;
+
             currSector = drive[cmdDrive()].idSector;
-            cout << " Found sector: " << currSector << endl;
 
             // The four bytes are checked.
             if (currSector != firstSector
@@ -683,10 +693,7 @@ class FDC
                 return false;
             }
             else
-            {
-                drive[cmdDrive()].hole = 0;
                 return true;
-            }
         }
 
         bool readOp()
@@ -699,9 +706,9 @@ class FDC
             sReg[1] = drive[cmdDrive()].statusReg1;
             sReg[2] = drive[cmdDrive()].statusReg2;
 
-            cout << "Reading sector... ";
-            cout << hex << setw(2) << setfill('0') << currSector;
-            cout << " (Skip bit " << (skipDeletedBit ? "ON)" : "OFF) ... ");
+            // cout << "Reading sector... ";
+            // cout << hex << setw(2) << setfill('0') << currSector;
+            // cout << " (Skip bit " << (skipDeletedBit ? "ON)" : "OFF) ... ");
 
             // Now we look at the data mark.
             if ((sReg[2] & 0x40) == (useDeletedDAM ? 0x00 : 0x40))
@@ -712,12 +719,8 @@ class FDC
             if (done)
             {
                 drive[cmdDrive()].nextSector();
-
                 setResultBytesOp();
             }
-
-            if (drive[cmdDrive()].hole)
-                sReg[1] |= 0x80;    // EN
 
             return done;
         }
@@ -728,6 +731,12 @@ class FDC
             resHead = cmdBuffer[3];
             resSector = cmdBuffer[4];
             resSize = cmdBuffer[5];
+
+            if (eocFound)
+            {
+                sReg[0] |= 0x40;
+                sReg[1] |= 0x80;
+            }
 
             if (!multiTrackBit)
             {
@@ -770,8 +779,8 @@ class FDC
             else                        // Use SZ as sector length.
                 outlen = 0x80 << cmdBuffer[5];
 
-            cout << "Sector length: " << outlen << " ";
-            cout << "Actual length: " << actlen << endl;
+            // cout << "Sector length: " << outlen << " ";
+            // cout << "Actual length: " << actlen << endl;
 
             if (actlen == 0)
                 actlen = outlen;
@@ -785,21 +794,8 @@ class FDC
             if (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20))
             {
                 cout << " - CRC error..." << endl;
-                dumpSector(buf);
                 randomizeSector(buf);
 
-                sReg[0] |= 0x40;    // 01000HUU - AT
-                error = true;
-            }
-
-            if (weak)
-            {
-                cout << "Weak sector..." << endl;
-                dumpSector(buf);
-                // randomizeSector(buf);
-
-                sReg[1] |= 0x20;
-                sReg[2] |= 0x20;
                 sReg[0] |= 0x40;    // 01000HUU - AT
                 error = true;
             }
@@ -819,8 +815,8 @@ class FDC
             size_t outlen = 0x80 << drive[cmdDrive()].idSize;
             size_t actlen = drive[cmdDrive()].length;
 
-            cout << "Sector length: " << outlen << " ";
-            cout << "Actual length: " << actlen << endl;
+            // cout << "Sector length: " << outlen << " ";
+            // cout << "Actual length: " << actlen << endl;
 
             if (skipDeletedBit)
                 return false;
@@ -838,19 +834,7 @@ class FDC
             if (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20))
             {
                 cout << " CRC error..." << endl;
-                dumpSector(buf);
                 randomizeSector(buf);
-                sReg[0] |= 0x40;    // 01000HUU - AT
-            }
-
-            if (weak)
-            {
-                cout << "Weak sector..." << endl;
-                dumpSector(buf);
-                // randomizeSector(buf);
-
-                sReg[1] |= 0x20;
-                sReg[2] |= 0x20;
                 sReg[0] |= 0x40;    // 01000HUU - AT
             }
 
@@ -895,6 +879,7 @@ class FDC
                     else
                     {
                         // Sectors can be unordered.
+                        drive[cmdDrive()].hole = 0;
                         ++firstSector;
                         stage = FDCAccess::FDC_ACCESS_SEEK;
                     }
@@ -912,7 +897,7 @@ class FDC
 
                     if (dataBytes)
                     {
-                        cout << "Returning " << dataBytes << " bytes..." << endl;
+                        // cout << "Returning " << dataBytes << " bytes..." << endl;
                         state = FDCState::FDC_STATE_TRANSMIT;
                     }
                     else
@@ -1010,6 +995,7 @@ class FDC
                     if (headLoadOp())
                         stage = FDCAccess::FDC_ACCESS_SEEK;
                     break;
+
                 // Seek stage. Here we try to find the disk hole.
                 case FDCAccess::FDC_ACCESS_SEEK:
                     if (findHoleOp())
@@ -1024,12 +1010,19 @@ class FDC
                     break;
 
                 case FDCAccess::FDC_ACCESS_UNLOAD:
-                    if (idmFound == false)
+                    if (!idmFound)
                         sReg[1] |= 0x04;
-                    if (ddmFound == false)
+
+                    if (!ddmFound)
                     {
                         sReg[0] |= 0x40;
                         sReg[1] |= 0x01;
+                    }
+
+                    if (eocFound)
+                    {
+                        sReg[0] |= 0x40;
+                        sReg[1] |= 0x80;
                     }
 
                     resBuffer[0] = sReg[0];
@@ -1070,6 +1063,13 @@ class FDC
             sReg[0] = cmdBuffer[1] & 0x07;
             sReg[1] = drive[cmdDrive()].statusReg1;
             sReg[2] = drive[cmdDrive()].statusReg2;
+
+            size_t mfmIndex = mfmModeBit ? 1 : 0;
+            size_t sizeIndex = drive[cmdDrive()].idSize;
+            size_t maxSector = maxSectors[mfmIndex][sizeIndex];
+            if (currSector > maxSector)
+                eocFound = true;
+
             ++currSector;
 
             size_t actlen = drive[cmdDrive()].length;
@@ -1119,7 +1119,7 @@ class FDC
 
         void reset()
         {
-            cout << "FDC reset or idle." << endl;
+            // cout << "FDC reset or idle." << endl;
             state = FDCState::FDC_STATE_IDLE;
             stage = FDCAccess::FDC_ACCESS_NONE;
             byte = false;
@@ -1159,12 +1159,12 @@ class FDC
                 }
                 else
                 {
-                    // cout << "Result buffer: ";
                     retval = resBuffer[resIndex++];
+                    // cout << "Result buffer: ";
+                    // cout << "Read byte: " << hex << setw(2) << setfill('0');
+                    // cout << static_cast<size_t>(retval) << endl;
                 }
                 byte = true;
-                // cout << "Read byte: " << hex << setw(2) << setfill('0');
-                // cout << static_cast<size_t>(retval) << endl;
             }
 
             return retval;
@@ -1213,60 +1213,16 @@ class FDC
                 drive[ii].motor = status;
         }
 
-        void checkAccess()
-        {
-            size_t equal = 0;
-
-            size_t command = cmdBuffer[0] & 0x1F;
-
-            if (command != 0x06 && command != 0x0C)
-            {
-                for (size_t ii = 0; ii < 4; ++ii)
-                {
-                    access[0][ii] = 0xFF;
-                    access[1][ii] = 0xFF;
-                }
-            }
-            else
-            {
-                for (size_t ii = 0; ii < 4; ++ii)
-                {
-                    if (access[0][ii] == cmdBuffer[ii + 2]
-                            && access[1][ii] == cmdBuffer[ii + 2])
-                        ++equal;
-
-                    access[1][ii] = access[0][ii];
-                    access[0][ii] = cmdBuffer[ii + 2];
-                }
-            }
-
-            weak = (equal == 4);
-        }
-
-        void dumpSector(vector<uint8_t> const& buf)
-        {
-            for (size_t ii = 0; ii < buf.size(); ++ii)
-            {
-                cout << hex << setw(2) << setfill('0');
-                cout << static_cast<size_t>(buf[ii]) << " ";
-                if (ii % 0x10 == 0x0F)
-                {
-                    for (size_t jj = ii - 0x0F; jj <= ii; ++jj)
-                        cout << (((buf[jj] < 0x7F) && (buf[jj] > 0x1F)) ?
-                                static_cast<char>(buf[jj]) : '?');
-                    cout << " - " << static_cast<size_t>(ii & 0xFFF0) << endl;
-                }
-
-            }
-        }
-
         void randomizeSector(vector<uint8_t>& buf)
         {
             for (size_t ii = 0; ii < 0xB0; ++ii)
-                buf[buf.size() - ii - 1] &= rand() & 0xFF;
+                buf[buf.size() - ii - 1] |= rand() & 0x01;
+
+            for (size_t ii = 0; ii < 0x30; ++ii)
+                buf[buf.size() - ii - 0xB1] = drive[cmdDrive()].filler;
 
             for (size_t ii = 0; ii < 0x20; ++ii)
-                buf[buf.size() - ii - 0xE1] &= rand() & 0xFF;
+                buf[buf.size() - ii - 0xE1] |= rand() & 0x01;
         }
 
 };
