@@ -243,17 +243,15 @@ void Spectrum::clock()
     ula.clock();
     z80.c = ula.z80_c;
 
-    if ((++count & 0x03) == 0x00)
+    ++count;
+    if ((count & 0x03) == 0x00)
     {
         buzzer.update();
         psgClock();
-    }
 
-    // For the moment, I'm clocking this at 7MHz. In a real Spectrum +3, the
-    // FDC is clocked at 8MHz. I'm changing this only if it is really necessary.
-    // (One easy way would be clocking twice every seven clocks... It's not like
-    // we're interfacing with a real disk drive...)
-    if (spectrumPlus3) fdc.clock();
+        if (spectrumPlus3 && ((count & 0x07) == 0x00))
+            fdc.clock();
+    }
 
     // We clock the Z80 if the ULA allows.
     if (ula.cpuClock)
