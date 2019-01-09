@@ -173,7 +173,11 @@ class FDC
                             state = FDCState::FDC_STATE_COMMAND;
                         }
                         else
-                            reset();
+                        {
+                            sReg[0] = 0x80;
+                            resBuffer[0] = sReg[0];
+                            state = FDCState::FDC_STATE_RESULT;
+                        }
                     }
                     break;
 
@@ -347,6 +351,13 @@ class FDC
                     mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
+                case 0x10:  // Version
+                    cout << "Version." << endl;
+                    cmdBytes = 1;
+                    resBytes = 1;
+                    mode = FDCMode::FDC_MODE_NONE;
+                    return true;
+
                 case 0x11:  // Scan equal
                     cout << "Scan equal." << endl;
                     cmdBytes = 9;   // 11+MT+MF+SK HU TR HD SC SZ LS GP SL
@@ -370,8 +381,8 @@ class FDC
 
                 default:
                     cout << "Invalid command." << endl;
-                    cmdBytes = 0;
-                    resBytes = 0;
+                    cmdBytes = 1;   // XX
+                    resBytes = 1;   //             S0 (80)
                     mode = FDCMode::FDC_MODE_NONE;
                     return false;
             }
@@ -447,6 +458,9 @@ class FDC
                     break;
 
                 case 0x0F:  // Seek track N
+                    break;
+
+                case 0x10:  // Version
                     break;
 
                 case 0x11:  // Scan equal
@@ -565,6 +579,10 @@ class FDC
                     }
                     break;
 
+                case 0x10:  // Version
+                    resBuffer[0] = 0x80;
+                    state = FDCState::FDC_STATE_RESULT;
+                    break;
                 case 0x11:  // Scan equal
                     break;
 
@@ -1015,6 +1033,7 @@ class FDC
             cmdIndex = resIndex = dataIndex = 0;
             cmdBytes = resBytes = dataBytes = 0;
             statusReg = SREG_RQM;
+            cout << endl;
         }
 
         uint_fast8_t status()
@@ -1033,7 +1052,10 @@ class FDC
                 if ((statusReg & SREG_EXM) == SREG_EXM)
                     retval = dataBuffer[dataIndex++];
                 else
+                {
                     retval = resBuffer[resIndex++];
+                    cout << " " << setw(2) << setfill('0') << hex << static_cast<size_t>(retval) << " ";
+                }
                 byte = true;
             }
 
@@ -1050,7 +1072,10 @@ class FDC
                 if ((statusReg & SREG_EXM) == SREG_EXM)
                     dataBuffer[dataIndex++] = value;
                 else
+                {
                     cmdBuffer[cmdIndex++] = value;
+                    cout << " " << setw(2) << setfill('0') << hex << static_cast<size_t>(value) << " ";
+                }
                 byte = true;
             }
         }
