@@ -81,8 +81,6 @@ constexpr size_t SERVICE_FM = 108;
 class FDC
 {
     public:
-        size_t maxSectors[2][9];
-
         uint_fast8_t statusReg = 0x00;
 
         uint_fast8_t cmdBuffer[16];
@@ -108,6 +106,7 @@ class FDC
         bool idmFound;
         bool ddmFound;
         bool eocFound;
+        bool secFound;
         bool loaded = false;
         bool unload = false;
         bool transfer = false;
@@ -139,9 +138,6 @@ class FDC
         bool useDma;
 
         FDC() :
-            maxSectors{
-                {0x1A, 0x0F, 0x08, 0x04, 0x02, 0x01, 0x01, 0x01, 0x01},   // FM
-                {0x3F, 0x1A, 0x0F, 0x08, 0x04, 0x02, 0x01, 0x01, 0x01}},  // MFM
             drive{DiskDrive(true), DiskDrive(false)},
             presCylNum{0, 0}
         {}
@@ -402,6 +398,7 @@ class FDC
                     idmFound = false;
                     ddmFound = false;
                     eocFound = false;
+                    secFound = false;
                     firstSector = cmdBuffer[4];
                     lastSector = cmdBuffer[6];
                     currSector = 0;
@@ -609,14 +606,6 @@ class FDC
                 return false;
             }
 
-            size_t mfmIndex = mfmModeBit ? 1 : 0;
-            size_t sizeIndex = drive[cmdDrive()].idSize;
-            sizeIndex = (sizeIndex > 8) ? 8 : sizeIndex;
-            size_t maxSector = maxSectors[mfmIndex][sizeIndex];
-            size_t presSector = drive[cmdDrive()].idSector;
-            if (currSector > maxSector || currSector > presSector)
-                eocFound = true;
-
             currSector = drive[cmdDrive()].idSector;
 
             // The four bytes are checked.
@@ -651,6 +640,10 @@ class FDC
             if (done)
             {
                 drive[cmdDrive()].nextSector();
+
+                if (sReg[0] == 0x00 && sReg[1] == 0x00 && currSector == lastSector)
+                    eocFound = true;
+
                 setResultBytesOp();
             }
 
@@ -930,18 +923,24 @@ class FDC
 
                 case FDCAccess::FDC_ACCESS_UNLOAD:
                     if (!idmFound)
-                        sReg[1] |= 0x04;
-
-                    if (!ddmFound)
                     {
                         sReg[0] |= 0x40;
                         sReg[1] |= 0x01;
                     }
 
-                    if (eocFound)
+                    if (!ddmFound)
                     {
                         sReg[0] |= 0x40;
+                        sReg[2] |= 0x01;
+                    }
+
+                    if (!ddmFound && !idmFound)
                         sReg[1] |= 0x80;
+
+                    if (!secFound)
+                    {
+                        sReg[0] |= 0x40;
+                        sReg[1] |= 0x04;
                     }
 
                     resBuffer[0] = sReg[0];
@@ -980,12 +979,6 @@ class FDC
             sReg[1] = drive[cmdDrive()].statusReg1;
             sReg[2] = drive[cmdDrive()].statusReg2;
 
-            size_t mfmIndex = mfmModeBit ? 1 : 0;
-            size_t sizeIndex = drive[cmdDrive()].idSize;
-            size_t maxSector = maxSectors[mfmIndex][sizeIndex];
-            if (currSector > maxSector)
-                eocFound = true;
-
             ++currSector;
 
             size_t actlen = drive[cmdDrive()].length;
@@ -1015,11 +1008,14 @@ class FDC
 
             setResultBytesOp();
 
-            if (resSector == firstSector)
+            if ((sReg[1] & 0x01) == 0x00)
                 idmFound = true;
 
-            if ((sReg[1] & 0x01) == 0x00)
+            if ((sReg[2] & 0x01) == 0x00)
                 ddmFound = true;
+
+            if (idmFound || ddmFound)
+                secFound = true;
 
             drive[cmdDrive()].nextSector();
             return ((currSector == lastSector) || (drive[cmdDrive()].hole > 1));
@@ -1033,7 +1029,6 @@ class FDC
             cmdIndex = resIndex = dataIndex = 0;
             cmdBytes = resBytes = dataBytes = 0;
             statusReg = SREG_RQM;
-            cout << endl;
         }
 
         uint_fast8_t status()
@@ -1052,10 +1047,7 @@ class FDC
                 if ((statusReg & SREG_EXM) == SREG_EXM)
                     retval = dataBuffer[dataIndex++];
                 else
-                {
                     retval = resBuffer[resIndex++];
-                    cout << " " << setw(2) << setfill('0') << hex << static_cast<size_t>(retval) << " ";
-                }
                 byte = true;
             }
 
@@ -1072,10 +1064,7 @@ class FDC
                 if ((statusReg & SREG_EXM) == SREG_EXM)
                     dataBuffer[dataIndex++] = value;
                 else
-                {
                     cmdBuffer[cmdIndex++] = value;
-                    cout << " " << setw(2) << setfill('0') << hex << static_cast<size_t>(value) << " ";
-                }
                 byte = true;
             }
         }
