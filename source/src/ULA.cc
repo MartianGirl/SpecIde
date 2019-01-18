@@ -133,7 +133,7 @@ void ULA::generateVideoControlSignals()
 
         if (scan == vBlankEnd)
         {
-            flash += 0x04;
+            flash += 0x08;
         }
         else if (scan == vSyncEnd)
         {
