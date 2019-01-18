@@ -28,6 +28,7 @@ David Garijo for helping with the MacOS build process.
 JFSebastian for his wonderful ZXSpectrum.ttf font.
 Ast_A_Moore for his help with the +2A timings and port 0x0FFD.
 chernandezba for his help with the initial values for IR register.
+Miguel Mesa for noticing that the FLASH attribute was running at half speed.
 
 How to install it:
 
