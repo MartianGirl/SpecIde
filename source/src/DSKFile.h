@@ -224,12 +224,10 @@ class DSKFile
                 if (equal(&stdMagic[0x00], &stdMagic[0x08], fileData.begin()))
                 {
                     stdMagicOk = true;
-                    cout << fileName << ": Standard DSK image detected." << endl;
                 }
                 else if (equal(&extMagic[0x00], &extMagic[0x08], fileData.begin()))
                 {
                     extMagicOk = true;
-                    cout << fileName << ": Extended DSK image detected." << endl;
                 }
                 else
                 {
@@ -252,19 +250,16 @@ class DSKFile
         {
             copy(&fileData[0x22], &fileData[0x30], creator);
             creator[14] = creator[15] = '\0';
-            cout << "Creator: " << creator << endl;
         }
 
         void readNumberOfTracks()
         {
             numTracks = fileData[0x30];
-            cout << "Number of tracks: " << static_cast<size_t>(numTracks) << endl;
         }
 
         void readNumberOfSides()
         {
             numSides = fileData[0x31];
-            cout << "Number of sides " << static_cast<size_t>(numSides) << endl;
         }
 
         void buildTrackSizeTable()
@@ -276,7 +271,6 @@ class DSKFile
             // Disk Information Block size.
             if (extMagicOk && (totalTracks * 2 + 0x34) > 0x100)
             {
-                cout << "Invalid DSK file: Too many tracks." << endl;
                 validFile = false;
                 return;
             }
@@ -296,17 +290,6 @@ class DSKFile
                     trackSizeTable.push_back(trackSize);
                 }
             }
-
-            // for (size_t track = 0; track < numTracks; ++track)
-            // {
-                // for (size_t side = 0; side < numSides; ++side)
-                // {
-                    // size_t size = trackSizeTable[track * numSides + side];
-                    // cout << "Track " << track << ", Side " << side;
-                    // cout << " size: " << size << "    ";
-                // }
-                // cout << endl;
-            // }
         }
 
         void loadTracks()
@@ -323,14 +306,6 @@ class DSKFile
                     tracks[tt].load(fileData, offset);
 
                 offset += trackSizeTable[tt];
-
-                // cout << hex << setw(2) << setfill('0');
-                // cout << "Track: " << static_cast<size_t>(tracks[tt].trackNumber) << " ";
-                // cout << "Side: " << static_cast<size_t>(tracks[tt].sideNumber) << " ";
-                // cout << "Sector size: " << static_cast<size_t>(0x80 << tracks[tt].sectorSize) << " ";
-                // cout << "Num sectors: " << static_cast<size_t>(tracks[tt].numSectors) << " ";
-                // cout << "Gap length: " << static_cast<size_t>(tracks[tt].gapLength) << " ";
-                // cout << "Track size: " << static_cast<size_t>(tracks[tt].trackSize) << endl;
             }
         }
 };

@@ -113,6 +113,7 @@ class FDC
         size_t loadTimer = 0;
         size_t unloadTimer = 0;
         size_t serviceTimer = 0;
+        size_t sectorCopy = 0;
 
         FDCState state;
         FDCMode mode;
@@ -165,7 +166,6 @@ class FDC
                         cout << "Command: ";
                         if (checkCommand())
                         {
-                            // cout << "Expecting " << hex << cmdBytes << " bytes." << endl;
                             state = FDCState::FDC_STATE_COMMAND;
                         }
                         else
@@ -250,7 +250,6 @@ class FDC
                     statusReg = SREG_RQM | SREG_DIO | SREG_CB;
                     if (byte)
                     {
-                        // Maybe put a delay here?
                         byte = false;
                         if (resIndex >= resBytes)
                             reset();
@@ -597,28 +596,25 @@ class FDC
         bool seekOp()
         {
             drive[cmdDrive()].readSector(cmdHead());
+            drive[cmdDrive()].nextSector();
 
             // Check No Data (ND) condition.
             if (((drive[cmdDrive()].statusReg1) & 0x04) == 0x04)
-            {
-                // Maybe check the whole track?
-                drive[cmdDrive()].nextSector();
                 return false;
-            }
 
             currSector = drive[cmdDrive()].idSector;
 
-            // The four bytes are checked.
-            if (currSector != firstSector
-                    || cmdBuffer[2] != drive[cmdDrive()].idTrack
-                    || cmdBuffer[3] != drive[cmdDrive()].idHead
-                    || cmdBuffer[5] != drive[cmdDrive()].idSize)
+            // Track and sector are checked.
+            if (drive[cmdDrive()].idTrack != cmdBuffer[2])
             {
-                drive[cmdDrive()].nextSector();
-                return false;
-            }
-            else
+                sReg[2] |= 0x10;    // WC
+                if (drive[cmdDrive()].idTrack == 0xFF)
+                    sReg[2] |= 0x02;    // BC
+                sReg[0] |= 0x40;    // AT
                 return true;
+            }
+
+            return (currSector == firstSector);
         }
 
         bool readOp()
@@ -640,7 +636,6 @@ class FDC
             if (done)
             {
                 drive[cmdDrive()].nextSector();
-
                 if (sReg[0] == 0x00 && sReg[1] == 0x00 && currSector == lastSector)
                     eocFound = true;
 
@@ -662,33 +657,6 @@ class FDC
                 sReg[0] |= 0x40;
                 sReg[1] |= 0x80;
             }
-
-            if (!multiTrackBit)
-            {
-                if (resHead != 0x00 || currSector == lastSector)
-                {
-                    resSector = 1;
-                    ++resTrack;
-                }
-                else
-                {
-                    ++resSector;
-                }
-            }
-            else
-            {
-                if (currSector == lastSector)
-                {
-                    resHead ^= 0x01;
-                    if (cmdBuffer[3] != 0x00)
-                        ++resTrack;
-                    resSector = 1;
-                }
-                else
-                {
-                    ++resSector;
-                }
-            }
         }
 
         bool readRegularDataOp()
@@ -696,24 +664,29 @@ class FDC
             bool error = false;
 
             size_t actlen = drive[cmdDrive()].length;
-            size_t outlen;
+            size_t outlen = 0x80 << cmdBuffer[5];   // Use SL as sector length.
+            size_t offset = 0;
 
-            // We determine how many bytes to read from this sector.
-            if (cmdBuffer[5] == 0x00)   // Use SL as sector length.
+            if (cmdBuffer[5] == 0x00)   // Use SZ as sector length.
                 outlen = cmdBuffer[8];
-            else                        // Use SZ as sector length.
-                outlen = 0x80 << cmdBuffer[5];
 
-            if (actlen == 0)
-                actlen = outlen;
+            // If actlen is a multiple of outlen, there are several
+            // copies of this sector and we have to choose one.
+            if ((actlen > outlen) && (actlen % outlen) == 0)
+            {
+                size_t sectorCopies = actlen / outlen;
+                offset = outlen * sectorCopy;
+                sectorCopy = (sectorCopy + 1) % sectorCopies;
+            }
 
-            vector<uint8_t> buf(&drive[cmdDrive()].buffer[0],
-                    &drive[cmdDrive()].buffer[actlen]);
+            size_t finish = min(offset + outlen, drive[cmdDrive()].buffer.size());
+            vector<uint8_t> buf(&drive[cmdDrive()].buffer[offset],
+                    &drive[cmdDrive()].buffer[finish]);
 
-            for (size_t ii = actlen; ii < outlen; ++ii)
-                buf.push_back(rand() & 0xFF);
+            // Complete length
+            buf.insert(buf.end(), (outlen - buf.size()), 0x00);
 
-            if (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20))
+            if ((sReg[2] & 0x20) == 0x20)
             {
                 randomizeSector(buf);
                 sReg[0] |= 0x40;    // 01000HUU - AT
@@ -731,24 +704,29 @@ class FDC
 
         bool readDeletedDataOp()
         {
-            // We determine how many bytes to read from this sector.
-            size_t outlen = 0x80 << drive[cmdDrive()].idSize;
             size_t actlen = drive[cmdDrive()].length;
+            size_t outlen = 0x80 << drive[cmdDrive()].idSize;
+            size_t offset = 0;
 
-            if (skipDeletedBit)
-                return false;
+            if (skipDeletedBit) return false;
 
-            // Not skipping: Dump entire sector and finish.
-            if (actlen == 0)
-                actlen = outlen;
+            // If actlen is a multiple of outlen, there are several
+            // copies of this sector and we have to choose one.
+            if ((actlen > outlen) && (actlen % outlen) == 0)
+            {
+                size_t sectorCopies = actlen / outlen;
+                offset = outlen * sectorCopy;
+                sectorCopy = (sectorCopy + 1) % sectorCopies;
+            }
 
-            vector<uint8_t> buf(&drive[cmdDrive()].buffer[0],
-                    &drive[cmdDrive()].buffer[actlen]);
+            size_t finish = min(offset + outlen, drive[cmdDrive()].buffer.size());
+            vector<uint8_t> buf(&drive[cmdDrive()].buffer[offset],
+                    &drive[cmdDrive()].buffer[finish]);
 
-            for (size_t ii = actlen; ii < outlen; ++ii)
-                buf.push_back(rand() & 0xFF);
+            // Complete length
+            buf.insert(buf.end(), (outlen - buf.size()), 0x00);
 
-            if (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20))
+            if ((sReg[2] & 0x20) == 0x20)
             {
                 randomizeSector(buf);
                 sReg[0] |= 0x40;    // 01000HUU - AT
@@ -768,7 +746,10 @@ class FDC
             {
                 case FDCAccess::FDC_ACCESS_LOAD:
                     if (headLoadOp())
+                    {
+                        sReg[0] &= 0x3F;
                         stage = FDCAccess::FDC_ACCESS_SEEK;
+                    }
                     break;
 
                 // Seek stage. Here we read all the sectors in the track,
@@ -778,7 +759,15 @@ class FDC
                 // end the operation with an error.
                 case FDCAccess::FDC_ACCESS_SEEK:
                     if (seekOp())
-                        stage = FDCAccess::FDC_ACCESS_DATA;
+                    {
+                        if ((sReg[0] & 0xC0) == 0x00)
+                            stage = FDCAccess::FDC_ACCESS_DATA;
+                        else
+                        {
+                            dataBytes = 0;
+                            stage = FDCAccess::FDC_ACCESS_UNLOAD;
+                        }
+                    }
                     else if (drive[cmdDrive()].hole > 1)
                     {
                         dataBytes = 0;
@@ -834,47 +823,18 @@ class FDC
                     break;
 
                 case FDCAccess::FDC_ACCESS_DATA:
-                    drive[cmdDrive()].readSector(cmdHead());
-                    drive[cmdDrive()].nextSector();
-                    sReg[0] = cmdBuffer[1] & 0x07;
-                    sReg[1] = drive[cmdDrive()].statusReg1;
-                    sReg[2] = drive[cmdDrive()].statusReg2;
-
-                    if (drive[cmdDrive()].hole > 1)
-                    {
-                        if (idmFound == false) sReg[1] |= 0x01;     // xxxxxxx1 - MAD
-                        if (ddmFound == false) sReg[1] |= 0x04;     // xxxxx1xx - ND
-                        sReg[0] |= 0x40;    // 01000HUU - AT
-
-                        drive[cmdDrive()].idTrack = rand() & 0xFF;
-                        drive[cmdDrive()].idHead = rand() & 0xFF;
-                        drive[cmdDrive()].idSector = rand() & 0xFF;
-                        drive[cmdDrive()].idSize = rand() & 0xFF;
-                    }
-                    else
-                    {
-                        // Check for Missing Address Mark or No Data.
-                        if ((sReg[1] & 0x01) == 0x00)
-                            idmFound = true;
-
-                        if ((sReg[1] & 0x04) == 0x00)
-                            ddmFound = true;
-
-                        if (idmFound == false || ddmFound == false)
-                            return;
-                    }
-
-                    stage = FDCAccess::FDC_ACCESS_UNLOAD;
+                    if (readIdOp())
+                        stage = FDCAccess::FDC_ACCESS_UNLOAD;
                     break;
 
                 case FDCAccess::FDC_ACCESS_UNLOAD:
                     resBuffer[0] = sReg[0];
                     resBuffer[1] = sReg[1];
                     resBuffer[2] = sReg[2];
-                    resBuffer[3] = drive[cmdDrive()].idTrack;
-                    resBuffer[4] = drive[cmdDrive()].idHead;
-                    resBuffer[5] = drive[cmdDrive()].idSector;
-                    resBuffer[6] = drive[cmdDrive()].idSize;
+                    resBuffer[3] = resTrack;
+                    resBuffer[4] = resHead;
+                    resBuffer[5] = resSector;
+                    resBuffer[6] = resSize;
                     interrupt = true;
                     unload = true;
                     state = FDCState::FDC_STATE_RESULT;
@@ -883,6 +843,43 @@ class FDC
                 default:
                     reset();
                     break;
+            }
+        }
+
+        bool readIdOp()
+        {
+            drive[cmdDrive()].readSector(cmdHead());
+            drive[cmdDrive()].nextSector();
+
+            sReg[0] = cmdBuffer[1] & 0x07;
+            sReg[1] = drive[cmdDrive()].statusReg1;
+            sReg[2] = drive[cmdDrive()].statusReg2;
+            resTrack = drive[cmdDrive()].idTrack;
+            resHead = drive[cmdDrive()].idHead;
+            resSector = drive[cmdDrive()].idSector;
+            resSize = drive[cmdDrive()].idSize;
+
+            if (drive[cmdDrive()].hole > 1)
+            {
+                sReg[1] |= 0x01;    // xxxxxxx1 - MAD
+                sReg[1] |= 0x04;    // xxxxx1xx - ND
+                sReg[0] |= 0x40;    // 01000HUU - AT
+                return true;
+            }
+            else
+            {
+                // Check for Missing Address Mark or No Data.
+                idmFound = ((sReg[1] & 0x01) == 0x00);
+                ddmFound = ((sReg[1] & 0x04) == 0x00);
+
+                if (idmFound && ddmFound)
+                {
+                    if ((sReg[1] & 0x20) == 0x20)
+                        sReg[1] |= 0x04;
+                    return true;
+                }
+                else
+                    return false;
             }
         }
 
@@ -999,7 +996,7 @@ class FDC
             buf.assign(&drive[cmdDrive()].buffer[0],
                     &drive[cmdDrive()].buffer[outlen]);
 
-            if (((sReg[1] & 0x20) == 0x20) || ((sReg[2] & 0x20) == 0x20))
+            if ((sReg[2] & 0x20) == 0x20)
                 randomizeSector(buf);   // Return random data.
 
             // If we reach here, it is a normal data read. Dump and continue.
@@ -1092,13 +1089,10 @@ class FDC
         void randomizeSector(vector<uint8_t>& buf)
         {
             for (size_t ii = 0; ii < 0xB0; ++ii)
-                buf[buf.size() - ii - 1] |= rand() & 0x01;
+                buf[buf.size() - ii - 1] |= rand() & 0xFF;
 
-            for (size_t ii = 0; ii < 0x30; ++ii)
-                buf[buf.size() - ii - 0xB1] = drive[cmdDrive()].filler;
-
-            for (size_t ii = 0; ii < 0x20; ++ii)
-                buf[buf.size() - ii - 0xE1] |= rand() & 0x01;
+            for (size_t ii = 0; ii < 0x10; ++ii)
+                buf[buf.size() - ii - 0xF1] |= rand() & 0xFF;
         }
 
 };
