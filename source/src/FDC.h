@@ -686,8 +686,12 @@ class FDC
             // Complete length
             buf.insert(buf.end(), (outlen - buf.size()), 0x00);
 
-            if ((sReg[2] & 0x20) == 0x20)
+            if (((sReg[2] & 0x20) == 0x20)      // CRC error
+                    && cmdBuffer[2] == 0x00     // Track 00
+                    && cmdBuffer[4] == 0x02     // Sector id 02
+                    && cmdBuffer[5] == 0x02)    // Sector size 512 bytes
             {
+                // We got a Speedlock.
                 randomizeSector(buf);
                 sReg[0] |= 0x40;    // 01000HUU - AT
                 error = true;
@@ -726,8 +730,12 @@ class FDC
             // Complete length
             buf.insert(buf.end(), (outlen - buf.size()), 0x00);
 
-            if ((sReg[2] & 0x20) == 0x20)
+            if (((sReg[2] & 0x20) == 0x20)      // CRC error
+                    && cmdBuffer[2] == 0x00     // Track 00
+                    && cmdBuffer[4] == 0x02     // Sector id 02
+                    && cmdBuffer[5] == 0x02)    // Sector size 512 bytes
             {
+                // We got a Speedlock.
                 randomizeSector(buf);
                 sReg[0] |= 0x40;    // 01000HUU - AT
             }
@@ -737,6 +745,7 @@ class FDC
 
             // We must signal the CM.
             sReg[2] |= 0x40;
+
             return true;
         }
 
@@ -996,8 +1005,11 @@ class FDC
             buf.assign(&drive[cmdDrive()].buffer[0],
                     &drive[cmdDrive()].buffer[outlen]);
 
-            if ((sReg[2] & 0x20) == 0x20)
-                randomizeSector(buf);   // Return random data.
+            if (((sReg[2] & 0x20) == 0x20)      // CRC error
+                    && cmdBuffer[2] == 0x00     // Track 00
+                    && cmdBuffer[4] == 0x02     // Sector id 02
+                    && cmdBuffer[5] == 0x02)    // Sector size 512 bytes
+                randomizeSector(buf);   // We got a Speedlock.
 
             // If we reach here, it is a normal data read. Dump and continue.
             copy(buf.begin(), buf.end(), &dataBuffer[dataBytes]);
@@ -1088,11 +1100,10 @@ class FDC
 
         void randomizeSector(vector<uint8_t>& buf)
         {
-            for (size_t ii = 0; ii < 0xB0; ++ii)
+            // Theoretically, there is a pattern here. However, this seems
+            // to suffice.
+            for (size_t ii = 0; ii < 0x40; ++ii)
                 buf[buf.size() - ii - 1] |= rand() & 0xFF;
-
-            for (size_t ii = 0; ii < 0x10; ++ii)
-                buf[buf.size() - ii - 0xF1] |= rand() & 0xFF;
         }
 
 };
