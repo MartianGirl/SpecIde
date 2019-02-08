@@ -153,7 +153,7 @@ class FDC
                     unloadTimer = headUnloadTime;
                     loaded = false;
                     unload = false;
-                    cout << "Head unloaded..." << endl;
+                    // cout << "Head unloaded..." << endl;
                 }
             }
 
@@ -163,7 +163,7 @@ class FDC
                     statusReg = SREG_RQM;
                     if (byte)
                     {
-                        cout << "Command: ";
+                        // cout << "Command: ";
                         if (checkCommand())
                         {
                             state = FDCState::FDC_STATE_COMMAND;
@@ -263,21 +263,21 @@ class FDC
             switch (cmdBuffer[0] & 0x1F)
             {
                 case 0x02:  // Read Track (Diagnostic)
-                    cout << "Read Track (Diagnostic)." << endl;
+                    // cout << "Read Track (Diagnostic)." << endl;
                     cmdBytes = 9;   // 02+MF+SK    HU TR HD SC SZ NM GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD NM SZ
                     mode = FDCMode::FDC_MODE_READ;
                     return true;
 
                 case 0x03:  // Specify SPD/DMA
-                    cout << "Specify SPD/DMA." << endl;
+                    // cout << "Specify SPD/DMA." << endl;
                     cmdBytes = 3;   // 03          XX YY
                     resBytes = 0;   //
                     mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x04:  // Sense drive status
-                    cout << "Sense drive status." << endl;
+                    // cout << "Sense drive status." << endl;
                     cmdBytes = 2;   // 04          HU
                     resBytes = 1;   //             S3
                     mode = FDCMode::FDC_MODE_NONE;
@@ -291,21 +291,21 @@ class FDC
                     return true;
 
                 case 0x06:  // Read sector(s)
-                    cout << "Read sector(s)." << endl;
+                    // cout << "Read sector(s)." << endl;
                     cmdBytes = 9;   // 06+MT+MF+SK HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
                     mode = FDCMode::FDC_MODE_READ;
                     return true;
 
                 case 0x07:  // Recalibrate and seek physical track 0
-                    cout << "Recalibrate and seek physical track 0." << endl;
+                    // cout << "Recalibrate and seek physical track 0." << endl;
                     cmdBytes = 2;   // 07          HU
                     resBytes = 0;
                     mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x08:  // Sense interrupt status
-                    cout << "Sense interrupt status." << endl;
+                    // cout << "Sense interrupt status." << endl;
                     cmdBytes = 1;   // 08
                     resBytes = 2;   //             S0 TP
                     mode = FDCMode::FDC_MODE_NONE;
@@ -319,14 +319,14 @@ class FDC
                     return true;
 
                 case 0x0A:  // Read ID
-                    cout << "Read ID." << endl;
+                    // cout << "Read ID." << endl;
                     cmdBytes = 2;   // 0A+MF       HU
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
                     mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x0C:  // Read deleted sector(s)
-                    cout << "Read deleted sector(s)." << endl;
+                    // cout << "Read deleted sector(s)." << endl;
                     cmdBytes = 9;   // 0C+MT+MF+SK HU TR HD SC SZ LS GP SL
                     resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
                     mode = FDCMode::FDC_MODE_READ;
@@ -340,14 +340,14 @@ class FDC
                     return true;
 
                 case 0x0F:  // Seek track N
-                    cout << "Seek track." << endl;
+                    // cout << "Seek track." << endl;
                     cmdBytes = 3;   // 0F          HU TP
                     resBytes = 0;
                     mode = FDCMode::FDC_MODE_NONE;
                     return true;
 
                 case 0x10:  // Version
-                    cout << "Version." << endl;
+                    // cout << "Version." << endl;
                     cmdBytes = 1;
                     resBytes = 1;
                     mode = FDCMode::FDC_MODE_NONE;
@@ -438,7 +438,7 @@ class FDC
                     eocFound = false;
                     ddmFound = false;
                     idmFound = false;
-                    stage = FDCAccess::FDC_ACCESS_LOAD;
+                    stage = FDCAccess::FDC_ACCESS_DATA;
                     break;
 
                 case 0x0C:  // Read deleted sector(s)
@@ -614,7 +614,8 @@ class FDC
                 return true;
             }
 
-            return (currSector == firstSector);
+            return ((currSector == firstSector)
+                    && drive[cmdDrive()].idSize == cmdBuffer[5]);
         }
 
         bool readOp()
@@ -780,7 +781,7 @@ class FDC
                     else if (drive[cmdDrive()].hole > 1)
                     {
                         dataBytes = 0;
-                        sReg[1] |= 0x04;    // xxxxx1xx - ND
+                        sReg[1] |= 0x05;    // xxxxx1x1 - ND - MAD
                         sReg[0] |= 0x40;    // 01000HUU - AT
                         stage = FDCAccess::FDC_ACCESS_UNLOAD;
                     }
@@ -826,11 +827,6 @@ class FDC
         {
             switch (stage)
             {
-                case FDCAccess::FDC_ACCESS_LOAD:
-                    if (headLoadOp())
-                        stage = FDCAccess::FDC_ACCESS_DATA;
-                    break;
-
                 case FDCAccess::FDC_ACCESS_DATA:
                     if (readIdOp())
                         stage = FDCAccess::FDC_ACCESS_UNLOAD;
@@ -857,12 +853,19 @@ class FDC
 
         bool readIdOp()
         {
+            sReg[0] = cmdBuffer[1] & 0x07;
+            sReg[1] = 0x00;
+            sReg[2] = 0x00;
+
             drive[cmdDrive()].readSector(cmdHead());
             drive[cmdDrive()].nextSector();
 
-            sReg[0] = cmdBuffer[1] & 0x07;
-            sReg[1] = drive[cmdDrive()].statusReg1;
-            sReg[2] = drive[cmdDrive()].statusReg2;
+            if (loaded)
+            {
+                sReg[1] = drive[cmdDrive()].statusReg1;
+                sReg[2] = drive[cmdDrive()].statusReg2;
+            }
+
             resTrack = drive[cmdDrive()].idTrack;
             resHead = drive[cmdDrive()].idHead;
             resSector = drive[cmdDrive()].idSector;
@@ -880,15 +883,9 @@ class FDC
                 // Check for Missing Address Mark or No Data.
                 idmFound = ((sReg[1] & 0x01) == 0x00);
                 ddmFound = ((sReg[1] & 0x04) == 0x00);
+                bool crcOk = ((sReg[1] & 0x20) == 0x00);
 
-                if (idmFound && ddmFound)
-                {
-                    if ((sReg[1] & 0x20) == 0x20)
-                        sReg[1] |= 0x04;
-                    return true;
-                }
-                else
-                    return false;
+                return idmFound && ddmFound && crcOk;
             }
         }
 
@@ -899,7 +896,7 @@ class FDC
             {
                 loadTimer = headLoadTime;
                 loaded = true;
-                cout << "Head loaded..." << endl;
+                // cout << "Head loaded..." << endl;
             }
 
             return loaded;
@@ -1092,8 +1089,8 @@ class FDC
 
         void motor(bool status)
         {
-            if (drive[0].motor != status)
-                cout << "Disk drive motor is " << (status ? "ON" : "OFF") << "..." << endl;
+            // if (drive[0].motor != status)
+                // cout << "Disk drive motor is " << (status ? "ON" : "OFF") << "..." << endl;
             for (size_t ii = 0; ii < 2; ++ii)
                 drive[ii].motor = status;
         }
