@@ -9,10 +9,11 @@ This is an attempt at writing a ZX Spectrum emulator using SFML for video, audio
 
 Currently, the emulator is functional and is quite accurate. Some of the supported features are:
 
-- Emulation of ZX Spectrum 48K (Issue 2 and Issue 3), 128K, +2, and +2A.
-- Emulation of Spanish 128K, +2, and +2A.
+- Emulation of ZX Spectrum 48K (Issue 2 and Issue 3), 128K, +2, +2A and +3 (However, disk drive is read-only yet).
+- Emulation of Spanish 128K, +2, +2A and +3.
 - AY-3-8912 sound emulation.
 - Loading of tapes via .tap and .tzx tape images.
+- Loading of disks via .dsk disk images.
 - Flashloading of .tap files and .tzx that use the ROM routines.
 - Saving of .tap files.
 - Full screen video mode detection.
