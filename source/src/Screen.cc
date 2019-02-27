@@ -107,21 +107,19 @@ void Screen::run()
 {
     steady_clock::time_point tick = steady_clock::now();
 
-    for (;;)
-    {
+    for (;;) {
         channel.play();
-        for (;;)
-        {
+        for (;;) {
             // Now this chunk is for instant loading of TAPs.
             // Check tape trap
-            if (flashTap == true && spectrum.rom48 && cpuInRefresh())
+            if (flashTap == true && spectrum.rom48 && cpuInRefresh()) {
                 checkTapeTraps();
+            }
 
             // Update Spectrum hardware.
             clock();
 
-            if (spectrum.ula.vSync)
-            {
+            if (spectrum.ula.vSync) {
                 // Update the screen.
                 update();
                 if (!syncToVideo)
@@ -137,16 +135,18 @@ void Screen::run()
                 if (done) return;
                 if (menu) break;
             }
+
+            if (spectrum.ula.keyPoll) {
+                pollEvents();
+            }
         }
         channel.stop();
 
-        for (;;)
-        {
+        for (;;) {
             // Menu thingy.
             updateMenu();
 
-            if (!syncToVideo)
-            {
+            if (!syncToVideo) {
 #ifdef USE_BOOST_THREADS
                 sleep_until(tick + boost::chrono::microseconds(delay));
 #else
@@ -294,8 +294,6 @@ void Screen::update()
         window.setTitle(str);
     }
 
-    pollEvents();
-
     tape.is48K = spectrum.set48;
 }
 
@@ -433,7 +431,8 @@ void Screen::setSmooth(bool sm)
 
 void Screen::pollEvents()
 {
-    // Poll events.
+    spectrum.ula.keyPoll = false;
+
     Event event;
     while (window.pollEvent(event))
     {
@@ -534,28 +533,16 @@ void Screen::pollEvents()
                         // Scan Spectrum keyboard
                     default:
                         scanKeys(event);
-                        spectrum.ula.keys[0] &= keyboardMask[0];
-                        spectrum.ula.keys[1] &= keyboardMask[1];
-                        spectrum.ula.keys[2] &= keyboardMask[2];
-                        spectrum.ula.keys[3] &= keyboardMask[3];
-                        spectrum.ula.keys[4] &= keyboardMask[4];
-                        spectrum.ula.keys[5] &= keyboardMask[5];
-                        spectrum.ula.keys[6] &= keyboardMask[6];
-                        spectrum.ula.keys[7] &= keyboardMask[7];
+                        for (size_t ii = 0; ii < 8; ++ii)
+                            spectrum.ula.keys[ii] &= keyboardMask[ii];
                         break;
                 }
                 break;
 
             case Event::KeyReleased:
                 scanKeys(event);
-                spectrum.ula.keys[0] |= ~keyboardMask[0];
-                spectrum.ula.keys[1] |= ~keyboardMask[1];
-                spectrum.ula.keys[2] |= ~keyboardMask[2];
-                spectrum.ula.keys[3] |= ~keyboardMask[3];
-                spectrum.ula.keys[4] |= ~keyboardMask[4];
-                spectrum.ula.keys[5] |= ~keyboardMask[5];
-                spectrum.ula.keys[6] |= ~keyboardMask[6];
-                spectrum.ula.keys[7] |= ~keyboardMask[7];
+                for (size_t ii = 0; ii < 8; ++ii)
+                    spectrum.ula.keys[ii] |= ~keyboardMask[ii];
                 break;
 
             case Event::JoystickMoved:
@@ -689,100 +676,148 @@ void Screen::pollEvents()
 
 void Screen::scanKeys(Event const& event)
 {
-    keyboardMask[0] = 0xFF;
-    keyboardMask[1] = 0xFF;
-    keyboardMask[2] = 0xFF;
-    keyboardMask[3] = 0xFF;
-    keyboardMask[4] = 0xFF;
-    keyboardMask[5] = 0xFF;
-    keyboardMask[6] = 0xFF;
-    keyboardMask[7] = 0xFF;
+    for (size_t ii = 0; ii < 8; ++ii)
+        keyboardMask[ii] = 0xFF;
 
     switch (event.key.code)
     {
-        case Keyboard::B: keyboardMask[0] = 0xEF; break;
-        case Keyboard::N: keyboardMask[0] = 0xF7; break;
-        case Keyboard::M: keyboardMask[0] = 0xFB; break;
+        case Keyboard::B:
+            keyboardMask[0] = 0xEF; break;
+        case Keyboard::N:
+            keyboardMask[0] = 0xF7; break;
+        case Keyboard::M:
+            keyboardMask[0] = 0xFB; break;
         case Keyboard::LControl:    // Symbol Shift
-        case Keyboard::RControl: keyboardMask[0] = 0xFD; break;
-        case Keyboard::Space: keyboardMask[0] = 0xFE; break;
+        case Keyboard::RControl:
+            keyboardMask[0] = 0xFD; break;
+        case Keyboard::Space:
+            keyboardMask[0] = 0xFE; break;
 
-        case Keyboard::Comma: keyboardMask[0] = 0xF5; break;    // Symbol Shift + N
-        case Keyboard::Period: keyboardMask[0] = 0xF9; break;   // Symbol Shift + M
+        case Keyboard::Comma:       // Symbol Shift + N
+            keyboardMask[0] = 0xF5; break;
+        case Keyboard::Period:      // Symbol Shift + M
+            keyboardMask[0] = 0xF9; break;
         case Keyboard::LAlt:    // Extend Mode = Caps Shift + Symbol Shift
-            keyboardMask[0] = 0xFD; keyboardMask[7] = 0xFE; break;
+            keyboardMask[0] = 0xFD;
+            keyboardMask[7] = 0xFE; break;
         case Keyboard::Escape:  // Break = Caps Shift + Space
-            keyboardMask[0] = 0xFE; keyboardMask[7] = 0xFE; break;
+            keyboardMask[0] = 0xFE;
+            keyboardMask[7] = 0xFE; break;
 
-        case Keyboard::H: keyboardMask[1] = 0xEF; break;
-        case Keyboard::J: keyboardMask[1] = 0xF7; break;
-        case Keyboard::K: keyboardMask[1] = 0xFB; break;
-        case Keyboard::L: keyboardMask[1] = 0xFD; break;
-        case Keyboard::Return: keyboardMask[1] = 0xFE; break;
+        case Keyboard::H:
+            keyboardMask[1] = 0xEF; break;
+        case Keyboard::J:
+            keyboardMask[1] = 0xF7; break;
+        case Keyboard::K:
+            keyboardMask[1] = 0xFB; break;
+        case Keyboard::L:
+            keyboardMask[1] = 0xFD; break;
+        case Keyboard::Return:
+            keyboardMask[1] = 0xFE; break;
 
-        case Keyboard::Y: keyboardMask[2] = 0xEF; break;
-        case Keyboard::U: keyboardMask[2] = 0xF7; break;
-        case Keyboard::I: keyboardMask[2] = 0xFB; break;
-        case Keyboard::O: keyboardMask[2] = 0xFD; break;
-        case Keyboard::P: keyboardMask[2] = 0xFE; break;
+        case Keyboard::Y:
+            keyboardMask[2] = 0xEF; break;
+        case Keyboard::U:
+            keyboardMask[2] = 0xF7; break;
+        case Keyboard::I:
+            keyboardMask[2] = 0xFB; break;
+        case Keyboard::O:
+            keyboardMask[2] = 0xFD; break;
+        case Keyboard::P:
+            keyboardMask[2] = 0xFE; break;
 
         case Keyboard::Quote:   // Symbol Shift + P
-            keyboardMask[0] = 0xFD; keyboardMask[2] = 0xFE; break;
+            keyboardMask[0] = 0xFD;
+            keyboardMask[2] = 0xFE; break;
 
-        case Keyboard::Num6: keyboardMask[3] = 0xEF; break;
-        case Keyboard::Num7: keyboardMask[3] = 0xF7; break;
-        case Keyboard::Num8: keyboardMask[3] = 0xFB; break;
-        case Keyboard::Num9: keyboardMask[3] = 0xFD; break;
-        case Keyboard::Num0: keyboardMask[3] = 0xFE; break;
+        case Keyboard::Num6:
+            keyboardMask[3] = 0xEF; break;
+        case Keyboard::Num7:
+            keyboardMask[3] = 0xF7; break;
+        case Keyboard::Num8:
+            keyboardMask[3] = 0xFB; break;
+        case Keyboard::Num9:
+            keyboardMask[3] = 0xFD; break;
+        case Keyboard::Num0:
+            keyboardMask[3] = 0xFE; break;
 
         case Keyboard::Down:        // Caps Shift + 6
-            keyboardMask[3] = 0xEF; keyboardMask[7] = 0xFE; break;
+            keyboardMask[3] = 0xEF;
+            keyboardMask[7] = 0xFE; break;
         case Keyboard::Up:          // Caps Shift + 7
-            keyboardMask[3] = 0xF7; keyboardMask[7] = 0xFE; break;
+            keyboardMask[3] = 0xF7;
+            keyboardMask[7] = 0xFE; break;
         case Keyboard::Right:       // Caps Shift + 8
-            keyboardMask[3] = 0xFB; keyboardMask[7] = 0xFE; break;
+            keyboardMask[3] = 0xFB;
+            keyboardMask[7] = 0xFE; break;
+        case Keyboard::Tab:
         case Keyboard::Insert:      // Graph Mode: Caps Shift + 9
-            keyboardMask[3] = 0xFD; keyboardMask[7] = 0xFE; break;
+            keyboardMask[3] = 0xFD;
+            keyboardMask[7] = 0xFE; break;
         case Keyboard::BackSpace:   // Delete: Caps Shift + 0
-            keyboardMask[3] = 0xFE; keyboardMask[7] = 0xFE; break;
+            keyboardMask[3] = 0xFE;
+            keyboardMask[7] = 0xFE; break;
 
-        case Keyboard::Num5: keyboardMask[4] = 0xEF; break;
-        case Keyboard::Num4: keyboardMask[4] = 0xF7; break;
-        case Keyboard::Num3: keyboardMask[4] = 0xFB; break;
-        case Keyboard::Num2: keyboardMask[4] = 0xFD; break;
-        case Keyboard::Num1: keyboardMask[4] = 0xFE; break;
+        case Keyboard::Num5:
+            keyboardMask[4] = 0xEF; break;
+        case Keyboard::Num4:
+            keyboardMask[4] = 0xF7; break;
+        case Keyboard::Num3:
+            keyboardMask[4] = 0xFB; break;
+        case Keyboard::Num2:
+            keyboardMask[4] = 0xFD; break;
+        case Keyboard::Num1:
+            keyboardMask[4] = 0xFE; break;
 
         case Keyboard::Left:        // Caps Shift + 5
-            keyboardMask[4] = 0xEF; keyboardMask[7] = 0xFE; break;
-            // case Keyboard::Home:        // Inv Video: Caps Shift + 4
-            // keyboardMask[4] = 0xF7; keyboardMask[7] = 0xFE;
-            // break;
-            // case Keyboard::End:         // True Video: Caps Shift + 3
-            // keyboardMask[4] = 0xFB; keyboardMask[7] = 0xFE;
-            // break;
+            keyboardMask[4] = 0xEF;
+            keyboardMask[7] = 0xFE; break;
+        case Keyboard::Home:        // Inv Video: Caps Shift + 4
+            keyboardMask[4] = 0xF7;
+            keyboardMask[7] = 0xFE; break;
+        case Keyboard::End:         // True Video: Caps Shift + 3
+            keyboardMask[4] = 0xFB;
+            keyboardMask[7] = 0xFE; break;
         case Keyboard::Unknown:      // Caps Lock: Caps Shift + 2
-            keyboardMask[4] = 0xFD; keyboardMask[7] = 0xFE; break;
+            keyboardMask[4] = 0xFD;
+            keyboardMask[7] = 0xFE; break;
         case Keyboard::Delete:   // Edit: Caps Shift + 1
-            keyboardMask[4] = 0xFE; keyboardMask[7] = 0xFE; break;
+            keyboardMask[4] = 0xFE;
+            keyboardMask[7] = 0xFE; break;
 
-        case Keyboard::T: keyboardMask[5] = 0xEF; break;
-        case Keyboard::R: keyboardMask[5] = 0xF7; break;
-        case Keyboard::E: keyboardMask[5] = 0xFB; break;
-        case Keyboard::W: keyboardMask[5] = 0xFD; break;
-        case Keyboard::Q: keyboardMask[5] = 0xFE; break;
+        case Keyboard::T:
+            keyboardMask[5] = 0xEF; break;
+        case Keyboard::R:
+            keyboardMask[5] = 0xF7; break;
+        case Keyboard::E:
+            keyboardMask[5] = 0xFB; break;
+        case Keyboard::W:
+            keyboardMask[5] = 0xFD; break;
+        case Keyboard::Q:
+            keyboardMask[5] = 0xFE; break;
 
-        case Keyboard::G: keyboardMask[6] = 0xEF; break;
-        case Keyboard::F: keyboardMask[6] = 0xF7; break;
-        case Keyboard::D: keyboardMask[6] = 0xFB; break;
-        case Keyboard::S: keyboardMask[6] = 0xFD; break;
-        case Keyboard::A: keyboardMask[6] = 0xFE; break;
+        case Keyboard::G:
+            keyboardMask[6] = 0xEF; break;
+        case Keyboard::F:
+            keyboardMask[6] = 0xF7; break;
+        case Keyboard::D:
+            keyboardMask[6] = 0xFB; break;
+        case Keyboard::S:
+            keyboardMask[6] = 0xFD; break;
+        case Keyboard::A:
+            keyboardMask[6] = 0xFE; break;
 
-        case Keyboard::V: keyboardMask[7] = 0xEF; break;
-        case Keyboard::C: keyboardMask[7] = 0xF7; break;
-        case Keyboard::X: keyboardMask[7] = 0xFB; break;
-        case Keyboard::Z: keyboardMask[7] = 0xFD; break;
+        case Keyboard::V:
+            keyboardMask[7] = 0xEF; break;
+        case Keyboard::C:
+            keyboardMask[7] = 0xF7; break;
+        case Keyboard::X:
+            keyboardMask[7] = 0xFB; break;
+        case Keyboard::Z:
+            keyboardMask[7] = 0xFD; break;
         case Keyboard::LShift:
-        case Keyboard::RShift: keyboardMask[7] = 0xFE; break;
+        case Keyboard::RShift:
+            keyboardMask[7] = 0xFE; break;
 
         default:
             break;

@@ -57,7 +57,7 @@ uint32_t ULA::pixelsX1[0x38000];
 uint32_t ULA::pixelsX2[0x38000];
 
 ULA::ULA() :
-    vSync(false), blanking(false), retrace(false),
+    vSync(false), blanking(false), retrace(false), keyPoll(false),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF)
 {
@@ -133,6 +133,7 @@ void ULA::generateVideoControlSignals()
 
         if (scan == vBlankEnd)
         {
+            keyPoll = true;
             flash += 0x08;
         }
         else if (scan == vSyncEnd)
@@ -395,12 +396,9 @@ void ULA::tapeEarMic()
 void ULA::ioPort()
 {
     // We read keyboard if we're reading the ULA port, during TW.
-    if (((z80_c & SIGNAL_IORQ_) == 0x0000) && ((z80_a & 0x0001) == 0x0000))
-    {
-        if ((z80_c & SIGNAL_RD_) == 0x0000)
-        {
-            if (++ioWait == 5)
-            {
+    if (((z80_c & SIGNAL_IORQ_) == 0x0000) && ((z80_a & 0x0001) == 0x0000)) {
+        if ((z80_c & SIGNAL_RD_) == 0x0000) {
+            if (++ioWait == 5) {
                 ioWait = 0;
                 ioPortIn = inMask;
                 ioPortIn |= (ear < 700) ? 0x00 : 0x40;
@@ -414,17 +412,12 @@ void ULA::ioPort()
                 if ((z80_a & 0x0100) == 0x0000) ioPortIn &= keys[7];
                 io = ioPortIn;
             }
-        }
-        else if ((z80_c & SIGNAL_WR_) == 0x0000)
-        {
+        } else if ((z80_c & SIGNAL_WR_) == 0x0000) {
             ++ioWait;
-            if (ioWait == 1)
-            {
+            if (ioWait == 1) {
                 ioPortOut = io;
                 borderAttr = ioPortOut & 0x07;
-            }
-            else if (ioWait == 5)
-            {
+            } else if (ioWait == 5) {
                 ioWait = 0;
             }
         }
@@ -435,19 +428,20 @@ void ULA::clock()
 {
     generateVideoControlSignals();
 
-    if (scan == vSyncStart)
+    if (scan == vSyncStart) {
         generateInterrupt();
+    }
 
-    if (ulaVersion == 3)
+    if (ulaVersion == 3) {
         generateVideoDataGa();
-    else
+    } else {
         generateVideoDataUla();
+    }
     tapeEarMic();
 
     // Contention affects to Z80 phase change and to when the I/O operation
     // actually happens.
-    if (cpuClock == true && (z80_c & SIGNAL_WAIT_) == SIGNAL_WAIT_)
-    {
+    if (cpuClock == true && (z80_c & SIGNAL_WAIT_) == SIGNAL_WAIT_) {
         ioPort();
         z80_c_2 = z80_c_1;
         z80_c_1 = z80_c;
@@ -458,8 +452,9 @@ void ULA::clock()
 
     ++pixel;
 
-    if (ulaReset)
+    if (ulaReset) {
         start();
+    }
 }
 
 void ULA::start()

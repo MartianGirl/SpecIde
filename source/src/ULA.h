@@ -132,6 +132,7 @@ class ULA
         bool vSync;
         bool blanking;
         bool retrace;
+        bool keyPoll;
 
         // Port 0xFE
         uint_fast8_t ioPortIn = 0xFF;

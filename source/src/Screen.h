@@ -89,8 +89,10 @@ class Screen : public GraphicWindow
         StereoMode stereo;
 
         bool pad;
-
         bool flashTap;
+
+        uint_fast8_t keyboardMask[8];
+
         bool cpuInRefresh();
         void checkTapeTraps();
         void writeMemory(uint_fast16_t a, uint_fast8_t d);
@@ -112,8 +114,6 @@ class Screen : public GraphicWindow
 
         void updateMenu();
         
-        uint_fast8_t keyboardMask[8];
-
         void texture(size_t x, size_t y);
 };
 
