@@ -1098,9 +1098,8 @@ class FDC
         void randomizeSector(vector<uint8_t>& buf)
         {
             // Theoretically, there is a pattern here. However, this seems
-            // to suffice.
-            for (size_t ii = 0; ii < 0x40; ++ii)
-                buf[buf.size() - ii - 1] |= rand() & 0xFF;
+            // to be enough.
+            buf.back() |= rand() & 0xFF;
         }
 
 };
