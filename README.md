@@ -21,15 +21,16 @@ Currently, the emulator is functional and is quite accurate. Some of the support
 - Kempston/Sinclair joystick emulation from the PC joystick/gamepad.
 - Works in GNU/Linux, Windows, and MacOS.
 
-Windows 32-bit binaries (Visual C++ 2017) here: https://drive.google.com/open?id=1C5zRcY8itrvP9hKJsIniFWSGP1Zs-3NC
-Windows 64-bit binaries (Visual C++ 2017) here: https://drive.google.com/open?id=1X-eZrQ7BfX1SP4DVdLrDT94rwOLgmoQX
+Windows 32-bit binaries (Visual C++ 2017) here: https://drive.google.com/open?id=1C5zRcY8itrvP9hKJsIniFWSGP1Zs-3NC  
+Windows 64-bit binaries (Visual C++ 2017) here: https://drive.google.com/open?id=1X-eZrQ7BfX1SP4DVdLrDT94rwOLgmoQX  
+Windows 32-bit binaries (MinGW) here: https://drive.google.com/open?id=1jta-_Wdl9C7p0AbkiEEBOUJsI95JPsbc  
 
-Credits and acknowledgements:
-David Garijo for helping with the MacOS build process.
-JFSebastian for his wonderful ZXSpectrum.ttf font.
-Ast_A_Moore for his help with the +2A timings and port 0x0FFD.
-chernandezba for his help with the initial values for IR register.
-Miguel Mesa for noticing that the FLASH attribute was running at half speed.
+Credits and acknowledgements:  
+David Garijo for helping with the MacOS build process.  
+JFSebastian for his wonderful ZXSpectrum.ttf font.  
+Ast_A_Moore for his help with the +2A timings and port 0x0FFD.  
+chernandezba for his help with the initial values for IR register.  
+Miguel Mesa for noticing that the FLASH attribute was running at half speed.  
 
 How to install it:
 
@@ -46,27 +47,27 @@ GNU/Linux:
 9. Run: bin/SpecIde \<TZXFile.tzx|TAPFile.tap\>
 
 MacOS: (Thanks to David Garijo for taking the time of making this work and for providing the information!)
-1. Install brew: /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-2. Install cmake: brew install cmake
-3. Install boost: brew install boost
-4. Install sfml: brew install sfml
-5. Install pkgconfig: brew install pkgconfig
-6. Simlink FindSFML.cmake in cmake modules `ln -s $(brew --prefix sfml)/share/SFML/cmake/Modules/FindSFML.cmake $(brew --prefix cmake)/share/cmake/Modules/FindSFML.cmake`
-7. Run: cmake -DCMAKE_BUILD_TYPE=Release .
-8. Run: make clean && make install
-8. To run it: Copy the roms from the spectrum-roms package (or find it online)
-   to the ~/.SpecIde/roms directory. Download https://github.com/jfsebastian/zx-spectrum-unicode-font/blob/master/build/ZXSpectrum.ttf to ./SpecIde/font directory.
-10. Run: bin/SpecIde \<TZXFile.tzx|TAPFile.tap\>
+1. Install brew: /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"  
+2. Install cmake: brew install cmake  
+3. Install boost: brew install boost  
+4. Install sfml: brew install sfml  
+5. Install pkgconfig: brew install pkgconfig  
+6. Simlink FindSFML.cmake in cmake modules `ln -s $(brew --prefix sfml)/share/SFML/cmake/Modules/FindSFML.cmake $(brew --prefix cmake)/share/cmake/Modules/FindSFML.cmake`  
+7. Run: cmake -DCMAKE_BUILD_TYPE=Release .  
+8. Run: make clean && make install  
+9. To run it: Copy the roms from the spectrum-roms package (or find it online)
+   to the ~/.SpecIde/roms directory. Download https://github.com/jfsebastian/zx-spectrum-unicode-font/blob/master/build/ZXSpectrum.ttf to ./SpecIde/font directory.  
+10. Run: bin/SpecIde \<TZXFile.tzx|TAPFile.tap\>  
 
 Windows:
 I've successfully compiled SpecIde with MinGW32 and Visual Studio 2015. There is a script RunCMake.bat that helps
 in the build process.
 
-1. Install boost.
-2. Install sfml.
-3. Install cmake. Optionally, install ninja-builds. It really helps building SpecIde.
-
+1. Install boost.  
+2. Install sfml.  
+3. Install cmake. Optionally, install ninja-builds. It really helps building SpecIde.  
 4. Edit the RunCMake.bat script. You need to change the following lines:<br>
+
    4.1. set BOOST_ROOT=\<Path_to_Boost_root_directory\><br>
    4.2. set SFML_ROOT=\<Path_to_SFML_binaries\><br>
 5. Run: RunCMake \[GNU|MS|NINJAGNU|NINJAMS\] RELEASE
