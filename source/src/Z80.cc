@@ -40,13 +40,13 @@ void Z80::clock()
     // NMI is edge-triggered.
     // If a falling edge in NMI is detected, accept the NMI and clear
     // the IFF1 flag.
-    if ((~c & c_d & SIGNAL_NMI_) == SIGNAL_NMI_)
+    if ((~c & c_d & SIGNAL_NMI_))
     {
         nmiAccept = true;
         iff &= ~(IFF1);
     }
 
-    intAccept = ((c_d & SIGNAL_INT_) == 0x0000);
+    intAccept = !(c_d & SIGNAL_INT_);
 
     c_d = c;
     iff_d = iff;
@@ -82,7 +82,7 @@ void Z80::clock()
             return;
 
         case Z80State::ST_OCF_T2L_DATARD:
-            if (((c & SIGNAL_WAIT_) == 0x0000) && !nmiProcess)
+            if (!nmiProcess && !(c & SIGNAL_WAIT_))
                 state = Z80State::ST_OCF_T2H_DATARD;
             else
                 state = Z80State::ST_OCF_T3H_RFSH1;
@@ -172,7 +172,7 @@ void Z80::clock()
             return;
 
         case Z80State::ST_INT_T4L_WAIT2:
-            if ((c & SIGNAL_WAIT_) == 0x0000)
+            if (!(c & SIGNAL_WAIT_))
                 state = Z80State::ST_INT_T4H_WAIT2;
             else
                 state = Z80State::ST_OCF_T3H_RFSH1;
@@ -182,7 +182,7 @@ void Z80::clock()
         case Z80State::ST_MEMRD_T1H_ADDRWR:
             // INT mode 0 places bytes directly on the bus.
             // c |= SIGNAL_RFSH_;
-            if (intProcess == false || im == 2)
+            if (!intProcess || im == 2)
                 a = getAddress();
             state = Z80State::ST_MEMRD_T1L_ADDRWR;
             return;
@@ -197,7 +197,7 @@ void Z80::clock()
             return;
 
         case Z80State::ST_MEMRD_T2L_WAITST:
-            if ((c & SIGNAL_WAIT_) == 0x0000)
+            if (!(c & SIGNAL_WAIT_))
                 state = Z80State::ST_MEMRD_T2H_WAITST;
             else
                 state = Z80State::ST_MEMRD_T3H_DATARD;
@@ -234,7 +234,7 @@ void Z80::clock()
             // d = dout;
             c &= ~(SIGNAL_WR_);
 
-            if ((c & SIGNAL_WAIT_) == 0x0000)
+            if (!(c & SIGNAL_WAIT_))
                 state = Z80State::ST_MEMWR_T2H_WAITST;
             else
                 state = Z80State::ST_MEMWR_T3H_DATAWR;
@@ -275,7 +275,7 @@ void Z80::clock()
             return;
 
         case Z80State::ST_IORD_TWL_WAITST:
-            if ((c & SIGNAL_WAIT_) == 0x0000)
+            if (!(c & SIGNAL_WAIT_))
                 state = Z80State::ST_IORD_TWH_WAITST;
             else
                 state = Z80State::ST_IORD_T3H_DATARD;
@@ -320,7 +320,7 @@ void Z80::clock()
 
         case Z80State::ST_IOWR_TWL_WAITST:
             // d = dout;
-            if ((c & SIGNAL_WAIT_) == 0x0000)
+            if (!(c & SIGNAL_WAIT_))
                 state = Z80State::ST_IOWR_TWH_WAITST;
             else
                 state = Z80State::ST_IOWR_T3H_DATAWR;
@@ -368,30 +368,30 @@ void Z80::clock()
     bool endOfCycle = false;
 
     // If we are in a BUSRQ cycle, we just insert wait states.
-    if ((c & SIGNAL_BUSAK_) == SIGNAL_BUSAK_)
+    if (c & SIGNAL_BUSAK_)
     {
-        if (nmiProcess == true)
+        if (nmiProcess)
         {
             endOfCycle = executeNmi();
-            if (endOfCycle 
-                    && prefix == PREFIX_NO
-                    && memRdCycles == 0
-                    && memWrCycles == 0
-                    && ioRdCycles == 0
-                    && ioWrCycles == 0
-                    && cpuProcCycles == 0)
+            if (endOfCycle
+                    && !memRdCycles
+                    && !memWrCycles
+                    && !ioRdCycles
+                    && !ioWrCycles
+                    && !cpuProcCycles
+                    && prefix == PREFIX_NO)
                 nmiProcess = false;
         }
-        else if (intProcess == true)
+        else if (intProcess)
         {
             endOfCycle = executeInt();
-            if (endOfCycle 
-                    && prefix == PREFIX_NO
-                    && memRdCycles == 0
-                    && memWrCycles == 0
-                    && ioRdCycles == 0
-                    && ioWrCycles == 0
-                    && cpuProcCycles == 0)
+            if (endOfCycle
+                    && !memRdCycles
+                    && !memWrCycles
+                    && !ioRdCycles
+                    && !ioWrCycles
+                    && !cpuProcCycles
+                    && prefix == PREFIX_NO)
                 intProcess = false;
         }
         else
@@ -400,7 +400,7 @@ void Z80::clock()
         }
     }
 
-    if (endOfCycle == false)    // Machine cycle not finished, insert a state.
+    if (!endOfCycle)    // Machine cycle not finished, insert a state.
         state = Z80State::ST_CPU_T0H_WAITST;
     // BUSRQ goes here, after a complete machine cycle.
     else if ((c & SIGNAL_BUSRQ_) == 0x0000)
@@ -424,8 +424,8 @@ void Z80::clock()
     // set above, when a falling edge is detected in the NMI signal.
     // Since prefixes are handled as one-cycle instructions, we have
     // to check we're not in the middle of a instruction.
-    else if (prefix == PREFIX_NO
-            && nmiAccept == true)
+    else if (nmiAccept
+            && prefix == PREFIX_NO)
     {
         nmiAccept = false;
         nmiProcess = true;
@@ -434,7 +434,7 @@ void Z80::clock()
         state = Z80State::ST_NMI_T1H_ADDRWR;
     }
     // INT only happens if there is no NMI.
-    else if (intAccept == true
+    else if (intAccept
             && ((iff_d & IFF1) == IFF1)
             && ((iff & IFF1) == IFF1)
             && prefix == PREFIX_NO)
@@ -446,7 +446,7 @@ void Z80::clock()
         c |= SIGNAL_HALT_;
         state = Z80State::ST_INT_T1H_ADDRWR;
     }
-    else if ((iff & HALT) == HALT)
+    else if (iff & HALT)
     {
         c &= ~SIGNAL_HALT_;
         state = Z80State::ST_OCF_T1H_ADDRWR;

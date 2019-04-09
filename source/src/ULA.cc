@@ -173,7 +173,6 @@ void ULA::generateVideoControlSignals()
 
 void ULA::generateInterrupt()
 {
-
     if (interrupt)
         z80_c &= ~SIGNAL_INT_;
     else
@@ -201,15 +200,15 @@ void ULA::generateVideoDataUla()
         // states are not contended. We do this by checking MREQ is low.
         // We contend T-States, which means we only consider high clock phase.
         bool memContention = contendedBank && z80Clk;
-        bool memContentionOff = ((z80_c & SIGNAL_MREQ_) == 0x0000);
+        bool memContentionOff = !(z80_c & SIGNAL_MREQ_);
 
         // I/O Contention
         // We detect I/O contended states whenever the address is even (A0 = 0)
         // and IORQ is low.
         // We only delay T2H. We do this by checking a delayed version of IORQ.
-        bool ioUlaPort = ((z80_a & 0x0001) == 0x0000);
-        bool iorqLow = ((z80_c & SIGNAL_IORQ_) == 0x0000);          // T2 TW T3
-        bool iorqLow_d = ((z80_c_2 & SIGNAL_IORQ_) == 0x0000);      // TW T3 T1
+        bool ioUlaPort = !(z80_a & 0x0001);
+        bool iorqLow = !(z80_c & SIGNAL_IORQ_);                     // T2 TW T3
+        bool iorqLow_d = !(z80_c_2 & SIGNAL_IORQ_);                 // TW T3 T1
         bool ioContention = ioUlaPort && iorqLow && z80Clk;         // T2 TW T3
         bool ioContentionOff = ioUlaPort && iorqLow_d;              // TW T3 NN
 
@@ -260,7 +259,7 @@ void ULA::generateVideoDataGa()
 
         // Memory Contention
         // +2A/+3 only apply contention if MREQ is low.
-        contention = contendedBank && ((z80_c & SIGNAL_MREQ_) == 0x0000);
+        contention = contendedBank && !(z80_c & SIGNAL_MREQ_);
 
         if (contention && delayTable[pixel & 0x0F])
             z80_c &= ~SIGNAL_WAIT_;
@@ -381,7 +380,7 @@ void ULA::tapeEarMic()
         else
         {
             chargeDelay = 0;
-            if (capacitor == 0)
+            if (!capacitor)
                 ear = v;
             else
                 --capacitor;
@@ -396,23 +395,23 @@ void ULA::tapeEarMic()
 void ULA::ioPort()
 {
     // We read keyboard if we're reading the ULA port, during TW.
-    if (((z80_c & SIGNAL_IORQ_) == 0x0000) && ((z80_a & 0x0001) == 0x0000)) {
-        if ((z80_c & SIGNAL_RD_) == 0x0000) {
+    if (!(z80_c & SIGNAL_IORQ_) && !(z80_a & 0x0001)) {
+        if (!(z80_c & SIGNAL_RD_)) {
             if (++ioWait == 5) {
                 ioWait = 0;
                 ioPortIn = inMask;
                 ioPortIn |= (ear < 700) ? 0x00 : 0x40;
-                if ((z80_a & 0x8000) == 0x0000) ioPortIn &= keys[0];
-                if ((z80_a & 0x4000) == 0x0000) ioPortIn &= keys[1];
-                if ((z80_a & 0x2000) == 0x0000) ioPortIn &= keys[2];
-                if ((z80_a & 0x1000) == 0x0000) ioPortIn &= keys[3];
-                if ((z80_a & 0x0800) == 0x0000) ioPortIn &= keys[4];
-                if ((z80_a & 0x0400) == 0x0000) ioPortIn &= keys[5];
-                if ((z80_a & 0x0200) == 0x0000) ioPortIn &= keys[6];
-                if ((z80_a & 0x0100) == 0x0000) ioPortIn &= keys[7];
+                if (!(z80_a & 0x8000)) ioPortIn &= keys[0];
+                if (!(z80_a & 0x4000)) ioPortIn &= keys[1];
+                if (!(z80_a & 0x2000)) ioPortIn &= keys[2];
+                if (!(z80_a & 0x1000)) ioPortIn &= keys[3];
+                if (!(z80_a & 0x0800)) ioPortIn &= keys[4];
+                if (!(z80_a & 0x0400)) ioPortIn &= keys[5];
+                if (!(z80_a & 0x0200)) ioPortIn &= keys[6];
+                if (!(z80_a & 0x0100)) ioPortIn &= keys[7];
                 io = ioPortIn;
             }
-        } else if ((z80_c & SIGNAL_WR_) == 0x0000) {
+        } else if (!(z80_c & SIGNAL_WR_)) {
             ++ioWait;
             if (ioWait == 1) {
                 ioPortOut = io;
@@ -441,7 +440,7 @@ void ULA::clock()
 
     // Contention affects to Z80 phase change and to when the I/O operation
     // actually happens.
-    if (cpuClock == true && (z80_c & SIGNAL_WAIT_) == SIGNAL_WAIT_) {
+    if (cpuClock && (z80_c & SIGNAL_WAIT_)) {
         ioPort();
         z80_c_2 = z80_c_1;
         z80_c_1 = z80_c;

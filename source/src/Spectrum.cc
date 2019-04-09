@@ -208,10 +208,10 @@ void Spectrum::clock()
     //
     // This is important, because when ULA is at 0 again Z80 clock will be
     // LOW. Contention intervals work this way.
-    bool as_ = ((z80.c & SIGNAL_MREQ_) == SIGNAL_MREQ_);
-    bool io_ = ((z80.c & SIGNAL_IORQ_) == SIGNAL_IORQ_);
-    bool rd_ = ((z80.c & SIGNAL_RD_) == SIGNAL_RD_);
-    bool wr_ = ((z80.c & SIGNAL_WR_) == SIGNAL_WR_);
+    bool as_ = z80.c & SIGNAL_MREQ_;
+    bool io_ = z80.c & SIGNAL_IORQ_;
+    bool rd_ = z80.c & SIGNAL_RD_;
+    bool wr_ = z80.c & SIGNAL_WR_;
     size_t memArea = (z80.a & 0xC000) >> 14;
     bool snow = contendedPage[memArea] && ula.snow && !as_;
 
@@ -227,7 +227,7 @@ void Spectrum::clock()
     // I've found that separating both data buses is helpful for all
     // Speccies.
     bus_1 = bus;
-    if (ula.mem == false)
+    if (!ula.mem)
     {
         if (snow)
             bus = map[memArea][(ula.a & 0x3f80) | (z80.a & 0x007f)];
@@ -244,12 +244,12 @@ void Spectrum::clock()
     z80.c = ula.z80_c;
 
     ++count;
-    if ((count & 0x03) == 0x00)
+    if (!(count & 0x03))
     {
         buzzer.update();
         psgClock();
 
-        if (spectrumPlus3 && ((count & 0x07) == 0x00))
+        if (spectrumPlus3 && !(count & 0x07))
             fdc.clock();
     }
 
@@ -257,11 +257,11 @@ void Spectrum::clock()
     if (ula.cpuClock)
     {
         // Z80 gets data from the ULA or memory, only when reading.
-        if (io_ == false)
+        if (!io_)
         {
             // 48K/128K/Plus2 floating bus. Return idle status by default,
             // or screen data, if the ULA is working.
-            if (rd_ == false)
+            if (!rd_)
             {
                 z80.d = (ula.idle) ? idle : bus & idle;
             }
@@ -274,9 +274,9 @@ void Spectrum::clock()
                     case 0x0000:    // In +2A/+3 this is the floating bus port.
                         if (spectrumPlus2A)
                         {
-                            if (rd_ == false)
+                            if (!rd_)
                             {
-                                if ((paging & 0x0020) == 0x0000)
+                                if (!(paging & 0x0020))
                                     z80.d = (bus_1 & idle) | 0x01;
                             }
                             break;
@@ -285,7 +285,7 @@ void Spectrum::clock()
                     case 0x1000:    // 0x1FFD (+3 Paging High)
                         if (spectrumPlus2A)
                         {
-                            if (wr_ == false)
+                            if (!wr_)
                                 updatePage(1);
                             break;
                         }
@@ -295,7 +295,7 @@ void Spectrum::clock()
                         {
                             if (spectrumPlus3)
                             {
-                                if (rd_ == false)
+                                if (!rd_)
                                     z80.d = fdc.status();
                             }
                             break;
@@ -306,9 +306,9 @@ void Spectrum::clock()
                         {
                             if (spectrumPlus3)
                             {
-                                if (wr_ == false)
+                                if (!wr_)
                                     fdc.write(z80.d);
-                                else if (rd_ == false)
+                                else if (!rd_)
                                     z80.d = fdc.read();
                             }
                             break;
@@ -318,8 +318,7 @@ void Spectrum::clock()
                     case 0x5000: // fall-through
                     case 0x6000: // fall-through
                     case 0x7000: // 0x7FFD (128K Paging / +3 Paging Low)
-                        if ((wr_ == false)
-                                || (rd_ == false && spectrumPlus2A == false))
+                        if (!wr_ || (!rd_ && !spectrumPlus2A))
                             updatePage(0);
                         break;
 
@@ -337,9 +336,9 @@ void Spectrum::clock()
                     case 0x9000: // fall-through
                     case 0xA000: // fall-through
                     case 0xB000: // 0xBFFD
-                        if (wr_ == false)
+                        if (!wr_)
                             psgWrite();
-                        else if (rd_ == false && spectrumPlus2A == true)
+                        else if (!rd_ && spectrumPlus2A)
                             psgRead();
                         break;
 
@@ -347,17 +346,17 @@ void Spectrum::clock()
                     case 0xD000: // fall-through
                     case 0xE000: // fall-through
                     case 0xF000: // 0xFFFD
-                        if (wr_ == false)
+                        if (!wr_)
                         {
                             if ((z80.d & 0x98) == 0x98)
                             {
                                 currentPsg = (~z80.d) & 0x07;
-                                psg[currentPsg].lchan = ((z80.d & 0x40) == 0x40);
-                                psg[currentPsg].rchan = ((z80.d & 0x20) == 0x20);
+                                psg[currentPsg].lchan = (z80.d & 0x40);
+                                psg[currentPsg].rchan = (z80.d & 0x20);
                             }
                             psgAddr();
                         }
-                        else if (rd_ == false)
+                        else if (!rd_)
                             psgRead();
                         break;
 
@@ -367,28 +366,28 @@ void Spectrum::clock()
             }
 
             // Common ports.
-            if (kempston == true && ((z80.a & 0x00E0) == 0x0000))  // Kempston joystick.
+            if (kempston && !(z80.a & 0x00E0))  // Kempston joystick.
             {
-                if (rd_ == false)
+                if (!rd_)
                     z80.d = joystick;
             }
-            else if ((z80.a & 0x0001) == 0x0000)
+            else if (!(z80.a & 0x0001))
             {
-                if (rd_ == false)
+                if (!rd_)
                     z80.d = ula.io;
             }
         }
-        else if (as_ == false)
+        else if (!as_)
         {
             // Bank 0: 0000h - ROM
             // Bank 1: 4000h - Contended memory
             // Bank 2: 8000h - Extended memory
             // Bank 3: C000h - Extended memory (can be contended)
-            if (rd_ == false)
+            if (!rd_)
             {
                 z80.d = map[memArea][z80.a & 0x3FFF];
             }
-            else if (romPage[memArea] == false && wr_ == false)
+            else if (!romPage[memArea] && !wr_)
             {
                 if (z80.state == Z80State::ST_MEMWR_T3L_DATAWR)
                     map[memArea][z80.a & 0x3FFF] = z80.d;
@@ -409,7 +408,7 @@ void Spectrum::updatePage(uint_fast8_t reg)
     if (wait == 5)
     {
         wait = 0;
-        if ((paging & 0x0020) == 0x0000)
+        if (!(paging & 0x0020))
         {
             if (reg == 1)
                 paging = (z80.d << 8) | (paging & 0x00FF);
@@ -417,12 +416,12 @@ void Spectrum::updatePage(uint_fast8_t reg)
                 paging = z80.d | (paging & 0xFF00);
 
             // Update +3 disk drive(s) motor status.
-            fdc.motor(spectrumPlus3 && ((paging & 0x0800) == 0x0800));
+            fdc.motor(spectrumPlus3 && (paging & 0x0800));
 
             // Select screen to display.
             setScreen(((paging & 0x0008) >> 2) | 0x05);
 
-            if ((paging & 0x0100) == 0x0100)    // Special paging mode.
+            if (paging & 0x0100)    // Special paging mode.
             {
                 switch (paging & 0x0600)
                 {
@@ -468,7 +467,7 @@ void Spectrum::updatePage(uint_fast8_t reg)
 
                 rom48 = ((spectrumPlus2A && romBank == 3)
                     || (spectrum128K && romBank == 1)) ? true : false;
-                set48 = ((paging & 0x0020) == 0x0020);
+                set48 = (paging & 0x0020);
             }
         }
     }
