@@ -14,9 +14,7 @@
  */
 
 #include "Screen.h"
-
 #include "SoundDefs.h"
-
 #include "config.h"
 
 #ifdef USE_BOOST_THREADS
@@ -38,7 +36,10 @@ using namespace std;
 using namespace sf;
 
 Screen::Screen(size_t scale) :
-    GraphicWindow(704 * scale, 576 * scale),
+    w(704 * scale), h(576 * scale),
+    window(),
+    modes(sf::VideoMode::getFullscreenModes()),
+    bestMode(sf::VideoMode::getDesktopMode()),
     skip(ULA_CLOCK_48 / SAMPLE_RATE),
     count(skip),
     fullscreen(false), doubleScanMode(false), smooth(false),
@@ -51,6 +52,10 @@ Screen::Screen(size_t scale) :
     pad(false),
     flashTap(false)
 {
+    cout << "Selected Full Screen Mode: " << bestMode.width
+        << "x" << bestMode.height << "-" << bestMode.bitsPerPixel << endl;
+    adjust();
+
     // Create a texture.
     texture(xSize, ySize);
 
@@ -831,6 +836,28 @@ void Screen::texture(size_t x, size_t y)
         assert(false);
     scrTexture.setRepeated(false);
     scrTexture.setSmooth(false);
+}
+
+void Screen::adjust()
+{
+    size_t divider = 0;
+
+    do
+    {
+        ++divider;
+        suggestedScansSingle = bestMode.height / divider;
+    } while (suggestedScansSingle > 304); // 312 - 8 VBlank lines.
+    cout << "Selected " << suggestedScansSingle
+        << " scans for single scan mode." << endl;
+
+    divider = 0;
+    do
+    {
+        ++divider;
+        suggestedScansDouble = bestMode.height / divider;
+    } while (suggestedScansDouble > 608); // 624 - 16 VBlank lines.
+    cout << "Selected " << suggestedScansDouble
+        << " scans for double scan mode." << endl;
 }
 
 void Screen::set128K(bool is128K)

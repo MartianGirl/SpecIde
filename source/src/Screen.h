@@ -29,11 +29,13 @@
  *
  */
 
-#include "GraphicWindow.h"
 #include "Spectrum.h"
 #include "Tape.h"
 
 #include "SoundChannel.h"
+
+#include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -52,10 +54,19 @@ enum class StereoMode
     STEREO_NEXT
 };
 
-class Screen : public GraphicWindow
+class Screen
 {
     public:
         Screen(size_t scale);
+        ~Screen() { window.close(); }
+
+        size_t w;
+        size_t h;
+        sf::RenderWindow window;
+        std::vector<sf::VideoMode> modes;
+        sf::VideoMode bestMode;
+        size_t suggestedScansSingle;
+        size_t suggestedScansDouble;
 
         Spectrum spectrum;
         Tape tape;
@@ -115,6 +126,7 @@ class Screen : public GraphicWindow
         void updateMenu();
         
         void texture(size_t x, size_t y);
+        void adjust();
 };
 
 // vim: et:sw=4:ts=4
