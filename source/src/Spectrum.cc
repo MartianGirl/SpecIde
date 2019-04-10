@@ -210,8 +210,9 @@ void Spectrum::clock()
     // LOW. Contention intervals work this way.
     bool as_ = z80.c & SIGNAL_MREQ_;
     bool io_ = z80.c & SIGNAL_IORQ_;
-    bool rd_ = z80.c & SIGNAL_RD_;
-    bool wr_ = z80.c & SIGNAL_WR_;
+    bool rd = z80.access && !(z80.c & SIGNAL_RD_);
+    bool wr = z80.access && !(z80.c & SIGNAL_WR_);
+
     size_t memArea = (z80.a & 0xC000) >> 14;
     bool snow = contendedPage[memArea] && ula.snow && !as_;
 
@@ -261,7 +262,7 @@ void Spectrum::clock()
         {
             // 48K/128K/Plus2 floating bus. Return idle status by default,
             // or screen data, if the ULA is working.
-            if (!rd_)
+            if (rd)
             {
                 z80.d = (ula.idle) ? idle : bus & idle;
             }
@@ -274,7 +275,7 @@ void Spectrum::clock()
                     case 0x0000:    // In +2A/+3 this is the floating bus port.
                         if (spectrumPlus2A)
                         {
-                            if (!rd_)
+                            if (rd)
                             {
                                 if (!(paging & 0x0020))
                                     z80.d = (bus_1 & idle) | 0x01;
@@ -285,7 +286,7 @@ void Spectrum::clock()
                     case 0x1000:    // 0x1FFD (+3 Paging High)
                         if (spectrumPlus2A)
                         {
-                            if (!wr_)
+                            if (wr)
                                 updatePage(1);
                             break;
                         }
@@ -295,7 +296,7 @@ void Spectrum::clock()
                         {
                             if (spectrumPlus3)
                             {
-                                if (!rd_)
+                                if (rd)
                                     z80.d = fdc.status();
                             }
                             break;
@@ -306,9 +307,9 @@ void Spectrum::clock()
                         {
                             if (spectrumPlus3)
                             {
-                                if (!wr_)
+                                if (wr)
                                     fdc.write(z80.d);
-                                else if (!rd_)
+                                else if (rd)
                                     z80.d = fdc.read();
                             }
                             break;
@@ -318,7 +319,7 @@ void Spectrum::clock()
                     case 0x5000: // fall-through
                     case 0x6000: // fall-through
                     case 0x7000: // 0x7FFD (128K Paging / +3 Paging Low)
-                        if (!wr_ || (!rd_ && !spectrumPlus2A))
+                        if (wr || (rd && !spectrumPlus2A))
                             updatePage(0);
                         break;
 
@@ -336,9 +337,9 @@ void Spectrum::clock()
                     case 0x9000: // fall-through
                     case 0xA000: // fall-through
                     case 0xB000: // 0xBFFD
-                        if (!wr_)
+                        if (wr)
                             psgWrite();
-                        else if (!rd_ && spectrumPlus2A)
+                        else if (rd && spectrumPlus2A)
                             psgRead();
                         break;
 
@@ -346,7 +347,7 @@ void Spectrum::clock()
                     case 0xD000: // fall-through
                     case 0xE000: // fall-through
                     case 0xF000: // 0xFFFD
-                        if (!wr_)
+                        if (wr)
                         {
                             if ((z80.d & 0x98) == 0x98)
                             {
@@ -356,7 +357,7 @@ void Spectrum::clock()
                             }
                             psgAddr();
                         }
-                        else if (!rd_)
+                        else if (rd)
                             psgRead();
                         break;
 
@@ -368,12 +369,12 @@ void Spectrum::clock()
             // Common ports.
             if (kempston && !(z80.a & 0x00E0))  // Kempston joystick.
             {
-                if (!rd_)
+                if (rd)
                     z80.d = joystick;
             }
             else if (!(z80.a & 0x0001))
             {
-                if (!rd_)
+                if (rd)
                     z80.d = ula.io;
             }
         }
@@ -383,14 +384,13 @@ void Spectrum::clock()
             // Bank 1: 4000h - Contended memory
             // Bank 2: 8000h - Extended memory
             // Bank 3: C000h - Extended memory (can be contended)
-            if (!rd_)
+            if (rd)
             {
                 z80.d = map[memArea][z80.a & 0x3FFF];
             }
-            else if (!romPage[memArea] && !wr_)
+            else if (!romPage[memArea] && wr)
             {
-                if (z80.state == Z80State::ST_MEMWR_T3L_DATAWR)
-                    map[memArea][z80.a & 0x3FFF] = z80.d;
+                map[memArea][z80.a & 0x3FFF] = z80.d;
             }
         }
         else
@@ -404,71 +404,66 @@ void Spectrum::clock()
 
 void Spectrum::updatePage(uint_fast8_t reg)
 {
-    ++wait;
-    if (wait == 5)
+    if (!(paging & 0x0020))
     {
-        wait = 0;
-        if (!(paging & 0x0020))
+        if (reg == 1)
+            paging = (z80.d << 8) | (paging & 0x00FF);
+        else
+            paging = z80.d | (paging & 0xFF00);
+
+        // Update +3 disk drive(s) motor status.
+        fdc.motor(spectrumPlus3 && (paging & 0x0800));
+
+        // Select screen to display.
+        setScreen(((paging & 0x0008) >> 2) | 0x05);
+
+        if (paging & 0x0100)    // Special paging mode.
         {
-            if (reg == 1)
-                paging = (z80.d << 8) | (paging & 0x00FF);
-            else
-                paging = z80.d | (paging & 0xFF00);
-
-            // Update +3 disk drive(s) motor status.
-            fdc.motor(spectrumPlus3 && (paging & 0x0800));
-
-            // Select screen to display.
-            setScreen(((paging & 0x0008) >> 2) | 0x05);
-
-            if (paging & 0x0100)    // Special paging mode.
+            switch (paging & 0x0600)
             {
-                switch (paging & 0x0600)
-                {
-                    case 0x0000:
-                        setPage(0, 0, false, false);
-                        setPage(1, 1, false, false);
-                        setPage(2, 2, false, false);
-                        setPage(3, 3, false, false);
-                        break;
-                    case 0x0200:
-                        setPage(0, 4, false, true);
-                        setPage(1, 5, false, true);
-                        setPage(2, 6, false, true);
-                        setPage(3, 7, false, true);
-                        break;
-                    case 0x0400:
-                        setPage(0, 4, false, true);
-                        setPage(1, 5, false, true);
-                        setPage(2, 6, false, true);
-                        setPage(3, 3, false, false);
-                        break;
-                    case 0x0600:
-                        setPage(0, 4, false, true);
-                        setPage(1, 7, false, true);
-                        setPage(2, 6, false, true);
-                        setPage(3, 3, false, false);
-                        break;
+                case 0x0000:
+                    setPage(0, 0, false, false);
+                    setPage(1, 1, false, false);
+                    setPage(2, 2, false, false);
+                    setPage(3, 3, false, false);
+                    break;
+                case 0x0200:
+                    setPage(0, 4, false, true);
+                    setPage(1, 5, false, true);
+                    setPage(2, 6, false, true);
+                    setPage(3, 7, false, true);
+                    break;
+                case 0x0400:
+                    setPage(0, 4, false, true);
+                    setPage(1, 5, false, true);
+                    setPage(2, 6, false, true);
+                    setPage(3, 3, false, false);
+                    break;
+                case 0x0600:
+                    setPage(0, 4, false, true);
+                    setPage(1, 7, false, true);
+                    setPage(2, 6, false, true);
+                    setPage(3, 3, false, false);
+                    break;
 
-                    default:
-                        assert(false);
-                }
+                default:
+                    assert(false);
             }
-            else                                // Normal paging mode.
-            {
-                size_t ramBank = paging & 0x0007;
-                size_t romBank =
-                    ((paging & 0x0010) >> 4) | ((paging & 0x0400) >> 9);
+        }
+        else                                // Normal paging mode.
+        {
+            size_t ramBank = paging & 0x0007;
+            size_t romBank =
+                ((paging & 0x0010) >> 4) | ((paging & 0x0400) >> 9);
 
-                setPage(0, romBank, true, false);
-                setPage(1, 5, false, true);
-                setPage(2, 2, false, false);
-                setPage(3, ramBank, false, ((paging & mask) == mask));
+            setPage(0, romBank, true, false);
+            setPage(1, 5, false, true);
+            setPage(2, 2, false, false);
+            setPage(3, ramBank, false, ((paging & mask) == mask));
 
-                rom48 = ((spectrumPlus2A && romBank == 3)
+            rom48 = ((spectrumPlus2A && romBank == 3)
                     || (spectrum128K && romBank == 1)) ? true : false;
-                set48 = (paging & 0x0020);
-            }
+            set48 = (paging & 0x0020);
         }
     }
 }

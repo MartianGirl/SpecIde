@@ -76,7 +76,6 @@ class Spectrum
         bool rom48;
 
         size_t count = 0;
-        size_t wait = 0;
 
         // This one is going to be called at 7MHz, and is going to:
         // 1. Clock the ULA. This starts the ULA counters.

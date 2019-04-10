@@ -1045,11 +1045,9 @@ class FDC
         uint_fast8_t read()
         {
             static uint_fast8_t retval = 0x00;
-            static uint_fast8_t wait = 0;
 
-            if (++wait == 5 && byte == false)
+            if (!byte)
             {
-                wait = 0;
                 if ((statusReg & SREG_EXM) == SREG_EXM)
                     retval = dataBuffer[dataIndex++];
                 else
@@ -1062,11 +1060,8 @@ class FDC
 
         void write(uint_fast8_t value)
         {
-            static uint_fast8_t wait = 0;
-
-            if (++wait == 5 && byte == false)
+            if (!byte)
             {
-                wait = 0;
                 if ((statusReg & SREG_EXM) == SREG_EXM)
                     dataBuffer[dataIndex++] = value;
                 else

@@ -85,10 +85,14 @@ void Z80::clock()
             if (!nmiProcess && !(c & SIGNAL_WAIT_))
                 state = Z80State::ST_OCF_T2H_DATARD;
             else
+            {
+                access = true;
                 state = Z80State::ST_OCF_T3H_RFSH1;
+            }
             return;
 
         case Z80State::ST_OCF_T3H_RFSH1:
+            access = false;
             c |= (SIGNAL_IORQ_ | SIGNAL_RD_ | SIGNAL_M1_);
             a = ir.w;
             ir.l = (ir.l & 0x80) | ((ir.l + 1) & 0x7F);
@@ -204,11 +208,13 @@ void Z80::clock()
             return;
 
         case Z80State::ST_MEMRD_T3H_DATARD:
+            access = true;
             state = Z80State::ST_MEMRD_T3L_DATARD;
             return;
 
         case Z80State::ST_MEMRD_T3L_DATARD:
             readMem(d);
+            access = false;
             c |= (SIGNAL_MREQ_ | SIGNAL_RD_);
             break;
 
@@ -242,11 +248,13 @@ void Z80::clock()
 
         case Z80State::ST_MEMWR_T3H_DATAWR:
             // d = dout;
+            access = true;
             state = Z80State::ST_MEMWR_T3L_DATAWR;
             return;
 
         case Z80State::ST_MEMWR_T3L_DATAWR:
             // d = dout;
+            access = false;
             c |= SIGNAL_MREQ_ | SIGNAL_WR_;
             break;
 
@@ -282,10 +290,12 @@ void Z80::clock()
             return;
 
         case Z80State::ST_IORD_T3H_DATARD:
+            access = true;
             state = Z80State::ST_IORD_T3L_DATARD;
             return;
 
         case Z80State::ST_IORD_T3L_DATARD:
+            access = false;
             readIo(d);
             c |= SIGNAL_IORQ_ | SIGNAL_RD_;
             break;
@@ -328,11 +338,13 @@ void Z80::clock()
 
         case Z80State::ST_IOWR_T3H_DATAWR:
             // d = dout;
+            access = true;
             state = Z80State::ST_IOWR_T3L_DATAWR;
             return;
 
         case Z80State::ST_IOWR_T3L_DATAWR:
             // d = dout;
+            access = false;
             c |= SIGNAL_IORQ_ | SIGNAL_WR_;
             break;
 

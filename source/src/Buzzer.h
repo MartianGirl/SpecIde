@@ -38,11 +38,13 @@ class Buzzer
 {
     public:
         int filter[FILTER_BZZ_SIZE];
+        size_t index = 0;
 
         uint_fast8_t *source;
         uint_fast8_t *tapeIn;
 
         int signal;
+
 
         bool playSound;
         bool tapeSound;
@@ -59,8 +61,6 @@ class Buzzer
 
         void update()
         {
-            static uint_fast32_t index = 0;
-
             // Smooth the signal directly from the ULA.
             if (playSound)
             {

@@ -55,7 +55,7 @@ class Z80
         ioRdCycles(0), ioWrCycles(0),
         cpuProcCycles(0),
         nmiAccept(false), nmiProcess(false),
-        intProcess(false),
+        intProcess(false), access(false),
         c_d(0xFFFF), iff_d(0x00), dout(0xFF)
         {
             if (!flagsReady)
@@ -165,6 +165,7 @@ class Z80
         bool nmiProcess;
         bool intAccept;
         bool intProcess;
+        bool access;
 
         uint_fast16_t c_d;
         uint_fast8_t iff_d;

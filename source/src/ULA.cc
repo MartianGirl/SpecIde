@@ -91,21 +91,22 @@ ULA::ULA() :
     }
 }
 
-uint32_t ULA::average(uint32_t a, uint32_t b)
+/** Average two colours in consecutive positions.
+ */
+uint32_t ULA::average(uint32_t *ptr)
 {
     uint32_t res;
     uint8_t *pRes = reinterpret_cast<uint8_t*>(&res);
-    uint8_t *pa = reinterpret_cast<uint8_t*>(&a);
-    uint8_t *pb = reinterpret_cast<uint8_t*>(&b);
+    uint8_t *pSrc = reinterpret_cast<uint8_t*>(ptr);
 #if SPECIDE_BYTE_ORDER == 1
     pRes[0] = 0xFF;
-    pRes[1] = averageTable[pa[1]][pb[1]];
-    pRes[2] = averageTable[pa[2]][pb[2]];
-    pRes[3] = averageTable[pa[3]][pb[3]];
+    pRes[1] = averageTable[pSrc[1]][pSrc[5]];
+    pRes[2] = averageTable[pSrc[2]][pSrc[6]];
+    pRes[3] = averageTable[pSrc[3]][pSrc[7]];
 #else
-    pRes[0] = averageTable[pa[0]][pb[0]];
-    pRes[1] = averageTable[pa[1]][pb[1]];
-    pRes[2] = averageTable[pa[2]][pb[2]];
+    pRes[0] = averageTable[pSrc[0]][pSrc[4]];
+    pRes[1] = averageTable[pSrc[1]][pSrc[5]];
+    pRes[2] = averageTable[pSrc[2]][pSrc[6]];
     pRes[3] = 0xFF;
 #endif
     return res;
@@ -309,7 +310,7 @@ void ULA::paint()
         {
             xPos += 8;
 
-            uint32_t *ptr, *ptr1, *ptr2;
+            uint32_t *ptr, *ptr1;
             switch (scanlines)
             {
                 case 1:     // Scanlines
@@ -325,25 +326,24 @@ void ULA::paint()
                     break;
 
                 case 2:     // Averaged scanlines
+                    ptr = ptr1 = pixelsX2 + 2 * (yPos * xSize + xPos);
+                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
                     ptr = pixelsX1 + (yPos * xSize) + xPos;
-                    ptr1 = pixelsX2 + ((2 * yPos + frame) * xSize) + xPos;
-                    ptr2 = pixelsX2 + ((2 * yPos + (1 - frame)) * xSize) + xPos;
-                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    *ptr = average(*ptr2, *ptr1);
-                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    *ptr = average(*ptr2, *ptr1);
-                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    *ptr = average(*ptr2, *ptr1);
-                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    *ptr = average(*ptr2, *ptr1);
-                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    *ptr = average(*ptr2, *ptr1);
-                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    *ptr = average(*ptr2, *ptr1);
-                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    *ptr = average(*ptr2, *ptr1);
-                    --ptr; --ptr1; --ptr2; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    *ptr = average(*ptr2, *ptr1);
+                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
+                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
+                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
+                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
+                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
+                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
+                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
+                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
                     break;
 
                 default:    // No scanlines

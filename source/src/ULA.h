@@ -47,7 +47,7 @@ class ULA
 
         void setUlaVersion(uint_fast8_t version);
 
-        uint32_t average(uint32_t a, uint32_t b);
+        uint32_t average(uint32_t *ptr);
 
         uint_fast16_t videoStart = 0x008;
         uint_fast16_t videoEnd = 0x108;

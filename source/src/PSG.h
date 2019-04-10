@@ -58,8 +58,8 @@ class PSG
         bool envHold;
         bool envA, envB, envC;
 
-        size_t counterA, counterB, counterC, counterN, counterE;
-        size_t periodA, periodB, periodC, periodN, periodE;
+        uint_fast16_t counterA, counterB, counterC, counterN, counterE;
+        uint_fast16_t periodA, periodB, periodC, periodN, periodE;
 
         size_t count = 0;
         size_t index = 0;
@@ -173,7 +173,7 @@ class PSG
             }
 
             // Because period means a complete wave cycle (high/low)
-            if ((count & 0x07) == 0x00)
+            if (!(count & 0x07))
             {
                 if (++counterA >= periodA)
                 {
@@ -203,17 +203,17 @@ class PSG
                 {
                     counterE = 0;
 
-                    if (envHold == false)
+                    if (!envHold)
                     {
                         if (++envStep >= 0x20)   // We've finished a cycle.
                         {
                             envStep = 0x00;
 
                             // Continue = 1: Cycle pattern controlled by Hold.
-                            if ((r[13] & 0x08) == 0x08)
+                            if (r[13] & 0x08)
                             {
                                 // Hold & Alternate
-                                if ((r[13] & 0x01) == 0x01)
+                                if (r[13] & 0x01)
                                     envHold = true;
 
                                 // If Alternate != Hold, change slope. :)
@@ -234,16 +234,14 @@ class PSG
                 }
             }
 
-            signalA = signalB = signalC = 1;
-
             if (playSound)
             {
-                if ((r[7] & 0x01) == 0) signalA = waveA;
-                if ((r[7] & 0x02) == 0) signalB = waveB;
-                if ((r[7] & 0x04) == 0) signalC = waveC;
-                if ((r[7] & 0x08) == 0) signalA += noise;
-                if ((r[7] & 0x10) == 0) signalB += noise;
-                if ((r[7] & 0x20) == 0) signalC += noise;
+                signalA = (r[7] & 0x01) ? 1 : waveA;
+                signalB = (r[7] & 0x02) ? 1 : waveB;
+                signalC = (r[7] & 0x04) ? 1 : waveC;
+                if (!(r[7] & 0x08)) signalA += noise;
+                if (!(r[7] & 0x10)) signalB += noise;
+                if (!(r[7] & 0x20)) signalC += noise;
                 signalA *= out[envA ? envLevel : volumeA];
                 signalB *= out[envB ? envLevel : volumeB];
                 signalC *= out[envC ? envLevel : volumeC];
@@ -258,12 +256,14 @@ class PSG
         void sample()
         {
             channelA = channelB = channelC = 0;
+
             for (uint_fast16_t i = 0; i < FILTER_PSG_SIZE; ++i)
-            {
                 channelA += filterA[i];
+            for (uint_fast16_t i = 0; i < FILTER_PSG_SIZE; ++i)
                 channelB += filterB[i];
+            for (uint_fast16_t i = 0; i < FILTER_PSG_SIZE; ++i)
                 channelC += filterC[i];
-            }
+
             channelA /= FILTER_PSG_SIZE;
             channelB /= FILTER_PSG_SIZE;
             channelC /= FILTER_PSG_SIZE;
@@ -274,22 +274,14 @@ class PSG
 
         void write(uint_fast8_t byte)
         {
-            if (++wait == 5)
-            {
-                wait = 0;
-                latch_di = byte;
-                wr = true;
-            }
+            latch_di = byte;
+            wr = true;
         }
 
         void addr(uint_fast8_t byte)
         {
-            if (++wait == 5)
-            {
-                wait = 0;
-                if ((byte & 0x0F) == byte)
-                    latch_a = byte;
-            }
+            if ((byte & 0x0F) == byte)
+                latch_a = byte;
         }
 
         void setVolumeLevels(bool ay)
