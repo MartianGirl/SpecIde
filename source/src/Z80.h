@@ -41,9 +41,9 @@ class Z80
 #include "Z80XXCBPrefixedTable.h"
         a(0xFFFF), d(0xFF), c(0xFFFF),
         state(Z80State::ST_RESET),
-        reg8{&bc.h, &bc.l, &de.h, &de.l, &hl.h, &hl.l, nullptr, &af.h},
-        regx8{&bc.h, &bc.l, &de.h, &de.l, &ix.h, &ix.l, nullptr, &af.h},
-        regy8{&bc.h, &bc.l, &de.h, &de.l, &iy.h, &iy.l, nullptr, &af.h},
+        reg8{&bc.b.h, &bc.b.l, &de.b.h, &de.b.l, &hl.b.h, &hl.b.l, nullptr, &af.b.h}
+        regx8{&bc.b.h, &bc.b.l, &de.b.h, &de.b.l, &ix.b.h, &ix.b.l, nullptr, &af.b.h}
+        regy8{&bc.b.h, &bc.b.l, &de.b.h, &de.b.l, &iy.b.h, &iy.b.l, nullptr, &af.b.h}
         regp{&bc.w, &de.w, &hl.w, &sp.w},
         regp2{&bc.w, &de.w, &hl.w, &af.w},
         regpx{&bc.w, &de.w, &ix.w, &sp.w},

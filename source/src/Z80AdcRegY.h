@@ -23,9 +23,9 @@
 
 bool z80AdcRegY()
 {
-    acc.l = af.l & FLAG_C;
-    af.l = addFlags[acc.l][af.h][*regy8[z]];
-    af.h += *regy8[z] + acc.l;
+    acc.b.l = af.b.l & FLAG_C;
+    af.b.l = flg = addFlags[acc.b.l][af.b.h][*regy8[z]];
+    af.b.h += *regy8[z] + acc.l;
     prefix = PREFIX_NO;
     return true;
 }

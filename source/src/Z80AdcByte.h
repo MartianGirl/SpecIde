@@ -31,9 +31,9 @@ bool z80AdcByte()
             return true;
 
         case 1:
-            acc.l = af.l & FLAG_C;
-            af.l = addFlags[acc.l][af.h][iReg.h];
-            af.h += iReg.h + acc.l;
+            acc.b.l = af.b.l & FLAG_C;
+            af.b.l = flg = addFlags[acc.b.l][af.b.h][iReg.b.h];
+            af.b.h += iReg.b.h + acc.b.l;
             prefix = PREFIX_NO;
             return true;
 

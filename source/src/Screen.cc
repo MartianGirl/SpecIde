@@ -902,7 +902,7 @@ uint_fast8_t Screen::readMemory(uint_fast16_t a)
 void Screen::trapLdStart()
 {
     // Find first block that matches flag byte (Flag is in AF')
-    while (tape.foundTapBlock(spectrum.z80.af_.h) == false)
+    while (tape.foundTapBlock(spectrum.z80.af_.b.h) == false)
         tape.nextTapBlock();
 
     // Get parameters from CPU registers
@@ -913,12 +913,12 @@ void Screen::trapLdStart()
     if (block < bytes)
     {
         // Load error if not enough bytes.
-        spectrum.z80.af.l &= 0xFE;
+        spectrum.z80.af.b.l &= 0xFE;
     }
     else
     {
         block = bytes;
-        spectrum.z80.af.l |= 0x01;
+        spectrum.z80.af.b.l |= 0x01;
     }
     spectrum.z80.ix.w += block; spectrum.z80.ix.w &= 0xFFFF;
     spectrum.z80.de.w -= block;
@@ -946,13 +946,13 @@ void Screen::trapSaBytes()
 
     tape.saveData.push_back(bytes & 0x00FF);
     tape.saveData.push_back((bytes & 0xFF00) >> 8);
-    tape.saveData.push_back(spectrum.z80.af.h);
+    tape.saveData.push_back(spectrum.z80.af.b.h);
     bytes -= 2;
 
     spectrum.z80.ix.w += bytes; spectrum.z80.ix.w &= 0xFFFF;
     spectrum.z80.de.w -= bytes;
 
-    checksum = spectrum.z80.af.h;
+    checksum = spectrum.z80.af.b.h;
     for (uint_fast16_t ii = 0; ii < bytes; ++ii)
     {
         uint_fast8_t byte = readMemory(start + ii);

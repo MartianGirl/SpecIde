@@ -13,10 +13,11 @@
  * along with SpecIde.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "Z80Register.h"
+// #include "Z80Register.h"
 
 // This works because the member variables were declared in this same order
 // in the header file.
+/*
 Z80Register::Z80Register() :
     reg(0x0000),
     pw(reinterpret_cast<uint16_t*>(&reg)),
@@ -42,5 +43,5 @@ uint_fast16_t Z80Register::getw()
 {
     return reg;
 }
-
+*/
 // vim: et:sw=4:ts=4

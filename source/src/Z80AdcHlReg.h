@@ -39,44 +39,45 @@ bool z80AdcHlReg()
         case 2:
             // First, do the low byte addition. Carry is in lowest
             // bit of H. Add carry here.
-            hl.w = acc.l + wz.l + (af.l & FLAG_C);
-            acc.w = acc.h;
-            af.l = hl.h & FLAG_C;
+            hl.w = acc.b.l + wz.b.l + (af.b.l & FLAG_C);
+            acc.w = acc.b.h;
+            flg = hl.b.h & FLAG_C;
 
             // Perform the addition in H, including low byte carry.
-            hl.h = acc.l + wz.h + (af.l & FLAG_C);
+            hl.b.h = acc.b.l + wz.b.h + (flg & FLAG_C);
             return false;
 
         case 3:
             // Now check flags:
             // Half carry
-            af.l |= (wz.h ^ acc.l ^ hl.h) & FLAG_H;
+            flg |= (wz.b.h ^ acc.b.l ^ hl.b.h) & FLAG_H;
 
             // Carry into bit 7
-            af.l |= ((wz.h ^ acc.l ^ hl.h) >> 5) & FLAG_PV;
+            flg |= ((wz.b.h ^ acc.b.l ^ hl.b.h) >> 5) & FLAG_PV;
             return false;
 
         case 4:
             // Carry out of bit 7
-            acc.w += wz.h + (af.l & FLAG_C);
-            af.l ^= ((acc.h & FLAG_C) << 2) & FLAG_PV;
-            af.l &= ~FLAG_C;
-            af.l |= (acc.h & FLAG_C);
+            acc.w += wz.b.h + (flg & FLAG_C);
+            flg ^= ((acc.b.h & FLAG_C) << 2) & FLAG_PV;
+            flg &= ~FLAG_C;
+            flg |= (acc.b.h & FLAG_C);
             return true;
 
         case 5:
             // Sign is affected by the 16-bit result - hence high byte.
             // 5 and 3 are affected by the high byte.
-            af.l |= hl.h & (FLAG_S | FLAG_5 | FLAG_3);
+            flg |= hl.b.h & (FLAG_S | FLAG_5 | FLAG_3);
             return false;
 
         case 6:
             // Zero is affected by the 16-bit result.
-            af.l |= (hl.w == 0x0000) ? FLAG_Z : 0x00;
+            flg |= (hl.w == 0x0000) ? FLAG_Z : 0x00;
             return false;
 
         case 7:
             ++wz.w;
+            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

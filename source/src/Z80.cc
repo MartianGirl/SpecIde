@@ -95,7 +95,7 @@ void Z80::clock()
             access = false;
             c |= (SIGNAL_IORQ_ | SIGNAL_RD_ | SIGNAL_M1_);
             a = ir.w;
-            ir.l = (ir.l & 0x80) | ((ir.l + 1) & 0x7F);
+            ir.b.l = (ir.b.l & 0x80) | ((ir.b.l + 1) & 0x7F);
             if (!(iff_d & HALT))
                 decode(d);
             startInstruction();
@@ -577,30 +577,30 @@ uint_fast16_t Z80::getAddress()
 
 void Z80::readMem(uint_fast8_t byte)
 {
-    iReg.l = iReg.h;
-    iReg.h = byte;
+    iReg.b.l = iReg.b.h;
+    iReg.b.h = byte;
     --memRdCycles;
 }
 
 uint_fast8_t Z80::writeMem()
 {
-    uint_fast8_t byte = oReg.l;
-    oReg.l = oReg.h;
+    uint_fast8_t byte = oReg.b.l;
+    oReg.b.l = oReg.b.h;
     --memWrCycles;
     return byte;
 }
 
 void Z80::readIo(uint_fast8_t byte)
 {
-    iReg.l = iReg.h;
-    iReg.h = byte;
+    iReg.b.l = iReg.b.h;
+    iReg.b.h = byte;
     --ioRdCycles;
 }
 
 uint_fast8_t Z80::writeIo()
 {
-    uint_fast8_t byte = oReg.l;
-    oReg.l = oReg.h;
+    uint_fast8_t byte = oReg.b.l;
+    oReg.b.l = oReg.b.h;
     --ioWrCycles;
     return byte;
 }
@@ -666,7 +666,7 @@ bool Z80::executeInt()
             finished = execute();
             break;
 
-        case 2:             // Mode 2: Jump to the address in IR.h & data bus.
+        case 2:             // Mode 2: Jump to the address in IR.b.h & data bus.
             finished = z80IntMode2();
             ++executionStep;
             break;

@@ -25,7 +25,24 @@
 
 using namespace std;
 
-class Z80Register
+struct Z80Pair
+{
+#if SPECIDE_BYTE_ORDER == 1
+    uint8_t h;
+    uint8_t l;
+#else
+    uint8_t l;
+    uint8_t h;
+#endif
+};
+
+union Z80Register
+{
+    uint16_t w;
+    Z80Pair b;
+};
+
+/* class Z80Register
 {
     public:
         Z80Register();
@@ -46,6 +63,6 @@ class Z80Register
         uint16_t &w;
         uint8_t &h;
         uint8_t &l;
-};
+}; */
 
 // vim: et:sw=4:ts=4

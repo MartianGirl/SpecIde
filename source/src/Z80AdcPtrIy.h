@@ -35,11 +35,11 @@ bool z80AdcPtrIy()
             return true;
 
         case 2:
-            wz.l = iReg.h;
+            wz.b.l = iReg.b.h;
             return false;
 
         case 3:
-            wz.h = ((wz.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
             return false;
 
         case 4:
@@ -54,9 +54,9 @@ bool z80AdcPtrIy()
             return true;
 
         case 7:
-            acc.l = af.l & FLAG_C;
-            af.l = addFlags[acc.l][af.h][iReg.h];
-            af.h += iReg.h + acc.l;
+            acc.b.l = af.b.l & FLAG_C;
+            af.b.l = flg = addFlags[acc.b.l][af.b.h][iReg.b.h];
+            af.b.h += iReg.b.h + acc.b.l;
             prefix = PREFIX_NO;
             return true;
 
