@@ -24,6 +24,7 @@
 bool z80Di()
 {
     iff &= ~(IFF1 | IFF2);
+    flg = 0;
     prefix = PREFIX_NO;
     return true;
 }

@@ -31,7 +31,7 @@ bool z80CpPtrHl()
             return true;
 
         case 1:
-            af.l = cpFlags[af.h][iReg.h];
+            af.b.l = flg = cpFlags[af.b.h][iReg.b.h];
             prefix = PREFIX_NO;
             return true;
 

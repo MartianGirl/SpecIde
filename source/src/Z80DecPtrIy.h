@@ -32,11 +32,11 @@ bool z80DecPtrIy()
             return true;
 
         case 1:
-            wz.l = iReg.h;
+            wz.b.l = iReg.b.h;
             return true;
 
         case 2:
-            wz.h = ((wz.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
             return false;
 
         case 3:
@@ -53,16 +53,17 @@ bool z80DecPtrIy()
 
         case 7:
             // Preserve carry bit.
-            af.l &= FLAG_C;
-            af.l |= decFlags[iReg.h];
+            flg = af.b.l & FLAG_C;
+            flg |= decFlags[iReg.b.h];
             return false;
 
         case 8:
-            oReg.l = iReg.h - 1;
+            oReg.b.l = iReg.b.h - 1;
             memWrCycles = 1;
             return true;
 
         case 9:
+            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

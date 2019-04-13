@@ -32,16 +32,17 @@ bool z80DecPtrHl()
 
         case 1:
             // Preserve carry bit.
-            af.l &= FLAG_C;
-            af.l |= decFlags[iReg.h];
+            flg = af.b.l & FLAG_C;
+            flg |= decFlags[iReg.b.h];
             return false;
 
         case 2:
-            oReg.l = iReg.h - 1;
+            oReg.b.l = iReg.b.h - 1;
             memWrCycles = 1;
             return true;
 
         case 3:
+            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

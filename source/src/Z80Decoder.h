@@ -44,7 +44,6 @@ class Z80Decoder
     public:
         Z80Decoder();
 
-
         void reset();
 
         Z80RegisterSet regs;

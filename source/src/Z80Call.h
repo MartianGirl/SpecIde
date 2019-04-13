@@ -38,8 +38,8 @@ bool z80Call()
             return false;
 
         case 3:
-            oReg.l = pc.h;
-            oReg.h = pc.l;
+            oReg.b.l = pc.b.h;
+            oReg.b.h = pc.b.l;
             return true;
 
         case 4:
@@ -47,6 +47,7 @@ bool z80Call()
 
         case 5:
             pc.w = wz.w = iReg.w;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

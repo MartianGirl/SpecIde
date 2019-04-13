@@ -23,10 +23,11 @@
 
 bool z80Cpl()
 {
-    af.h = ~af.h;
-    af.l &= (FLAG_S | FLAG_Z | FLAG_PV | FLAG_C);
-    af.l |= af.h & (FLAG_5 | FLAG_3);
-    af.l |= FLAG_H | FLAG_N;
+    af.b.h = ~af.b.h;
+    flg = af.b.l & (FLAG_S | FLAG_Z | FLAG_PV | FLAG_C);
+    flg |= af.b.h & (FLAG_5 | FLAG_3);
+    flg |= FLAG_H | FLAG_N;
+    af.b.l = flg;
     prefix = PREFIX_NO;
     return true;
 }

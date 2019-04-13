@@ -23,9 +23,10 @@
 
 bool z80DecReg()
 {
-    af.l &= FLAG_C;
-    af.l |= decFlags[*reg8[y]];
+    flg = af.b.l & FLAG_C;
+    flg |= decFlags[*reg8[y]];
     --*reg8[y];
+    af.b.l = flg;
     prefix = PREFIX_NO;
     return true;
 }

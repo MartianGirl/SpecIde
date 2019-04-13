@@ -37,16 +37,17 @@
 
 bool z80BitNReg()
 {
-    acc.l = *reg8[z];
+    acc.b.l = *reg8[z];
 
-    af.l &= FLAG_C;
-    af.l |= FLAG_H;
-    af.l |= acc.l & (FLAG_5 | FLAG_3);
+    flg = af.b.l & FLAG_C;
+    flg |= FLAG_H;
+    flg |= acc.b.l & (FLAG_5 | FLAG_3);
 
-    acc.l &= (1 << y);
-    af.l |= acc.l & FLAG_S;
-    af.l |= (acc.l != 0x00) ? 0x00 : (FLAG_Z | FLAG_PV);
+    acc.b.l &= (1 << y);
+    flg |= acc.b.l & FLAG_S;
+    flg |= (acc.b.l != 0x00) ? 0x00 : (FLAG_Z | FLAG_PV);
 
+    af.b.l = flg;
     prefix = PREFIX_NO;
     return true;
 }

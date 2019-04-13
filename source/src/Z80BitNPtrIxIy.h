@@ -32,17 +32,18 @@ bool z80BitNPtrIxIy()
     switch (executionStep)
     {
         case 5:
-            acc.l = iReg.h;
-            acc.l &= (1 << y);
+            acc.b.l = iReg.b.h;
+            acc.b.l &= (1 << y);
 
-            af.l &= FLAG_C;
-            af.l |= FLAG_H;
-            af.l |= acc.l & FLAG_S;
-            af.l |= wz.h & (FLAG_5 | FLAG_3);
-            af.l |= (acc.l) ? 0x00 : (FLAG_Z | FLAG_PV);
+            flg = af.b.l & FLAG_C;
+            flg |= FLAG_H;
+            flg |= acc.b.l & FLAG_S;
+            flg |= wz.b.h & (FLAG_5 | FLAG_3);
+            flg |= (acc.b.l) ? 0x00 : (FLAG_Z | FLAG_PV);
             return false;
 
         case 6:
+            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

@@ -23,7 +23,7 @@
 
 bool z80CpRegX()
 {
-    af.l = cpFlags[af.h][*regx8[z]];
+    af.b.l = flg = cpFlags[af.b.h][*regx8[z]];
     prefix = PREFIX_NO;
     return true;
 }

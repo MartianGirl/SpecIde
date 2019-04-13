@@ -44,20 +44,20 @@ bool z80CallCc()
             wz.w = iReg.w;
             switch (y)
             {
-                case 0: return ((af.l & FLAG_Z) == FLAG_Z);
-                case 1: return ((af.l & FLAG_Z) == 0x00);
-                case 2: return ((af.l & FLAG_C) == FLAG_C);
-                case 3: return ((af.l & FLAG_C) == 0x00);
-                case 4: return ((af.l & FLAG_PV) == FLAG_PV);
-                case 5: return ((af.l & FLAG_PV) == 0x00);
-                case 6: return ((af.l & FLAG_S) == FLAG_S);
-                case 7: return ((af.l & FLAG_S) == 0x00);
+                case 0: return ((af.b.l & FLAG_Z) == FLAG_Z);
+                case 1: return ((af.b.l & FLAG_Z) == 0x00);
+                case 2: return ((af.b.l & FLAG_C) == FLAG_C);
+                case 3: return ((af.b.l & FLAG_C) == 0x00);
+                case 4: return ((af.b.l & FLAG_PV) == FLAG_PV);
+                case 5: return ((af.b.l & FLAG_PV) == 0x00);
+                case 6: return ((af.b.l & FLAG_S) == FLAG_S);
+                case 7: return ((af.b.l & FLAG_S) == 0x00);
                 default: assert(false); return true;
             }
 
         case 3:
-            oReg.l = pc.h;
-            oReg.h = pc.l;
+            oReg.b.l = pc.b.h;
+            oReg.b.h = pc.b.l;
             memWrCycles = 2;
             return true;
 
@@ -66,6 +66,7 @@ bool z80CallCc()
 
         case 5:
             pc.w = wz.w;
+            flg = 0x00;
             prefix = PREFIX_NO;
             return true;
 

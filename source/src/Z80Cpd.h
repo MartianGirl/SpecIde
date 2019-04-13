@@ -54,27 +54,28 @@ bool z80Cpd()
             return false;
 
         case 3:
-            acc.l = af.h - iReg.h;
-            af.l &= FLAG_C;                             // 0000000C
-            af.l |= FLAG_N;                             // 000000NC
-            af.l |= 
-                (af.h ^ iReg.h ^ acc.l) & FLAG_H;       // 000H00NC
-            af.l |= acc.l & FLAG_S;                     // S00H00NC
-            af.l |= (acc.l) ? 0x00 : FLAG_Z;            // SZ0H00NC
+            acc.b.l = af.b.h - iReg.b.h;
+            flg = af.b.l & FLAG_C;                      // 0000000C
+            flg |= FLAG_N;                              // 000000NC
+            flg |= 
+                (af.b.h ^ iReg.b.h ^ acc.b.l) & FLAG_H; // 000H00NC
+            flg |= acc.b.l & FLAG_S;                    // S00H00NC
+            flg |= (acc.b.l) ? 0x00 : FLAG_Z;           // SZ0H00NC
             return false;
 
         case 4:
-            acc.l -= (af.l & FLAG_H) >> 4;
-            af.l |= (acc.l & FLAG_3);                   // SZ0H30NC
-            af.l |= (acc.l << 4) & FLAG_5;              // SZ5H30NC
+            acc.b.l -= (flg & FLAG_H) >> 4;
+            flg |= (acc.b.l & FLAG_3);                  // SZ0H30NC
+            flg |= (acc.b.l << 4) & FLAG_5;             // SZ5H30NC
             return false;
 
         case 5:
-            af.l |= (bc.w) ? FLAG_PV : 0x00;            // SZ5H3PNC
+            flg |= (bc.w) ? FLAG_PV : 0x00;             // SZ5H3PNC
             return false;
 
         case 6:
             --wz.w;
+            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

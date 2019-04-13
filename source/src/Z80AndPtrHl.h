@@ -32,8 +32,8 @@ bool z80AndPtrHl()
 
         case 1:
             // Calculate the result.
-            af.l = andFlags[af.h][iReg.h];
-            af.h &= iReg.h;
+            af.b.l = flg = andFlags[af.b.h][iReg.b.h];
+            af.b.h &= iReg.b.h;
             prefix = PREFIX_NO;
             return true;
 

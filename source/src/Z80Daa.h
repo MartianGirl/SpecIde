@@ -24,49 +24,50 @@
 bool z80Daa()
 {
     // Keep the relevant flags.
-    af.l &= (FLAG_H | FLAG_N | FLAG_C);          // ...H..NC
+    flg = af.b.l & (FLAG_H | FLAG_N | FLAG_C);  // ...b.H..NC
     // Adjust the lower nybble first.
-    acc.w = (af.h & 0x0F);
-    if ((acc.w > 0x09) || ((af.l & FLAG_H) == FLAG_H))
+    acc.w = (af.b.h & 0x0F);
+    if ((acc.w > 0x09) || ((flg & FLAG_H) == FLAG_H))
     {
-        if ((af.l & FLAG_N) == FLAG_N)   // Subtraction
+        if ((flg & FLAG_N) == FLAG_N)   // Subtraction
         {
-            af.l &= (acc.w > 0x05) ? ~FLAG_H : 0xFF;
+            flg &= (acc.w > 0x05) ? ~FLAG_H : 0xFF;
             acc.w -= 0x06;
         }
-        else                                // Addition
+        else    // Addition
         {
-            af.l &= ~FLAG_H;
-            af.l |= (acc.w > 0x09) ? FLAG_H : 0x00;
+            flg &= ~FLAG_H;
+            flg |= (acc.w > 0x09) ? FLAG_H : 0x00;
             acc.w += 0x06;
         }
     }
 
     // Adjust the upper nybble then.
-    acc.w += (af.h & 0xF0);
-    if ((af.h > 0x99) || ((af.l & FLAG_C) == FLAG_C))
+    acc.w += (af.b.h & 0xF0);
+    if ((af.b.h > 0x99) || ((flg & FLAG_C) == FLAG_C))
     {
-        if ((af.l & FLAG_N) == FLAG_N)   // Subtraction
+        if ((flg & FLAG_N) == FLAG_N)   // Subtraction
         {
             acc.w -= 0x60;
         }
-        else                                // Addition
+        else    // Addition
         {
             acc.w += 0x60;
         }
 
-        af.l |= FLAG_C;
+        flg |= FLAG_C;
     }
 
-    af.l |= 
-        acc.l & (FLAG_S | FLAG_5 | FLAG_3);      // S.5H3.NC
-    acc.h = acc.l;
-    acc.h ^= acc.h >> 1;
-    acc.h ^= acc.h >> 2;
-    acc.h ^= acc.h >> 4;
-    af.l |= (acc.h & 0x01) ? 0x00 : FLAG_PV;  // S.5H3PNC
-    af.l |= (acc.l) ? 0x00 : FLAG_Z;          // SZ5H3PNC
-    af.h = acc.l;
+    flg |= 
+        acc.b.l & (FLAG_S | FLAG_5 | FLAG_3);   // S.5H3.NC
+    acc.b.h = acc.b.l;
+    acc.b.h ^= acc.b.h >> 1;
+    acc.b.h ^= acc.b.h >> 2;
+    acc.b.h ^= acc.b.h >> 4;
+    flg |= (acc.b.h & 0x01) ? 0x00 : FLAG_PV;  // S.5H3PNC
+    flg |= (acc.b.l) ? 0x00 : FLAG_Z;          // SZ5H3PNC
+    af.b.h = acc.b.l;
+    af.b.l = flg;
     prefix = PREFIX_NO;
     return true;
 }

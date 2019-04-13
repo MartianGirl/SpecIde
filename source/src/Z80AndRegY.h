@@ -23,8 +23,8 @@
 
 bool z80AndRegY()
 {
-    af.l = andFlags[af.h][*regy8[z]];
-    af.h &= *regy8[z];
+    af.b.l = flg = andFlags[af.b.h][*regy8[z]];
+    af.b.h &= *regy8[z];
     prefix = PREFIX_NO;
     return true;
 }

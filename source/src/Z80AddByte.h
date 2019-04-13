@@ -31,8 +31,8 @@ bool z80AddByte()
             return true;
 
         case 1:
-            af.l = addFlags[0][af.h][iReg.h];
-            af.h += iReg.h;
+            af.b.l = flg = addFlags[0][af.b.h][iReg.b.h];
+            af.b.h += iReg.b.h;
             prefix = PREFIX_NO;
             return true;
 

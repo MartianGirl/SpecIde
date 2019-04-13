@@ -39,30 +39,30 @@ bool z80AddIyRegY()
         case 2:
             // First, do the low byte addition. Carry is in lowest
             // bit of H. Add carry here.
-            iy.w = acc.l + wz.l;
-            acc.w = acc.h;
-            af.l &= (FLAG_S | FLAG_Z | FLAG_PV);
-            af.l |= iy.h & FLAG_C;
+            iy.w = acc.b.l + wz.b.l;
+            acc.w = acc.b.h;
+            flg = af.b.l & (FLAG_S | FLAG_Z | FLAG_PV);
+            flg |= iy.b.h & FLAG_C;
 
             // Perform the addition in H, including low byte carry.
-            iy.h = acc.l + wz.h + (af.l & FLAG_C);
+            iy.b.h = acc.b.l + wz.b.h + (flg & FLAG_C);
             return false;
 
         case 3:
             // Half carry
-            af.l |= (wz.h ^ acc.l ^ iy.h) & FLAG_H;
+            flg |= (wz.b.h ^ acc.b.l ^ iy.b.h) & FLAG_H;
             return false;
 
         case 4:
             // Carry
-            acc.w += wz.h + (af.l & FLAG_C);
-            af.l &= ~FLAG_C;
-            af.l |= (acc.h & FLAG_C);
+            acc.w += wz.b.h + (flg & FLAG_C);
+            flg &= ~FLAG_C;
+            flg |= (acc.b.h & FLAG_C);
             return true;
 
         case 5:
             // 5 and 3 are affected by the high byte.
-            af.l |= iy.h & (FLAG_5 | FLAG_3);
+            flg |= iy.b.h & (FLAG_5 | FLAG_3);
             return false;
 
         case 6:
@@ -70,6 +70,7 @@ bool z80AddIyRegY()
 
         case 7:
             ++wz.w;
+            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 
