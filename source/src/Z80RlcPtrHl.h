@@ -43,17 +43,9 @@ bool z80RlcPtrHl()
             return false;
 
         case 2:
+            af.b.l = flg = rlcFlags[iReg.b.h];
             acc.w = iReg.b.h << 1;
-            acc.b.h = acc.b.l = acc.b.l | acc.b.h;
-            acc.b.h ^= acc.b.h >> 1;
-            acc.b.h ^= acc.b.h >> 2;
-            acc.b.h ^= acc.b.h >> 4;
-            flg = acc.b.l & (FLAG_S | FLAG_5 | FLAG_3 | FLAG_C);
-            flg |= (acc.b.l) ? 0x00 : FLAG_Z;
-            flg |= (acc.b.h & 0x01) ? 0x00 : FLAG_PV;
-            af.b.l = flg;
-
-            oReg.b.l = acc.b.l;
+            oReg.b.l = acc.b.l | acc.b.h;
             return true;
 
         case 3:

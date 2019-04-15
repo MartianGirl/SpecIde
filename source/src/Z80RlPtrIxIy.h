@@ -52,17 +52,8 @@ bool z80RlPtrIxIy()
             return false;
 
         case 6:
-            acc.w = iReg.b.h << 1;
-            acc.w |= af.b.l & FLAG_C;
-            flg = acc.b.h & FLAG_C;
-            acc.b.h = acc.b.l;
-            acc.b.h ^= acc.b.h >> 1;
-            acc.b.h ^= acc.b.h >> 2;
-            acc.b.h ^= acc.b.h >> 4;
-            flg |= acc.b.l & (FLAG_S | FLAG_5 | FLAG_3);
-            flg |= (acc.b.l) ? 0x00 : FLAG_Z;
-            flg |= (acc.b.h & 0x01) ? 0x00 : FLAG_PV;
-            af.b.l = flg;
+            acc.w = (iReg.b.h << 1) | (af.b.l & FLAG_C);
+            af.b.l = flg = rlFlags[af.b.l & FLAG_C][iReg.b.h];
 
             if (z != 6)
                 *reg8[z] = acc.b.l;

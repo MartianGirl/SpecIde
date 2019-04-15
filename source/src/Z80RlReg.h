@@ -40,17 +40,9 @@
 
 bool z80RlReg()
 {
-    acc.w = *reg8[z] << 1;
-    acc.w |= af.b.l & FLAG_C;
-    flg = acc.b.h & FLAG_C;
-    *reg8[z] = acc.b.h = acc.b.l;
-    acc.b.h ^= acc.b.h >> 1;
-    acc.b.h ^= acc.b.h >> 2;
-    acc.b.h ^= acc.b.h >> 4;
-    flg |= acc.b.l & (FLAG_S | FLAG_5 | FLAG_3);
-    flg |= (acc.b.l) ? 0x00 : FLAG_Z;
-    flg |= (acc.b.h & 0x01) ? 0x00 : FLAG_PV;
-    af.b.l = flg;
+    acc.w = (*reg8[z] << 1) | (af.b.l & FLAG_C);
+    af.b.l = flg = rlFlags[af.b.l & FLAG_C][*reg8[z]];
+    *reg8[z] = acc.b.l;
     prefix = PREFIX_NO;
     return true;
 }
