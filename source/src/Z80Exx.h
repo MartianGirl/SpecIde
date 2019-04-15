@@ -39,6 +39,7 @@ bool z80Exx()
     hl.w = hl_.w;
     hl_.w = tmp.w;
 
+    flg = 0;
     prefix = PREFIX_NO;
     return true;
 }

@@ -35,14 +35,15 @@ bool z80PushIx()
             return false;
 
         case 1:
-            oReg.l = ix.h;
-            oReg.h = ix.l;
+            oReg.b.l = ix.b.h;
+            oReg.b.h = ix.b.l;
             return true;
 
         case 2:
             return true;
 
         case 3:
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

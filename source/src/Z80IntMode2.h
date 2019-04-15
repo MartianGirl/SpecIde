@@ -32,7 +32,7 @@ bool z80IntMode2()
             return false;
 
         case 1:
-            wz.w = (ir.h << 8) | d;
+            wz.w = (ir.b.h << 8) | d;
             return true;
 
         case 2:
@@ -41,8 +41,8 @@ bool z80IntMode2()
         case 3:
             wz.w = iReg.w;
             acc.w = pc.w;
-            oReg.l = acc.h;
-            oReg.h = acc.l;
+            oReg.b.l = acc.b.h;
+            oReg.b.h = acc.b.l;
             return true;
 
         case 4:

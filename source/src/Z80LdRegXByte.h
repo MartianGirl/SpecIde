@@ -45,7 +45,8 @@ bool z80LdRegXByte()
             return true;
 
         case 1:
-            *(regx8[y]) = iReg.h;
+            *(regx8[y]) = iReg.b.h;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

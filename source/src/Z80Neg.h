@@ -25,22 +25,22 @@ bool z80Neg()
 {
     // Calculate half-carry. This is done by doing a 4-bit
     // subtraction. Half-carry will be in bit 4.
-    acc.w = -(af.h & 0x0F);
-    af.l = 
-        (acc.w & (FLAG_H | FLAG_3)) | FLAG_N;    // ...H3.1.  
+    acc.w = -(af.b.h & 0x0F);
+    flg = (acc.w & (FLAG_H | FLAG_3)) | FLAG_N;    // ...b.H3.1.  
 
     // Calculate carry in the bit 7. Overflow flag is
     // (carry in bit 7) XOR (carry in bit 8).
-    acc.w = -(af.h & 0x7F);
-    af.l |= (acc.w >> 5) & FLAG_PV;
+    acc.w = -(af.b.h & 0x7F);
+    flg |= (acc.w >> 5) & FLAG_PV;
 
     // Calculate the result.
-    acc.w = -af.h;
-    af.l |= acc.l & (FLAG_S | FLAG_5);        // S.5H3.1.
-    af.l |= acc.h & FLAG_C;                   // S.5H3.1C
-    af.l ^= (acc.w >> 6) & FLAG_PV;           // S.5H3V1C
-    af.l |= (acc.l) ? 0x00 : FLAG_Z;          // SZ5H3V1C
-    af.h = acc.l;
+    acc.w = -af.b.h;
+    flg |= acc.b.l & (FLAG_S | FLAG_5);         // S.5H3.1.
+    flg |= acc.b.h & FLAG_C;                    // S.5H3.1C
+    flg ^= (acc.w >> 6) & FLAG_PV;              // S.5H3V1C
+    flg |= (acc.b.l) ? 0x00 : FLAG_Z;           // SZ5H3V1C
+    af.b.h = acc.b.l;
+    af.b.l = flg;
     prefix = PREFIX_NO;
     return true;
 }

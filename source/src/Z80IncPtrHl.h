@@ -32,16 +32,17 @@ bool z80IncPtrHl()
 
         case 1:
             // Preserve carry flag.
-            af.l &= FLAG_C;
-            af.l |= incFlags[iReg.h];
+            flg = af.b.l & FLAG_C;
+            flg |= incFlags[iReg.b.h];
             return false;
 
         case 2:
-            oReg.l = iReg.h + 1;
+            oReg.b.l = iReg.b.h + 1;
             memWrCycles = 1;
             return true;
 
         case 3:
+            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

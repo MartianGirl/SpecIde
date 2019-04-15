@@ -36,10 +36,11 @@ bool z80LdPtrHlByte()
             return true;
 
         case 1:
-            oReg.l = iReg.h;
+            oReg.b.l = iReg.b.h;
             return true;
 
         case 2:
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

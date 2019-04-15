@@ -38,8 +38,8 @@ bool z80Rst()
             return false;
 
         case 1:
-            oReg.l = pc.h;
-            oReg.h = pc.l;
+            oReg.b.l = pc.b.h;
+            oReg.b.h = pc.b.l;
             return true;
 
         case 2:
@@ -47,6 +47,7 @@ bool z80Rst()
 
         case 3:
             pc.w = wz.w = (y << 3);
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

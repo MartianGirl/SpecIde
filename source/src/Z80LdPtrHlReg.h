@@ -43,10 +43,11 @@ bool z80LdPtrHlReg()
             memWrCycles = 1;
             memAddrMode = 0x00000002;
 
-            oReg.l = *(reg8[z]);
+            oReg.b.l = *(reg8[z]);
             return true;
 
         case 1:
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

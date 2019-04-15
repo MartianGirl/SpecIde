@@ -42,7 +42,8 @@ bool z80LdAPtrWord()
             return true;
 
         case 3:
-            af.h = iReg.h;
+            af.b.h = iReg.b.h;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

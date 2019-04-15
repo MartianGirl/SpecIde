@@ -37,8 +37,7 @@ target_link_libraries(DSKFileTest
 add_executable(Z80Test
     Z80Test.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
+    ${PROJECT_SOURCE_DIR}/src/Z80.cc)
 target_link_libraries(Z80Test
     ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
@@ -47,8 +46,7 @@ target_link_libraries(Z80Test
 add_executable(Z80AluTest
     Z80AluTest.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
+    ${PROJECT_SOURCE_DIR}/src/Z80.cc)
 target_link_libraries(Z80AluTest
     ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
@@ -57,8 +55,7 @@ target_link_libraries(Z80AluTest
 add_executable(Z80InterruptTest
     Z80InterruptTest.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
+    ${PROJECT_SOURCE_DIR}/src/Z80.cc)
 target_link_libraries(Z80InterruptTest
     ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
@@ -67,8 +64,7 @@ target_link_libraries(Z80InterruptTest
 add_executable(Z80JumpTest
     Z80JumpTest.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
+    ${PROJECT_SOURCE_DIR}/src/Z80.cc)
 target_link_libraries(Z80JumpTest
     ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
@@ -77,24 +73,14 @@ target_link_libraries(Z80JumpTest
 add_executable(Z80BitTest
     Z80BitTest.cc
     ${PROJECT_SOURCE_DIR}/src/Memory.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
+    ${PROJECT_SOURCE_DIR}/src/Z80.cc)
 target_link_libraries(Z80BitTest
-    ${Boost_LIBRARIES}
-    ${SFML_LIBRARIES}
-    ${SFML_DEPENDENCIES})
-
-add_executable(Z80RegisterTest
-    Z80RegisterTest.cc
-    ${PROJECT_SOURCE_DIR}/src/Z80Register.cc)
-target_link_libraries(Z80RegisterTest
     ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
     ${SFML_DEPENDENCIES})
 
 install(TARGETS
     Z80Test Z80AluTest Z80InterruptTest Z80JumpTest Z80BitTest
-    Z80RegisterTest
     TZXFileTest DSKFileTest
     RUNTIME
     DESTINATION ${PROJECT_INSTALL_DIR}/tst)

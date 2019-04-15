@@ -38,11 +38,12 @@ bool z80LdAR()
             return false;
 
         case 1:
-            af.h = ir.l;
-            af.l &= FLAG_C;                                 // 0000000C
-            af.l |= (ir.l & (FLAG_S | FLAG_5 | FLAG_3)); // S050300C
-            af.l |= (ir.l == 0x00) ? FLAG_Z : 0x00;      // SZ50300C
-            af.l |= (iff & IFF2);                        // SZ503P0C
+            af.b.h = ir.b.l;
+            flg = af.b.l & FLAG_C;                              // 0000000C
+            flg |= (ir.b.l & (FLAG_S | FLAG_5 | FLAG_3));       // S050300C
+            flg |= (ir.b.l == 0x00) ? FLAG_Z : 0x00;            // SZ50300C
+            flg |= (iff & IFF2);                                // SZ503P0C
+            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

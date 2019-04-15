@@ -36,15 +36,16 @@ bool z80SetNPtrHl()
             return true;
 
         case 1:
-            acc.l = iReg.h;
-            acc.l |= (1 << y);
+            acc.b.l = iReg.b.h;
+            acc.b.l |= (1 << y);
             return false;
 
         case 2:
-            oReg.l = acc.l;
+            oReg.b.l = acc.b.l;
             return true;
 
         case 3:
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

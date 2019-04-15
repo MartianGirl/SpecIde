@@ -38,6 +38,7 @@
 bool z80LdRegReg()
 {
     *(reg8[y]) = *(reg8[z]);
+    flg = 0;
     prefix = PREFIX_NO;
     return true;
 }

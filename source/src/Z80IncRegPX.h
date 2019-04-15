@@ -31,6 +31,7 @@ bool z80IncRegPX()
 
         case 2:
             ++*regpx[p];
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

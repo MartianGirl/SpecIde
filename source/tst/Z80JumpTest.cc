@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(jr_test)
     runCycles(z80, m, 7);   // Negative conditions
     BOOST_CHECK_EQUAL(z80.pc.w, 0x0106);
     runCycles(z80, m, 4);   // XOR A
-    BOOST_CHECK_EQUAL(z80.af.h, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0x00);
     runCycles(z80, m, 7);   // Negative conditions
     BOOST_CHECK_EQUAL(z80.pc.w, 0x0109);
     runCycles(z80, m, 7);   // Negative conditions
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(djnz_test)
     runCycles(z80, m, 182);
     BOOST_CHECK_EQUAL(z80.pc.w, 0x0008);
     BOOST_CHECK_EQUAL(z80.bc.w, 0x000A);
-    BOOST_CHECK_EQUAL(z80.af.h, 0xAA);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xAA);
 }
 
 BOOST_AUTO_TEST_CASE(call_test)

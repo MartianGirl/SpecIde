@@ -39,6 +39,7 @@ bool z80SetNReg()
 {
     *reg8[z] |= (1 << y);
 
+    flg = 0;
     prefix = PREFIX_NO;
     return true;
 }

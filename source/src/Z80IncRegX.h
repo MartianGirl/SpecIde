@@ -24,9 +24,10 @@
 bool z80IncRegX()
 {
     // Preserve carry flag.
-    af.l &= FLAG_C;
-    af.l |= incFlags[*regx8[y]];
+    flg = af.b.l & FLAG_C;
+    flg |= incFlags[*regx8[y]];
     ++*regx8[y];
+    af.b.l = flg;
     prefix = PREFIX_NO;
     return true;
 }

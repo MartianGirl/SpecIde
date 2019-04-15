@@ -24,6 +24,7 @@
 bool z80JpIy()
 {
     pc.w = iy.w;
+    flg = 0;
     prefix = PREFIX_NO;
     return true;
 }

@@ -54,26 +54,27 @@ bool z80Otdr()
         case 2:
             --hl.w;
             wz.w = bc.w;
-            oReg.l = iReg.h;
+            oReg.b.l = iReg.b.h;
             return true;
 
         case 3:
-            --bc.h;
-            af.l = bc.h & (FLAG_S | FLAG_5 | FLAG_3); // S.5.3...
-            af.l |= (bc.h) ? 0x00 : FLAG_Z;           // SZ5.3...
+            --bc.b.h;
+            flg = bc.b.h & (FLAG_S | FLAG_5 | FLAG_3); // S.5.3...
+            flg |= (bc.b.h) ? 0x00 : FLAG_Z;           // SZ5.3...
 
-            af.l |= (iReg.h & 0x80) >> 6;              // SZ5.3.N.
-            acc.w = iReg.h + hl.l;
-            af.l |= (acc.h) ? FLAG_H | FLAG_C : 0x00; // SZ5H3.NC
-            acc.w = (acc.w & 0x07) ^ bc.h;
-            acc.l ^= acc.l >> 1;
-            acc.l ^= acc.l >> 2;
-            acc.l ^= acc.l >> 4;
-            af.l |= (acc.l & 0x01) ? 0x00 : FLAG_PV;   // SZ5H3PNC
+            flg |= (iReg.b.h & 0x80) >> 6;             // SZ5.3.N.
+            acc.w = iReg.b.h + hl.b.l;
+            flg |= (acc.b.h) ? FLAG_H | FLAG_C : 0x00; // SZ5H3.NC
+            acc.w = (acc.w & 0x07) ^ bc.b.h;
+            acc.b.l ^= acc.b.l >> 1;
+            acc.b.l ^= acc.b.l >> 2;
+            acc.b.l ^= acc.b.l >> 4;
+            flg |= (acc.b.l & 0x01) ? 0x00 : FLAG_PV;  // SZ5H3PNC
+            af.b.l = flg;
 
             wz.w -= 0x0102;
 
-            if (bc.h != 0x00)
+            if (bc.b.h != 0x00)
                 cpuProcCycles = 1;
             else
                 prefix = PREFIX_NO;

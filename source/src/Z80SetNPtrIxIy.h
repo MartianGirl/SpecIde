@@ -45,17 +45,18 @@ bool z80SetNPtrIxIy()
     switch (executionStep)
     {
         case 5:
-            acc.l = iReg.h;
-            acc.l |= (1 << y);
+            acc.b.l = iReg.b.h;
+            acc.b.l |= (1 << y);
             if (z != 6)
-                *reg8[z] = acc.l;
+                *reg8[z] = acc.b.l;
             return false;
 
         case 6:
-            oReg.l = acc.l;
+            oReg.b.l = acc.b.l;
             return true;
 
         case 7:
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

@@ -38,6 +38,7 @@ bool z80RetI()
         case 2:
             iff = ((iff & IFF2) >> 2) | (iff & IFF2);
             pc.w = wz.w = iReg.w;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

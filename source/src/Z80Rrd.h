@@ -40,13 +40,13 @@ bool z80Rrd()
 
         case 1:
             wz.w = hl.w;
-            acc.w = iReg.h;
+            acc.w = iReg.b.h;
             return true;
 
         case 2:
-            acc.h = af.h & 0x0F;
-            af.h &= 0xF0;
-            af.h |= acc.l & 0x0F;
+            acc.b.h = af.b.h & 0x0F;
+            af.b.h &= 0xF0;
+            af.b.h |= acc.b.l & 0x0F;
             return false;
 
         case 3:
@@ -54,18 +54,19 @@ bool z80Rrd()
             return false;
 
         case 4:
-            acc.h = af.h;
-            acc.h ^= acc.h >> 1;
-            acc.h ^= acc.h >> 2;
-            acc.h ^= acc.h >> 4;
-            af.l &= FLAG_C;
-            af.l |= af.h & (FLAG_S | FLAG_5 | FLAG_3);
-            af.l |= af.h ? 0x00 : FLAG_Z;
-            af.l |= (acc.h & 0x01) ? 0x00 : FLAG_PV;
+            acc.b.h = af.b.h;
+            acc.b.h ^= acc.b.h >> 1;
+            acc.b.h ^= acc.b.h >> 2;
+            acc.b.h ^= acc.b.h >> 4;
+            flg = af.b.l & FLAG_C;
+            flg |= af.b.h & (FLAG_S | FLAG_5 | FLAG_3);
+            flg |= af.b.h ? 0x00 : FLAG_Z;
+            flg |= (acc.b.h & 0x01) ? 0x00 : FLAG_PV;
+            af.b.l = flg;
             return false;
 
         case 5:
-            oReg.l = acc.l;
+            oReg.b.l = acc.b.l;
             return true;
 
         case 6:

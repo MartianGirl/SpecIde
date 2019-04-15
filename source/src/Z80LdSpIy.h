@@ -35,6 +35,7 @@ bool z80LdSpIy()
 
         case 2:
             sp.w = iy.w;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

@@ -35,11 +35,11 @@ bool z80SubPtrIy()
             return true;
 
         case 2:
-            wz.l = iReg.h;
+            wz.b.l = iReg.b.h;
             return false;
 
         case 3:
-            wz.h = ((wz.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
             return false;
 
         case 4:
@@ -54,8 +54,8 @@ bool z80SubPtrIy()
             return true;
 
         case 7:
-            af.l = subFlags[0][af.h][iReg.h];
-            af.h -= iReg.h;
+            af.b.l = flg = subFlags[0][af.b.h][iReg.b.h];
+            af.b.h -= iReg.b.h;
             prefix = PREFIX_NO;
             return true;
 

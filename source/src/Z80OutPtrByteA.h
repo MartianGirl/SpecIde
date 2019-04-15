@@ -36,12 +36,13 @@ bool z80OutPtrByteA()
             return true;
 
         case 1:
-            wz.w = (af.h << 8) | iReg.h;
-            oReg.l = af.h;
+            wz.w = (af.b.h << 8) | iReg.b.h;
+            oReg.b.l = af.b.h;
             return true;
 
         case 2:
-            wz.h = af.h;
+            wz.b.h = af.b.h;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

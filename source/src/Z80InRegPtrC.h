@@ -49,20 +49,21 @@ bool z80InRegPtrC()
             return true;
 
         case 1:
-            acc.h = acc.l = iReg.h;
+            acc.b.h = acc.b.l = iReg.b.h;
 
-            acc.h ^= acc.h >> 1;
-            acc.h ^= acc.h >> 2;
-            acc.h ^= acc.h >> 4;
+            acc.b.h ^= acc.b.h >> 1;
+            acc.b.h ^= acc.b.h >> 2;
+            acc.b.h ^= acc.b.h >> 4;
 
-            af.l &= FLAG_C;
-            af.l |= (FLAG_S | FLAG_5 | FLAG_3) & acc.l;
-            af.l |= (acc.h & 0x01) ? 0x00 : FLAG_PV;
-            af.l |= (acc.l) ? 0x00 : FLAG_Z;
+            flg = af.b.l & FLAG_C;
+            flg |= (FLAG_S | FLAG_5 | FLAG_3) & acc.b.l;
+            flg |= (acc.b.h & 0x01) ? 0x00 : FLAG_PV;
+            flg |= (acc.b.l) ? 0x00 : FLAG_Z;
 
             if (y != 6)
-                *reg8[y] = acc.l;
+                *reg8[y] = acc.b.l;
 
+            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

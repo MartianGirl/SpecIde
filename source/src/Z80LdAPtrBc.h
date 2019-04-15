@@ -37,7 +37,8 @@ bool z80LdAPtrBc()
             return true;
 
         case 1:
-            af.h = iReg.h;
+            af.b.h = iReg.b.h;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

@@ -39,21 +39,22 @@ bool z80RrPtrHl()
             return true;
 
         case 1:
-            acc.l = iReg.h;
-            acc.h = af.l & FLAG_C;
-            af.l = acc.l & FLAG_C;
+            acc.b.l = iReg.b.h;
+            acc.b.h = af.b.l & FLAG_C;
+            flg = acc.b.l & FLAG_C;
             acc.w >>= 1;
-            acc.h = acc.l;
-            acc.h ^= acc.h >> 1;
-            acc.h ^= acc.h >> 2;
-            acc.h ^= acc.h >> 4;
-            af.l |= acc.l & (FLAG_S | FLAG_5 | FLAG_3);
-            af.l |= (acc.l) ? 0x00 : FLAG_Z;
-            af.l |= (acc.h & 0x01) ? 0x00 : FLAG_PV;
+            acc.b.h = acc.b.l;
+            acc.b.h ^= acc.b.h >> 1;
+            acc.b.h ^= acc.b.h >> 2;
+            acc.b.h ^= acc.b.h >> 4;
+            flg |= acc.b.l & (FLAG_S | FLAG_5 | FLAG_3);
+            flg |= (acc.b.l) ? 0x00 : FLAG_Z;
+            flg |= (acc.b.h & 0x01) ? 0x00 : FLAG_PV;
+            af.b.l = flg;
             return false;
 
         case 2:
-            oReg.l = acc.l;
+            oReg.b.l = acc.b.l;
             return true;
 
         case 3:

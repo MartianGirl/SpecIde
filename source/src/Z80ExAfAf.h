@@ -31,6 +31,7 @@ bool z80ExAfAf()
     af.w = af_.w;
     af_.w = acc.w;
     prefix = PREFIX_NO;
+    flg = 0;
     return true;
 }
 

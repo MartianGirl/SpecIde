@@ -50,6 +50,7 @@ bool z80LdRegYWord()
 
         case 2:
             *regpy[p] = iReg.w;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

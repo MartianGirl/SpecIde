@@ -23,8 +23,8 @@
 
 bool z80OrRegX()
 {
-    af.l = orFlags[af.h][*regx8[z]];
-    af.h |= *regx8[z];
+    af.b.l = flg = orFlags[af.b.h][*regx8[z]];
+    af.b.h |= *regx8[z];
     prefix = PREFIX_NO;
     return true;
 }

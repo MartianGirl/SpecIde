@@ -24,6 +24,7 @@
 bool z80JpHl()
 {
     pc.w = hl.w;
+    flg = 0;
     prefix = PREFIX_NO;
     return true;
 }

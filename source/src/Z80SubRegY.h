@@ -23,8 +23,8 @@
 
 bool z80SubRegY()
 {
-    af.l = subFlags[0][af.h][*regy8[z]];
-    af.h -= *regy8[z];
+    af.b.l = flg = subFlags[0][af.b.h][*regy8[z]];
+    af.b.h -= *regy8[z];
     prefix = PREFIX_NO;
     return true;
 }

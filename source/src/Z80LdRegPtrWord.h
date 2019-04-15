@@ -53,6 +53,7 @@ bool z80LdRegPtrWord()
 
         case 4:
             *(regp[p]) = iReg.w;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

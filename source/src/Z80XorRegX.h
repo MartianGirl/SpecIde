@@ -23,8 +23,8 @@
 
 bool z80XorRegX()
 {
-    af.l = xorFlags[af.h][*regx8[z]];
-    af.h ^= *regx8[z];
+    af.b.l = flg = xorFlags[af.b.h][*regx8[z]];
+    af.b.h ^= *regx8[z];
     prefix = PREFIX_NO;
     return true;
 }

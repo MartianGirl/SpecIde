@@ -46,6 +46,7 @@ bool z80PopReg()
 
         case 2:
             *(regp2[p]) = iReg.w;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

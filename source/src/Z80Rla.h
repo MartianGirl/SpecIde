@@ -30,11 +30,12 @@
 
 bool z80Rla()
 {
-    acc.w = af.h << 1;
-    af.h = acc.l | (af.l & FLAG_C);
-    af.l &= FLAG_S | FLAG_Z | FLAG_PV;
-    af.l |= af.h & (FLAG_5 | FLAG_3);
-    af.l |= acc.h & FLAG_C;
+    acc.w = af.b.h << 1;
+    af.b.h = acc.b.l | (af.b.l & FLAG_C);
+    flg = af.b.l & (FLAG_S | FLAG_Z | FLAG_PV);
+    flg |= af.b.h & (FLAG_5 | FLAG_3);
+    flg |= acc.b.h & FLAG_C;
+    af.b.l = flg;
     prefix = PREFIX_NO;
     return true;
 }

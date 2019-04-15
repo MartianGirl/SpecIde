@@ -34,11 +34,12 @@ bool z80LdPtrBcA()
             memAddrMode = 0x00000003;
 
             wz.w = bc.w + 1;
-            oReg.l = af.h;
+            oReg.b.l = af.b.h;
             return true;
 
         case 1:
-            wz.h = af.h;
+            wz.b.h = af.b.h;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

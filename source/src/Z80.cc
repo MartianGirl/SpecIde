@@ -496,8 +496,8 @@ void Z80::start()
     addr.w = 0xFFFF;
     acc.w = 0xFFFF;
     tmp.w = 0xFFFF;
-    flg.w = 0xFFFF;
 
+    flg = 0xFF;
     iff = 0x00;
     im = 0x00;
 }

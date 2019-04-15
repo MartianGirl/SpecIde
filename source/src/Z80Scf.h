@@ -23,9 +23,10 @@
 
 bool z80Scf()
 {
-    af.l &= (FLAG_S | FLAG_Z | FLAG_PV);
-    af.l |= af.h & (FLAG_5 | FLAG_3);
-    af.l |= FLAG_C;
+    flg = ((af.b.l ^ flg) | af.b.h) & (FLAG_5 | FLAG_3);
+    flg |= af.b.l & (FLAG_S | FLAG_Z | FLAG_PV);
+    flg |= FLAG_C;
+    af.b.l = flg;
     prefix = PREFIX_NO;
     return true;
 }

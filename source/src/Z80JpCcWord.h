@@ -45,39 +45,40 @@ bool z80JpCcWord()
             switch (y)
             {
                 case 0:
-                    if ((af.l & FLAG_Z) == 0x00)
+                    if ((af.b.l & FLAG_Z) == 0x00)
                         pc.w = wz.w;
                     break;
                 case 1:
-                    if ((af.l & FLAG_Z) == FLAG_Z)
+                    if ((af.b.l & FLAG_Z) == FLAG_Z)
                         pc.w = wz.w;
                     break;
                 case 2:
-                    if ((af.l & FLAG_C) == 0x00)
+                    if ((af.b.l & FLAG_C) == 0x00)
                         pc.w = wz.w;
                     break;
                 case 3:
-                    if ((af.l & FLAG_C) == FLAG_C)
+                    if ((af.b.l & FLAG_C) == FLAG_C)
                         pc.w = wz.w;
                     break;
                 case 4:
-                    if ((af.l & FLAG_PV) == 0x00)
+                    if ((af.b.l & FLAG_PV) == 0x00)
                         pc.w = wz.w;
                     break;
                 case 5: 
-                    if ((af.l & FLAG_PV) == FLAG_PV)
+                    if ((af.b.l & FLAG_PV) == FLAG_PV)
                         pc.w = wz.w;
                     break;
                 case 6:
-                    if ((af.l & FLAG_S) == 0x00)
+                    if ((af.b.l & FLAG_S) == 0x00)
                         pc.w = wz.w;
                     break;
                 case 7:
-                    if ((af.l & FLAG_S) == FLAG_S)
+                    if ((af.b.l & FLAG_S) == FLAG_S)
                         pc.w = wz.w;
                     break;
                 default: assert(false);
             }
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

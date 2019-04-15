@@ -39,8 +39,8 @@ bool z80ExPtrSpIy()
             return true;
 
         case 2:
-            oReg.l = iy.h;
-            oReg.h = iy.l;
+            oReg.b.l = iy.b.h;
+            oReg.b.h = iy.b.l;
             return false;
 
         case 3:
@@ -57,6 +57,7 @@ bool z80ExPtrSpIy()
             return false;
 
         case 7:
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

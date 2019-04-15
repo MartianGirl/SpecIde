@@ -40,11 +40,12 @@ bool z80LdPtrWordA()
         case 2:
             wz.w = iReg.w;
             memWrCycles = 1;
-            oReg.l = af.h;
+            oReg.b.l = af.b.h;
             return true;
 
         case 3:
-            wz.h = af.h;
+            wz.b.h = af.b.h;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

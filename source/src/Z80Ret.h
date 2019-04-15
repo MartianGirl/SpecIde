@@ -36,6 +36,7 @@ bool z80Ret()
 
         case 2:
             pc.w = wz.w = iReg.w;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

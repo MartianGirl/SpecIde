@@ -39,6 +39,7 @@ bool z80PopIx()
 
         case 2:
             ix.w = iReg.w;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

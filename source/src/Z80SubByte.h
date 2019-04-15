@@ -31,8 +31,8 @@ bool z80SubByte()
             return true;
 
         case 1:
-            af.l = subFlags[0][af.h][iReg.h];
-            af.h -= iReg.h;
+            af.b.l = flg = subFlags[0][af.b.h][iReg.b.h];
+            af.b.h -= iReg.b.h;
             prefix = PREFIX_NO;
             return true;
 

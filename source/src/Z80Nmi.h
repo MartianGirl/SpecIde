@@ -33,8 +33,8 @@ bool z80Nmi()
             return false;
 
         case 1:
-            oReg.l = acc.h;
-            oReg.h = acc.l;
+            oReg.b.l = acc.b.h;
+            oReg.b.h = acc.b.l;
             return true;
 
         case 2:

@@ -42,27 +42,4 @@ union Z80Register
     Z80Pair b;
 };
 
-/* class Z80Register
-{
-    public:
-        Z80Register();
-
-        void setw(uint_fast16_t value);
-        uint_fast16_t getw(void);
-
-        // The ordering of the following variables is important.
-        // These will be initialized in the order they are declared here.
-        // For the sake of clarity, the constructor relies on this.
-        uint_fast16_t reg;
-
-        // Using non-fast pointers for correct bitwise operations.
-        uint16_t *pw;
-        uint8_t *ph;
-        uint8_t *pl;
-
-        uint16_t &w;
-        uint8_t &h;
-        uint8_t &l;
-}; */
-
 // vim: et:sw=4:ts=4

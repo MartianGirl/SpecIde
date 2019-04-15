@@ -31,6 +31,7 @@ bool z80IncRegPY()
 
         case 2:
             ++*regpy[p];
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

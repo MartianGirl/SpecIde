@@ -34,7 +34,8 @@ bool z80LdRA()
             return false;
 
         case 1:
-            ir.l = af.h;
+            ir.b.l = af.b.h;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

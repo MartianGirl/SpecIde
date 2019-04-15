@@ -24,6 +24,7 @@
 bool z80Halt()
 {
     iff |= HALT;
+    flg = 0;
     prefix = PREFIX_NO;
     return true;
 }

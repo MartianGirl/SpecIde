@@ -36,11 +36,12 @@ bool z80InAPtrByte()
             return true;
 
         case 1:
-            wz.w = (af.h << 8) | iReg.h;
+            wz.w = (af.b.h << 8) | iReg.b.h;
             return true;
 
         case 2:
-            af.h = iReg.h;
+            af.b.h = iReg.b.h;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

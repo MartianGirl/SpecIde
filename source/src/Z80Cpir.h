@@ -57,7 +57,7 @@ bool z80Cpir()
 
         case 3:
             acc.b.l = af.b.h - iReg.b.h;
-            af.b.l = flg & FLAG_C;                              // 0000000C
+            flg = af.b.l & FLAG_C;                              // 0000000C
             flg |= FLAG_N;                                      // 000000NC
             flg |= 
                 (af.b.h ^ iReg.b.h ^ acc.b.l) & FLAG_H;         // 000H00NC

@@ -47,29 +47,30 @@ bool z80Ini()
 
         case 1:
             wz.w = bc.w;
-            --wz.h;
+            --wz.b.h;
             bc.w = wz.w;
             return true;
 
         case 2:
-            oReg.l = iReg.h;
+            oReg.b.l = iReg.b.h;
             return true;
 
         case 3:
             ++hl.w;
-            af.l = bc.h & (FLAG_S | FLAG_5 | FLAG_3); // S.5.3...
-            af.l |= (bc.h) ? 0x00 : FLAG_Z;           // SZ5.3...
-            af.l |= (iReg.h & 0x80) >> 6;             // SZ5.3.N.
-            acc.w = iReg.h + ((bc.l + 1) & 0xFF);
-            af.l |= (acc.h) ? FLAG_H | FLAG_C : 0x00; // SZ5H3.NC
-            acc.w = (acc.w & 0x07) ^ bc.h;
-            acc.l ^= acc.l >> 1;
-            acc.l ^= acc.l >> 2;
-            acc.l ^= acc.l >> 4;
-            af.l |= (acc.l & 0x01) ? 0x00 : FLAG_PV;   // SZ5H3PNC
+            flg = bc.b.h & (FLAG_S | FLAG_5 | FLAG_3); // S.5.3...
+            flg |= (bc.b.h) ? 0x00 : FLAG_Z;           // SZ5.3...
+            flg |= (iReg.b.h & 0x80) >> 6;             // SZ5.3.N.
+            acc.w = iReg.b.h + ((bc.b.l + 1) & 0xFF);
+            flg |= (acc.b.h) ? FLAG_H | FLAG_C : 0x00; // SZ5H3.NC
+            acc.w = (acc.w & 0x07) ^ bc.b.h;
+            acc.b.l ^= acc.b.l >> 1;
+            acc.b.l ^= acc.b.l >> 2;
+            acc.b.l ^= acc.b.l >> 4;
+            flg |= (acc.b.l & 0x01) ? 0x00 : FLAG_PV;   // SZ5H3PNC
 
             wz.w += 0x0100;
 
+            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

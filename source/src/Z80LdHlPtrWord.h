@@ -46,6 +46,7 @@ bool z80LdHlPtrWord()
 
         case 4:
             hl.w = iReg.w;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

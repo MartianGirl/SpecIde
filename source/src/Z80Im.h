@@ -32,6 +32,7 @@ bool z80Im()
     else
         im = 2;
 
+    flg = 0;
     prefix = PREFIX_NO;
     return true;
 }

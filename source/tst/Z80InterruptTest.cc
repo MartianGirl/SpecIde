@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(nmi_test)
     BOOST_CHECK_EQUAL(z80.bc.w, 0x0102);
     BOOST_CHECK_EQUAL(z80.de.w, 0xFFFF);
     BOOST_CHECK_EQUAL(z80.hl.w, 0xFFFF);
-    BOOST_CHECK_EQUAL(z80.af.h, 0x08);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0x08);
 }
 
 BOOST_AUTO_TEST_CASE(int_mode_0_test)
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(int_mode_2_test)
     loadBinary(ihnd, m, 0x0200);
 
     startZ80(z80);
-    z80.ir.h = 0x40;
+    z80.ir.b.h = 0x40;
     z80.iff = IFF1 | IFF2;
     z80.im = 2;
     runCycles(z80, m, 7);   // Run first instruction.

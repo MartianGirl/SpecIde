@@ -39,14 +39,14 @@ bool z80RetCc()
         case 1:
             switch (y)
             {
-                case 0: memRdCycles = ((af.l & FLAG_Z) == 0x00) ? 2 : 0; break;
-                case 1: memRdCycles = ((af.l & FLAG_Z) == FLAG_Z) ? 2 : 0; break;
-                case 2: memRdCycles = ((af.l & FLAG_C) == 0x00) ? 2 : 0; break;
-                case 3: memRdCycles = ((af.l & FLAG_C) == FLAG_C) ? 2 : 0; break;
-                case 4: memRdCycles = ((af.l & FLAG_PV) == 0x00) ? 2 : 0; break;
-                case 5: memRdCycles = ((af.l & FLAG_PV) == FLAG_PV) ? 2 : 0; break;
-                case 6: memRdCycles = ((af.l & FLAG_S) == 0x00) ? 2 : 0; break;
-                case 7: memRdCycles = ((af.l & FLAG_S) == FLAG_S) ? 2 : 0; break;
+                case 0: memRdCycles = ((af.b.l & FLAG_Z) == 0x00) ? 2 : 0; break;
+                case 1: memRdCycles = ((af.b.l & FLAG_Z) == FLAG_Z) ? 2 : 0; break;
+                case 2: memRdCycles = ((af.b.l & FLAG_C) == 0x00) ? 2 : 0; break;
+                case 3: memRdCycles = ((af.b.l & FLAG_C) == FLAG_C) ? 2 : 0; break;
+                case 4: memRdCycles = ((af.b.l & FLAG_PV) == 0x00) ? 2 : 0; break;
+                case 5: memRdCycles = ((af.b.l & FLAG_PV) == FLAG_PV) ? 2 : 0; break;
+                case 6: memRdCycles = ((af.b.l & FLAG_S) == 0x00) ? 2 : 0; break;
+                case 7: memRdCycles = ((af.b.l & FLAG_S) == FLAG_S) ? 2 : 0; break;
                 default: assert(false); break;
             }
             return true;
@@ -56,6 +56,7 @@ bool z80RetCc()
 
         case 3:
             pc.w = iReg.w;
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

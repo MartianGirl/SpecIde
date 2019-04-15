@@ -28,6 +28,7 @@
 bool z80Nop()
 {
     prefix = PREFIX_NO;
+    flg = 0;
     return true;
 }
 

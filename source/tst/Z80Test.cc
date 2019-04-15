@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(states_ld_r_n_test)
     z80.d = 0xA5;
     z80.clock();    // ST_MEMRD_T3_DATARD -> ST_OCF_T1_ADDRWR
     z80.clock();    // ST_MEMRD_T3_DATARD -> ST_OCF_T1_ADDRWR
-    BOOST_CHECK_EQUAL(z80.af.h, 0xA5);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xA5);
 
     // LD B, n
     z80.reset();
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(states_ld_r_n_test)
     z80.d = 0x34;
     z80.clock();    // ST_MEMRD_T3_DATARD -> ST_OCF_T1_ADDRWR
     z80.clock();    // ST_MEMRD_T3_DATARD -> ST_OCF_T1_ADDRWR
-    BOOST_CHECK_EQUAL(z80.bc.h, 0x34);
+    BOOST_CHECK_EQUAL(z80.bc.b.h, 0x34);
 }
 
 BOOST_AUTO_TEST_CASE(ld_r_n_test)
@@ -225,13 +225,13 @@ BOOST_AUTO_TEST_CASE(ld_r_n_test)
     startZ80(z80);
     runCycles(z80, m, 56);
 
-    BOOST_CHECK_EQUAL(z80.af.h, 0xB7);
-    BOOST_CHECK_EQUAL(z80.bc.h, 0xB0);
-    BOOST_CHECK_EQUAL(z80.bc.l, 0xB1);
-    BOOST_CHECK_EQUAL(z80.de.h, 0xB2);
-    BOOST_CHECK_EQUAL(z80.de.l, 0xB3);
-    BOOST_CHECK_EQUAL(z80.hl.h, 0xB4);
-    BOOST_CHECK_EQUAL(z80.hl.l, 0xB5);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xB7);
+    BOOST_CHECK_EQUAL(z80.bc.b.h, 0xB0);
+    BOOST_CHECK_EQUAL(z80.bc.b.l, 0xB1);
+    BOOST_CHECK_EQUAL(z80.de.b.h, 0xB2);
+    BOOST_CHECK_EQUAL(z80.de.b.l, 0xB3);
+    BOOST_CHECK_EQUAL(z80.hl.b.h, 0xB4);
+    BOOST_CHECK_EQUAL(z80.hl.b.l, 0xB5);
 }
 
 BOOST_AUTO_TEST_CASE(ld_memhl_n_test)
@@ -251,14 +251,14 @@ BOOST_AUTO_TEST_CASE(ld_memhl_n_test)
     startZ80(z80);
     runCycles(z80, m, 24);
 
-    BOOST_CHECK_EQUAL(z80.hl.h, 0x40);
-    BOOST_CHECK_EQUAL(z80.hl.l, 0x60);
+    BOOST_CHECK_EQUAL(z80.hl.b.h, 0x40);
+    BOOST_CHECK_EQUAL(z80.hl.b.l, 0x60);
     BOOST_CHECK_EQUAL(m.memory[0x4060], 0x34);
 
     runCycles(z80, m, 24);
 
-    BOOST_CHECK_EQUAL(z80.hl.h, 0x22);
-    BOOST_CHECK_EQUAL(z80.hl.l, 0x23);
+    BOOST_CHECK_EQUAL(z80.hl.b.h, 0x22);
+    BOOST_CHECK_EQUAL(z80.hl.b.l, 0x23);
     BOOST_CHECK_EQUAL(m.memory[0x2223], 0x78);
 }
 
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(ld_r_r_test)
             startZ80(z80);
             // LD A, n
             runCycles(z80, m, 7);
-            BOOST_CHECK_EQUAL(z80.af.h, m.memory[0x0001]);
+            BOOST_CHECK_EQUAL(z80.af.b.h, m.memory[0x0001]);
 
             // LD z, A
             runCycles(z80, m, 4);
@@ -299,11 +299,11 @@ BOOST_AUTO_TEST_CASE(ld_r_r_test)
 
             // LD A, 00h
             runCycles(z80, m, 7);
-            BOOST_CHECK_EQUAL(z80.af.h, 0x00);
+            BOOST_CHECK_EQUAL(z80.af.b.h, 0x00);
 
             // LD A, y
             runCycles(z80, m, 4);
-            BOOST_CHECK_EQUAL(z80.af.h, m.memory[0x0001]);
+            BOOST_CHECK_EQUAL(z80.af.b.h, m.memory[0x0001]);
         }
     }
 }
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(ld_r_a_test)
     startZ80(z80);
     // LD A, nn
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.af.h, 0x35);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0x35);
     
     // LD R, A
     runCycles(z80, m, 4);
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(ld_r_a_test)
     runCycles(z80, m, 4);
 
     runCycles(z80, m, 1);
-    BOOST_CHECK_EQUAL(z80.ir.l, 0x35);
+    BOOST_CHECK_EQUAL(z80.ir.b.l, 0x35);
 }
 
 BOOST_AUTO_TEST_CASE(ld_i_a_test)
@@ -345,11 +345,11 @@ BOOST_AUTO_TEST_CASE(ld_i_a_test)
     startZ80(z80);
     // LD A, nn
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.af.h, 0x43);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0x43);
     
     // LD I, A
     runCycles(z80, m, 9);
-    BOOST_CHECK_EQUAL(z80.ir.h, 0x43);
+    BOOST_CHECK_EQUAL(z80.ir.b.h, 0x43);
 }
 
 BOOST_AUTO_TEST_CASE(ld_a_r_test)
@@ -366,16 +366,16 @@ BOOST_AUTO_TEST_CASE(ld_a_r_test)
     startZ80(z80);
     // LD A, ABh
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.af.h, 0xAB);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xAB);
     
     // LD R, A
     runCycles(z80, m, 9);
-    BOOST_CHECK_EQUAL(z80.ir.l, 0xAB);
+    BOOST_CHECK_EQUAL(z80.ir.b.l, 0xAB);
 
     // LD A, R
     runCycles(z80, m, 9);
-    BOOST_CHECK_EQUAL(z80.af.h, 0xAD);
-    BOOST_CHECK_EQUAL(z80.af.l, 0xA9);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xAD);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0xA9);
 }
 
 BOOST_AUTO_TEST_CASE(ld_a_i_test)
@@ -392,16 +392,16 @@ BOOST_AUTO_TEST_CASE(ld_a_i_test)
     startZ80(z80);
     // LD A, 00h
     runCycles(z80, m, 7);
-    BOOST_CHECK_EQUAL(z80.af.h, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0x00);
     
     // LD I, A
     runCycles(z80, m, 9);
-    BOOST_CHECK_EQUAL(z80.ir.h, 0x00);
+    BOOST_CHECK_EQUAL(z80.ir.b.h, 0x00);
 
     // LD A, I
     runCycles(z80, m, 9);
-    BOOST_CHECK_EQUAL(z80.af.h, 0x00);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x41);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x41);
 }
 
 BOOST_AUTO_TEST_CASE(ld_rx_rx_test)
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(ld_rx_rx_test)
             startZ80(z80);
             // LD A, n
             runCycles(z80, m, 7);
-            BOOST_CHECK_EQUAL(z80.af.h, m.memory[0x0001]);
+            BOOST_CHECK_EQUAL(z80.af.b.h, m.memory[0x0001]);
 
             // LD z, A
             runCycles(z80, m, 8);
@@ -448,11 +448,11 @@ BOOST_AUTO_TEST_CASE(ld_rx_rx_test)
 
             // LD A, 00h
             runCycles(z80, m, 7);
-            BOOST_CHECK_EQUAL(z80.af.h, 0x00);
+            BOOST_CHECK_EQUAL(z80.af.b.h, 0x00);
 
             // LD A, y
             runCycles(z80, m, 8);
-            BOOST_CHECK_EQUAL(z80.af.h, m.memory[0x0001]);
+            BOOST_CHECK_EQUAL(z80.af.b.h, m.memory[0x0001]);
         }
     }
 }
@@ -489,7 +489,7 @@ BOOST_AUTO_TEST_CASE(ld_ry_ry_test)
             startZ80(z80);
             // LD A, n
             runCycles(z80, m, 7);
-            BOOST_CHECK_EQUAL(z80.af.h, m.memory[0x0001]);
+            BOOST_CHECK_EQUAL(z80.af.b.h, m.memory[0x0001]);
 
             // LD z, A
             runCycles(z80, m, 8);
@@ -501,11 +501,11 @@ BOOST_AUTO_TEST_CASE(ld_ry_ry_test)
 
             // LD A, 00h
             runCycles(z80, m, 7);
-            BOOST_CHECK_EQUAL(z80.af.h, 0x00);
+            BOOST_CHECK_EQUAL(z80.af.b.h, 0x00);
 
             // LD A, y
             runCycles(z80, m, 8);
-            BOOST_CHECK_EQUAL(z80.af.h, m.memory[0x0001]);
+            BOOST_CHECK_EQUAL(z80.af.b.h, m.memory[0x0001]);
         }
     }
 }
@@ -528,13 +528,13 @@ BOOST_AUTO_TEST_CASE(ld_rx_n_test)
     startZ80(z80);
     runCycles(z80, m, 77);
 
-    BOOST_CHECK_EQUAL(z80.af.h, 0xD7);
-    BOOST_CHECK_EQUAL(z80.bc.h, 0xD0);
-    BOOST_CHECK_EQUAL(z80.bc.l, 0xD1);
-    BOOST_CHECK_EQUAL(z80.de.h, 0xD2);
-    BOOST_CHECK_EQUAL(z80.de.l, 0xD3);
-    BOOST_CHECK_EQUAL(z80.ix.h, 0xD4);
-    BOOST_CHECK_EQUAL(z80.ix.l, 0xD5);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xD7);
+    BOOST_CHECK_EQUAL(z80.bc.b.h, 0xD0);
+    BOOST_CHECK_EQUAL(z80.bc.b.l, 0xD1);
+    BOOST_CHECK_EQUAL(z80.de.b.h, 0xD2);
+    BOOST_CHECK_EQUAL(z80.de.b.l, 0xD3);
+    BOOST_CHECK_EQUAL(z80.ix.b.h, 0xD4);
+    BOOST_CHECK_EQUAL(z80.ix.b.l, 0xD5);
 }
 
 BOOST_AUTO_TEST_CASE(ld_ry_n_test)
@@ -555,13 +555,13 @@ BOOST_AUTO_TEST_CASE(ld_ry_n_test)
     startZ80(z80);
     runCycles(z80, m, 77);
 
-    BOOST_CHECK_EQUAL(z80.af.h, 0xF7);
-    BOOST_CHECK_EQUAL(z80.bc.h, 0xF0);
-    BOOST_CHECK_EQUAL(z80.bc.l, 0xF1);
-    BOOST_CHECK_EQUAL(z80.de.h, 0xF2);
-    BOOST_CHECK_EQUAL(z80.de.l, 0xF3);
-    BOOST_CHECK_EQUAL(z80.iy.h, 0xF4);
-    BOOST_CHECK_EQUAL(z80.iy.l, 0xF5);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xF7);
+    BOOST_CHECK_EQUAL(z80.bc.b.h, 0xF0);
+    BOOST_CHECK_EQUAL(z80.bc.b.l, 0xF1);
+    BOOST_CHECK_EQUAL(z80.de.b.h, 0xF2);
+    BOOST_CHECK_EQUAL(z80.de.b.l, 0xF3);
+    BOOST_CHECK_EQUAL(z80.iy.b.h, 0xF4);
+    BOOST_CHECK_EQUAL(z80.iy.b.l, 0xF5);
 }
 
 BOOST_AUTO_TEST_CASE(ld_r_memhl_test)
@@ -595,13 +595,13 @@ BOOST_AUTO_TEST_CASE(ld_r_memhl_test)
     startZ80(z80);
     runCycles(z80, m, 105);
 
-    BOOST_CHECK_EQUAL(z80.af.h, 0xA7);
-    BOOST_CHECK_EQUAL(z80.bc.h, 0xB0);
-    BOOST_CHECK_EQUAL(z80.bc.l, 0xC1);
-    BOOST_CHECK_EQUAL(z80.de.h, 0xD2);
-    BOOST_CHECK_EQUAL(z80.de.l, 0xE3);
-    BOOST_CHECK_EQUAL(z80.hl.h, 0x44);
-    BOOST_CHECK_EQUAL(z80.hl.l, 0x15);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xA7);
+    BOOST_CHECK_EQUAL(z80.bc.b.h, 0xB0);
+    BOOST_CHECK_EQUAL(z80.bc.b.l, 0xC1);
+    BOOST_CHECK_EQUAL(z80.de.b.h, 0xD2);
+    BOOST_CHECK_EQUAL(z80.de.b.l, 0xE3);
+    BOOST_CHECK_EQUAL(z80.hl.b.h, 0x44);
+    BOOST_CHECK_EQUAL(z80.hl.b.l, 0x15);
 }
 
 BOOST_AUTO_TEST_CASE(ld_r_memix_test)
@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE(ld_r_memix_test)
     runCycles(z80, m, 155);
 
     BOOST_CHECK_EQUAL(z80.ix.w, 0x0104);
-    BOOST_CHECK_EQUAL(z80.af.h, 0xA7);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xA7);
     BOOST_CHECK_EQUAL(z80.bc.w, 0xB0C1);
     BOOST_CHECK_EQUAL(z80.de.w, 0xD2E3);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x4415);
@@ -658,7 +658,7 @@ BOOST_AUTO_TEST_CASE(ld_r_memiy_test)
     runCycles(z80, m, 155);
 
     BOOST_CHECK_EQUAL(z80.iy.w, 0x0104);
-    BOOST_CHECK_EQUAL(z80.af.h, 0xA7);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xA7);
     BOOST_CHECK_EQUAL(z80.bc.w, 0xB0C1);
     BOOST_CHECK_EQUAL(z80.de.w, 0xD2E3);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x4415);
@@ -695,7 +695,7 @@ BOOST_AUTO_TEST_CASE(ld_memhl_r_test)
     startZ80(z80);
     runCycles(z80, m, 140);
 
-    BOOST_CHECK_EQUAL(z80.af.h, 0xA7);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xA7);
     BOOST_CHECK_EQUAL(z80.bc.w, 0xB0C1);
     BOOST_CHECK_EQUAL(z80.de.w, 0xD2E3);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x0105);
@@ -736,7 +736,7 @@ BOOST_AUTO_TEST_CASE(ld_memix_r_test)
     runCycles(z80, m, 204);
 
     BOOST_CHECK_EQUAL(z80.ix.w, 0x0104);
-    BOOST_CHECK_EQUAL(z80.af.h, 0xA7);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xA7);
     BOOST_CHECK_EQUAL(z80.bc.w, 0xB0C1);
     BOOST_CHECK_EQUAL(z80.de.w, 0xD2E3);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x4415);
@@ -777,7 +777,7 @@ BOOST_AUTO_TEST_CASE(ld_memiy_r_test)
     runCycles(z80, m, 204);
 
     BOOST_CHECK_EQUAL(z80.iy.w, 0x0104);
-    BOOST_CHECK_EQUAL(z80.af.h, 0xA7);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xA7);
     BOOST_CHECK_EQUAL(z80.bc.w, 0xB0C1);
     BOOST_CHECK_EQUAL(z80.de.w, 0xD2E3);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x4415);
@@ -871,7 +871,7 @@ BOOST_AUTO_TEST_CASE(ld_a_membc_test)
     runCycles(z80, m, 21);
 
     BOOST_CHECK_EQUAL(z80.bc.w, 0x1020);
-    BOOST_CHECK_EQUAL(z80.af.h, m.memory[0x1020]);
+    BOOST_CHECK_EQUAL(z80.af.b.h, m.memory[0x1020]);
 }
 
 BOOST_AUTO_TEST_CASE(ld_a_memde_test)
@@ -891,7 +891,7 @@ BOOST_AUTO_TEST_CASE(ld_a_memde_test)
     runCycles(z80, m, 21);
 
     BOOST_CHECK_EQUAL(z80.de.w, 0x1020);
-    BOOST_CHECK_EQUAL(z80.af.h, m.memory[0x1020]);
+    BOOST_CHECK_EQUAL(z80.af.b.h, m.memory[0x1020]);
 }
 
 BOOST_AUTO_TEST_CASE(ld_a_memnn_test)
@@ -908,7 +908,7 @@ BOOST_AUTO_TEST_CASE(ld_a_memnn_test)
     startZ80(z80);
     runCycles(z80, m, 13);
 
-    BOOST_CHECK_EQUAL(z80.af.h, m.memory[0x1020]);
+    BOOST_CHECK_EQUAL(z80.af.b.h, m.memory[0x1020]);
 }
 
 BOOST_AUTO_TEST_CASE(ld_membc_a_test)
@@ -929,7 +929,7 @@ BOOST_AUTO_TEST_CASE(ld_membc_a_test)
     runCycles(z80, m, 28);
 
     BOOST_CHECK_EQUAL(z80.bc.w, 0x1020);
-    BOOST_CHECK_EQUAL(z80.af.h, 0x23);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0x23);
     BOOST_CHECK_EQUAL(m.memory[0x1020], 0x23);
 }
 
@@ -951,7 +951,7 @@ BOOST_AUTO_TEST_CASE(ld_memde_a_test)
     runCycles(z80, m, 28);
 
     BOOST_CHECK_EQUAL(z80.de.w, 0x1020);
-    BOOST_CHECK_EQUAL(z80.af.h, 0x48);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0x48);
     BOOST_CHECK_EQUAL(m.memory[0x1020], 0x48);
 }  
 
@@ -970,7 +970,7 @@ BOOST_AUTO_TEST_CASE(ld_memnn_a_test)
     startZ80(z80);
     runCycles(z80, m, 20);
 
-    BOOST_CHECK_EQUAL(z80.af.h, 0x69);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0x69);
     BOOST_CHECK_EQUAL(m.memory[0x1020], 0x69);
 }
 
@@ -1267,14 +1267,14 @@ BOOST_AUTO_TEST_CASE(push_rr_test)
     runCycles(z80, m, 91);
 
     BOOST_CHECK_EQUAL(z80.sp.w, 0xC078);
-    BOOST_CHECK_EQUAL(m.memory[0xC078], z80.af.l);
-    BOOST_CHECK_EQUAL(m.memory[0xC079], z80.af.h);
-    BOOST_CHECK_EQUAL(m.memory[0xC07A], z80.hl.l);
-    BOOST_CHECK_EQUAL(m.memory[0xC07B], z80.hl.h);
-    BOOST_CHECK_EQUAL(m.memory[0xC07C], z80.de.l);
-    BOOST_CHECK_EQUAL(m.memory[0xC07D], z80.de.h);
-    BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.bc.l);
-    BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.bc.h);
+    BOOST_CHECK_EQUAL(m.memory[0xC078], z80.af.b.l);
+    BOOST_CHECK_EQUAL(m.memory[0xC079], z80.af.b.h);
+    BOOST_CHECK_EQUAL(m.memory[0xC07A], z80.hl.b.l);
+    BOOST_CHECK_EQUAL(m.memory[0xC07B], z80.hl.b.h);
+    BOOST_CHECK_EQUAL(m.memory[0xC07C], z80.de.b.l);
+    BOOST_CHECK_EQUAL(m.memory[0xC07D], z80.de.b.h);
+    BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.bc.b.l);
+    BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.bc.b.h);
 }
 
 BOOST_AUTO_TEST_CASE(pop_rr_test)
@@ -1297,14 +1297,14 @@ BOOST_AUTO_TEST_CASE(pop_rr_test)
     runCycles(z80, m, 50);
 
     BOOST_CHECK_EQUAL(z80.sp.w, 0xC080);
-    BOOST_CHECK_EQUAL(m.memory[0xC078], z80.bc.l);
-    BOOST_CHECK_EQUAL(m.memory[0xC079], z80.bc.h);
-    BOOST_CHECK_EQUAL(m.memory[0xC07A], z80.de.l);
-    BOOST_CHECK_EQUAL(m.memory[0xC07B], z80.de.h);
-    BOOST_CHECK_EQUAL(m.memory[0xC07C], z80.hl.l);
-    BOOST_CHECK_EQUAL(m.memory[0xC07D], z80.hl.h);
-    BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.af.l);
-    BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.af.h);
+    BOOST_CHECK_EQUAL(m.memory[0xC078], z80.bc.b.l);
+    BOOST_CHECK_EQUAL(m.memory[0xC079], z80.bc.b.h);
+    BOOST_CHECK_EQUAL(m.memory[0xC07A], z80.de.b.l);
+    BOOST_CHECK_EQUAL(m.memory[0xC07B], z80.de.b.h);
+    BOOST_CHECK_EQUAL(m.memory[0xC07C], z80.hl.b.l);
+    BOOST_CHECK_EQUAL(m.memory[0xC07D], z80.hl.b.h);
+    BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.af.b.l);
+    BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.af.b.h);
 }
 
 BOOST_AUTO_TEST_CASE(push_ix_test)
@@ -1322,8 +1322,8 @@ BOOST_AUTO_TEST_CASE(push_ix_test)
     runCycles(z80, m, 39);
 
     BOOST_CHECK_EQUAL(z80.sp.w, 0xC07E);
-    BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.ix.l);
-    BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.ix.h);
+    BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.ix.b.l);
+    BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.ix.b.h);
 }
 
 BOOST_AUTO_TEST_CASE(push_iy_test)
@@ -1341,8 +1341,8 @@ BOOST_AUTO_TEST_CASE(push_iy_test)
     runCycles(z80, m, 39);
 
     BOOST_CHECK_EQUAL(z80.sp.w, 0xC07E);
-    BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.iy.l);
-    BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.iy.h);
+    BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.iy.b.l);
+    BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.iy.b.h);
 }
 
 BOOST_AUTO_TEST_CASE(pop_ix_test)
@@ -1359,8 +1359,8 @@ BOOST_AUTO_TEST_CASE(pop_ix_test)
     runCycles(z80, m, 24);
 
     BOOST_CHECK_EQUAL(z80.sp.w, 0xC080);
-    BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.ix.l);
-    BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.ix.h);
+    BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.ix.b.l);
+    BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.ix.b.h);
 }
 
 BOOST_AUTO_TEST_CASE(pop_iy_test)
@@ -1377,8 +1377,8 @@ BOOST_AUTO_TEST_CASE(pop_iy_test)
     runCycles(z80, m, 24);
 
     BOOST_CHECK_EQUAL(z80.sp.w, 0xC080);
-    BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.iy.l);
-    BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.iy.h);
+    BOOST_CHECK_EQUAL(m.memory[0xC07E], z80.iy.b.l);
+    BOOST_CHECK_EQUAL(m.memory[0xC07F], z80.iy.b.h);
 }
 
 BOOST_AUTO_TEST_CASE(ex_de_hl_test)
@@ -1527,7 +1527,7 @@ BOOST_AUTO_TEST_CASE(ldi_test)
     BOOST_CHECK_EQUAL(z80.de.w, 0x4001);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x8001);
     BOOST_CHECK_EQUAL(m.memory[0x4000], 0x01);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x0C);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x0C);
 
     runCycles(z80, m, 16);
 
@@ -1535,7 +1535,7 @@ BOOST_AUTO_TEST_CASE(ldi_test)
     BOOST_CHECK_EQUAL(z80.de.w, 0x4002);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x8002);
     BOOST_CHECK_EQUAL(m.memory[0x4001], 0x23);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x2C);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x2C);
     
     runCycles(z80, m, 16);
 
@@ -1543,7 +1543,7 @@ BOOST_AUTO_TEST_CASE(ldi_test)
     BOOST_CHECK_EQUAL(z80.de.w, 0x4003);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x8003);
     BOOST_CHECK_EQUAL(m.memory[0x4002], 0x45);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x08);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x08);
 }
 
 BOOST_AUTO_TEST_CASE(ldir_test)
@@ -1561,7 +1561,7 @@ BOOST_AUTO_TEST_CASE(ldir_test)
         m.memory[0xC000 + i] = i % 0x100;
 
     startZ80(z80);
-    z80.af.l = 0x00;
+    z80.af.b.l = 0x00;
     runCycles(z80, m, 37);
 
     for (size_t i = 0; i != 0x27F; ++i)
@@ -1572,7 +1572,7 @@ BOOST_AUTO_TEST_CASE(ldir_test)
         BOOST_CHECK_EQUAL(z80.de.w, 0x4000 + i + 1);
         BOOST_CHECK_EQUAL(z80.hl.w, 0xC000 + i + 1);
         BOOST_CHECK_EQUAL(m.memory[0x4000 + i], i % 0x100);
-        BOOST_CHECK_EQUAL(z80.af.l, 
+        BOOST_CHECK_EQUAL(z80.af.b.l, 
                 (((i + 0x20) % 0x100) & 0x08) 
                 | ((((i + 0x20) % 0x100) & 0x02) << 4) 
                 | 0x04);
@@ -1584,7 +1584,7 @@ BOOST_AUTO_TEST_CASE(ldir_test)
     BOOST_CHECK_EQUAL(z80.de.w, 0x4280);
     BOOST_CHECK_EQUAL(z80.hl.w, 0xC280);
     BOOST_CHECK_EQUAL(m.memory[0x427F], 0x7F);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x28);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x28);
 }
 
 BOOST_AUTO_TEST_CASE(ldd_test)
@@ -1609,7 +1609,7 @@ BOOST_AUTO_TEST_CASE(ldd_test)
     BOOST_CHECK_EQUAL(z80.de.w, 0x4001);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x8001);
     BOOST_CHECK_EQUAL(m.memory[0x4002], 0x45);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x0C);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x0C);
 
     runCycles(z80, m, 16);
 
@@ -1617,7 +1617,7 @@ BOOST_AUTO_TEST_CASE(ldd_test)
     BOOST_CHECK_EQUAL(z80.de.w, 0x4000);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x8000);
     BOOST_CHECK_EQUAL(m.memory[0x4001], 0x23);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x2C);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x2C);
     
     runCycles(z80, m, 16);
 
@@ -1625,7 +1625,7 @@ BOOST_AUTO_TEST_CASE(ldd_test)
     BOOST_CHECK_EQUAL(z80.de.w, 0x3FFF);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x7FFF);
     BOOST_CHECK_EQUAL(m.memory[0x4000], 0x01);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x08);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x08);
 }
 
 BOOST_AUTO_TEST_CASE(lddr_test)
@@ -1643,7 +1643,7 @@ BOOST_AUTO_TEST_CASE(lddr_test)
         m.memory[0xC000 + i] = i % 0x100;
 
     startZ80(z80);
-    z80.af.l = 0x00;
+    z80.af.b.l = 0x00;
     runCycles(z80, m, 37);
 
     for (size_t i = 0; i != 0x27F; ++i)
@@ -1654,7 +1654,7 @@ BOOST_AUTO_TEST_CASE(lddr_test)
         BOOST_CHECK_EQUAL(z80.de.w, 0x427F - i - 1);
         BOOST_CHECK_EQUAL(z80.hl.w, 0xC27F - i - 1);
         BOOST_CHECK_EQUAL(m.memory[0x427F - i], (0x27F - i) % 0x100);
-        BOOST_CHECK_EQUAL(z80.af.l, 
+        BOOST_CHECK_EQUAL(z80.af.b.l, 
                 ((((0x27F - i) + 0x20) % 0x100) & 0x08) 
                 | (((((0x27F - i) + 0x20) % 0x100) & 0x02) << 4)
                 | 0x04);
@@ -1666,7 +1666,7 @@ BOOST_AUTO_TEST_CASE(lddr_test)
     BOOST_CHECK_EQUAL(z80.de.w, 0x3FFF);
     BOOST_CHECK_EQUAL(z80.hl.w, 0xBFFF);
     BOOST_CHECK_EQUAL(m.memory[0x4000], 0x00);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x00);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x00);
 }
 
 BOOST_AUTO_TEST_CASE(cpi_test)
@@ -1692,17 +1692,17 @@ BOOST_AUTO_TEST_CASE(cpi_test)
     runCycles(z80, m, 36);
     BOOST_CHECK_EQUAL(z80.bc.w, 0x0002);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x8001);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x26);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x26);
 
     runCycles(z80, m, 16);
     BOOST_CHECK_EQUAL(z80.bc.w, 0x0001);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x8002);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x46);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x46);
     
     runCycles(z80, m, 16);
     BOOST_CHECK_EQUAL(z80.bc.w, 0x0000);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x8003);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x9A);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x9A);
 }
 
 BOOST_AUTO_TEST_CASE(cpir_test)
@@ -1722,7 +1722,7 @@ BOOST_AUTO_TEST_CASE(cpir_test)
         m.memory[0xC000 + i] = static_cast<uint8_t>(i);
 
     startZ80(z80);
-    z80.af.l = 0x00;
+    z80.af.b.l = 0x00;
     runCycles(z80, m, 27);
 
     for (size_t i = 0; i != 0x20; ++i)
@@ -1736,14 +1736,14 @@ BOOST_AUTO_TEST_CASE(cpir_test)
 
         BOOST_CHECK_EQUAL(z80.bc.w, 0x0080 - i - 1);
         BOOST_CHECK_EQUAL(z80.hl.w, 0xC000 + i + 1);
-        BOOST_CHECK_EQUAL(z80.af.l, f);
+        BOOST_CHECK_EQUAL(z80.af.b.l, f);
     }
 
     runCycles(z80, m, 16);
 
     BOOST_CHECK_EQUAL(z80.bc.w, 0x005F);
     BOOST_CHECK_EQUAL(z80.hl.w, 0xC021);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x46);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x46);
 }
 
 BOOST_AUTO_TEST_CASE(cpd_test)
@@ -1768,17 +1768,17 @@ BOOST_AUTO_TEST_CASE(cpd_test)
     runCycles(z80, m, 36);
     BOOST_CHECK_EQUAL(z80.bc.w, 0x0002);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x8001);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x9E);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x9E);
 
     runCycles(z80, m, 16);
     BOOST_CHECK_EQUAL(z80.bc.w, 0x0001);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x8000);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x46);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x46);
     
     runCycles(z80, m, 16);
     BOOST_CHECK_EQUAL(z80.bc.w, 0x0000);
     BOOST_CHECK_EQUAL(z80.hl.w, 0x7FFF);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x22);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x22);
 }
 
 BOOST_AUTO_TEST_CASE(cpdr_test)
@@ -1798,7 +1798,7 @@ BOOST_AUTO_TEST_CASE(cpdr_test)
         m.memory[0xC000 + i] = static_cast<uint8_t>(i);
 
     startZ80(z80);
-    z80.af.l = 0x00;
+    z80.af.b.l = 0x00;
     runCycles(z80, m, 27);
 
     for (size_t i = 0; i != 0x5F; ++i)
@@ -1812,14 +1812,14 @@ BOOST_AUTO_TEST_CASE(cpdr_test)
 
         BOOST_CHECK_EQUAL(z80.bc.w, 0x0080 - i - 1);
         BOOST_CHECK_EQUAL(z80.hl.w, 0xC07F - i - 1);
-        BOOST_CHECK_EQUAL(z80.af.l, f);
+        BOOST_CHECK_EQUAL(z80.af.b.l, f);
     }
 
     runCycles(z80, m, 16);
 
     BOOST_CHECK_EQUAL(z80.bc.w, 0x0020);
     BOOST_CHECK_EQUAL(z80.hl.w, 0xC01F);
-    BOOST_CHECK_EQUAL(z80.af.l, 0x46);
+    BOOST_CHECK_EQUAL(z80.af.b.l, 0x46);
 }
 
 BOOST_AUTO_TEST_CASE(ld_r_memix_states_test)
@@ -1844,7 +1844,7 @@ BOOST_AUTO_TEST_CASE(ld_r_memix_states_test)
 
     runCycles(z80, m, 98);
     BOOST_CHECK_EQUAL(z80.ix.w, 0x0104);
-    BOOST_CHECK_EQUAL(z80.af.h, 0xA7);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xA7);
     BOOST_CHECK_EQUAL(z80.bc.w, 0xB0C1);
     BOOST_CHECK_EQUAL(z80.de.w, 0xD2FF);
     BOOST_CHECK_EQUAL(z80.hl.w, 0xFFFF);
@@ -1875,7 +1875,7 @@ BOOST_AUTO_TEST_CASE(ld_r_memiy_states_test)
 
     runCycles(z80, m, 98);
     BOOST_CHECK_EQUAL(z80.iy.w, 0x0104);
-    BOOST_CHECK_EQUAL(z80.af.h, 0xA7);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xA7);
     BOOST_CHECK_EQUAL(z80.bc.w, 0xB0C1);
     BOOST_CHECK_EQUAL(z80.de.w, 0xD2FF);
     BOOST_CHECK_EQUAL(z80.hl.w, 0xFFFF);
@@ -1907,7 +1907,7 @@ BOOST_AUTO_TEST_CASE(ld_memix_r_states_test)
 
     runCycles(z80, m, 126);
     BOOST_CHECK_EQUAL(z80.ix.w, 0x0104);
-    BOOST_CHECK_EQUAL(z80.af.h, 0xA7);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xA7);
     BOOST_CHECK_EQUAL(z80.bc.w, 0xB0C1);
     BOOST_CHECK_EQUAL(z80.de.w, 0xD2FF);
     BOOST_CHECK_EQUAL(z80.hl.w, 0xFFFF);
@@ -1946,7 +1946,7 @@ BOOST_AUTO_TEST_CASE(ld_memiy_r_states_test)
 
     runCycles(z80, m, 126);
     BOOST_CHECK_EQUAL(z80.iy.w, 0x0104);
-    BOOST_CHECK_EQUAL(z80.af.h, 0xA7);
+    BOOST_CHECK_EQUAL(z80.af.b.h, 0xA7);
     BOOST_CHECK_EQUAL(z80.bc.w, 0xB0C1);
     BOOST_CHECK_EQUAL(z80.de.w, 0xD2FF);
     BOOST_CHECK_EQUAL(z80.hl.w, 0xFFFF);

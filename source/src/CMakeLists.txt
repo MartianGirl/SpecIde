@@ -20,7 +20,7 @@ include_directories(${Boost_INCLUDE_DIR})
 add_executable(SpecIde SpecIde.cc Screen.cc
         Z80.cc ULA.cc
         Spectrum.cc
-        Memory.cc Z80Register.cc
+        Memory.cc
         Tape.cc TAPFile.cc TZXFile.cc)
 target_link_libraries(SpecIde ${Boost_LIBRARIES}
         sfml-audio sfml-graphics sfml-window sfml-system)

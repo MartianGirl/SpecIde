@@ -49,11 +49,11 @@ bool z80LdPtrIxReg()
             return true;
 
         case 2:
-            wz.l = iReg.h;
+            wz.b.l = iReg.b.h;
             return false;
 
         case 3:
-            wz.h = ((wz.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
             return false;
 
         case 4:
@@ -65,10 +65,11 @@ bool z80LdPtrIxReg()
 
         case 6:
             memWrCycles = 1;
-            oReg.l = *(reg8[z]);
+            oReg.b.l = *(reg8[z]);
             return true;
 
         case 7:
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

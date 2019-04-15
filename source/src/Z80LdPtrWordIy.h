@@ -47,6 +47,7 @@ bool z80LdPtrWordIy()
             return true;
 
         case 4:
+            flg = 0;
             prefix = PREFIX_NO;
             return true;
 

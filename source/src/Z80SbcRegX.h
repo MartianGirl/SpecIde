@@ -28,17 +28,18 @@ bool z80SbcRegX()
         case 0:
             memAddrMode = 0x00000000;
 
-            acc.w = af.h - *regx8[z];
-            acc.w -= af.l & FLAG_C;
+            acc.w = af.b.h - *regx8[z];
+            acc.w -= af.b.l & FLAG_C;
 
-            af.l = acc.l & (FLAG_S | FLAG_5 | FLAG_3);
-            af.l |= FLAG_N;
-            af.l |= (acc.l ^ *regx8[z] ^ af.h) & FLAG_H;
-            af.l |= (((acc.l ^ *regx8[z] ^ af.h) >> 5) 
-                    ^ (acc.h << 2)) & FLAG_PV;
-            af.l |= acc.h & FLAG_C;                   // S.5H3V0C
-            af.l |= (acc.l) ? 0x00 : FLAG_Z;          // SZ5H3V0C
-            af.h = acc.l;
+            flg = acc.b.l & (FLAG_S | FLAG_5 | FLAG_3);
+            flg |= FLAG_N;
+            flg |= (acc.b.l ^ *regx8[z] ^ af.b.h) & FLAG_H;
+            flg |= (((acc.b.l ^ *regx8[z] ^ af.b.h) >> 5) 
+                    ^ (acc.b.h << 2)) & FLAG_PV;
+            flg |= acc.b.h & FLAG_C;                   // S.5H3V0C
+            flg |= (acc.b.l) ? 0x00 : FLAG_Z;          // SZ5H3V0C
+            af.b.h = acc.b.l;
+            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

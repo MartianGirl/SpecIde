@@ -30,6 +30,7 @@ bool z80ExDeHl()
     acc.w = de.w;
     de.w = hl.w;
     hl.w = acc.w;
+    flg = 0;
     prefix = PREFIX_NO;
     return true;
 }
