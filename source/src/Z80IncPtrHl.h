@@ -28,21 +28,23 @@ bool z80IncPtrHl()
         case 0:
             memRdCycles = 1;
             memAddrMode = 0x00000022;
+            skipCycles = 1;
             return true;
 
         case 1:
-            // Preserve carry flag.
-            flg = af.b.l & FLAG_C;
-            flg |= incFlags[iReg.b.h];
             return false;
 
         case 2:
+            // Preserve carry flag.
+            flg = af.b.l & FLAG_C;
+            flg |= incFlags[iReg.b.h];
+            af.b.l = flg;
+
             oReg.b.l = iReg.b.h + 1;
             memWrCycles = 1;
             return true;
 
         case 3:
-            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

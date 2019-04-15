@@ -32,6 +32,7 @@ bool z80Call()
             return true;
 
         case 1:
+            skipCycles = 1;
             return true;
 
         case 2:

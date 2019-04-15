@@ -27,29 +27,24 @@ bool z80JrByte()
     {
         case 0:
             memRdCycles = 1;
-            cpuProcCycles = 1;
             memAddrMode = 0x00000001;
             return true;
 
         case 1:
-            wz.b.l = iReg.b.h;
+            cpuProcCycles = 1;
+            skipCycles = 4;
             return true;
 
         case 2:
-            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
-            return false;
-
         case 3:
-            wz.w += pc.w;
-            return false;
-
         case 4:
-            return false;
-
         case 5:
             return false;
 
         case 6:
+            wz.b.l = iReg.b.h;
+            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            wz.w += pc.w;
             pc.w = wz.w;
             flg = 0;
             prefix = PREFIX_NO;

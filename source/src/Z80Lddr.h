@@ -48,26 +48,28 @@ bool z80Lddr()
 
         case 1:
             oReg.b.l = iReg.b.h;
+            skipCycles = 2;
             return true;
 
         case 2:
+        case 3:
+            return false;
+
+        case 4:
             --bc.w;
             --de.w;
             --hl.w;
-            return false;
-
-        case 3:
             acc.b.l = iReg.b.h + af.b.h;
             flg = af.b.l & (FLAG_S | FLAG_Z | FLAG_C);          // SZ00000C
             flg |= (acc.b.l & FLAG_3);                          // SZ00300C
             flg |= (acc.b.l << 4) & FLAG_5;                     // SZ50300C
             flg |= (bc.w) ? FLAG_PV : 0x00;                     // SZ503P0C
             af.b.l = flg;
-            return false;
-
-        case 4:
             if (bc.w != 0x0000)
+            {
                 cpuProcCycles = 1;
+                skipCycles = 4;
+            }
             else
                 prefix = PREFIX_NO;
             return true;

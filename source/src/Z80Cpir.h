@@ -48,42 +48,39 @@ bool z80Cpir()
             return true;
 
         case 1:
+            skipCycles = 4;
             return true;
 
         case 2:
-            --bc.w;
-            ++hl.w;
-            return false;
-
         case 3:
-            acc.b.l = af.b.h - iReg.b.h;
-            flg = af.b.l & FLAG_C;                              // 0000000C
-            flg |= FLAG_N;                                      // 000000NC
-            flg |= 
-                (af.b.h ^ iReg.b.h ^ acc.b.l) & FLAG_H;         // 000H00NC
-            flg |= acc.b.l & FLAG_S;                            // S00H00NC
-            flg |= (acc.b.l) ? 0x00 : FLAG_Z;                   // SZ0H00NC
-            return false;
-
         case 4:
-            acc.b.l -= (flg & FLAG_H) >> 4;
-            flg |= (acc.b.l & FLAG_3);                          // SZ0H30NC
-            flg |= (acc.b.l << 4) & FLAG_5;                     // SZ5H30NC
-            return false;
-
         case 5:
-            flg |= (bc.w) ? FLAG_PV : 0x00;                     // SZ5H3PNC
-            ++wz.w;
             return false;
 
         case 6:
+            --bc.w;
+            ++hl.w;
+            acc.b.l = af.b.h - iReg.b.h;
+            flg = af.b.l & FLAG_C;                          // 0000000C
+            flg |= FLAG_N;                                  // 000000NC
+            flg |= 
+                (af.b.h ^ iReg.b.h ^ acc.b.l) & FLAG_H;     // 000H00NC
+            flg |= acc.b.l & FLAG_S;                        // S00H00NC
+            flg |= (acc.b.l) ? 0x00 : FLAG_Z;               // SZ0H00NC
+            acc.b.l -= (flg & FLAG_H) >> 4;
+            flg |= (acc.b.l & FLAG_3);                      // SZ0H30NC
+            flg |= (acc.b.l << 4) & FLAG_5;                 // SZ5H30NC
+            flg |= (bc.w) ? FLAG_PV : 0x00;                 // SZ5H3PNC
+            af.b.l = flg;
+
+            ++wz.w;
             if (bc.w != 0x0000 && ((flg & FLAG_Z) == 0x00))
-                cpuProcCycles = 1;
-            else
             {
-                af.b.l = flg;
-                prefix = PREFIX_NO;
+                cpuProcCycles = 1;
+                skipCycles = 4;
             }
+            else
+                prefix = PREFIX_NO;
             return true;
 
         case 7:
@@ -95,7 +92,6 @@ bool z80Cpir()
         case 11:
             wz.w = pc.w - 1;
             pc.w = wz.w - 1;
-            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

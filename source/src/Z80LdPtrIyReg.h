@@ -46,26 +46,21 @@ bool z80LdPtrIyReg()
 
         case 1: // Memory read byte cycle
             cpuProcCycles = 1;
+            skipCycles = 4;
             return true;
 
         case 2:
-            wz.b.l = iReg.b.h;
-            return false;
-
         case 3:
-            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
-            return false;
-
         case 4:
-            wz.w += iy.w;
-            return false;
-
         case 5:
             return false;
 
         case 6:
-            memWrCycles = 1;
+            wz.b.l = iReg.b.h;
+            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            wz.w += iy.w;
             oReg.b.l = *(reg8[z]);
+            memWrCycles = 1;
             return true;
 
         case 7:

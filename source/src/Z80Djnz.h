@@ -36,24 +36,19 @@ bool z80Djnz()
 
         case 2:
             cpuProcCycles = (bc.b.h != 0x00) ? 1 : 0;
+            skipCycles = 4;
             return true;
 
         case 3:
-            wz.b.l = iReg.b.h;
-            return false;
-
         case 4:
-            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
-            return false;
-
         case 5:
-            wz.w += pc.w;
-            return false;
-
         case 6:
             return false;
 
         case 7:
+            wz.b.l = iReg.b.h;
+            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            wz.w += pc.w;
             pc.w = wz.w;
             flg = 0;
             prefix = PREFIX_NO;

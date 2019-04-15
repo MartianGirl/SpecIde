@@ -45,13 +45,14 @@ bool z80ResNPtrIxIy()
     switch (executionStep)
     {
         case 5:
+            return false;
+
+        case 6:
             acc.b.l = iReg.b.h;
             acc.b.l &= ~(1 << y);
             if (z != 6)
                 *reg8[z] = acc.b.l;
-            return false;
 
-        case 6:
             oReg.b.l = acc.b.l;
             return true;
 

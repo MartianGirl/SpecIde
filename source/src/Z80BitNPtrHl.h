@@ -32,9 +32,13 @@ bool z80BitNPtrHl()
         case 0:
             memRdCycles = 1;
             memAddrMode = 0x00000002;
+            skipCycles = 1;
             return true;
 
         case 1:
+            return false;
+
+        case 2:
             acc.b.l = iReg.b.h;
             acc.b.l &= (1 << y);
 
@@ -43,9 +47,6 @@ bool z80BitNPtrHl()
             flg |= acc.b.l & FLAG_S;
             flg |= wz.b.h & (FLAG_5 | FLAG_3);
             flg |= (acc.b.l) ? 0x00 : (FLAG_Z | FLAG_PV);
-            return false;
-
-        case 2:
             af.b.l = flg;
             prefix = PREFIX_NO;
             return true;

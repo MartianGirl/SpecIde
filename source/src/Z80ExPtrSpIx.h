@@ -36,27 +36,27 @@ bool z80ExPtrSpIx()
             return true;
 
         case 1:
+            skipCycles = 1;
             return true;
 
         case 2:
-            oReg.b.l = ix.b.h;
-            oReg.b.h = ix.b.l;
             return false;
 
         case 3:
+            oReg.b.l = ix.b.h;
+            oReg.b.h = ix.b.l;
             return true;
 
         case 4:
+            skipCycles = 2;
             return true;
 
         case 5:
-            return false;
-
         case 6:
-            ix.w = wz.w = iReg.w;
             return false;
 
         case 7:
+            ix.w = wz.w = iReg.w;
             flg = 0;
             prefix = PREFIX_NO;
             return true;

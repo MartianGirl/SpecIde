@@ -23,18 +23,9 @@
 
 bool z80SbcReg()
 {
-    acc.w = af.b.h - *reg8[z];
-    acc.w -= af.b.l & FLAG_C;
-
-    flg = acc.b.l & (FLAG_S | FLAG_5 | FLAG_3);
-    flg |= FLAG_N;
-    flg |= (acc.b.l ^ *reg8[z] ^ af.b.h) & FLAG_H;
-    flg |= (((acc.b.l ^ *reg8[z] ^ af.b.h) >> 5) 
-            ^ (acc.b.h << 2)) & FLAG_PV;
-    flg |= acc.b.h & FLAG_C;                   // S.5H3V0C
-    flg |= (acc.b.l) ? 0x00 : FLAG_Z;          // SZ5H3V0C
-    af.b.h = acc.b.l;
-    af.b.l = flg;
+    acc.b.l = af.b.l & FLAG_C;
+    af.b.l = flg = subFlags[acc.b.l][af.b.h][*reg8[z]];
+    af.b.h -= *reg8[z] + acc.b.l;
     prefix = PREFIX_NO;
     return true;
 }

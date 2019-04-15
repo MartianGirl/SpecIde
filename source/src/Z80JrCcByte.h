@@ -34,8 +34,6 @@ bool z80JrCcByte()
             return true;
 
         case 1:
-            wz.b.l = iReg.b.h;
-
             switch (y)
             {
                 case 4: cpuProcCycles = ((af.b.l & FLAG_Z) == FLAG_Z) ? 0 : 1; break;
@@ -44,21 +42,19 @@ bool z80JrCcByte()
                 case 7: cpuProcCycles = ((af.b.l & FLAG_C) == 0x00) ? 0 : 1; break;
                 default: assert(false);
             }
+            skipCycles = 4 * cpuProcCycles;
             return true;
 
         case 2:
-            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
-            return false;
-
         case 3:
-            wz.w += pc.w;
-            return false;
-
         case 4:
         case 5:
             return false;
 
         case 6:
+            wz.b.l = iReg.b.h;
+            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            wz.w += pc.w;
             pc.w = wz.w;
             flg = 0;
             prefix = PREFIX_NO;

@@ -69,16 +69,17 @@ bool z80Inir()
             acc.b.l ^= acc.b.l >> 2;
             acc.b.l ^= acc.b.l >> 4;
             flg |= (acc.b.l & 0x01) ? 0x00 : FLAG_PV;   // SZ5H3PNC
+            af.b.l = flg;
 
             wz.w += 0x0100;
 
             if (bc.b.h != 0x00)
-                cpuProcCycles = 1;
-            else
             {
-                af.b.l = flg;
-                prefix = PREFIX_NO;
+                cpuProcCycles = 1;
+                skipCycles = 4;
             }
+            else
+                prefix = PREFIX_NO;
             return true;
 
         case 4:
@@ -89,7 +90,6 @@ bool z80Inir()
 
         case 8:
             pc.w -= 0x0002;
-            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

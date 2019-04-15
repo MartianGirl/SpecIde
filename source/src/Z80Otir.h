@@ -74,7 +74,10 @@ bool z80Otir()
             wz.w -= 0x0100;
 
             if (bc.b.h != 0x00)
+            {
                 cpuProcCycles = 1;
+                skipCycles = 4;
+            }
             else
                 prefix = PREFIX_NO;
             return true;

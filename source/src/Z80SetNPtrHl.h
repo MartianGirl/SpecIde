@@ -33,14 +33,16 @@ bool z80SetNPtrHl()
             memRdCycles = 1;
             memWrCycles = 1;
             memAddrMode = 0x00000022;
+            skipCycles = 1;
             return true;
 
         case 1:
-            acc.b.l = iReg.b.h;
-            acc.b.l |= (1 << y);
             return false;
 
         case 2:
+            acc.b.l = iReg.b.h;
+            acc.b.l |= (1 << y);
+
             oReg.b.l = acc.b.l;
             return true;
 

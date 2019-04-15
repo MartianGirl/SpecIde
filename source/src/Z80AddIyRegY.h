@@ -31,12 +31,15 @@ bool z80AddIyRegY()
             return true;
 
         case 1:
+        case 2:
+        case 3:
+            return false;
+
+        case 4:
             // Save HL and operand.
             wz.w = iy.w;
             acc.w = *regpy[p];
-            return false;
 
-        case 2:
             // First, do the low byte addition. Carry is in lowest
             // bit of H. Add carry here.
             iy.w = acc.b.l + wz.b.l;
@@ -46,31 +49,28 @@ bool z80AddIyRegY()
 
             // Perform the addition in H, including low byte carry.
             iy.b.h = acc.b.l + wz.b.h + (flg & FLAG_C);
-            return false;
 
-        case 3:
             // Half carry
             flg |= (wz.b.h ^ acc.b.l ^ iy.b.h) & FLAG_H;
-            return false;
 
-        case 4:
             // Carry
             acc.w += wz.b.h + (flg & FLAG_C);
             flg &= ~FLAG_C;
             flg |= (acc.b.h & FLAG_C);
+
+            // 5 and 3 are affected by the high byte.
+            flg |= iy.b.h & (FLAG_5 | FLAG_3);
+            af.b.l = flg;
+
+            skipCycles = 2;
             return true;
 
         case 5:
-            // 5 and 3 are affected by the high byte.
-            flg |= iy.b.h & (FLAG_5 | FLAG_3);
-            return false;
-
         case 6:
             return false;
 
         case 7:
             ++wz.w;
-            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

@@ -36,9 +36,13 @@ bool z80SraPtrHl()
             memRdCycles = 1;
             memWrCycles = 1;
             memAddrMode = 0x00000022;
+            skipCycles = 1;
             return true;
 
         case 1:
+            return false;
+
+        case 2:
             acc.b.l = iReg.b.h;
             acc.b.h = (acc.b.l & 0x80) ? 0x01 : 0x00;
             flg = acc.b.l & FLAG_C;
@@ -51,9 +55,7 @@ bool z80SraPtrHl()
             flg |= (acc.b.l) ? 0x00 : FLAG_Z;
             flg |= (acc.b.h & 0x01) ? 0x00 : FLAG_PV;
             af.b.l = flg;
-            return false;
 
-        case 2:
             oReg.b.l = acc.b.l;
             return true;
 

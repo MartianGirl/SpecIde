@@ -46,24 +46,19 @@ bool z80LdRegPtrIx()
 
         case 1: // Memory read byte cycle
             cpuProcCycles = 1;
+            skipCycles = 4;
             return true;
 
         case 2:
-            wz.b.l = iReg.b.h;
-            return false;
-
         case 3:
-            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
-            return false;
-
         case 4:
-            wz.w += ix.w;
-            return false;
-
         case 5:
             return false;
 
         case 6:
+            wz.b.l = iReg.b.h;
+            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            wz.w += ix.w;
             memRdCycles = 1;
             return true;
 

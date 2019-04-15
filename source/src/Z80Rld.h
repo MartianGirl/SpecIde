@@ -33,27 +33,29 @@ bool z80Rld()
     {
         case 0:
             memRdCycles = 1;
-            cpuProcCycles = 1;
-            memWrCycles = 1;
             memAddrMode = 0x00000082;
             return true;
 
         case 1:
             wz.w = hl.w;
             acc.w = iReg.b.h;
+
+            cpuProcCycles = 1;
+            skipCycles = 3;
             return true;
 
         case 2:
+        case 3:
+        case 4:
+            return false;
+
+        case 5:
             acc.w <<= 4;
             acc.w |= af.b.h & 0x0F;
-            return false;
 
-        case 3:
             af.b.h &= 0xF0;
             af.b.h |= acc.b.h & 0x0F;
-            return false;
 
-        case 4:
             acc.b.h = af.b.h;
             acc.b.h ^= acc.b.h >> 1;
             acc.b.h ^= acc.b.h >> 2;
@@ -63,10 +65,10 @@ bool z80Rld()
             flg |= af.b.h ? 0x00 : FLAG_Z;
             flg |= (acc.b.h & 0x01) ? 0x00 : FLAG_PV;
             af.b.l = flg;
-            return false;
 
-        case 5:
             oReg.b.l = acc.b.l;
+
+            memWrCycles = 1;
             return true;
 
         case 6:

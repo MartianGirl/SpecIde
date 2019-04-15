@@ -50,7 +50,7 @@ class Z80
         regpy{&bc.w, &de.w, &iy.w, &sp.w},
         x(0), y(0), z(0), p(0), q(0),
         prefix(0),
-        executionStep(0),
+        executionStep(0), skipCycles(0),
         memRdCycles(0), memWrCycles(0),
         ioRdCycles(0), ioWrCycles(0),
         cpuProcCycles(0),
@@ -156,6 +156,7 @@ class Z80
         uint_fast8_t opcode;
         uint_fast8_t prefix;
         uint_fast8_t executionStep;
+        uint_fast8_t skipCycles;
         uint_fast8_t memRdCycles, memWrCycles;
         uint_fast8_t ioRdCycles, ioWrCycles;
         uint_fast8_t cpuProcCycles;

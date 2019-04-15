@@ -515,6 +515,7 @@ void Z80::decode(uint_fast8_t byte)
 void Z80::startInstruction()
 {
     executionStep = 0;
+    skipCycles = 0;
 
     memRdCycles = 0;
     memWrCycles = 0;
@@ -612,32 +613,39 @@ void Z80::cpuProcCycle()
 
 bool Z80::execute()
 {
-    bool finished = true;
+    bool finished = false;
 
-    switch (prefix)
+    if (!skipCycles)
     {
-        case PREFIX_ED:
-            finished = (this->*(edprefixed[opcode]))();
-            break;
-        case PREFIX_CB:
-            finished = (this->*(cbprefixed[opcode]))();
-            break;
-        case PREFIX_DD:
-            finished = (this->*(ddprefixed[opcode]))();
-            break;
-        case PREFIX_FD:
-            finished = (this->*(fdprefixed[opcode]))();
-            break;
-        case PREFIX_DD | PREFIX_CB:
-        case PREFIX_FD | PREFIX_CB:
-            finished = (this->*(xxcbprefixed[opcode]))();
-            break;
-        case PREFIX_NO:
-            finished = (this->*(unprefixed[opcode]))();
-            break;
-        default:
-            assert(false);
-            break;
+        switch (prefix)
+        {
+            case PREFIX_ED:
+                finished = (this->*(edprefixed[opcode]))();
+                break;
+            case PREFIX_CB:
+                finished = (this->*(cbprefixed[opcode]))();
+                break;
+            case PREFIX_DD:
+                finished = (this->*(ddprefixed[opcode]))();
+                break;
+            case PREFIX_FD:
+                finished = (this->*(fdprefixed[opcode]))();
+                break;
+            case PREFIX_DD | PREFIX_CB:
+            case PREFIX_FD | PREFIX_CB:
+                finished = (this->*(xxcbprefixed[opcode]))();
+                break;
+            case PREFIX_NO:
+                finished = (this->*(unprefixed[opcode]))();
+                break;
+            default:
+                assert(false);
+                break;
+        }
+    }
+    else
+    {
+        --skipCycles;
     }
 
     ++executionStep;

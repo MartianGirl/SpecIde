@@ -36,19 +36,18 @@ bool z80LdPtrIyByte()
 
         case 1:
             wz.b.l = iReg.b.h;
+            skipCycles = 2;
             return true;
 
         case 2:
-            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
-            return false;
-
         case 3:
-            wz.w += iy.w;
             return false;
 
         case 4:
-            memWrCycles = 1;
+            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            wz.w += iy.w;
             oReg.b.l = iReg.b.h;
+            memWrCycles = 1;
             return true;
 
         case 5:

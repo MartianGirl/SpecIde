@@ -28,15 +28,19 @@ bool z80AdcHlReg()
         case 0:
             memAddrMode = 0x00000000;
             cpuProcCycles = 2;
+            skipCycles = 3;
             return true;
 
         case 1:
+        case 2:
+        case 3:
+            return false;
+
+        case 4:
             // Save HL and operand.
             wz.w = hl.w;
             acc.w = *regp[p];
-            return false;
 
-        case 2:
             // First, do the low byte addition. Carry is in lowest
             // bit of H. Add carry here.
             hl.w = acc.b.l + wz.b.l + (af.b.l & FLAG_C);
@@ -45,39 +49,37 @@ bool z80AdcHlReg()
 
             // Perform the addition in H, including low byte carry.
             hl.b.h = acc.b.l + wz.b.h + (flg & FLAG_C);
-            return false;
 
-        case 3:
             // Now check flags:
             // Half carry
             flg |= (wz.b.h ^ acc.b.l ^ hl.b.h) & FLAG_H;
 
             // Carry into bit 7
             flg |= ((wz.b.h ^ acc.b.l ^ hl.b.h) >> 5) & FLAG_PV;
-            return false;
 
-        case 4:
             // Carry out of bit 7
             acc.w += wz.b.h + (flg & FLAG_C);
             flg ^= ((acc.b.h & FLAG_C) << 2) & FLAG_PV;
             flg &= ~FLAG_C;
             flg |= (acc.b.h & FLAG_C);
-            return true;
 
-        case 5:
             // Sign is affected by the 16-bit result - hence high byte.
             // 5 and 3 are affected by the high byte.
             flg |= hl.b.h & (FLAG_S | FLAG_5 | FLAG_3);
-            return false;
 
-        case 6:
             // Zero is affected by the 16-bit result.
             flg |= (hl.w == 0x0000) ? FLAG_Z : 0x00;
+            af.b.l = flg;
+
+            skipCycles = 2;
+            return true;
+
+        case 5:
+        case 6:
             return false;
 
         case 7:
             ++wz.w;
-            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

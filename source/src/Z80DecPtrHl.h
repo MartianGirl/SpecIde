@@ -28,15 +28,17 @@ bool z80DecPtrHl()
         case 0:
             memRdCycles = 1;
             memAddrMode = 0x00000022;
+            skipCycles = 1;
             return true;
 
         case 1:
-            // Preserve carry bit.
-            flg = af.b.l & FLAG_C;
-            flg |= decFlags[iReg.b.h];
             return false;
 
         case 2:
+            // Preserve carry bit.
+            flg = af.b.l & FLAG_C;
+            flg |= decFlags[iReg.b.h];
+
             oReg.b.l = iReg.b.h - 1;
             memWrCycles = 1;
             return true;

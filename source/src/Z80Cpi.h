@@ -46,14 +46,18 @@ bool z80Cpi()
             return true;
 
         case 1:
+            skipCycles = 4;
             return true;
 
         case 2:
-            --bc.w;
-            ++hl.w;
+        case 3:
+        case 4:
+        case 5:
             return false;
 
-        case 3:
+        case 6:
+            --bc.w;
+            ++hl.w;
             acc.b.l = af.b.h - iReg.b.h;
             flg = af.b.l & FLAG_C;                              // 0000000C
             flg |= FLAG_N;                                      // 000000NC
@@ -61,21 +65,14 @@ bool z80Cpi()
                 (af.b.h ^ iReg.b.h ^ acc.b.l) & FLAG_H;         // 000H00NC
             flg |= acc.b.l & FLAG_S;                            // S00H00NC
             flg |= (acc.b.l) ? 0x00 : FLAG_Z;                   // SZ0H00NC
-            return false;
 
-        case 4:
             acc.b.l -= (flg & FLAG_H) >> 4;
             flg |= (acc.b.l & FLAG_3);                          // SZ0H30NC
             flg |= (acc.b.l << 4) & FLAG_5;                     // SZ5H30NC
-            return false;
-
-        case 5:
             flg |= (bc.w) ? FLAG_PV : 0x00;                     // SZ5H3PNC
-            return false;
-
-        case 6:
-            ++wz.w;
             af.b.l = flg;
+
+            ++wz.w;
             prefix = PREFIX_NO;
             return true;
 

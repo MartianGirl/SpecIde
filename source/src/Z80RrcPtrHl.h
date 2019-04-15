@@ -34,11 +34,14 @@ bool z80RrcPtrHl()
     {
         case 0:
             memRdCycles = 1;
-            memWrCycles = 1;
             memAddrMode = 0x00000022;
+            skipCycles = 1;
             return true;
 
         case 1:
+            return false;
+
+        case 2:
             acc.b.l = iReg.b.h;
             acc.b.h = acc.b.l & 0x01;
             flg = acc.b.h & FLAG_C;
@@ -51,10 +54,9 @@ bool z80RrcPtrHl()
             flg |= (acc.b.l) ? 0x00 : FLAG_Z;
             flg |= (acc.b.h & 0x01) ? 0x00 : FLAG_PV;
             af.b.l = flg;
-            return false;
 
-        case 2:
             oReg.b.l = acc.b.l;
+            memWrCycles = 1;
             return true;
 
         case 3:

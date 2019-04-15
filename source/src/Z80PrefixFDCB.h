@@ -32,20 +32,21 @@ bool z80PrefixFDCB()
 
         case 1: // This is the displacement.
             wz.b.l = iReg.b.h;
+            skipCycles = 2;
             return true;
 
-        case 2: // This is actually the opcode. Now we *decode* it,
+            // This is actually the opcode. Now we *decode* it,
             // as if we were starting a new instruction.
             // Also, during this cycle we calculate the operand
             // address.
-            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
-            return false;
-
+        case 2:
         case 3:
-            wz.w += iy.w;
             return false;
 
         case 4:
+            wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
+            wz.w += iy.w;
+
             opcode = iReg.b.h;
             x = (iReg.b.h & 0xC0) >> 6; // xx......
             y = (iReg.b.h & 0x38) >> 3; // ..yyy...
@@ -58,6 +59,7 @@ bool z80PrefixFDCB()
             ioRdCycles = 0;
             ioWrCycles = 0;
             cpuProcCycles = 0;
+            skipCycles = 1;
 
             prefix = PREFIX_FD | PREFIX_CB;
             return true;

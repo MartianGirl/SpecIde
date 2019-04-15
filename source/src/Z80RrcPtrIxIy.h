@@ -49,6 +49,9 @@ bool z80RrcPtrIxIy()
     {
         // Previous steps are executed by the prefix.
         case 5:
+            return false;
+
+        case 6:
             acc.b.l = iReg.b.h;
             acc.b.h = acc.b.l & 0x01;
             flg = acc.b.h & FLAG_C;
@@ -61,9 +64,7 @@ bool z80RrcPtrIxIy()
             flg |= (acc.b.l) ? 0x00 : FLAG_Z;
             flg |= (acc.b.h & 0x01) ? 0x00 : FLAG_PV;
             af.b.l = flg;
-            return false;
 
-        case 6:
             if (z != 6)
                 *reg8[z] = acc.b.l;
             oReg.b.l = acc.b.l;
