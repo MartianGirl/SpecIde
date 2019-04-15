@@ -746,7 +746,9 @@ void Z80::loadAndFlags()
             uint8_t sl = a & b;
             uint8_t f;
 
-            sh ^= sh >> 1; sh ^= sh >> 2; sh ^= sh >> 4;
+            sh ^= sh >> 1;
+            sh ^= sh >> 2;
+            sh ^= sh >> 4;
             f = (sh & 0x01) ? FLAG_H : FLAG_H | FLAG_PV;
             f |= sl & (FLAG_S | FLAG_5 | FLAG_3);
             f |= sl ? 0x00 : FLAG_Z;
@@ -765,7 +767,9 @@ void Z80::loadOrFlags()
             uint8_t sl = a | b;
             uint8_t f;
 
-            sh ^= sh >> 1; sh ^= sh >> 2; sh ^= sh >> 4;
+            sh ^= sh >> 1;
+            sh ^= sh >> 2;
+            sh ^= sh >> 4;
             f = (sh & 0x01) ? 0 : FLAG_PV;
             f |= sl & (FLAG_S | FLAG_5 | FLAG_3);
             f |= sl ? 0x00 : FLAG_Z;
@@ -784,7 +788,9 @@ void Z80::loadXorFlags()
             uint8_t sl = a ^ b;
             uint8_t f;
 
-            sh ^= sh >> 1; sh ^= sh >> 2; sh ^= sh >> 4;
+            sh ^= sh >> 1;
+            sh ^= sh >> 2;
+            sh ^= sh >> 4;
             f = (sh & 0x01) ? 0 : FLAG_PV;
             f |= sl & (FLAG_S | FLAG_5 | FLAG_3);
             f |= sl ? 0x00 : FLAG_Z;
