@@ -95,21 +95,18 @@ ULA::ULA() :
  */
 uint32_t ULA::average(uint32_t *ptr)
 {
-    uint32_t res;
-    uint8_t *pRes = reinterpret_cast<uint8_t*>(&res);
     uint8_t *pSrc = reinterpret_cast<uint8_t*>(ptr);
 #if SPECIDE_BYTE_ORDER == 1
-    pRes[0] = 0xFF;
-    pRes[1] = averageTable[pSrc[1]][pSrc[5]];
-    pRes[2] = averageTable[pSrc[2]][pSrc[6]];
-    pRes[3] = averageTable[pSrc[3]][pSrc[7]];
+    return (0xFF
+            | averageTable[pSrc[1]][pSrc[5]] << 8
+            | averageTable[pSrc[2]][pSrc[6]] << 16
+            | averageTable[pSrc[3]][pSrc[7]] << 24);
 #else
-    pRes[0] = averageTable[pSrc[0]][pSrc[4]];
-    pRes[1] = averageTable[pSrc[1]][pSrc[5]];
-    pRes[2] = averageTable[pSrc[2]][pSrc[6]];
-    pRes[3] = 0xFF;
+    return (0xFF << 24
+            | averageTable[pSrc[2]][pSrc[6]] << 16
+            | averageTable[pSrc[1]][pSrc[5]] << 8
+            | averageTable[pSrc[0]][pSrc[4]]);
 #endif
-    return res;
 }
 
 void ULA::generateVideoControlSignals()
