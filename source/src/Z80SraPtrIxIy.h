@@ -52,18 +52,10 @@ bool z80SraPtrIxIy()
             return false;
 
         case 6:
+            af.b.l = flg = sraFlags[iReg.b.h];
             acc.b.l = iReg.b.h;
             acc.b.h = (acc.b.l & 0x80) ? 0x01 : 0x00;
-            flg = acc.b.l & FLAG_C;
             acc.w >>= 1;
-            acc.b.h = acc.b.l;
-            acc.b.h ^= acc.b.h >> 1;
-            acc.b.h ^= acc.b.h >> 2;
-            acc.b.h ^= acc.b.h >> 4;
-            flg |= acc.b.l & (FLAG_S | FLAG_5 | FLAG_3);
-            flg |= (acc.b.l) ? 0x00 : FLAG_Z;
-            flg |= (acc.b.h & 0x01) ? 0x00 : FLAG_PV;
-            af.b.l = flg;
 
             if (z != 6)
                 *reg8[z] = acc.b.l;

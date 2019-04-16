@@ -27,6 +27,10 @@ uint8_t Z80::rlFlags[2][256];
 uint8_t Z80::rrFlags[2][256];
 uint8_t Z80::rlcFlags[256];
 uint8_t Z80::rrcFlags[256];
+uint8_t Z80::slaFlags[256];
+uint8_t Z80::sllFlags[256];
+uint8_t Z80::sraFlags[256];
+uint8_t Z80::srlFlags[256];
 bool Z80::flagsReady = false;
 
 
@@ -935,6 +939,80 @@ void Z80::loadRrcFlags()
         f |= r.b.l ? 0x00 : FLAG_Z;
         f |= (p & 0x01) ? 0x00 : FLAG_PV;
         rrcFlags[a] = f;
+    }
+}
+
+void Z80::loadSlaFlags()
+{
+    for (uint16_t a = 0; a < 0x100; ++a)
+    {
+        Z80Register r;
+        r.w = a << 1;
+        uint8_t f = r.b.h & FLAG_C;
+        uint8_t p = r.b.l;
+        p ^= p >> 1;
+        p ^= p >> 2;
+        p ^= p >> 4;
+        f |= r.b.l & (FLAG_S | FLAG_5 | FLAG_3);
+        f |= r.b.l ? 0x00 : FLAG_Z;
+        f |= (p & 0x01) ? 0x00 : FLAG_PV;
+        slaFlags[a] = f;
+    }
+}
+
+void Z80::loadSllFlags()
+{
+    for (uint16_t a = 0; a < 0x100; ++a)
+    {
+        Z80Register r;
+        r.w = a << 1 | 0x01;
+        uint8_t f = r.b.h & FLAG_C;
+        uint8_t p = r.b.l;
+        p ^= p >> 1;
+        p ^= p >> 2;
+        p ^= p >> 4;
+        f |= r.b.l & (FLAG_S | FLAG_5 | FLAG_3);
+        f |= r.b.l ? 0x00 : FLAG_Z;
+        f |= (p & 0x01) ? 0x00 : FLAG_PV;
+        sllFlags[a] = f;
+    }
+}
+
+void Z80::loadSraFlags()
+{
+    for (uint16_t a = 0; a < 0x100; ++a)
+    {
+        Z80Register r;
+        r.b.l = a;
+        r.b.h = (r.b.l & 0x80) ? 0x01 : 0x00;
+        r.w >>= 1;
+        uint8_t f = a & FLAG_C;
+        uint8_t p = r.b.l;
+        p ^= p >> 1;
+        p ^= p >> 2;
+        p ^= p >> 4;
+        f |= r.b.l & (FLAG_S | FLAG_5 | FLAG_3);
+        f |= r.b.l ? 0x00 : FLAG_Z;
+        f |= (p & 0x01) ? 0x00 : FLAG_PV;
+        sraFlags[a] = f;
+    }
+}
+
+void Z80::loadSrlFlags()
+{
+    for (uint16_t a = 0; a < 0x100; ++a)
+    {
+        Z80Register r;
+        r.w = a >> 1;
+        uint8_t f = a & FLAG_C;
+        uint8_t p = r.b.l;
+        p ^= p >> 1;
+        p ^= p >> 2;
+        p ^= p >> 4;
+        f |= r.b.l & (FLAG_S | FLAG_5 | FLAG_3);
+        f |= r.b.l ? 0x00 : FLAG_Z;
+        f |= (p & 0x01) ? 0x00 : FLAG_PV;
+        srlFlags[a] = f;
     }
 }
 // vim: et:sw=4:ts=4

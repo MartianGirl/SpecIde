@@ -40,18 +40,11 @@
 
 bool z80SraReg()
 {
+    af.b.l = flg = sraFlags[*reg8[z]];
     acc.b.l = *reg8[z];
     acc.b.h = (acc.b.l & 0x80) ? 0x01 : 0x00;
-    flg = acc.b.l & FLAG_C;
     acc.w >>= 1;
-    *reg8[z] = acc.b.h = acc.b.l;
-    acc.b.h ^= acc.b.h >> 1;
-    acc.b.h ^= acc.b.h >> 2;
-    acc.b.h ^= acc.b.h >> 4;
-    flg |= acc.b.l & (FLAG_S | FLAG_5 | FLAG_3);
-    flg |= (acc.b.l) ? 0x00 : FLAG_Z;
-    flg |= (acc.b.h & 0x01) ? 0x00 : FLAG_PV;
-    af.b.l = flg;
+    *reg8[z] = acc.b.l;
     prefix = PREFIX_NO;
     return true;
 }
