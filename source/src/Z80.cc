@@ -24,7 +24,9 @@ uint8_t Z80::cpFlags[256][256];
 uint8_t Z80::incFlags[256];
 uint8_t Z80::decFlags[256];
 uint8_t Z80::rlFlags[2][256];
+uint8_t Z80::rrFlags[2][256];
 uint8_t Z80::rlcFlags[256];
+uint8_t Z80::rrcFlags[256];
 bool Z80::flagsReady = false;
 
 
@@ -875,6 +877,29 @@ void Z80::loadRlFlags()
     }
 }
 
+void Z80::loadRrFlags()
+{
+    for (uint16_t c = 0; c < 2; ++c)
+    {
+        for (uint16_t a = 0; a < 0x100; ++a)
+        {
+            Z80Register r;
+            r.b.l = a;
+            r.b.h = c;
+            r.w >>= 1;
+            uint8_t f = a & FLAG_C;
+            uint8_t p = r.b.l;
+            p ^= p >> 1;
+            p ^= p >> 2;
+            p ^= p >> 4;
+            f |= r.b.l & (FLAG_S | FLAG_5 | FLAG_3);
+            f |= r.b.l ? 0x00 : FLAG_Z;
+            f |= (p & 0x01) ? 0x00 : FLAG_PV;
+            rrFlags[c][a] = f;
+        }
+    }
+}
+
 void Z80::loadRlcFlags()
 {
     for (uint16_t a = 0; a < 0x100; ++a)
@@ -890,6 +915,26 @@ void Z80::loadRlcFlags()
         f |= r.b.l ? 0x00 : FLAG_Z;
         f |= (p & 0x01) ? 0x00 : FLAG_PV;
         rlcFlags[a] = f;
+    }
+}
+
+void Z80::loadRrcFlags()
+{
+    for (uint16_t a = 0; a < 0x100; ++a)
+    {
+        Z80Register r;
+        r.b.l = a;
+        r.b.h = a & FLAG_C;
+        uint8_t f = r.b.h;
+        r.w >>= 1;
+        uint8_t p = r.b.l;
+        p ^= p >> 1;
+        p ^= p >> 2;
+        p ^= p >> 4;
+        f |= r.b.l & (FLAG_S | FLAG_5 | FLAG_3);
+        f |= r.b.l ? 0x00 : FLAG_Z;
+        f |= (p & 0x01) ? 0x00 : FLAG_PV;
+        rrcFlags[a] = f;
     }
 }
 // vim: et:sw=4:ts=4

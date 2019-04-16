@@ -69,7 +69,9 @@ class Z80
                 loadIncFlags();
                 loadDecFlags();
                 loadRlFlags();
+                loadRrFlags();
                 loadRlcFlags();
+                loadRrcFlags();
                 flagsReady = true;
             }
         }
@@ -184,7 +186,9 @@ class Z80
         static uint8_t incFlags[256];
         static uint8_t decFlags[256];
         static uint8_t rlFlags[2][256];
+        static uint8_t rrFlags[2][256];
         static uint8_t rlcFlags[256];
+        static uint8_t rrcFlags[256];
         static bool flagsReady;
 
         void loadAddFlags();
@@ -197,7 +201,9 @@ class Z80
         void loadIncFlags();
         void loadDecFlags();
         void loadRlFlags();
+        void loadRrFlags();
         void loadRlcFlags();
+        void loadRrcFlags();
 };
 
 // vim: et:sw=4:ts=4
