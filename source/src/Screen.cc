@@ -41,14 +41,13 @@ Screen::Screen(size_t scale) :
     modes(sf::VideoMode::getFullscreenModes()),
     bestMode(sf::VideoMode::getDesktopMode()),
     skip(ULA_CLOCK_48 / SAMPLE_RATE),
-    count(skip),
+    pulse(0), sample(skip),
     fullscreen(false), doubleScanMode(false), smooth(false),
     aychip(true),
     syncToVideo(false),
     scale(scale),
     xSize(360), ySize(625),
     delay(19968),
-    stereo(StereoMode::STEREO_MONO),
     pad(false),
     flashTap(false)
 {
@@ -115,11 +114,6 @@ void Screen::run()
     for (;;) {
         channel.play();
         for (;;) {
-            // Now this chunk is for instant loading of TAPs.
-            // Check tape trap
-            if (flashTap == true && spectrum.rom48 && cpuInRefresh()) {
-                checkTapeTraps();
-            }
 
             // Update Spectrum hardware.
             clock();
@@ -140,8 +134,7 @@ void Screen::run()
                 if (done) return;
                 if (menu) break;
             }
-
-            if (spectrum.ula.keyPoll) {
+            else if (spectrum.ula.keyPoll) {
                 pollEvents();
             }
         }
@@ -167,111 +160,31 @@ void Screen::run()
 
 void Screen::clock()
 {
+    if (flashTap) checkTapeTraps();
+
     spectrum.clock();
 
-    if (tape.sample == 0)
+    if (tape.playing)
     {
-        if (tape.playing)   // Next pulse & keep controlling ULA pin.
+        if (!pulse--)
+        {
             spectrum.ula.tapeIn = tape.advance() | 0x80;
-        else                // Release ULA pin, keep pulse.
-            spectrum.ula.tapeIn &= 0x7F;
+            pulse = tape.sample;
+        }
     }
     else
-        --tape.sample;
+    {
+        spectrum.ula.tapeIn &= 0x7F;
+    }
 
     // Generate sound
-    if (--count == 0)
+    --sample;
+    if (!sample)
     {
-        count = skip;
-        spectrum.buzzer.sample();
-        spectrum.psgSample();
+        sample = skip;
 
-        int l = spectrum.buzzer.signal;
-        int r = spectrum.buzzer.signal;
-
-        switch (stereo)
-        {
-            case StereoMode::STEREO_ACB: // ACB
-                l += spectrum.psg[0].channelA;
-                l += spectrum.psg[0].channelC;
-                r += spectrum.psg[0].channelB;
-                r += spectrum.psg[0].channelC;
-                break;
-
-            case StereoMode::STEREO_ABC: // ABC
-                l += spectrum.psg[0].channelA;
-                l += spectrum.psg[0].channelB;
-                r += spectrum.psg[0].channelB;
-                r += spectrum.psg[0].channelC;
-                break;
-
-            case StereoMode::STEREO_TURBO_MONO: // TurboSound with 2 PSGs, mono.
-                l += spectrum.psg[0].channelA;
-                l += spectrum.psg[0].channelB;
-                l += spectrum.psg[0].channelC;
-                r += spectrum.psg[0].channelA;
-                r += spectrum.psg[0].channelB;
-                r += spectrum.psg[0].channelC;
-
-                l += spectrum.psg[1].channelA;
-                l += spectrum.psg[1].channelB;
-                l += spectrum.psg[1].channelC;
-                r += spectrum.psg[1].channelA;
-                r += spectrum.psg[1].channelB;
-                r += spectrum.psg[1].channelC;
-                break;
-
-            case StereoMode::STEREO_TURBO_ACB:  // TurboSound with 2 PSGs, ACB
-                l += spectrum.psg[0].channelA;
-                l += spectrum.psg[0].channelC;
-                r += spectrum.psg[0].channelB;
-                r += spectrum.psg[0].channelC;
-
-                l += spectrum.psg[1].channelA;
-                l += spectrum.psg[1].channelC;
-                r += spectrum.psg[1].channelB;
-                r += spectrum.psg[1].channelC;
-                break;
-
-            case StereoMode::STEREO_TURBO_ABC: // TurboSound with 2 PSGs, ABC
-                l += spectrum.psg[0].channelA;
-                l += spectrum.psg[0].channelB;
-                r += spectrum.psg[0].channelB;
-                r += spectrum.psg[0].channelC;
-
-                l += spectrum.psg[1].channelA;
-                l += spectrum.psg[1].channelB;
-                r += spectrum.psg[1].channelB;
-                r += spectrum.psg[1].channelC;
-                break;
-
-            case StereoMode::STEREO_NEXT:
-                for (size_t ii = 0; ii < 8; ++ii)
-                {
-                    if (spectrum.psg[ii].lchan)
-                    {
-                        l += spectrum.psg[ii].channelA >> 1;
-                        l += spectrum.psg[ii].channelB >> 1;
-                        l += spectrum.psg[ii].channelC >> 1;
-                    }
-                    if (spectrum.psg[ii].rchan)
-                    {
-                        r += spectrum.psg[ii].channelA >> 1;
-                        r += spectrum.psg[ii].channelB >> 1;
-                        r += spectrum.psg[ii].channelC >> 1;
-                    }
-                }
-                break;
-
-            default:    // mono, all channels go through both sides.
-                l += spectrum.psg[0].channelA;
-                l += spectrum.psg[0].channelB;
-                l += spectrum.psg[0].channelC;
-                r += spectrum.psg[0].channelA;
-                r += spectrum.psg[0].channelB;
-                r += spectrum.psg[0].channelC;
-                break;
-        }
+        int l, r;
+        spectrum.sample(l, r);
         channel.push(l, r);
     }
 }
@@ -862,7 +775,7 @@ void Screen::adjust()
 
 void Screen::set128K(bool is128K)
 {
-    count = skip = ((is128K) ? ULA_CLOCK_128 : ULA_CLOCK_48) / SAMPLE_RATE + 1;
+    sample = skip = ((is128K) ? ULA_CLOCK_128 : ULA_CLOCK_48) / SAMPLE_RATE + 1;
     cout << "Skipping " << skip << " samples." << endl;
     delay = is128K ? 19992 : 19968;
 }
@@ -874,15 +787,20 @@ bool Screen::cpuInRefresh()
 
 void Screen::checkTapeTraps()
 {
-    if (spectrum.z80.pc.w == 0x56D) // LD_START
+    switch (spectrum.z80.pc.w)
     {
-        if (tape.tapData.size())
-            trapLdStart();
-    }
+        case 0x056D:    // LD_START
+            if (spectrum.rom48 && cpuInRefresh() && tape.tapData.size())
+                trapLdStart();
+            break;
 
-    if (spectrum.z80.pc.w == 0x4D1) // SA_FLAG
-    {
-        trapSaBytes();
+        case 0x04D1:    // SA_FLAG
+            if (spectrum.rom48 && cpuInRefresh())
+                trapSaBytes();
+            break;
+
+        default:
+            break;
     }
 }
 

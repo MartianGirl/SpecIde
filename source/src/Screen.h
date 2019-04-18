@@ -43,17 +43,6 @@
 #include <queue>
 #include <vector>
 
-enum class StereoMode
-{
-    STEREO_MONO,
-    STEREO_ABC,
-    STEREO_ACB,
-    STEREO_TURBO_MONO,
-    STEREO_TURBO_ABC,
-    STEREO_TURBO_ACB,
-    STEREO_NEXT
-};
-
 class Screen
 {
     public:
@@ -74,7 +63,8 @@ class Screen
 
         int samples[2];
         size_t skip;
-        size_t count;
+        size_t pulse = 0;
+        size_t sample = 0;
 
         bool done = false;
         bool menu = false;
@@ -96,8 +86,6 @@ class Screen
         sf::Uint8* pixbuf;
 
         sf::Font zxFont;
-
-        StereoMode stereo;
 
         bool pad;
         bool flashTap;

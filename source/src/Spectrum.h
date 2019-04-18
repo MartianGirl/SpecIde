@@ -36,6 +36,17 @@
 
 using namespace std;
 
+enum class StereoMode
+{
+    STEREO_MONO,
+    STEREO_ABC,
+    STEREO_ACB,
+    STEREO_TURBO_MONO,
+    STEREO_TURBO_ABC,
+    STEREO_TURBO_ACB,
+    STEREO_NEXT
+};
+
 class Spectrum
 {
     public:
@@ -77,6 +88,8 @@ class Spectrum
 
         size_t count = 0;
 
+        StereoMode stereo;
+
         // This one is going to be called at 7MHz, and is going to:
         // 1. Clock the ULA. This starts the ULA counters.
         // 2. Access memory for the ULA, if the ULA is not high impedance.
@@ -115,6 +128,8 @@ class Spectrum
         void psgSample();
         void psgChip(bool play);
         void psgPlaySound(bool play);
+
+        void sample(int& l, int& r);
 };
 
 // vim: et:sw=4:ts=4

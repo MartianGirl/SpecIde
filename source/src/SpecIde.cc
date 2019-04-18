@@ -341,19 +341,19 @@ int main(int argc, char* argv[])
     }
 
     if (options["stereo"] == "acb")
-        screen.stereo = StereoMode::STEREO_ACB;
+        screen.spectrum.stereo = StereoMode::STEREO_ACB;
     else if (options["stereo"] == "abc")
-        screen.stereo = StereoMode::STEREO_ABC;
+        screen.spectrum.stereo = StereoMode::STEREO_ABC;
     else if (options["stereo"] == "turbo")
-        screen.stereo = StereoMode::STEREO_TURBO_MONO;
+        screen.spectrum.stereo = StereoMode::STEREO_TURBO_MONO;
     else if (options["stereo"] == "turboabc")
-        screen.stereo = StereoMode::STEREO_TURBO_ABC;
+        screen.spectrum.stereo = StereoMode::STEREO_TURBO_ABC;
     else if (options["stereo"] == "turboacb")
-        screen.stereo = StereoMode::STEREO_TURBO_ACB;
+        screen.spectrum.stereo = StereoMode::STEREO_TURBO_ACB;
     else if (options["stereo"] == "turbonext")
-        screen.stereo = StereoMode::STEREO_NEXT;
+        screen.spectrum.stereo = StereoMode::STEREO_NEXT;
     else
-        screen.stereo = StereoMode::STEREO_MONO;
+        screen.spectrum.stereo = StereoMode::STEREO_MONO;
     cout << "Stereo type: " << options["stereo"] << endl;
 
     screen.aychip = (options["psgtype"] != "ym");

@@ -45,7 +45,6 @@ class Buzzer
 
         int signal;
 
-
         bool playSound;
         bool tapeSound;
 
@@ -81,10 +80,10 @@ class Buzzer
 
         void sample()
         {
-                signal = 0;
-                for (uint_fast32_t i = 0; i < FILTER_BZZ_SIZE; ++i)
-                    signal += filter[i];
-                signal /= FILTER_BZZ_SIZE;
+            signal = 0;
+            for (size_t i = 0; i < FILTER_BZZ_SIZE; ++i)
+                signal += filter[i];
+            signal /= FILTER_BZZ_SIZE;
         }
 };
 

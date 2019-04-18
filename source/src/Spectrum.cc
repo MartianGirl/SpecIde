@@ -32,7 +32,8 @@ Spectrum::Spectrum() :
     paging(0x0020), mask(0x0001),
     contendedPage{false, true, false, false},
     romPage{true, false, false, false},
-    set48(true), rom48(true)
+    set48(true), rom48(true),
+    stereo(StereoMode::STEREO_MONO)
 {
     buzzer.init(&ula.ioPortOut, &ula.tapeIn);
 
@@ -174,7 +175,7 @@ void Spectrum::setPlus2()
 
 void Spectrum::setPlus2A()
 {
-    spectrum128K = true;
+    spectrum128K = false;
     spectrumPlus2 = false;
     spectrumPlus2A = true;
     spectrumPlus3 = false;
@@ -185,7 +186,7 @@ void Spectrum::setPlus2A()
 
 void Spectrum::setPlus3()
 {
-    spectrum128K = true;
+    spectrum128K = false;
     spectrumPlus2 = false;
     spectrumPlus2A = true;
     spectrumPlus3 = true;
@@ -270,56 +271,48 @@ void Spectrum::clock()
             // 128K only ports (paging, disk)
             if (spectrum128K)
             {
+                if (!(z80.a & 0x8002))
+                {
+                    if (wr || rd)
+                        updatePage(0);
+                }
+            }
+            else if (spectrumPlus2A)
+            {
                 switch (z80.a & 0xF002)
                 {
                     case 0x0000:    // In +2A/+3 this is the floating bus port.
-                        if (spectrumPlus2A)
+                        if (rd)
+                        {
+                            if (!(paging & 0x0020))
+                                z80.d = (bus_1 & idle) | 0x01;
+                        }
+                        break;
+                    case 0x1000:    // 0x1FFD (+3 Paging High)
+                        if (wr)
+                            updatePage(1);
+                        break;
+                    case 0x2000:    // 0x2FFD (+3 FDC Main Status)
+                        if (spectrumPlus3)
                         {
                             if (rd)
-                            {
-                                if (!(paging & 0x0020))
-                                    z80.d = (bus_1 & idle) | 0x01;
-                            }
-                            break;
+                                z80.d = fdc.status();
                         }
-                        // fall-through
-                    case 0x1000:    // 0x1FFD (+3 Paging High)
-                        if (spectrumPlus2A)
+                        break;
+                    case 0x3000:    // 0x3FFD (+3 FDC Data)
+                        if (spectrumPlus3)
                         {
                             if (wr)
-                                updatePage(1);
-                            break;
+                                fdc.write(z80.d);
+                            else if (rd)
+                                z80.d = fdc.read();
                         }
-                        // fall-through
-                    case 0x2000:    // 0x2FFD (+3 FDC Main Status)
-                        if (spectrumPlus2A)
-                        {
-                            if (spectrumPlus3)
-                            {
-                                if (rd)
-                                    z80.d = fdc.status();
-                            }
-                            break;
-                        }
-                        // fall-through
-                    case 0x3000:    // 0x3FFD (+3 FDC Data)
-                        if (spectrumPlus2A)
-                        {
-                            if (spectrumPlus3)
-                            {
-                                if (wr)
-                                    fdc.write(z80.d);
-                                else if (rd)
-                                    z80.d = fdc.read();
-                            }
-                            break;
-                        }
-                        // fall-through
+                        break;
                     case 0x4000: // fall-through
                     case 0x5000: // fall-through
                     case 0x6000: // fall-through
                     case 0x7000: // 0x7FFD (128K Paging / +3 Paging Low)
-                        if (wr || (rd && !spectrumPlus2A))
+                        if (wr)
                             updatePage(0);
                         break;
 
@@ -475,7 +468,7 @@ void Spectrum::reset()
     psgReset();
     fdc.reset();
 
-    if (spectrum128K)
+    if (spectrum128K || spectrumPlus2A)
     {
         setPage(0, 0, true, false);
         setPage(1, 5, false, true);
@@ -576,4 +569,97 @@ void Spectrum::psgChip(bool aychip)
     psg[6].setVolumeLevels(aychip);
     psg[7].setVolumeLevels(aychip);
 }
+
+void Spectrum::sample(int& l, int& r)
+{
+    buzzer.sample();
+    psgSample();
+
+    l = r = buzzer.signal;
+
+    switch (stereo)
+    {
+        case StereoMode::STEREO_ACB: // ACB
+            l += psg[0].channelA;
+            l += psg[0].channelC;
+            r += psg[0].channelB;
+            r += psg[0].channelC;
+            break;
+
+        case StereoMode::STEREO_ABC: // ABC
+            l += psg[0].channelA;
+            l += psg[0].channelB;
+            r += psg[0].channelB;
+            r += psg[0].channelC;
+            break;
+
+        case StereoMode::STEREO_TURBO_MONO: // TurboSound with 2 PSGs, mono.
+            l += psg[0].channelA;
+            l += psg[0].channelB;
+            l += psg[0].channelC;
+            r += psg[0].channelA;
+            r += psg[0].channelB;
+            r += psg[0].channelC;
+
+            l += psg[1].channelA;
+            l += psg[1].channelB;
+            l += psg[1].channelC;
+            r += psg[1].channelA;
+            r += psg[1].channelB;
+            r += psg[1].channelC;
+            break;
+
+        case StereoMode::STEREO_TURBO_ACB:  // TurboSound with 2 PSGs, ACB
+            l += psg[0].channelA;
+            l += psg[0].channelC;
+            r += psg[0].channelB;
+            r += psg[0].channelC;
+
+            l += psg[1].channelA;
+            l += psg[1].channelC;
+            r += psg[1].channelB;
+            r += psg[1].channelC;
+            break;
+
+        case StereoMode::STEREO_TURBO_ABC: // TurboSound with 2 PSGs, ABC
+            l += psg[0].channelA;
+            l += psg[0].channelB;
+            r += psg[0].channelB;
+            r += psg[0].channelC;
+
+            l += psg[1].channelA;
+            l += psg[1].channelB;
+            r += psg[1].channelB;
+            r += psg[1].channelC;
+            break;
+
+        case StereoMode::STEREO_NEXT:
+            for (size_t ii = 0; ii < 8; ++ii)
+            {
+                if (psg[ii].lchan)
+                {
+                    l += psg[ii].channelA >> 1;
+                    l += psg[ii].channelB >> 1;
+                    l += psg[ii].channelC >> 1;
+                }
+                if (psg[ii].rchan)
+                {
+                    r += psg[ii].channelA >> 1;
+                    r += psg[ii].channelB >> 1;
+                    r += psg[ii].channelC >> 1;
+                }
+            }
+            break;
+
+        default:    // mono, all channels go through both sides.
+            l += psg[0].channelA;
+            l += psg[0].channelB;
+            l += psg[0].channelC;
+            r += psg[0].channelA;
+            r += psg[0].channelB;
+            r += psg[0].channelC;
+            break;
+    }
+}
+
 // vim: et:sw=4:ts=4
