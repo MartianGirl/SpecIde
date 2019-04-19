@@ -455,7 +455,7 @@ void Spectrum::updatePage(uint_fast8_t reg)
             setPage(3, ramBank, false, ((paging & mask) == mask));
 
             rom48 = ((spectrumPlus2A && romBank == 3)
-                    || (spectrum128K && romBank == 1)) ? true : false;
+                    || (spectrum128K && romBank == 1));
             set48 = (paging & 0x0020);
         }
     }
