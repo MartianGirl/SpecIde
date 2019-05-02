@@ -457,6 +457,8 @@ FileTypes guessFileType(string const& fileName)
 
     if (extension == ".tzx")
         return FileTypes::FILETYPE_TZX;
+    else if (extension == ".cdt")
+        return FileTypes::FILETYPE_TZX;
     else if (extension == ".tap")
         return FileTypes::FILETYPE_TAP;
     else if (extension == ".dsk")
@@ -483,6 +485,10 @@ void displayLicense()
     cout << endl;
     cout << "You should have received a copy of the GNU General Public License" << endl;
     cout << "along with this program.  If not, see <https://www.gnu.org/licenses/>." << endl;
+    cout << endl;
+    cout << "ZX Spectrum ROMs are (c) Amstrad PLC. Amstrad PLC has kindly given" << endl;
+    cout << "permission for the redistribution of the ZX Spectrum ROMs for their" << endl;
+    cout << "use with emulators, but retains the copyright for them." << endl;
     cout << endl;
 }
 
