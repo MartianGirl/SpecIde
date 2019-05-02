@@ -76,6 +76,7 @@ class Z80
                 loadSllFlags();
                 loadSraFlags();
                 loadSrlFlags();
+                loadDaaTable();
                 flagsReady = true;
             }
         }
@@ -197,6 +198,7 @@ class Z80
         static uint8_t sllFlags[256];
         static uint8_t sraFlags[256];
         static uint8_t srlFlags[256];
+        static uint16_t daaTable[65536];
         static bool flagsReady;
 
         void loadAddFlags();
@@ -216,6 +218,7 @@ class Z80
         void loadSllFlags();
         void loadSraFlags();
         void loadSrlFlags();
+        void loadDaaTable();
 };
 
 // vim: et:sw=4:ts=4

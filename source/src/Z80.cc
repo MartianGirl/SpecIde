@@ -31,6 +31,7 @@ uint8_t Z80::slaFlags[256];
 uint8_t Z80::sllFlags[256];
 uint8_t Z80::sraFlags[256];
 uint8_t Z80::srlFlags[256];
+uint16_t Z80::daaTable[65536];
 bool Z80::flagsReady = false;
 
 
@@ -1013,6 +1014,60 @@ void Z80::loadSrlFlags()
         f |= r.b.l ? 0x00 : FLAG_Z;
         f |= (p & 0x01) ? 0x00 : FLAG_PV;
         srlFlags[a] = f;
+    }
+}
+
+void Z80::loadDaaTable()
+{
+    for (uint32_t a = 0; a < 0x10000; ++a)
+    {
+        Z80Register r;
+        Z80Register t;
+        r.w = a;
+
+        // Keep the relevant flags.
+        uint8_t f = r.b.l & (FLAG_H | FLAG_N | FLAG_C);  // ...b.H..NC
+        // Adjust the lower nybble first.
+        t.w = r.b.h & 0x0F;
+        if ((t.w > 0x09) || ((f & FLAG_H) == FLAG_H))
+        {
+            if ((f & FLAG_N) == FLAG_N)   // Subtraction
+            {
+                f &= (t.w > 0x05) ? ~FLAG_H : 0xFF;
+                t.w -= 0x06;
+            }
+            else    // Addition
+            {
+                f &= ~FLAG_H;
+                f |= (t.w > 0x09) ? FLAG_H : 0x00;
+                t.w += 0x06;
+            }
+        }
+
+        // Adjust the upper nybble then.
+        t.w += (r.b.h & 0xF0);
+        if ((r.b.h > 0x99) || ((f & FLAG_C) == FLAG_C))
+        {
+            if ((f & FLAG_N) == FLAG_N)   // Subtraction
+                t.w -= 0x60;
+            else    // Addition
+                t.w += 0x60;
+
+            f |= FLAG_C;
+        }
+
+        f |= t.b.l & (FLAG_S | FLAG_5 | FLAG_3);   // S.5H3.NC
+
+        uint8_t p = t.b.l;
+        p ^= p >> 1;
+        p ^= p >> 2;
+        p ^= p >> 4;
+        f |= (p & 0x01) ? 0x00 : FLAG_PV;  // S.5H3PNC
+        f |= (t.b.l) ? 0x00 : FLAG_Z;      // SZ5H3PNC
+        r.b.h = t.b.l;
+        r.b.l = f;
+
+        daaTable[a] = r.w;
     }
 }
 // vim: et:sw=4:ts=4
