@@ -324,22 +324,16 @@ void Spectrum::clock()
             // AY-3-8912 ports.
             if (psgPresent[0])  // If there are PSGs, there is a PSG 0
             {
-                switch (z80.a & 0xF002)
+                switch (z80.a & 0xC002)
                 {
-                    case 0x8000: // fall-through
-                    case 0x9000: // fall-through
-                    case 0xA000: // fall-through
-                    case 0xB000: // 0xBFFD
+                    case 0x8000:    // 0xBFFD
                         if (wr)
                             psgWrite();
                         else if (rd && spectrumPlus2A)
                             psgRead();
                         break;
 
-                    case 0xC000: // fall-through
-                    case 0xD000: // fall-through
-                    case 0xE000: // fall-through
-                    case 0xF000: // 0xFFFD
+                    case 0xC000:    // 0xFFFD
                         if (wr)
                         {
                             if ((z80.d & 0x98) == 0x98)
@@ -348,10 +342,15 @@ void Spectrum::clock()
                                 psg[currentPsg].lchan = (z80.d & 0x40);
                                 psg[currentPsg].rchan = (z80.d & 0x20);
                             }
-                            psgAddr();
+                            else
+                            {
+                                psgAddr();
+                            }
                         }
                         else if (rd)
+                        {
                             psgRead();
+                        }
                         break;
 
                     default:
