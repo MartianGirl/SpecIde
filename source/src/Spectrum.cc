@@ -337,20 +337,12 @@ void Spectrum::clock()
                         if (wr)
                         {
                             if ((z80.d & 0x98) == 0x98)
-                            {
-                                currentPsg = (~z80.d) & 0x07;
-                                psg[currentPsg].lchan = (z80.d & 0x40);
-                                psg[currentPsg].rchan = (z80.d & 0x20);
-                            }
+                                psgSelect(z80.d);
                             else
-                            {
                                 psgAddr();
-                            }
                         }
                         else if (rd)
-                        {
                             psgRead();
-                        }
                         break;
 
                     default:
@@ -377,18 +369,12 @@ void Spectrum::clock()
             // Bank 2: 8000h - Extended memory
             // Bank 3: C000h - Extended memory (can be contended)
             if (rd)
-            {
                 z80.d = map[memArea][z80.a & 0x3FFF];
-            }
             else if (!romPage[memArea] && wr)
-            {
                 map[memArea][z80.a & 0x3FFF] = z80.d;
-            }
         }
         else
-        {
             z80.d = 0xFF;
-        }
 
         z80.clock();
     }
@@ -488,6 +474,17 @@ void Spectrum::reset()
         paging = 0x0020;
         set48 = true;
         set48 = true;
+    }
+}
+
+void Spectrum::psgSelect(uint_fast8_t byte)
+{
+    size_t newPsg = (~byte) & 0x07;
+    if (psgPresent[newPsg])
+    {
+        currentPsg = newPsg;
+        psg[currentPsg].lchan = (byte & 0x40);
+        psg[currentPsg].rchan = (byte & 0x20);
     }
 }
 
