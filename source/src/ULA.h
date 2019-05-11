@@ -42,7 +42,8 @@ class ULA
         void generateVideoDataUla();
         void generateVideoDataGa();
         void tapeEarMic();
-        void ioPort();
+        uint_fast8_t ioRead();
+        void ioWrite(uint_fast8_t byte);
         void start();
 
         void setUlaVersion(uint_fast8_t version);
@@ -91,7 +92,6 @@ class ULA
         uint_fast8_t flash = 0;
         bool z80Clk = false;
 
-        uint_fast8_t ioWait = 0;
         uint_fast16_t z80_c_1 = 0xFFFF;
         uint_fast16_t z80_c_2 = 0xFFFF;
 
@@ -135,8 +135,7 @@ class ULA
         bool keyPoll;
 
         // Port 0xFE
-        uint_fast8_t ioPortIn = 0xFF;
-        uint_fast8_t ioPortOut = 0x00;
+        uint_fast8_t soundBits = 0x00;
         uint_fast8_t inMask = 0xBF;
         uint_fast8_t borderAttr = 0x00;
         uint_fast8_t tapeIn = 0x00;

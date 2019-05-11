@@ -120,7 +120,7 @@ class Spectrum
             scr = &ram[page * (2 << 14)];
         }
 
-        void psgSelect(uint_fast8_t byte);
+        void psgSelect();
         void psgRead();
         void psgWrite();
         void psgAddr();

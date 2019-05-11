@@ -324,23 +324,23 @@ void ULA::paint()
 
                 case 2:     // Averaged scanlines
                     ptr = ptr1 = pixelsX2 + 2 * (yPos * xSize + xPos);
-                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                    --ptr; --ptr; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
                     ptr = pixelsX1 + (yPos * xSize) + xPos;
-                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
-                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
-                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
-                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
-                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
-                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
-                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
-                    --ptr1; --ptr1; --ptr; *ptr = average(ptr1);
+                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
                     break;
 
                 default:    // No scanlines
@@ -365,14 +365,16 @@ void ULA::tapeEarMic()
     // Let's keep this here for the moment.
     if (ulaVersion < 2)
     {
-        uint_fast32_t v = voltage[(ioPortOut & 0x18) >> 3];
+        uint_fast32_t v = voltage[soundBits];
 
         if (v > 3000)
         {
             ear = v;
             if (chargeDelay < 86400)
+            {
+                capacitor = 368 + (chargeDelay / 16);
                 ++chargeDelay;
-            capacitor = 368 + (chargeDelay >> 4);
+            }
         }
         else
         {
@@ -389,56 +391,45 @@ void ULA::tapeEarMic()
     if ((tapeIn & 0xC0) == 0xC0) ear = 3790;
 }
 
-void ULA::ioPort()
+uint_fast8_t ULA::ioRead()
 {
-    // We read keyboard if we're reading the ULA port, during TW.
-    if (!(z80_c & SIGNAL_IORQ_) && !(z80_a & 0x0001)) {
-        if (!(z80_c & SIGNAL_RD_)) {
-            if (++ioWait == 5) {
-                ioWait = 0;
-                ioPortIn = inMask;
-                ioPortIn |= (ear < 700) ? 0x00 : 0x40;
-                if (!(z80_a & 0x8000)) ioPortIn &= keys[0];
-                if (!(z80_a & 0x4000)) ioPortIn &= keys[1];
-                if (!(z80_a & 0x2000)) ioPortIn &= keys[2];
-                if (!(z80_a & 0x1000)) ioPortIn &= keys[3];
-                if (!(z80_a & 0x0800)) ioPortIn &= keys[4];
-                if (!(z80_a & 0x0400)) ioPortIn &= keys[5];
-                if (!(z80_a & 0x0200)) ioPortIn &= keys[6];
-                if (!(z80_a & 0x0100)) ioPortIn &= keys[7];
-                io = ioPortIn;
-            }
-        } else if (!(z80_c & SIGNAL_WR_)) {
-            ++ioWait;
-            if (ioWait == 1) {
-                ioPortOut = io;
-                borderAttr = ioPortOut & 0x07;
-            } else if (ioWait == 5) {
-                ioWait = 0;
-            }
-        }
-    }
+    uint_fast8_t byte = inMask;
+    byte |= (ear < 700) ? 0x00 : 0x40;
+    if (!(z80_a & 0x8000)) byte &= keys[0];
+    if (!(z80_a & 0x4000)) byte &= keys[1];
+    if (!(z80_a & 0x2000)) byte &= keys[2];
+    if (!(z80_a & 0x1000)) byte &= keys[3];
+    if (!(z80_a & 0x0800)) byte &= keys[4];
+    if (!(z80_a & 0x0400)) byte &= keys[5];
+    if (!(z80_a & 0x0200)) byte &= keys[6];
+    if (!(z80_a & 0x0100)) byte &= keys[7];
+
+    return byte;
+}
+
+void ULA::ioWrite(uint_fast8_t byte)
+{
+    soundBits = (byte & 0x18) >> 3;
+    borderAttr = byte & 0x07;
 }
 
 void ULA::clock()
 {
     generateVideoControlSignals();
 
-    if (scan == vSyncStart) {
+    if (scan == vSyncStart)
         generateInterrupt();
-    }
 
-    if (ulaVersion == 3) {
+    if (ulaVersion == 3)
         generateVideoDataGa();
-    } else {
+    else
         generateVideoDataUla();
-    }
+
     tapeEarMic();
 
     // Contention affects to Z80 phase change and to when the I/O operation
     // actually happens.
     if (cpuClock && (z80_c & SIGNAL_WAIT_)) {
-        ioPort();
         z80_c_2 = z80_c_1;
         z80_c_1 = z80_c;
         z80Clk = !z80Clk;
@@ -448,9 +439,8 @@ void ULA::clock()
 
     ++pixel;
 
-    if (ulaReset) {
+    if (ulaReset)
         start();
-    }
 }
 
 void ULA::start()

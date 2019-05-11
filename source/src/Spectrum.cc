@@ -35,7 +35,7 @@ Spectrum::Spectrum() :
     set48(true), rom48(true),
     stereo(StereoMode::STEREO_MONO)
 {
-    buzzer.init(&ula.ioPortOut, &ula.tapeIn);
+    buzzer.init(&ula.soundBits, &ula.tapeIn);
 
     // This is just for the laughs. We initialize the whole RAM to random
     // values to see the random attributes that appeared in the Spectrum
@@ -214,8 +214,7 @@ void Spectrum::clock()
     bool rd = z80.access && !(z80.c & SIGNAL_RD_);
     bool wr = z80.access && !(z80.c & SIGNAL_WR_);
 
-    size_t memArea = (z80.a & 0xC000) >> 14;
-    bool snow = contendedPage[memArea] && ula.snow && !as_;
+    size_t memArea = z80.a >> 14;
 
     // First we clock the ULA. This generates video and contention signals.
     // We need to provide the ULA with the Z80 address and control buses.
@@ -231,7 +230,7 @@ void Spectrum::clock()
     bus_1 = bus;
     if (!ula.mem)
     {
-        if (snow)
+        if (contendedPage[memArea] && ula.snow && !as_) // Snow effect
             bus = map[memArea][(ula.a & 0x3f80) | (z80.a & 0x007f)];
         else
             bus = scr[ula.a];
@@ -337,7 +336,7 @@ void Spectrum::clock()
                         if (wr)
                         {
                             if ((z80.d & 0x98) == 0x98)
-                                psgSelect(z80.d);
+                                psgSelect();
                             else
                                 psgAddr();
                         }
@@ -358,8 +357,10 @@ void Spectrum::clock()
             }
             else if (!(z80.a & 0x0001))
             {
-                if (rd)
-                    z80.d = ula.io;
+                if (wr)
+                    ula.ioWrite(z80.d);
+                else if (rd)
+                    z80.d = ula.ioRead();
             }
         }
         else if (!as_)
@@ -477,14 +478,14 @@ void Spectrum::reset()
     }
 }
 
-void Spectrum::psgSelect(uint_fast8_t byte)
+void Spectrum::psgSelect()
 {
-    size_t newPsg = (~byte) & 0x07;
+    size_t newPsg = (~z80.d) & 0x07;
     if (psgPresent[newPsg])
     {
         currentPsg = newPsg;
-        psg[currentPsg].lchan = (byte & 0x40);
-        psg[currentPsg].rchan = (byte & 0x20);
+        psg[currentPsg].lchan = (z80.d & 0x40);
+        psg[currentPsg].rchan = (z80.d & 0x20);
     }
 }
 

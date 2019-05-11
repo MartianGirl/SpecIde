@@ -63,11 +63,11 @@ class Buzzer
             // Smooth the signal directly from the ULA.
             if (playSound)
             {
-                filter[index] = (*source & 0x10) ? SOUND_VOLUME : 0;
+                filter[index] = (*source & 0x02) ? SOUND_VOLUME : 0;
                 if (tapeSound)
                 {
                     filter[index] += 
-                        + (((*source & 0x18) == 0x18) ? SAVE_VOLUME : 0)
+                        + (((*source & 0x03) == 0x03) ? SAVE_VOLUME : 0)
                         + ((*tapeIn & 0x40) ? LOAD_VOLUME : 0);
                 }
             }
