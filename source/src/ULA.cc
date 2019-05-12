@@ -268,19 +268,19 @@ void ULA::generateVideoDataGa()
         switch (pixel & 0x0F)
         {
             case 0x08:
-            case 0x0c:
+            case 0x0C:
                 a = dataAddr++;
                 break;
-            case 0x0a:
-            case 0x0e:
+            case 0x0A:
+            case 0x0E:
                 a = attrAddr++;
                 break;
             case 0x09:
-            case 0x0d:
+            case 0x0D:
                 dataReg = d;
                 break;
-            case 0x0b:
-            case 0x0f:
+            case 0x0B:
+            case 0x0F:
                 attrReg = d;
                 break;
             default:
@@ -296,65 +296,62 @@ void ULA::generateVideoDataGa()
 
 void ULA::paint()
 {
-    if ((pixel & 0x07) == 0x03)
+    data = video ? dataReg : 0xFF;
+    attr = video ? attrReg : borderAttr;
+    colour[0] = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+    colour[1] = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+
+    if (!blanking)
     {
-        data = video ? dataReg : 0xFF;
-        attr = video ? attrReg : borderAttr;
-        colour[0] = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-        colour[1] = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+        xPos += 8;
 
-        if (!blanking)
+        uint32_t *ptr, *ptr1;
+        switch (scanlines)
         {
-            xPos += 8;
+            case 1:     // Scanlines
+                ptr1 = pixelsX2 + ((yPos + frame) * xSize) + xPos;
+                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                break;
 
-            uint32_t *ptr, *ptr1;
-            switch (scanlines)
-            {
-                case 1:     // Scanlines
-                    ptr1 = pixelsX2 + ((yPos + frame) * xSize) + xPos;
-                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                    break;
+            case 2:     // Averaged scanlines
+                ptr = ptr1 = pixelsX2 + 2 * (yPos * xSize + xPos);
+                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
+                ptr = pixelsX1 + (yPos * xSize) + xPos;
+                ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                break;
 
-                case 2:     // Averaged scanlines
-                    ptr = ptr1 = pixelsX2 + 2 * (yPos * xSize + xPos);
-                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                    ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                    ptr = pixelsX1 + (yPos * xSize) + xPos;
-                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
-                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
-                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
-                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
-                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
-                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
-                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
-                    ptr1 -= 2; --ptr; *ptr = average(ptr1);
-                    break;
-
-                default:    // No scanlines
-                    ptr = pixelsX1 + (yPos * xSize) + xPos;
-                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                    --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                    break;
-            }
+            default:    // No scanlines
+                ptr = pixelsX1 + (yPos * xSize) + xPos;
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                break;
         }
     }
 }
@@ -435,7 +432,8 @@ void ULA::clock()
         z80Clk = !z80Clk;
     }
 
-    paint();
+    if ((pixel & 0x07) == 0x04)
+        paint();
 
     ++pixel;
 
@@ -451,7 +449,6 @@ void ULA::start()
     z80Clk = false;
     video = true;
     border = false;
-
     z80_c_2 = z80_c_1 = 0xFFFF;
 
 }

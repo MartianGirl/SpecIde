@@ -681,8 +681,8 @@ void TZXFile::addPause(size_t pause, vector<size_t>& data)
 {
     if ((data.size() % 2) == 0)
     {
-        data.push_back(1750);
-        data.push_back(3500 * (pause - 1) + 1750);
+        data.push_back(500);
+        data.push_back(3500 * (pause - 1) + 3000);
     }
     else
     {
