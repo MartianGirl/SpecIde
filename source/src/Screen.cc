@@ -183,9 +183,8 @@ void Screen::clock()
     {
         sample = skip;
 
-        int l, r;
-        spectrum.sample(l, r);
-        channel.push(l, r);
+        spectrum.sample();
+        channel.push(spectrum.l, spectrum.r);
     }
 }
 

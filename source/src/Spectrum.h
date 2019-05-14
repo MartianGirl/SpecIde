@@ -55,7 +55,7 @@ class Spectrum
         // Required hardware.
         Z80 z80;
         ULA ula;
-        PSG psg[8];
+        PSG psg[4];
         FDC fdc;
         Buzzer buzzer;
 
@@ -74,6 +74,9 @@ class Spectrum
         uint_fast8_t idle;
         uint_fast16_t paging;
         uint_fast16_t mask;
+
+        int l = 0;
+        int r = 0;
 
         bool contendedPage[4];
         bool romPage[4];
@@ -130,7 +133,7 @@ class Spectrum
         void psgChip(bool play);
         void psgPlaySound(bool play);
 
-        void sample(int& l, int& r);
+        void sample();
 };
 
 // vim: et:sw=4:ts=4

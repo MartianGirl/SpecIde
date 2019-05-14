@@ -26,7 +26,7 @@ Spectrum::Spectrum() :
     spectrumPlus2(false),
     spectrumPlus2A(false),
     spectrumPlus3(false),
-    psgPresent{false, false, false, false, false, false, false, false},
+    psgPresent{false, false, false, false},
     currentPsg(0),
     idle(0xFF),
     paging(0x0020), mask(0x0001),
@@ -480,7 +480,7 @@ void Spectrum::reset()
 
 void Spectrum::psgSelect()
 {
-    size_t newPsg = (~z80.d) & 0x07;
+    size_t newPsg = (~z80.d) & 0x03;
     if (psgPresent[newPsg])
     {
         currentPsg = newPsg;
@@ -513,10 +513,6 @@ void Spectrum::psgReset()
     psg[1].reset();
     psg[2].reset();
     psg[3].reset();
-    psg[4].reset();
-    psg[5].reset();
-    psg[6].reset();
-    psg[7].reset();
 }
 
 void Spectrum::psgClock()
@@ -525,10 +521,6 @@ void Spectrum::psgClock()
     if (psgPresent[1]) psg[1].clock();
     if (psgPresent[2]) psg[2].clock();
     if (psgPresent[3]) psg[3].clock();
-    if (psgPresent[4]) psg[4].clock();
-    if (psgPresent[5]) psg[5].clock();
-    if (psgPresent[6]) psg[6].clock();
-    if (psgPresent[7]) psg[7].clock();
 }
 
 void Spectrum::psgPlaySound(bool play)
@@ -537,10 +529,6 @@ void Spectrum::psgPlaySound(bool play)
     psg[1].playSound = play;
     psg[2].playSound = play;
     psg[3].playSound = play;
-    psg[4].playSound = play;
-    psg[5].playSound = play;
-    psg[6].playSound = play;
-    psg[7].playSound = play;
 }
 
 void Spectrum::psgSample()
@@ -549,10 +537,6 @@ void Spectrum::psgSample()
     if (psgPresent[1]) psg[1].sample();
     if (psgPresent[2]) psg[2].sample();
     if (psgPresent[3]) psg[3].sample();
-    if (psgPresent[4]) psg[4].sample();
-    if (psgPresent[5]) psg[5].sample();
-    if (psgPresent[6]) psg[6].sample();
-    if (psgPresent[7]) psg[7].sample();
 }
 
 void Spectrum::psgChip(bool aychip)
@@ -561,13 +545,9 @@ void Spectrum::psgChip(bool aychip)
     psg[1].setVolumeLevels(aychip);
     psg[2].setVolumeLevels(aychip);
     psg[3].setVolumeLevels(aychip);
-    psg[4].setVolumeLevels(aychip);
-    psg[5].setVolumeLevels(aychip);
-    psg[6].setVolumeLevels(aychip);
-    psg[7].setVolumeLevels(aychip);
 }
 
-void Spectrum::sample(int& l, int& r)
+void Spectrum::sample()
 {
     buzzer.sample();
     psgSample();
@@ -631,7 +611,7 @@ void Spectrum::sample(int& l, int& r)
             break;
 
         case StereoMode::STEREO_NEXT:
-            for (size_t ii = 0; ii < 8; ++ii)
+            for (size_t ii = 0; ii < 4; ++ii)
             {
                 if (psg[ii].lchan)
                 {

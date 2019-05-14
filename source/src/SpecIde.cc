@@ -333,11 +333,7 @@ int main(int argc, char* argv[])
         screen.spectrum.psgPresent[1] = true;
         screen.spectrum.psgPresent[2] = true;
         screen.spectrum.psgPresent[3] = true;
-        screen.spectrum.psgPresent[4] = true;
-        screen.spectrum.psgPresent[5] = true;
-        screen.spectrum.psgPresent[6] = true;
-        screen.spectrum.psgPresent[7] = true;
-        cout << "Generalized NEXT sound (8 PSGs) active." << endl;
+        cout << "Generalized NEXT sound (4 PSGs) active." << endl;
     }
 
     if (options["stereo"] == "acb")
