@@ -38,19 +38,17 @@ void TAPFile::parse(
     static constexpr size_t SYNC_PULSE_2 = 735;
     static constexpr size_t DATA_PULSE_0 = 855;
     static constexpr size_t DATA_PULSE_1 = 1710;
-    static constexpr size_t PILOT_HEAD_LENGTH = 8063;
-    static constexpr size_t PILOT_DATA_LENGTH = 3223;
+    static constexpr size_t PILOT_HEAD_LENGTH = 8064;
+    static constexpr size_t PILOT_DATA_LENGTH = 3224;
     static constexpr size_t MILLISECOND_PAUSE = 3500;
 
     size_t dataLength;
     uint8_t flagByte;
     uint8_t byte;
 
-    // Parse data from the beginning.
+    // Parse data from the beginning. Do not erase previous pulseData, so
+    // multiple tapes can be concatenated.
     pointer = 0;
-    // pulseData.clear();
-    // indexData.clear();
-    // stopData.clear();
     if (pulseData.size())
     {
         indexData.insert(pulseData.size());
@@ -94,6 +92,7 @@ void TAPFile::parse(
 
         // Insert the pause. Annotate the pause.
         pulseData.push_back(((flagByte & 0x80) ? 5000 : 1000) * MILLISECOND_PAUSE);
+        pulseData.push_back(100);
         indexData.insert(pulseData.size());
 
         pointer += dataLength + 2;

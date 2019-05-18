@@ -83,7 +83,6 @@ uint_fast8_t Tape::advance()
         pointer = 0;
         sample = 0;
         playing = false;
-        level &= 0x80;
     }
 
     return level;

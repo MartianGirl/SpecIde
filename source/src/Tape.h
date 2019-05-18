@@ -65,7 +65,7 @@ class Tape
             useSaveData(false), tapes(0),
             pointer(0), index(0), sample(0),
             playing(false),
-            level(0x00), is48K(true) {}
+            level(0x7F), is48K(true) {}
 
         void loadTzx(string const& fileName);
         void loadTap(string const& fileName);
@@ -79,7 +79,7 @@ class Tape
 
         void rewind(size_t position = 0)
         {
-            playing = false; sample = 0; pointer = position; level = 0x00;
+            playing = false; sample = 0; pointer = position; level = 0x7F;
             if (position == 0) tapPointer = 0;
             cout << "Rewind to " << position << "..." << endl;
         }

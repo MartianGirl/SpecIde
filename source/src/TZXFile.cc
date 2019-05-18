@@ -22,7 +22,6 @@ void TZXFile::load(string const& fileName)
     char c;
 
     magicIsOk = false;
-    firstLeadTone = false;
 
     ifstream ifs(fileName.c_str(), ifstream::binary);
     if (ifs.good())
@@ -87,10 +86,9 @@ void TZXFile::parse(
 
     if (magicIsOk)
     {
+        // Do not erase previous pulseData, so multiple tapes can be
+        // concatenated.
         pointer = 0x0A;
-        // pulseData.clear();
-        // indexData.clear();
-        // stopData.clear();
         romData.clear();
         if (pulseData.size() != 0)
         {
@@ -127,7 +125,7 @@ void TZXFile::parse(
                 dataLength = fileData[pointer + 4] * 0x100
                     + fileData[pointer + 3];
                 flagByte = fileData[pointer + 5];
-                pilotLength = (flagByte & 0x80) ? 3223 : 8063;
+                pilotLength = (flagByte & 0x80) ? 3224 : 8064;
 
                 // Pilot tone
                 pulseData.insert(pulseData.end(), pilotLength, pilotPulse);
@@ -156,8 +154,6 @@ void TZXFile::parse(
                 indexData.insert(pulseData.size());
                 if (pause)
                     addPause(pause, pulseData);
-                else
-                    addEdge(pulseData);
 
                 pointer += dataLength + 5;
                 break;
@@ -176,7 +172,7 @@ void TZXFile::parse(
                     + fileData[pointer + 9];
                 pilotLength = fileData[pointer + 12] * 0x100
                     + fileData[pointer + 11];
-                pilotLength += (pilotLength % 2) ? 0 : 1;   // Pilot should be odd
+                pilotLength += (pilotLength % 2) ? 1 : 0;   // Pilot should be even
                 bitsInLastByte = fileData[pointer + 13];
                 pause = fileData[pointer + 15] * 0x100
                     + fileData[pointer + 14];
@@ -213,8 +209,6 @@ void TZXFile::parse(
                 indexData.insert(pulseData.size());
                 if (pause)
                     addPause(pause, pulseData);
-                else
-                    addEdge(pulseData);
 
                 pointer += dataLength + 19;
                 break;
@@ -228,13 +222,11 @@ void TZXFile::parse(
 
                 // If this is the first segment of lead tone in a custom loader,
                 // then it should contain an odd number of pulses.
-                if (firstLeadTone)
-                    pilotLength += (pilotLength % 2) ? 1 : 0;   // Pilot should be even
+                pilotLength += (pilotLength % 2) ? 1 : 0;   // Pilot should be even
 
                 // Pilot tone
                 pulseData.insert(pulseData.end(), pilotLength, pilotPulse);
                 pointer += 5;
-                firstLeadTone = false;
                 break;
 
             case 0x13:
@@ -402,7 +394,6 @@ void TZXFile::parse(
                 dataLength = fileData[pointer + 1];
                 indexData.insert(pulseData.size());
                 pointer += dataLength + 2;
-                firstLeadTone = true;
                 break;
 
             case 0x22:
@@ -421,7 +412,6 @@ void TZXFile::parse(
                     + fileData[pointer + 1];
                 pointer += 3;
                 loopStart = pointer;
-                firstLeadTone = true;
                 break;
 
             case 0x25:
@@ -679,19 +669,8 @@ void TZXFile::pushSymbol(size_t rep, size_t sym,
 
 void TZXFile::addPause(size_t pause, vector<size_t>& data)
 {
-    if ((data.size() % 2) == 0)
-    {
-        data.push_back(500);
-        data.push_back(3500 * (pause - 1) + 3000);
-    }
-    else
-    {
-        data.push_back(3500 * pause);
-    }
+    data.push_back(3500 * pause);
+    data.push_back(100);  // Keep number of pulses even
 }
 
-void TZXFile::addEdge(vector<size_t>& data)
-{
-    data.push_back(3500);
-}
 // vim: et:sw=4:ts=4

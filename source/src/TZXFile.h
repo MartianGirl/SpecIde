@@ -43,13 +43,11 @@ class TZXFile
         TZXFile() :
             magic { 'Z', 'X', 'T', 'a', 'p', 'e', '!', 0x1A },
                   magicIsOk(false),
-                  firstLeadTone(false),
                   majorVersion(0), minorVersion(0),
                   pointer(0), loopStart(0), loopCounter(0) {}
 
         uint8_t magic[8];
         bool magicIsOk;
-        bool firstLeadTone;
         uint8_t majorVersion, minorVersion;
 
         vector<uint8_t> fileData;
@@ -83,7 +81,6 @@ class TZXFile
         void pushSymbol(size_t rep, size_t sym,
                 vector<size_t> const& alphabet, vector<size_t>& data);
         void addPause(size_t pause, vector<size_t>& data);
-        void addEdge(vector<size_t>& data);
 
 };
 
