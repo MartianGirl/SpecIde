@@ -398,6 +398,9 @@ void Spectrum::updatePage(uint_fast8_t reg)
 
         if (paging & 0x0100)    // Special paging mode.
         {
+            // 1. Any page in the range 0x4000-0x7FFF is always contended.
+            // 2. Pages 4, 5, 6, 7 are contended when paged in the range
+            //    0xC000-0xFFFF. Pages 1, 2, 3, 4 are not.
             switch (paging & 0x0600)
             {
                 case 0x0000:
@@ -407,21 +410,21 @@ void Spectrum::updatePage(uint_fast8_t reg)
                     setPage(3, 3, false, false);
                     break;
                 case 0x0200:
-                    setPage(0, 4, false, true);
+                    setPage(0, 4, false, false);
                     setPage(1, 5, false, true);
-                    setPage(2, 6, false, true);
+                    setPage(2, 6, false, false);
                     setPage(3, 7, false, true);
                     break;
                 case 0x0400:
-                    setPage(0, 4, false, true);
+                    setPage(0, 4, false, false);
                     setPage(1, 5, false, true);
-                    setPage(2, 6, false, true);
+                    setPage(2, 6, false, false);
                     setPage(3, 3, false, false);
                     break;
                 case 0x0600:
-                    setPage(0, 4, false, true);
+                    setPage(0, 4, false, false);
                     setPage(1, 7, false, true);
-                    setPage(2, 6, false, true);
+                    setPage(2, 6, false, false);
                     setPage(3, 3, false, false);
                     break;
 

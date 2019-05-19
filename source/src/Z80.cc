@@ -298,8 +298,8 @@ void Z80::clock()
             return;
 
         case Z80State::ST_IORD_T3L_DATARD:
-            access = false;
             readIo(d);
+            access = false;
             c |= SIGNAL_IORQ_ | SIGNAL_RD_;
             break;
 

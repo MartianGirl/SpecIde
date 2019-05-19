@@ -184,113 +184,98 @@ void ULA::generateInterrupt()
 
 void ULA::generateVideoDataUla()
 {
-    if (!border)
+    // Check for contended memory or I/O accesses.
+    idle = idleTable[pixel & 0x0F];
+    mem = memTable[pixel & 0x0F];
+    snow = snowTable[pixel & 0x0F];
+
+    // Memory Contention
+    // We detect memory contended states whenever the address is in the
+    // contention range (0x4000-0x7FFF).
+    // We only delay T1H until the ULA has finished reading. The rest of
+    // states are not contended. We do this by checking MREQ is low.
+    // We contend T-States, which means we only consider high clock phase.
+    bool memContention = contendedBank && z80Clk;
+    bool memContentionOff = !(z80_c & SIGNAL_MREQ_);
+
+    // I/O Contention
+    // We detect I/O contended states whenever the address is even (A0 = 0)
+    // and IORQ is low.
+    // We only delay T2H. We do this by checking a delayed version of IORQ.
+    bool ioUlaPort = !(z80_a & 0x0001);
+    bool iorqLow = !(z80_c & SIGNAL_IORQ_);                     // T2 TW T3
+    bool iorqLow_d = !(z80_c_2 & SIGNAL_IORQ_);                 // TW T3 T1
+    bool ioContention = ioUlaPort && iorqLow && z80Clk;         // T2 TW T3
+    bool ioContentionOff = ioUlaPort && iorqLow_d;              // TW T3 NN
+
+    // We use the same contention manager, and we consider contention when
+    // there is any contention, and when no contention is not disabled.
+    contention = (memContention || ioContention)        // Contention On?
+        && !(memContentionOff || ioContentionOff);      // Contention Off?
+
+    // Resolve contention and generate CPU clock.
+    cpuClock = !(contention && delayTable[pixel & 0x0F]);
+
+    // Read from memory.
+    switch (pixel & 0x0F)
     {
-        // Check for contended memory or I/O accesses.
-        idle = idleTable[pixel & 0x0F];
-        mem = memTable[pixel & 0x0F];
-        snow = snowTable[pixel & 0x0F];
-
-        // Memory Contention
-        // We detect memory contended states whenever the address is in the
-        // contention range (0x4000-0x7FFF).
-        // We only delay T1H until the ULA has finished reading. The rest of
-        // states are not contended. We do this by checking MREQ is low.
-        // We contend T-States, which means we only consider high clock phase.
-        bool memContention = contendedBank && z80Clk;
-        bool memContentionOff = !(z80_c & SIGNAL_MREQ_);
-
-        // I/O Contention
-        // We detect I/O contended states whenever the address is even (A0 = 0)
-        // and IORQ is low.
-        // We only delay T2H. We do this by checking a delayed version of IORQ.
-        bool ioUlaPort = !(z80_a & 0x0001);
-        bool iorqLow = !(z80_c & SIGNAL_IORQ_);                     // T2 TW T3
-        bool iorqLow_d = !(z80_c_2 & SIGNAL_IORQ_);                 // TW T3 T1
-        bool ioContention = ioUlaPort && iorqLow && z80Clk;         // T2 TW T3
-        bool ioContentionOff = ioUlaPort && iorqLow_d;              // TW T3 NN
-
-        // We use the same contention manager, and we consider contention when
-        // there is any contention, and when no contention is not disabled.
-        contention = (memContention || ioContention)        // Contention On?
-            && !(memContentionOff || ioContentionOff);      // Contention Off?
-
-        // Resolve contention and generate CPU clock.
-        cpuClock = !(contention && delayTable[pixel & 0x0F]);
-
-        // Read from memory.
-        switch (pixel & 0x0F)
-        {
-            case 0x08:
-            case 0x0C:
-                a = dataAddr++;
-                break;
-            case 0x0A:
-            case 0x0E:
-                a = attrAddr++;
-                break;
-            case 0x09:
-            case 0x0D:
-                dataReg = d;
-                break;
-            case 0x0B:
-            case 0x0F:
-                attrReg = d;
-                break;
-            default:
-                break;
-        }
-    }
-    else
-    {
-        idle = true;
+        case 0x08:
+        case 0x0C:
+            a = dataAddr++;
+            break;
+        case 0x0A:
+        case 0x0E:
+            a = attrAddr++;
+            break;
+        case 0x09:
+        case 0x0D:
+            dataReg = d;
+            break;
+        case 0x0B:
+        case 0x0F:
+            attrReg = d;
+            break;
+        default:
+            break;
     }
 }
 
 void ULA::generateVideoDataGa()
 {
-    if (!border)
-    {
-        // Check for contended memory or I/O accesses.
-        idle = idleTable[pixel & 0x0F];
-        mem = memTable[pixel & 0x0F];
+    // Check for contended memory or I/O accesses.
+    idle = idleTable[pixel & 0x0F];
+    mem = memTable[pixel & 0x0F];
 
-        // Memory Contention
-        // +2A/+3 only apply contention if MREQ is low.
-        contention = contendedBank && !(z80_c & SIGNAL_MREQ_);
+    // Memory Contention
+    // +2A/+3 only apply contention if MREQ is low.
+    contention = contendedBank && !(z80_c & SIGNAL_MREQ_);
 
-        if (contention && delayTable[pixel & 0x0F])
-            z80_c &= ~SIGNAL_WAIT_;
-        else
-            z80_c |= SIGNAL_WAIT_;
-
-        // Read from memory.
-        switch (pixel & 0x0F)
-        {
-            case 0x08:
-            case 0x0C:
-                a = dataAddr++;
-                break;
-            case 0x0A:
-            case 0x0E:
-                a = attrAddr++;
-                break;
-            case 0x09:
-            case 0x0D:
-                dataReg = d;
-                break;
-            case 0x0B:
-            case 0x0F:
-                attrReg = d;
-                break;
-            default:
-                break;
-        }
-    }
+    if (contention && delayTable[pixel & 0x0F])
+        z80_c &= ~SIGNAL_WAIT_;
     else
+        z80_c |= SIGNAL_WAIT_;
+
+    // Read from memory.
+    switch (pixel & 0x0F)
     {
-        if (delayTable[pixel & 0x0F] == false)
-            z80_c |= SIGNAL_WAIT_;
+        case 0x08:
+        case 0x0C:
+            a = dataAddr++;
+            break;
+        case 0x0A:
+        case 0x0E:
+            a = attrAddr++;
+            break;
+        case 0x09:
+        case 0x0D:
+            dataReg = d;
+            break;
+        case 0x0B:
+        case 0x0F:
+            attrReg = d;
+            break;
+        default:
+            break;
     }
 }
 
@@ -417,10 +402,13 @@ void ULA::clock()
     if (scan == vSyncStart)
         generateInterrupt();
 
-    if (ulaVersion == 3)
-        generateVideoDataGa();
-    else
-        generateVideoDataUla();
+    if (!border)
+    {
+        if (ulaVersion == 3)
+            generateVideoDataGa();
+        else
+            generateVideoDataUla();
+    }
 
     tapeEarMic();
 
@@ -464,7 +452,6 @@ void ULA::setUlaVersion(uint_fast8_t version)
 
     videoStart = 0x008;
     videoEnd = 0x108;
-    hBorderStart = 0x100;
     hBlankStart = 0x140;
     hBlankEnd = 0x19F;
 
@@ -477,6 +464,7 @@ void ULA::setUlaVersion(uint_fast8_t version)
     switch (ulaVersion)
     {
         case 0: // 48K, Issue 2
+            hBorderStart = 0x101;
             hSyncEnd = 0x170;
             maxPixel = 0x1C0;
             interruptStart = 0x000;
@@ -484,6 +472,7 @@ void ULA::setUlaVersion(uint_fast8_t version)
             maxScan = 0x138;
             break;
         case 1: // 48K, Issue 3
+            hBorderStart = 0x101;
             hSyncEnd = 0x178;
             maxPixel = 0x1C0;
             interruptStart = 0x000;
@@ -491,6 +480,7 @@ void ULA::setUlaVersion(uint_fast8_t version)
             maxScan = 0x138;
             break;
         case 2: // 128K, +2
+            hBorderStart = 0x101;
             hSyncEnd = 0x178;
             maxPixel = 0x1C8;
             interruptStart = 0x004;
@@ -498,6 +488,7 @@ void ULA::setUlaVersion(uint_fast8_t version)
             maxScan = 0x137;
             break;
         case 3: // +2A, +3
+            hBorderStart = 0x104;
             hSyncEnd = 0x178;
             maxPixel = 0x1C8;
             interruptStart = 0x000;
@@ -505,7 +496,7 @@ void ULA::setUlaVersion(uint_fast8_t version)
             maxScan = 0x137;
             cpuClock = true;
             break;
-        // case 4: // Pentagon
+            // case 4: // Pentagon
             // hSyncEnd = 0x158;
             // hBlankStart = 0x138;
             // hBlankEnd = 0x177;
@@ -518,6 +509,7 @@ void ULA::setUlaVersion(uint_fast8_t version)
             // break;
 
         default:
+            hBorderStart = 0x101;
             hSyncEnd = 0x178;
             maxPixel = 0x1C0;
             interruptStart = 0x000;
