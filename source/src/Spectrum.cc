@@ -228,6 +228,7 @@ void Spectrum::clock()
     // I've found that separating both data buses is helpful for all
     // Speccies.
     bus_1 = bus;
+
     if (!ula.mem)
     {
         if (contendedPage[memArea] && ula.snow && !as_) // Snow effect
@@ -238,7 +239,6 @@ void Spectrum::clock()
     else if (!spectrumPlus2A || contendedPage[memArea])
         bus = z80.d;
 
-    ula.io = z80.d;
     ula.d = bus;
 
     ula.clock();

@@ -111,7 +111,6 @@ class ULA
         // Memory signals
         uint_fast16_t a;
         uint_fast8_t d;
-        uint_fast8_t io;
 
         uint_fast16_t z80_a = 0xFFFF;
         uint_fast16_t z80_c = 0xFFFF;
