@@ -258,6 +258,12 @@ void ULA::generateVideoDataGa()
     // Read from memory.
     switch (pixel & 0x0F)
     {
+        case 0x01:
+            attrReg = attrLatch;
+            break;
+        case 0x09:
+            dataLatch = d;
+            break;
         case 0x08:
         case 0x0C:
             a = dataAddr++;
@@ -266,13 +272,14 @@ void ULA::generateVideoDataGa()
         case 0x0E:
             a = attrAddr++;
             break;
-        case 0x09:
         case 0x0D:
-            dataReg = d;
+            attrReg = attrLatch;
+            dataLatch = d;
             break;
         case 0x0B:
         case 0x0F:
-            attrReg = d;
+            attrLatch = d;
+            dataReg = dataLatch;
             break;
         default:
             break;
@@ -420,7 +427,7 @@ void ULA::clock()
         z80Clk = !z80Clk;
     }
 
-    if ((pixel & 0x07) == 0x04)
+    if ((pixel & 0x07) == paintPixel)
         paint();
 
     ++pixel;
@@ -449,6 +456,7 @@ void ULA::reset()
 void ULA::setUlaVersion(uint_fast8_t version)
 {
     ulaVersion = version;
+    paintPixel = 0x04;
 
     videoStart = 0x008;
     videoEnd = 0x108;
@@ -484,10 +492,11 @@ void ULA::setUlaVersion(uint_fast8_t version)
             hSyncEnd = 0x178;
             maxPixel = 0x1C8;
             interruptStart = 0x004;
-            interruptEnd = 0x044;
+            interruptEnd = 0x04A;
             maxScan = 0x137;
             break;
         case 3: // +2A, +3
+            paintPixel = 0x06;
             hBorderStart = 0x104;
             hSyncEnd = 0x178;
             maxPixel = 0x1C8;

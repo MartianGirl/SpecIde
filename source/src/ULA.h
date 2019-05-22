@@ -65,6 +65,8 @@ class ULA
         uint_fast16_t vSyncEnd = 0x0FC;
         uint_fast16_t maxScan = 0x138;
 
+        uint_fast16_t paintPixel = 0x004;
+
         uint_fast32_t voltage[4];
         static uint_fast32_t voltages[4][4];
         static bool delayTable[16];
@@ -95,7 +97,8 @@ class ULA
         uint_fast16_t z80_c_1 = 0xFFFF;
         uint_fast16_t z80_c_2 = 0xFFFF;
 
-        uint_fast16_t dataAddr, attrAddr;
+        uint_fast16_t dataAddr;
+        uint_fast16_t attrAddr;
 
         uint_fast8_t data;
         uint_fast8_t attr;

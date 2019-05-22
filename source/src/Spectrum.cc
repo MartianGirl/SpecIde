@@ -405,7 +405,7 @@ void Spectrum::updatePage(uint_fast8_t reg)
             {
                 case 0x0000:
                     setPage(0, 0, false, false);
-                    setPage(1, 1, false, false);
+                    setPage(1, 1, false, true);
                     setPage(2, 2, false, false);
                     setPage(3, 3, false, false);
                     break;
