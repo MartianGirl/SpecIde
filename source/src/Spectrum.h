@@ -108,20 +108,9 @@ class Spectrum
         void setPlus2A();
         void setPlus3();
         void updatePage(uint_fast8_t reg);
-        void setPage(
-                uint_fast8_t page, uint_fast8_t bank,
-                bool isRom, bool isContended)
-        {
-            size_t addr = bank * (2 << 14);
-            map[page] = (isRom) ? &rom[addr] : &ram[addr];
-            romPage[page] = isRom;
-            contendedPage[page] = isContended;
-        }
-
-        void setScreen(uint_fast8_t page)
-        {
-            scr = &ram[page * (2 << 14)];
-        }
+        void setPage(uint_fast8_t page,
+                uint_fast8_t bank, bool isRom, bool isContended);
+        void setScreen(uint_fast8_t page);
 
         void psgSelect();
         void psgRead();

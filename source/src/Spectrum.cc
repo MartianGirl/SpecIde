@@ -231,13 +231,26 @@ void Spectrum::clock()
 
     if (!ula.mem)
     {
-        if (contendedPage[memArea] && ula.snow && !as_) // Snow effect
-            bus = map[memArea][(ula.a & 0x3f80) | (z80.a & 0x007f)];
+        if (!spectrumPlus2A)
+        {
+            // Snow effect
+            bus = (contendedPage[memArea] && ula.snow && !as_) ?
+                map[memArea][(ula.a & 0x3f80) | (z80.a & 0x007f)] :
+                scr[ula.a];
+        }
         else
+        {
             bus = scr[ula.a];
+        }
     }
-    else if (!spectrumPlus2A || contendedPage[memArea])
-        bus = z80.d;
+    else
+    {
+        if (!spectrumPlus2A)
+            bus = z80.d;
+        else if (contendedPage[memArea] && !as_
+                && (!(z80.c & SIGNAL_RD_) || !(z80.c & SIGNAL_WR_)))
+            bus = z80.d;
+    }
 
     ula.d = bus;
 
@@ -398,33 +411,30 @@ void Spectrum::updatePage(uint_fast8_t reg)
 
         if (paging & 0x0100)    // Special paging mode.
         {
-            // 1. Any page in the range 0x4000-0x7FFF is always contended.
-            // 2. Pages 4, 5, 6, 7 are contended when paged in the range
-            //    0xC000-0xFFFF. Pages 1, 2, 3, 4 are not.
             switch (paging & 0x0600)
             {
                 case 0x0000:
                     setPage(0, 0, false, false);
-                    setPage(1, 1, false, true);
+                    setPage(1, 1, false, false);
                     setPage(2, 2, false, false);
                     setPage(3, 3, false, false);
                     break;
                 case 0x0200:
-                    setPage(0, 4, false, false);
+                    setPage(0, 4, false, true);
                     setPage(1, 5, false, true);
-                    setPage(2, 6, false, false);
+                    setPage(2, 6, false, true);
                     setPage(3, 7, false, true);
                     break;
                 case 0x0400:
-                    setPage(0, 4, false, false);
+                    setPage(0, 4, false, true);
                     setPage(1, 5, false, true);
-                    setPage(2, 6, false, false);
+                    setPage(2, 6, false, true);
                     setPage(3, 3, false, false);
                     break;
                 case 0x0600:
-                    setPage(0, 4, false, false);
+                    setPage(0, 4, false, true);
                     setPage(1, 7, false, true);
-                    setPage(2, 6, false, false);
+                    setPage(2, 6, false, true);
                     setPage(3, 3, false, false);
                     break;
 
@@ -640,6 +650,20 @@ void Spectrum::sample()
             r += psg[0].channelC;
             break;
     }
+}
+
+void Spectrum::setPage(uint_fast8_t page,
+        uint_fast8_t bank, bool isRom, bool isContended)
+{
+    size_t addr = bank * (2 << 14);
+    map[page] = (isRom) ? &rom[addr] : &ram[addr];
+    romPage[page] = isRom;
+    contendedPage[page] = isContended;
+}
+
+void Spectrum::setScreen(uint_fast8_t page)
+{
+    scr = &ram[page * (2 << 14)];
 }
 
 // vim: et:sw=4:ts=4

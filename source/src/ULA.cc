@@ -219,24 +219,23 @@ void ULA::generateVideoDataUla()
     // Read from memory.
     switch (pixel & 0x0F)
     {
-        case 0x08:
-        case 0x0C:
-            a = dataAddr++;
-            break;
-        case 0x0A:
-        case 0x0E:
-            a = attrAddr++;
-            break;
-        case 0x09:
-        case 0x0D:
-            dataReg = d;
-            break;
-        case 0x0B:
-        case 0x0F:
-            attrReg = d;
-            break;
-        default:
-            break;
+        case 0x00: break;
+        case 0x01: break;
+        case 0x02: break;
+        case 0x03: break;
+        case 0x04: break;
+        case 0x05: break;
+        case 0x06: break;
+        case 0x07: break;
+        case 0x08: a = dataAddr++; break;
+        case 0x09: dataReg = d; break;
+        case 0x0A: a = attrAddr++; break;
+        case 0x0B: attrReg = d; break;
+        case 0x0C: a = dataAddr++; break;
+        case 0x0D: dataReg = d; break;
+        case 0x0E: a = attrAddr++; break;
+        case 0x0F: attrReg = d; break;
+        default: break;
     }
 }
 
@@ -258,31 +257,23 @@ void ULA::generateVideoDataGa()
     // Read from memory.
     switch (pixel & 0x0F)
     {
-        case 0x01:
-            attrReg = attrLatch;
-            break;
-        case 0x09:
-            dataLatch = d;
-            break;
-        case 0x08:
-        case 0x0C:
-            a = dataAddr++;
-            break;
-        case 0x0A:
-        case 0x0E:
-            a = attrAddr++;
-            break;
-        case 0x0D:
-            attrReg = attrLatch;
-            dataLatch = d;
-            break;
-        case 0x0B:
-        case 0x0F:
-            attrLatch = d;
-            dataReg = dataLatch;
-            break;
-        default:
-            break;
+        case 0x00: break;
+        case 0x01: attrReg = latch; break;
+        case 0x02: break;
+        case 0x03: break;
+        case 0x04: break;
+        case 0x05: break;
+        case 0x06: break;
+        case 0x07: break;
+        case 0x08: a = dataAddr++; break;
+        case 0x09: latch = d; break;
+        case 0x0A: a = attrAddr++; break;
+        case 0x0B: dataReg = latch; latch = d; break;
+        case 0x0C: a = dataAddr++; break;
+        case 0x0D: attrReg = latch; latch = d; break;
+        case 0x0E: a = attrAddr++; break;
+        case 0x0F: dataReg = latch; latch = d; break;
+        default: break;
     }
 }
 

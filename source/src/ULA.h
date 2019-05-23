@@ -102,10 +102,9 @@ class ULA
 
         uint_fast8_t data;
         uint_fast8_t attr;
-        uint_fast8_t dataLatch;
-        uint_fast8_t attrLatch;
         uint_fast8_t dataReg;
         uint_fast8_t attrReg;
+        uint_fast8_t latch;
 
         uint_fast32_t ear = 0;
         uint_fast32_t chargeDelay = 0;
