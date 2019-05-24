@@ -235,7 +235,7 @@ void Spectrum::clock()
         {
             // Snow effect
             bus = (contendedPage[memArea] && ula.snow && !as_) ?
-                map[memArea][(ula.a & 0x3f80) | (z80.a & 0x007f)] :
+                map[memArea][(ula.a & 0x3F80) | (z80.a & 0x007f)] :
                 scr[ula.a];
         }
         else
@@ -247,8 +247,7 @@ void Spectrum::clock()
     {
         if (!spectrumPlus2A)
             bus = z80.d;
-        else if (contendedPage[memArea] && !as_
-                && (!(z80.c & SIGNAL_RD_) || !(z80.c & SIGNAL_WR_)))
+        else if (contendedPage[memArea] && !as_)
             bus = z80.d;
     }
 
