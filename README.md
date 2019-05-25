@@ -200,8 +200,8 @@ This is an attempt at writing a ZX Spectrum emulator using SFML for video, audio
 I've been writing SpecIde mostly for learning and for trying to do a big project. So far, I am happy with the outcome!
 
 ## Credits and acknowledgements:  
-David Garijo: For taking the time and helping with the MacOS build process.
-JFSebastian: For his wonderful ZXSpectrum.ttf font.
-Ast_A_Moore: For all his help with the +2A timings and port 0x0FFD.
-César Hernández Bañó: For his help with the initial values for IR register, his comments, and his own emulator ZesarUX.
-Miguel Mesa: For pointing out that the FLASH attribute was running at half speed.
++ David Garijo: For taking the time and helping with the MacOS build process.
++ JFSebastian: For his wonderful ZXSpectrum.ttf font.
++ Ast_A_Moore: For all his help with the +2A timings and port 0x0FFD.
++ César Hernández Bañó: For his help with the initial values for IR register, his comments, and his own emulator ZesarUX.
++ Miguel Mesa: For pointing out that the FLASH attribute was running at half speed.
