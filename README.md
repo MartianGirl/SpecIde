@@ -19,10 +19,11 @@ actually, it is *very* accurate. Some of the supported features are:
 - Works in GNU/Linux, Windows, and MacOS.
 
 ## How to get it?
-These are SpecIde binaries for Windows.
-[SpecIde for Windows 10 (32-bit)](https://drive.google.com/open?id=1C5zRcY8itrvP9hKJsIniFWSGP1Zs-3NC)
-[SpecIde for Windows 10 (64-bit)](https://drive.google.com/open?id=1X-eZrQ7BfX1SP4DVdLrDT94rwOLgmoQX)
-[SpecIde for older Windows (XP/Vista/7) (32-bit)](https://drive.google.com/open?id=1jta-_Wdl9C7p0AbkiEEBOUJsI95JPsbc)
+These are SpecIde binaries for Windows:
+
+- [SpecIde for Windows 10 (32-bit)](https://drive.google.com/open?id=1C5zRcY8itrvP9hKJsIniFWSGP1Zs-3NC)
+- [SpecIde for Windows 10 (64-bit)](https://drive.google.com/open?id=1X-eZrQ7BfX1SP4DVdLrDT94rwOLgmoQX)
+- [SpecIde for older Windows (XP/Vista/7) (32-bit)](https://drive.google.com/open?id=1jta-_Wdl9C7p0AbkiEEBOUJsI95JPsbc)
 
 For GNU/Linux and MacOS I'm not providing binaries, but SpecIde can be compiled quite easily.
 
@@ -40,7 +41,7 @@ For GNU/Linux and MacOS I'm not providing binaries, but SpecIde can be compiled 
 1. Download [this font](https://github.com/jfsebastian/zx-spectrum-unicode-font/blob/master/build/ZXSpectrum.ttf "ZX Spectrum font by JFSebastian") to the $HOME/.SpecIde/font directory.
 1. Run: bin/SpecIde [options] \<TZXFile.tzx|TAPFile.tap|DSKFile.dsk\>
 
-###Compiling for MacOS
+### Compiling for MacOS
 1. Install brew: `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
 1. Install cmake: `brew install cmake`
 1. Install boost: `brew install boost`
@@ -55,7 +56,7 @@ For GNU/Linux and MacOS I'm not providing binaries, but SpecIde can be compiled 
 1. Download [this font](https://github.com/jfsebastian/zx-spectrum-unicode-font/blob/master/build/ZXSpectrum.ttf "ZX Spectrum font by JFSebastian") to the $HOME/Library/Application Support/SpecIde/font directory.
 1. Run: bin/SpecIde [options] \<TZXFile.tzx|TAPFile.tap|DSKFile.dsk\>
 
-###Compiling for Windows
+### Compiling for Windows
 I've successfully compiled SpecIde with MinGW32 and Visual Studio 2015 & 2017.  
 I've included a script RunCMake.bat that helps in the build process.
 
@@ -63,9 +64,7 @@ I've included a script RunCMake.bat that helps in the build process.
 1. Install and compile sfml. Add the binaries to the PATH.
 1. Install cmake.
 1. (Optional) Install ninja-builds. It really helps building SpecIde.
-1. Edit the RunCMake.bat script. You need to change the following lines:
-  2. set BOOST_ROOT=\<Path_to_Boost_root_directory\>
-  2. set SFML_ROOT=\<Path_to_SFML_binaries\>
+1. Edit the RunCMake.bat script. You need to change the lines: `set BOOST_ROOT=\<Path_to_Boost_root_directory\>` and `set SFML_ROOT=\<Path_to_SFML_binaries\>`  
 1. Run: `RunCMake \[GNU|MS|NINJAGNU|NINJAMS\] RELEASE`
 1. Build it!: `ninja clean & ninja install` or `mingw32-make clean & mingw32-make install` (or use Visual Studio IDE)
 1. Copy the roms from the spectrum-roms package (or find them online) to the %APPDATA%/SpecIde/roms directory.
@@ -131,22 +130,25 @@ Emulation options (add prefix 'no' to disable. Eg. --noflashtap):
 ### Function keys
 When the emulator is running, pressing F1 displays help about the function keys.
 
-F1: Display help.
-F2: Switch between fullscreen and windowed mode.
-S-F2: Toggle antialiasing on/off.
-F4: Switch PSG between AY-3-8910 and YM-2149.
-F5: Reset the Spectrum.
-F7: Add FlashTAP to SAVE buffer.
-S-F7: Clear SAVE buffer.
-F8: Write SAVE buffer to a file named savetapeXX.tap.
-S-F8: Use SAVE buffer as LOAD buffer.
-F9: Turn sound on/off.
-S-F9: Turn tape sounds on/off.
-F10: Exit emulator.
-F11: Play/Stop the tape.
-S-F11: Remember tape position. (Reset tape counter to zero).
-F12: Rewind tape to start.
-S-F12: Rewind tape to saved position. (Rewind to tape counter zero).
+| Key | Function |
+| --- | -------- |
+| F1        | Display help. |
+| F2        | Switch between fullscreen and windowed mode. |
+| Shift-F2  | Toggle antialiasing on/off. |
+| F4        | Switch PSG between AY-3-8910 and YM-2149. |
+| F5        | Reset the Spectrum. |
+| F7        | Add FlashTAP to SAVE buffer. |
+| Shift-F7  | Clear SAVE buffer. |
+| F8        | Write SAVE buffer to a file named savetapeXX.tap. |
+| Shift-F8  | Use SAVE buffer as LOAD buffer. |
+| F9        | Turn sound on/off. |
+| Shift-F9  | Turn tape sounds on/off. |
+| F10       | Exit the emulator. |
+| F11       | Play/Stop the tape. |
+| Shift-F11 | Remember tape position. (Reset tape counter to zero). |
+| F12       | Rewind tape to start. |
+| Shift-F12 | Rewind tape to saved position. (Rewind to tape counter zero). |
+
 
 ### The config directories
 Finally, SpecIde looks for a configuration file (SpecIde.cfg) in the following places:
@@ -163,25 +165,26 @@ System ROMs can be placed also in the config directory:
 - On Windows: %APPDATA%\SpecIde\roms
 
 The following ROMs are included in the binary packages:
+
 | File Name | Model |
 |:---:|:---:|
-|48.rom|Spectrum 48K|
-|128-0.rom|Spectrum 128K (ROM 0)|
-|128-1.rom|Spectrum 128K (ROM 1)|
-|plus2-0.rom|Spectrum +2 (ROM 0)|
-|plus2-1.rom|Spectrum +2 (ROM 1)|
-|plus3-0.rom|Spectrum +2A/+3 (ROM 0)|
-|plus3-1.rom|Spectrum +2A/+3 (ROM 1)|
-|plus3-2.rom|Spectrum +2A/+3 (ROM 2)|
-|plus3-3.rom|Spectrum +2A/+3 (ROM 3)|
-|128-spanish-0.rom|Spanish Spectrum 128K (ROM 0)|
-|128-spanish-1.rom|Spanish Spectrum 128K (ROM 1)|
-|plus2-spanish-0.rom|Spanish Spectrum +2 (ROM 0)|
-|plus2-spanish-1.rom|Spanish Spectrum +2 (ROM 1)|
-|plus3-spanish-0.rom|Spanish Spectrum +2A/+3 (ROM 0)|
-|plus3-spanish-1.rom|Spanish Spectrum +2A/+3 (ROM 1)|
-|plus3-spanish-2.rom|Spanish Spectrum +2A/+3 (ROM 2)|
-|plus3-spanish-3.rom|Spanish Spectrum +2A/+3 (ROM 3)|
+| 48.rom | Spectrum 48K |
+| 128-0.rom | Spectrum 128K (ROM 0) |
+| 128-1.rom | Spectrum 128K (ROM 1) |
+| plus2-0.rom | Spectrum +2 (ROM 0) |
+| plus2-1.rom | Spectrum +2 (ROM 1) |
+| plus3-0.rom | Spectrum +2A/+3 (ROM 0) |
+| plus3-1.rom | Spectrum +2A/+3 (ROM 1) |
+| plus3-2.rom | Spectrum +2A/+3 (ROM 2) |
+| plus3-3.rom | Spectrum +2A/+3 (ROM 3) |
+| 128-spanish-0.rom | Spanish Spectrum 128K (ROM 0) |
+| 128-spanish-1.rom | Spanish Spectrum 128K (ROM 1) |
+| plus2-spanish-0.rom | Spanish Spectrum +2 (ROM 0) |
+| plus2-spanish-1.rom | Spanish Spectrum +2 (ROM 1) |
+| plus3-spanish-0.rom | Spanish Spectrum +2A/+3 (ROM 0) |
+| plus3-spanish-1.rom | Spanish Spectrum +2A/+3 (ROM 1) |
+| plus3-spanish-2.rom | Spanish Spectrum +2A/+3 (ROM 2) |
+| plus3-spanish-3.rom | Spanish Spectrum +2A/+3 (ROM 3) |
 
 Also, the font can be placed in here:
 - On GNU/Linux: $HOME/.SpecIde/font
