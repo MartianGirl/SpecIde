@@ -207,7 +207,11 @@ void Screen::update()
     {
         char str[64];
         unsigned int percent = 100 * tape.pointer / tape.pulseData.size();
-        snprintf(str, 64, "SpecIde [%03u%%]", percent);
+        snprintf(str, 64, "SpecIde %d.%d.%d [%03u%%]",
+                SPECIDE_VERSION_MAJOR,
+                SPECIDE_VERSION_MINOR,
+                SPECIDE_VERSION_TWEAK,
+                percent);
         window.setTitle(str);
     }
 
@@ -285,14 +289,20 @@ void Screen::updateMenu()
 
 void Screen::reopenWindow(bool fs)
 {
+    char str[64];
+    snprintf(str, 64, "SpecIde %d.%d.%d [NO TAPE]",
+            SPECIDE_VERSION_MAJOR,
+            SPECIDE_VERSION_MINOR,
+            SPECIDE_VERSION_TWEAK);
+
     window.close();
 
     if (fs)
-        window.create(bestMode, "SpecIDE", sf::Style::Fullscreen);
+        window.create(bestMode, str, sf::Style::Fullscreen);
     else
         window.create(
                 sf::VideoMode(static_cast<sf::Uint32>(w), static_cast<sf::Uint32>(h)),
-                "SpecIDE", sf::Style::Close | sf::Style::Titlebar);
+                str, sf::Style::Close | sf::Style::Titlebar);
 }
 
 void Screen::setFullScreen(bool fs)
