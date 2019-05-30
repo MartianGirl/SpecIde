@@ -248,42 +248,42 @@ int main(int argc, char* argv[])
         screen.set128K(true);
         screen.spectrum.loadRoms(2);
         screen.spectrum.setPlus2();
-        screen.spectrum.ula.setUlaVersion(2);
+        screen.spectrum.ula.setUlaVersion(3);
     }
     else if (options["model"] == "plus2sp")
     {
         screen.set128K(true);
         screen.spectrum.loadRoms(5);
         screen.spectrum.setPlus2();
-        screen.spectrum.ula.setUlaVersion(2);
+        screen.spectrum.ula.setUlaVersion(3);
     }
     else if (options["model"] == "plus2a")
     {
         screen.set128K(true);
         screen.spectrum.loadRoms(3);
         screen.spectrum.setPlus2A();
-        screen.spectrum.ula.setUlaVersion(3);
+        screen.spectrum.ula.setUlaVersion(4);
     }
     else if (options["model"] == "plus2asp")
     {
         screen.set128K(true);
         screen.spectrum.loadRoms(6);
         screen.spectrum.setPlus2A();
-        screen.spectrum.ula.setUlaVersion(3);
+        screen.spectrum.ula.setUlaVersion(4);
     }
     else if (options["model"] == "plus3")
     {
         screen.set128K(true);
         screen.spectrum.loadRoms(3);
         screen.spectrum.setPlus3();
-        screen.spectrum.ula.setUlaVersion(3);
+        screen.spectrum.ula.setUlaVersion(4);
     }
     else if (options["model"] == "plus3sp")
     {
         screen.set128K(true);
         screen.spectrum.loadRoms(6);
         screen.spectrum.setPlus3();
-        screen.spectrum.ula.setUlaVersion(3);
+        screen.spectrum.ula.setUlaVersion(4);
     }
     else
     {

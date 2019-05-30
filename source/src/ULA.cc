@@ -402,7 +402,7 @@ void ULA::clock()
 
     if (!border)
     {
-        if (ulaVersion == 3)
+        if (ulaVersion == 4)
             generateVideoDataGa();
         else
             generateVideoDataUla();
@@ -478,7 +478,7 @@ void ULA::setUlaVersion(uint_fast8_t version)
             interruptEnd = 0x040;
             maxScan = 0x138;
             break;
-        case 2: // 128K, +2
+        case 2: // 128K
             hBorderStart = 0x101;
             hSyncEnd = 0x178;
             maxPixel = 0x1C8;
@@ -486,7 +486,15 @@ void ULA::setUlaVersion(uint_fast8_t version)
             interruptEnd = 0x04A;
             maxScan = 0x137;
             break;
-        case 3: // +2A, +3
+        case 3: // +2 (128K with late timings)
+            hBorderStart = 0x101;
+            hSyncEnd = 0x178;
+            maxPixel = 0x1C8;
+            interruptStart = 0x002;
+            interruptEnd = 0x04A;
+            maxScan = 0x137;
+            break;
+        case 4: // +2A, +3
             paintPixel = 0x06;
             hBorderStart = 0x104;
             hSyncEnd = 0x178;
@@ -547,7 +555,7 @@ void ULA::setUlaVersion(uint_fast8_t version)
 
     for (uint_fast8_t ii = 0; ii < 16; ++ii)
     {
-        if (ulaVersion == 3)
+        if (ulaVersion == 4)
         {
             delayTable[ii] = delayGa[ii];
             idleTable[ii] = idleGa[ii];
