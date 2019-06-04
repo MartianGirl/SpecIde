@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
             cout << "--sync                 Sync emulation to PC video refresh rate." << endl;
             cout << endl;
             cout << "Sound options (add prefix 'no' to disable. Eg. --nosound):" << endl;
-            cout << "--sound                Enable buzzer/PSG sound. (Default)" << endl;
+            cout << "--sound                Enable beeper/PSG sound. (Default)" << endl;
             cout << "--tapesound            Enable tape sound." << endl;
             cout << endl;
             cout << "Emulation options (add prefix 'no' to disable. Eg. --noflashtap):" << endl;
@@ -302,10 +302,10 @@ int main(int argc, char* argv[])
     cout << "Map game pad extra buttons to keys: " << options["pad"] << endl;
 
     // Sound settings.
-    screen.spectrum.buzzer.tapeSound = (options["tapesound"] != "no");
+    screen.spectrum.ula.tapeSound = (options["tapesound"] != "no");
     cout << "Play tape sound: " << options["tapesound"] << endl;
 
-    screen.spectrum.buzzer.playSound = (options["sound"] != "no");
+    screen.spectrum.ula.playSound = (options["sound"] != "no");
     screen.spectrum.psgPlaySound((options["sound"] != "no"));
     cout << "Play sound: " << options["sound"] << endl;
 

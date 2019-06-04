@@ -57,7 +57,6 @@ uint32_t ULA::pixelsX1[0x38000];
 uint32_t ULA::pixelsX2[0x38000];
 
 ULA::ULA() :
-    vSync(false), blanking(false), retrace(false), keyPoll(false),
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF)
 {
@@ -393,6 +392,37 @@ void ULA::ioWrite(uint_fast8_t byte)
     borderAttr = byte & 0x07;
 }
 
+void ULA::beeper()
+{
+    // Smooth the signal directly from the ULA.
+    if (playSound)
+    {
+        filter[index] = (soundBits & 0x02) ? SOUND_VOLUME : 0;
+        if (tapeSound)
+        {
+            // In Spectrum 48K, ULA.b3 only causes sound if ULA.b4 is set.
+            // In Spectrum 128K, ULA.b3 causes sound on its own.
+            filter[index] +=
+                + (((soundBits & micMask) == micMask) ? SAVE_VOLUME : 0)
+                + ((tapeIn & 0x40) ? LOAD_VOLUME : 0);
+        }
+    }
+    else
+    {
+        filter[index] = 0x00;
+    }
+
+    index = (index + 1) % FILTER_BZZ_SIZE;
+}
+
+void ULA::sample()
+{
+    sound = 0;
+    for (size_t i = 0; i < FILTER_BZZ_SIZE; ++i)
+        sound += filter[i];
+    sound /= FILTER_BZZ_SIZE;
+}
+
 void ULA::clock()
 {
     generateVideoControlSignals();
@@ -448,6 +478,7 @@ void ULA::setUlaVersion(uint_fast8_t version)
 {
     ulaVersion = version;
     paintPixel = 0x04;
+    micMask = 0x03;
 
     videoStart = 0x008;
     videoEnd = 0x108;
@@ -485,6 +516,7 @@ void ULA::setUlaVersion(uint_fast8_t version)
             interruptStart = 0x004;
             interruptEnd = 0x04A;
             maxScan = 0x137;
+            micMask = 0x01;
             break;
         case 3: // +2 (128K with late timings)
             hBorderStart = 0x101;
@@ -493,6 +525,7 @@ void ULA::setUlaVersion(uint_fast8_t version)
             interruptStart = 0x002;
             interruptEnd = 0x04A;
             maxScan = 0x137;
+            micMask = 0x01;
             break;
         case 4: // +2A, +3
             paintPixel = 0x06;
@@ -503,6 +536,7 @@ void ULA::setUlaVersion(uint_fast8_t version)
             interruptEnd = 0x040;
             maxScan = 0x137;
             cpuClock = true;
+            micMask = 0x01;
             break;
             // case 4: // Pentagon
             // hSyncEnd = 0x158;

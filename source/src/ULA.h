@@ -24,9 +24,14 @@
 #include <cstdint>
 #include <cstddef>
 
+#include "SoundDefs.h"
 #include "Z80Defs.h"
 
 using namespace std;
+
+constexpr int SOUND_VOLUME = 0x17FF;
+constexpr int SAVE_VOLUME = 0x03FF;
+constexpr int LOAD_VOLUME = 0x01FF;
 
 class ULA
 {
@@ -44,6 +49,8 @@ class ULA
         void tapeEarMic();
         uint_fast8_t ioRead();
         void ioWrite(uint_fast8_t byte);
+        void beeper();
+        void sample();
         void start();
 
         void setUlaVersion(uint_fast8_t version);
@@ -110,6 +117,14 @@ class ULA
         uint_fast32_t chargeDelay = 0;
         uint_fast32_t capacitor = 0;
 
+        // Audio and tape signals
+        int sound = 0;
+        int filter[FILTER_BZZ_SIZE];
+        size_t index = 0;
+        bool playSound = true;
+        bool tapeSound = true;
+        uint_fast8_t micMask = 0x03;
+
         // Memory signals
         uint_fast16_t a;
         uint_fast8_t d;
@@ -130,10 +145,10 @@ class ULA
         bool mem = true;
 
         // Useful video signals
-        bool vSync;
-        bool blanking;
-        bool retrace;
-        bool keyPoll;
+        bool vSync = false;
+        bool blanking = false;
+        bool retrace = false;
+        bool keyPoll = false;
 
         // Port 0xFE
         uint_fast8_t soundBits = 0x00;

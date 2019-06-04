@@ -35,8 +35,6 @@ Spectrum::Spectrum() :
     set48(true), rom48(true),
     stereo(StereoMode::STEREO_MONO)
 {
-    buzzer.init(&ula.soundBits, &ula.tapeIn);
-
     // This is just for the laughs. We initialize the whole RAM to random
     // values to see the random attributes that appeared in the Spectrum
     // at boot time.
@@ -259,7 +257,7 @@ void Spectrum::clock()
     ++count;
     if (!(count & 0x03))
     {
-        buzzer.update();
+        ula.beeper();
         psgClock();
 
         if (spectrumPlus3 && !(count & 0x07))
@@ -561,10 +559,10 @@ void Spectrum::psgChip(bool aychip)
 
 void Spectrum::sample()
 {
-    buzzer.sample();
+    ula.sample();
     psgSample();
 
-    l = r = buzzer.signal;
+    l = r = ula.sound;
 
     switch (stereo)
     {

@@ -25,7 +25,6 @@
 #include "ULA.h"
 #include "Z80.h"
 #include "Z80Defs.h"
-#include "Buzzer.h"
 #include "PSG.h"
 #include "FDC.h"
 #include "config.h"
@@ -57,7 +56,6 @@ class Spectrum
         ULA ula;
         PSG psg[4];
         FDC fdc;
-        Buzzer buzzer;
 
         uint_fast8_t bus;
         uint_fast8_t bus_1;

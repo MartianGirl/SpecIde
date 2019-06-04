@@ -430,11 +430,11 @@ void Screen::pollEvents()
                     case Keyboard::F9:
                         if (event.key.shift)
                         {
-                            spectrum.buzzer.tapeSound = !spectrum.buzzer.tapeSound;
+                            spectrum.ula.tapeSound = !spectrum.ula.tapeSound;
                         }
                         else
                         {
-                            spectrum.buzzer.playSound = !spectrum.buzzer.playSound;
+                            spectrum.ula.playSound = !spectrum.ula.playSound;
                             spectrum.psgPlaySound(!spectrum.psg[0].playSound);
                         }
                         break;
