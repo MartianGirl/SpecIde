@@ -44,6 +44,7 @@ using namespace std;
 FileTypes guessFileType(string const& fileName);
 void displayLicense();
 void readOptions(map<string, string>& options);
+size_t getScale(string const& scale);
 
 int main(int argc, char* argv[])
 {
@@ -106,7 +107,7 @@ int main(int argc, char* argv[])
 
     // The Screen class is now actually more of a "console".
     // We create the instance, and load the given tape (if any).
-    Screen screen(1);
+    Screen screen(getScale(options["scale"]));
 
     for (vector<string>::iterator it = params.begin(); it != params.end(); ++it)
     {
@@ -504,6 +505,7 @@ void readOptions(map<string, string>& options)
     options["flashtap"] = "no";
     options["sync"] = "no";
     options["sd1"] = "no";
+    options["scale"] = "1";
 
     vector<string> cfgPaths;
     string cfgName("SpecIde.cfg");
@@ -565,6 +567,26 @@ void readOptions(map<string, string>& options)
             options[key] = val;
         }
     }
-    ifs.close();
+}
+
+size_t getScale(string const& scale)
+{
+    size_t s = 1;
+    try
+    {
+        s = stoi(scale);
+    }
+    catch (invalid_argument &ia)
+    {
+        cout << "Invalid scale value: '" << scale << "'" << endl;
+    }
+
+    if (s < 1)
+        s = 1;
+    else if (s > 10)
+        s = 10;
+
+    cout << "Selected Scale Factor: " << s << endl;
+    return s;
 }
 // vim: et:sw=4:ts=4

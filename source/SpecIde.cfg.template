@@ -78,6 +78,12 @@ pad=yes
 # Values: yes, no
 fullscreen=no
 
+# Option: scale
+# Selects scale factor for windowed mode.
+# Default is 1.
+# Values: an integer number.
+# scale=1
+
 # Option: scanmode
 # Selects the scan mode used.
 # Options are:
