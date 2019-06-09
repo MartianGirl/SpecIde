@@ -429,6 +429,13 @@ void TZXFile::parse(
                 pointer += 5;
                 break;
 
+            case 0x2B:
+                blockName = "Set Signal Level";
+                if (!fileData[pointer + 5])
+                    pulseData.push_back(100);
+                pointer += 6;
+                break;
+
             case 0x30:
                 blockName = "Text Description";
                 pointer += dumpComment() + 2;
@@ -652,7 +659,7 @@ void TZXFile::pushSymbol(size_t rep, size_t sym,
             break;
         case 0x02:  // Force low
         case 0x03:  // Force high
-            if ((data.size() % 2) != (type % 2))
+            if ((data.size() % 2) == (type % 2))
             {
                 data.insert(data.end(), first, last);
             }
