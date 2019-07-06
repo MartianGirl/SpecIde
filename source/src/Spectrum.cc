@@ -46,7 +46,7 @@ Spectrum::Spectrum() :
     setPage(1, 5, false, true);
     setPage(2, 2, false, false);
     setPage(3, 0, false, false);
-    setScreen(5);
+    setScreenPage(5);
 }
 
 void Spectrum::loadRoms(size_t model)
@@ -232,9 +232,17 @@ void Spectrum::clock()
         if (!spectrumPlus2A)
         {
             // Snow effect
-            bus = (contendedPage[memArea] && ula.snow && !as_) ?
-                map[memArea][(ula.a & 0x3F80) | (z80.a & 0x007f)] :
-                scr[ula.a];
+            if (contendedPage[memArea] && ula.snow && !as_)
+            {
+                if (memArea == 1)
+                    bus = scr[(ula.a & 0x3F80) | (z80.a & 0x007F)];
+                else
+                    bus = sno[(ula.a & 0x3F80) | (z80.a & 0x007F)];
+            }
+            else
+            {
+                bus = scr[ula.a];
+            }
         }
         else
         {
@@ -404,7 +412,8 @@ void Spectrum::updatePage(uint_fast8_t reg)
         fdc.motor(spectrumPlus3 && (paging & 0x0800));
 
         // Select screen to display.
-        setScreen(((paging & 0x0008) >> 2) | 0x05);
+        setScreenPage(((paging & 0x0008) >> 2) | 0x05);
+        setSnowPage(paging & 0x0005);
 
         if (paging & 0x0100)    // Special paging mode.
         {
@@ -470,7 +479,7 @@ void Spectrum::reset()
         setPage(1, 5, false, true);
         setPage(2, 2, false, false);
         setPage(3, 0, false, false);
-        setScreen(5);
+        setScreenPage(5);
         paging = 0x0000;
         set48 = false;
         rom48 = false;
@@ -481,7 +490,7 @@ void Spectrum::reset()
         setPage(1, 5, false, true);
         setPage(2, 2, false, false);
         setPage(3, 0, false, false);
-        setScreen(5);
+        setScreenPage(5);
         paging = 0x0020;
         set48 = true;
         set48 = true;
@@ -658,9 +667,14 @@ void Spectrum::setPage(uint_fast8_t page,
     contendedPage[page] = isContended;
 }
 
-void Spectrum::setScreen(uint_fast8_t page)
+void Spectrum::setScreenPage(uint_fast8_t page)
 {
     scr = &ram[page * (2 << 14)];
+}
+
+void Spectrum::setSnowPage(uint_fast8_t page)
+{
+    sno = &ram[page * (2 << 14)];
 }
 
 // vim: et:sw=4:ts=4

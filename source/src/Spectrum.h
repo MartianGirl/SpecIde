@@ -83,6 +83,7 @@ class Spectrum
         uint_fast8_t rom[2 << 16];
         uint_fast8_t* map[4];
         uint_fast8_t* scr;
+        uint_fast8_t* sno;
 
         bool set48;
         bool rom48;
@@ -108,7 +109,8 @@ class Spectrum
         void updatePage(uint_fast8_t reg);
         void setPage(uint_fast8_t page,
                 uint_fast8_t bank, bool isRom, bool isContended);
-        void setScreen(uint_fast8_t page);
+        void setScreenPage(uint_fast8_t page);
+        void setSnowPage(uint_fast8_t page);
 
         void psgSelect();
         void psgRead();
