@@ -368,7 +368,7 @@ void Spectrum::clock()
             }
 
             // Common ports.
-            if (kempston && !(z80.a & 0x00E0))  // Kempston joystick.
+            if (kempston && !(z80.a & 0x0020))  // Kempston joystick.
             {
                 if (rd)
                     z80.d = joystick;
