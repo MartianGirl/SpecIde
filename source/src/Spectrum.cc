@@ -528,10 +528,10 @@ void Spectrum::psgAddr()
 
 void Spectrum::psgReset()
 {
-    psg[0].reset();
-    psg[1].reset();
-    psg[2].reset();
-    psg[3].reset();
+    for (size_t ii = 0; ii < 4; ++ii) {
+        psg[ii].reset();
+        psg[ii].seed = 0xFFFF - (ii * 0x1111);
+    }
 }
 
 void Spectrum::psgClock()
@@ -590,19 +590,19 @@ void Spectrum::sample()
             break;
 
         case StereoMode::STEREO_TURBO_MONO: // TurboSound with 2 PSGs, mono.
-            l += psg[0].channelA;
-            l += psg[0].channelB;
-            l += psg[0].channelC;
-            r += psg[0].channelA;
-            r += psg[0].channelB;
-            r += psg[0].channelC;
+            l += psg[0].channelA >> 1;
+            l += psg[0].channelB >> 1;
+            l += psg[0].channelC >> 1;
+            r += psg[0].channelA >> 1;
+            r += psg[0].channelB >> 1;
+            r += psg[0].channelC >> 1;
 
-            l += psg[1].channelA;
-            l += psg[1].channelB;
-            l += psg[1].channelC;
-            r += psg[1].channelA;
-            r += psg[1].channelB;
-            r += psg[1].channelC;
+            l += psg[1].channelA >> 1;
+            l += psg[1].channelB >> 1;
+            l += psg[1].channelC >> 1;
+            r += psg[1].channelA >> 1;
+            r += psg[1].channelB >> 1;
+            r += psg[1].channelC >> 1;
             break;
 
         case StereoMode::STEREO_TURBO_ACB:  // TurboSound with 2 PSGs, ACB
