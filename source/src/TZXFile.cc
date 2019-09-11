@@ -423,6 +423,23 @@ void TZXFile::parse(
                     pointer += 1;
                 break;
 
+            case 0x26:
+                blockName = "Call Sequence (Not implemented yet)";
+                pointer += 2 * (fileData[pointer + 2] * 0x100
+                    + fileData[pointer + 1]) + 3;
+                break;
+
+            case 0x27:
+                blockName = "Return From Sequence (Not implemented yet)";
+                ++pointer;
+                break;
+
+            case 0x28:
+                blockName = "Select block";
+                pointer += fileData[pointer + 2] * 0x100
+                    + fileData[pointer + 1] + 3;
+                break;
+
             case 0x2A:
                 blockName = "Stop The Tape If In 48K Mode";
                 stopIf48K.insert(pulseData.size());
@@ -477,6 +494,7 @@ void TZXFile::parse(
         cout << "Found " << blockName << " block." << endl;
         cout << ss.str();
         ss.str("");
+        ss.clear();
     }
 
     cout << "Got " << pulseData.size() << " pulses." << endl;
@@ -511,12 +529,15 @@ size_t TZXFile::dumpArchiveInfo()
 
         len = fileData[pointer + index + 1];
         text.clear();
-        for (size_t jj = 0; jj < len; ++jj)
+        for (size_t jj = 0; jj < len; ++jj) {
             text.push_back(static_cast<char>(fileData[pointer + index + 2 + jj]));
+            if (fileData[pointer + index + 3 + jj] == 0x0D) text.push_back(0x0A);
+        }
 
         ss << tag << text << endl;
         index += len + 2;
     }
+    ss << "--------------------------" << endl;
     return length;
 }
 
@@ -525,14 +546,12 @@ size_t TZXFile::dumpComment()
     string text;
     size_t length = fileData[pointer + 1];
 
-    for (size_t i = 0; i < length; ++i)
-    {
-        text.push_back(static_cast<char>(fileData[pointer + 2 + i]));
-        if (fileData[pointer + 3 + i] == 0x0D) text.push_back(0x0A);
+    for (size_t ii = 0; ii < length; ++ii) {
+        text.push_back(static_cast<char>(fileData[pointer + 2 + ii]));
+        if (fileData[pointer + 3 + ii] == 0x0D) text.push_back(0x0A);
     }
     ss << "--- Comment block ---" << endl << text << endl;
     ss << "---------------------" << endl;
-
     return length;
 }
 
@@ -542,10 +561,9 @@ size_t TZXFile::dumpMessage()
     // size_t time = fileData[pointer + 1];
     size_t length = fileData[pointer + 2];
 
-    for (size_t i = 0; i < length; ++i)
-    {
-        text.push_back(static_cast<char>(fileData[pointer + 3 + i]));
-        if (fileData[pointer + 3 + i] == 0x0D) text.push_back(0x0A);
+    for (size_t ii = 0; ii < length; ++ii) {
+        text.push_back(static_cast<char>(fileData[pointer + 3 + ii]));
+        if (fileData[pointer + 3 + ii] == 0x0D) text.push_back(0x0A);
     }
     ss << "--- Message block ---" << endl << text << endl;
     ss << "---------------------" << endl;
