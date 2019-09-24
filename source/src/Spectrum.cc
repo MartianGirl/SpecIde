@@ -33,8 +33,8 @@ Spectrum::Spectrum() :
     contendedPage{false, true, false, false},
     romPage{true, false, false, false},
     set48(true), rom48(true),
-    stereo(StereoMode::STEREO_MONO)
-{
+    stereo(StereoMode::STEREO_MONO) {
+
     // This is just for the laughs. We initialize the whole RAM to random
     // values to see the random attributes that appeared in the Spectrum
     // at boot time.
@@ -49,8 +49,7 @@ Spectrum::Spectrum() :
     setScreenPage(5);
 }
 
-void Spectrum::loadRoms(size_t model)
-{
+void Spectrum::loadRoms(RomVariant model) {
     ifstream ifs;
     vector<string> romNames;
     vector<string> romPaths;
@@ -59,8 +58,7 @@ void Spectrum::loadRoms(size_t model)
     char* pHome = getenv(SPECIDE_HOME_ENV);
 
     romPaths.push_back("");
-    if (pHome != nullptr)
-    {
+    if (pHome != nullptr) {
 #if (SPECIDE_ON_UNIX==1)
         string home(pHome);
         home += string("/") + string(SPECIDE_CONF_DIR) + string("/roms/");
@@ -76,40 +74,43 @@ void Spectrum::loadRoms(size_t model)
     romPaths.push_back("/usr/share/spectrum-roms/");
 #endif
 
-    switch (model)
-    {
-        case 0:
+    switch (model) {
+        case RomVariant::ROM_48_EN:
             romNames.push_back("48.rom");
             break;
 
-        case 1:
+        case RomVariant::ROM_128_EN:
             romNames.push_back("128-0.rom");
             romNames.push_back("128-1.rom");
             break;
 
-        case 2:
+        case RomVariant::ROM_PLUS2_EN:
             romNames.push_back("plus2-0.rom");
             romNames.push_back("plus2-1.rom");
             break;
 
-        case 3:
+        case RomVariant::ROM_PLUS3_EN:
             romNames.push_back("plus3-0.rom");
             romNames.push_back("plus3-1.rom");
             romNames.push_back("plus3-2.rom");
             romNames.push_back("plus3-3.rom");
             break;
 
-        case 4:
+        case RomVariant::ROM_48_ES:
+            romNames.push_back("48-spanish.rom");
+            break;
+
+        case RomVariant::ROM_128_ES:
             romNames.push_back("128-spanish-0.rom");
             romNames.push_back("128-spanish-1.rom");
             break;
 
-        case 5:
+        case RomVariant::ROM_PLUS2_ES:
             romNames.push_back("plus2-spanish-0.rom");
             romNames.push_back("plus2-spanish-1.rom");
             break;
 
-        case 6:
+        case RomVariant::ROM_PLUS3_ES:
             romNames.push_back("plus3-spanish-0.rom");
             romNames.push_back("plus3-spanish-1.rom");
             romNames.push_back("plus3-spanish-2.rom");
@@ -124,12 +125,9 @@ void Spectrum::loadRoms(size_t model)
     size_t j = 0;
     bool fail = true;
 
-    do
-    {
-        for (size_t i = 0; i < romNames.size(); ++i)
-        {
+    do {
+        for (size_t i = 0; i < romNames.size(); ++i) {
             size_t pos = 0;
-
             romName = romPaths[j] + romNames[i];
             cout << "Trying ROM: " << romName << endl;
             ifs.open(romName, ifstream::binary);
@@ -149,8 +147,8 @@ void Spectrum::loadRoms(size_t model)
     } while (fail && j < romPaths.size());
 }
 
-void Spectrum::set128K()
-{
+void Spectrum::set128K() {
+
     spectrum128K = true;
     spectrumPlus2 = false;
     spectrumPlus2A = false;
@@ -160,8 +158,8 @@ void Spectrum::set128K()
     reset();
 }
 
-void Spectrum::setPlus2()
-{
+void Spectrum::setPlus2() {
+
     spectrum128K = true;
     spectrumPlus2 = true;
     spectrumPlus2A = false;
@@ -171,8 +169,8 @@ void Spectrum::setPlus2()
     reset();
 }
 
-void Spectrum::setPlus2A()
-{
+void Spectrum::setPlus2A() {
+
     spectrum128K = false;
     spectrumPlus2 = false;
     spectrumPlus2A = true;
@@ -182,8 +180,8 @@ void Spectrum::setPlus2A()
     reset();
 }
 
-void Spectrum::setPlus3()
-{
+void Spectrum::setPlus3() {
+
     spectrum128K = false;
     spectrumPlus2 = false;
     spectrumPlus2A = true;
@@ -193,8 +191,8 @@ void Spectrum::setPlus3()
     reset();
 }
 
-void Spectrum::clock()
-{
+void Spectrum::clock() {
+
     // ULA is 'clocked' before Z80. This means:
     //
     // ULA   Z80
@@ -227,30 +225,21 @@ void Spectrum::clock()
     // Speccies.
     bus_1 = bus;
 
-    if (!ula.mem)
-    {
-        if (!spectrumPlus2A)
-        {
+    if (!ula.mem) {
+        if (!spectrumPlus2A) {
             // Snow effect
-            if (contendedPage[memArea] && ula.snow && !as_)
-            {
+            if (contendedPage[memArea] && ula.snow && !as_) {
                 if (memArea == 1)
                     bus = scr[(ula.a & 0x3F80) | (z80.a & 0x007F)];
                 else
                     bus = sno[(ula.a & 0x3F80) | (z80.a & 0x007F)];
-            }
-            else
-            {
+            } else {
                 bus = scr[ula.a];
             }
-        }
-        else
-        {
+        } else {
             bus = scr[ula.a];
         }
-    }
-    else
-    {
+    } else {
         if (!spectrumPlus2A)
             bus = z80.d;
         else if (contendedPage[memArea] && !as_)
@@ -263,8 +252,7 @@ void Spectrum::clock()
     z80.c = ula.z80_c;
 
     ++count;
-    if (!(count & 0x03))
-    {
+    if (!(count & 0x03)) {
         ula.beeper();
         psgClock();
 
@@ -273,36 +261,28 @@ void Spectrum::clock()
     }
 
     // We clock the Z80 if the ULA allows.
-    if (ula.cpuClock)
-    {
+    if (ula.cpuClock) {
         // Z80 gets data from the ULA or memory, only when reading.
-        if (!io_)
-        {
+        if (!io_) {
             // 48K/128K/Plus2 floating bus. Return idle status by default,
             // or screen data, if the ULA is working.
-            if (rd)
-            {
+            if (rd) {
                 z80.d = (ula.idle) ? idle : bus & idle;
             }
 
             // 128K only ports (paging, disk)
-            if (spectrum128K)
-            {
-                if (!(z80.a & 0x8002))
-                {
+            if (spectrum128K) {
+                if (!(z80.a & 0x8002)) {
                     if (wr || rd)
                         updatePage(0);
                 }
-            }
-            else if (spectrumPlus2A)
-            {
-                switch (z80.a & 0xF002)
-                {
+            } else if (spectrumPlus2A) {
+                switch (z80.a & 0xF002) {
                     case 0x0000:    // In +2A/+3 this is the floating bus port.
-                        if (rd)
-                        {
-                            if (!(paging & 0x0020))
+                        if (rd) {
+                            if (!(paging & 0x0020)) {
                                 z80.d = (bus_1 & idle) | 0x01;
+                            }
                         }
                         break;
                     case 0x1000:    // 0x1FFD (+3 Paging High)
@@ -310,19 +290,19 @@ void Spectrum::clock()
                             updatePage(1);
                         break;
                     case 0x2000:    // 0x2FFD (+3 FDC Main Status)
-                        if (spectrumPlus3)
-                        {
-                            if (rd)
+                        if (spectrumPlus3) {
+                            if (rd) {
                                 z80.d = fdc.status();
+                            }
                         }
                         break;
                     case 0x3000:    // 0x3FFD (+3 FDC Data)
-                        if (spectrumPlus3)
-                        {
-                            if (wr)
+                        if (spectrumPlus3) {
+                            if (wr) {
                                 fdc.write(z80.d);
-                            else if (rd)
+                            } else if (rd) {
                                 z80.d = fdc.read();
+                            }
                         }
                         break;
                     case 0x4000: // fall-through
@@ -339,10 +319,8 @@ void Spectrum::clock()
             }
 
             // AY-3-8912 ports.
-            if (psgPresent[0])  // If there are PSGs, there is a PSG 0
-            {
-                switch (z80.a & 0xC002)
-                {
+            if (psgPresent[0]) {    // If there are PSGs, there is a PSG 0
+                switch (z80.a & 0xC002) {
                     case 0x8000:    // 0xBFFD
                         if (wr)
                             psgWrite();
@@ -351,15 +329,15 @@ void Spectrum::clock()
                         break;
 
                     case 0xC000:    // 0xFFFD
-                        if (wr)
-                        {
-                            if ((z80.d & 0x98) == 0x98)
+                        if (wr) {
+                            if ((z80.d & 0x98) == 0x98) {
                                 psgSelect();
-                            else
+                            } else {
                                 psgAddr();
-                        }
-                        else if (rd)
+                            }
+                        } else if (rd) {
                             psgRead();
+                        }
                         break;
 
                     default:
@@ -368,21 +346,19 @@ void Spectrum::clock()
             }
 
             // Common ports.
-            if (kempston && !(z80.a & 0x0020))  // Kempston joystick.
-            {
-                if (rd)
+            if (kempston && !(z80.a & 0x0020)) {    // Kempston joystick.
+                if (rd) {
                     z80.d = joystick;
-            }
-            else if (!(z80.a & 0x0001))
-            {
-                if (wr)
+                }
+            } else if (!(z80.a & 0x0001)) {         // ULA port
+                if (wr) {
                     ula.ioWrite(z80.d);
-                else if (rd)
+                } else if (rd) {
                     z80.d = ula.ioRead();
+                }
             }
         }
-        else if (!as_)
-        {
+        else if (!as_) {
             // Bank 0: 0000h - ROM
             // Bank 1: 4000h - Contended memory
             // Bank 2: 8000h - Extended memory
@@ -391,18 +367,17 @@ void Spectrum::clock()
                 z80.d = map[memArea][z80.a & 0x3FFF];
             else if (!romPage[memArea] && wr)
                 map[memArea][z80.a & 0x3FFF] = z80.d;
-        }
-        else
+        } else {
             z80.d = 0xFF;
+        }
 
         z80.clock();
     }
 }
 
-void Spectrum::updatePage(uint_fast8_t reg)
-{
-    if (!(paging & 0x0020))
-    {
+void Spectrum::updatePage(uint_fast8_t reg) {
+
+    if (!(paging & 0x0020)) {
         if (reg == 1)
             paging = (z80.d << 8) | (paging & 0x00FF);
         else
@@ -415,10 +390,8 @@ void Spectrum::updatePage(uint_fast8_t reg)
         setScreenPage(((paging & 0x0008) >> 2) | 0x05);
         setSnowPage(paging & 0x0005);
 
-        if (paging & 0x0100)    // Special paging mode.
-        {
-            switch (paging & 0x0600)
-            {
+        if (paging & 0x0100) {      // Special paging mode.
+            switch (paging & 0x0600) {
                 case 0x0000:
                     setPage(0, 0, false, false);
                     setPage(1, 1, false, false);
@@ -447,9 +420,7 @@ void Spectrum::updatePage(uint_fast8_t reg)
                 default:
                     assert(false);
             }
-        }
-        else                                // Normal paging mode.
-        {
+        } else {                    // Normal paging mode.
             size_t ramBank = paging & 0x0007;
             size_t romBank =
                 ((paging & 0x0010) >> 4) | ((paging & 0x0400) >> 9);
@@ -466,15 +437,14 @@ void Spectrum::updatePage(uint_fast8_t reg)
     }
 }
 
-void Spectrum::reset()
-{
+void Spectrum::reset() {
+
     ula.reset();    // Synchronize clock level.
     z80.reset();
     psgReset();
     fdc.reset();
 
-    if (spectrum128K || spectrumPlus2A)
-    {
+    if (spectrum128K || spectrumPlus2A) {
         setPage(0, 0, true, false);
         setPage(1, 5, false, true);
         setPage(2, 2, false, false);
@@ -483,9 +453,7 @@ void Spectrum::reset()
         paging = 0x0000;
         set48 = false;
         rom48 = false;
-    }
-    else
-    {
+    } else {
         setPage(0, 0, true, false);
         setPage(1, 5, false, true);
         setPage(2, 2, false, false);
@@ -497,84 +465,82 @@ void Spectrum::reset()
     }
 }
 
-void Spectrum::psgSelect()
-{
+void Spectrum::psgSelect() {
+
     size_t newPsg = (~z80.d) & 0x03;
-    if (psgPresent[newPsg])
-    {
+    if (psgPresent[newPsg]) {
         currentPsg = newPsg;
         psg[currentPsg].lchan = (z80.d & 0x40);
         psg[currentPsg].rchan = (z80.d & 0x20);
     }
 }
 
-void Spectrum::psgRead()
-{
+void Spectrum::psgRead() {
+
     if (psgPresent[currentPsg])
         z80.d = psg[currentPsg].read();
 }
 
-void Spectrum::psgWrite()
-{
+void Spectrum::psgWrite() {
+
     if (psgPresent[currentPsg])
         psg[currentPsg].write(z80.d);
 }
 
-void Spectrum::psgAddr()
-{
+void Spectrum::psgAddr() {
+
     if (psgPresent[currentPsg])
         psg[currentPsg].addr(z80.d);
 }
 
-void Spectrum::psgReset()
-{
+void Spectrum::psgReset() {
+
     for (size_t ii = 0; ii < 4; ++ii) {
         psg[ii].reset();
         psg[ii].seed = 0xFFFF - (ii * 0x1111);
     }
 }
 
-void Spectrum::psgClock()
-{
+void Spectrum::psgClock() {
+
     if (psgPresent[0]) psg[0].clock();
     if (psgPresent[1]) psg[1].clock();
     if (psgPresent[2]) psg[2].clock();
     if (psgPresent[3]) psg[3].clock();
 }
 
-void Spectrum::psgPlaySound(bool play)
-{
+void Spectrum::psgPlaySound(bool play) {
+
     psg[0].playSound = play;
     psg[1].playSound = play;
     psg[2].playSound = play;
     psg[3].playSound = play;
 }
 
-void Spectrum::psgSample()
-{
+void Spectrum::psgSample() {
+
     if (psgPresent[0]) psg[0].sample();
     if (psgPresent[1]) psg[1].sample();
     if (psgPresent[2]) psg[2].sample();
     if (psgPresent[3]) psg[3].sample();
 }
 
-void Spectrum::psgChip(bool aychip)
-{
+void Spectrum::psgChip(bool aychip) {
+
     psg[0].setVolumeLevels(aychip);
     psg[1].setVolumeLevels(aychip);
     psg[2].setVolumeLevels(aychip);
     psg[3].setVolumeLevels(aychip);
 }
 
-void Spectrum::sample()
-{
+void Spectrum::sample() {
+
     ula.sample();
     psgSample();
 
     l = r = ula.sound;
 
-    switch (stereo)
-    {
+    switch (stereo) {
         case StereoMode::STEREO_ACB: // ACB
             l += psg[0].channelA;
             l += psg[0].channelC;
@@ -630,16 +596,13 @@ void Spectrum::sample()
             break;
 
         case StereoMode::STEREO_NEXT:
-            for (size_t ii = 0; ii < 4; ++ii)
-            {
-                if (psg[ii].lchan)
-                {
+            for (size_t ii = 0; ii < 4; ++ii) {
+                if (psg[ii].lchan) {
                     l += psg[ii].channelA >> 1;
                     l += psg[ii].channelB >> 1;
                     l += psg[ii].channelC >> 1;
                 }
-                if (psg[ii].rchan)
-                {
+                if (psg[ii].rchan) {
                     r += psg[ii].channelA >> 1;
                     r += psg[ii].channelB >> 1;
                     r += psg[ii].channelC >> 1;
@@ -659,21 +622,21 @@ void Spectrum::sample()
 }
 
 void Spectrum::setPage(uint_fast8_t page,
-        uint_fast8_t bank, bool isRom, bool isContended)
-{
+        uint_fast8_t bank, bool isRom, bool isContended) {
+
     size_t addr = bank * (2 << 14);
     map[page] = (isRom) ? &rom[addr] : &ram[addr];
     romPage[page] = isRom;
     contendedPage[page] = isContended;
 }
 
-void Spectrum::setScreenPage(uint_fast8_t page)
-{
+void Spectrum::setScreenPage(uint_fast8_t page) {
+
     scr = &ram[page * (2 << 14)];
 }
 
-void Spectrum::setSnowPage(uint_fast8_t page)
-{
+void Spectrum::setSnowPage(uint_fast8_t page) {
+
     sno = &ram[page * (2 << 14)];
 }
 

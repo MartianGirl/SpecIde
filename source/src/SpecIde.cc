@@ -26,8 +26,7 @@
 
 #include "config.h"
 
-enum class FileTypes
-{
+enum class FileTypes {
     FILETYPE_TAP,
     FILETYPE_TZX,
     FILETYPE_PZX,
@@ -36,7 +35,6 @@ enum class FileTypes
     FILETYPE_Z80,
     FILETYPE_SNA,
     FILETYPE_ERR
-
 };
 
 using namespace std;
@@ -46,8 +44,8 @@ void displayLicense();
 void readOptions(map<string, string>& options);
 size_t getScale(string const& scale);
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
+
     vector<string> params(argv + 1, argv + argc);
     vector<string> files;
     map<string, string> options;
@@ -55,10 +53,8 @@ int main(int argc, char* argv[])
     displayLicense();
     readOptions(options);
 
-    for (vector<string>::iterator it = params.begin(); it != params.end(); ++it)
-    {
-        if (*it == "--help" || *it == "-h")
-        {
+    for (vector<string>::iterator it = params.begin(); it != params.end(); ++it) {
+        if (*it == "--help" || *it == "-h") {
             cout << "Usage: SpecIde [options] [tapefiles]" << endl;
             cout << endl;
             cout << "Supported formats are TAP and TZX." << endl;
@@ -68,6 +64,7 @@ int main(int argc, char* argv[])
             cout << "Model selection options:" << endl;
             cout << "--issue2               Spectrum 48K, issue 2." << endl;
             cout << "--issue3 | --48        Spectrum 48K, issue 3. (Default)" << endl;
+            cout << "--48sp                 Spectrum + 48K. (Spanish ROM)" << endl;
             cout << "--128                  Spectrum 128K." << endl;
             cout << "--128sp                Spectrum 128K. (Spanish ROM)" << endl;
             cout << "--plus2                Spectrum +2." << endl;
@@ -109,13 +106,14 @@ int main(int argc, char* argv[])
     // We create the instance, and load the given tape (if any).
     Screen screen(getScale(options["scale"]));
 
-    for (vector<string>::iterator it = params.begin(); it != params.end(); ++it)
-    {
+    for (vector<string>::iterator it = params.begin(); it != params.end(); ++it) {
         // Model selection
         if (*it == "--issue2")
             options["model"] = "issue2";
         if (*it == "--issue3" || *it == "--48")
             options["model"] = "issue3";
+        if (*it == "--48sp")
+            options["model"] = "48sp";
         if (*it == "--128")
             options["model"] = "128";
         if (*it == "--128sp")
@@ -218,79 +216,62 @@ int main(int argc, char* argv[])
     }
 
     // Model selection
-    if (options["model"] == "issue2")
-    {
+    if (options["model"] == "issue2") {
         screen.set128K(false);
-        screen.spectrum.loadRoms(0);
+        screen.spectrum.loadRoms(RomVariant::ROM_48_EN);
         screen.spectrum.ula.setUlaVersion(0);
-    }
-    else if (options["model"] == "issue3")
-    {
+    } else if (options["model"] == "issue3") {
         screen.set128K(false);
-        screen.spectrum.loadRoms(0);
+        screen.spectrum.loadRoms(RomVariant::ROM_48_EN);
         screen.spectrum.ula.setUlaVersion(1);
-    }
-    else if (options["model"] == "128")
-    {
+    } else if (options["model"] == "48sp") {
+        screen.set128K(false);
+        screen.spectrum.loadRoms(RomVariant::ROM_48_ES);
+        screen.spectrum.ula.setUlaVersion(1);
+    } else if (options["model"] == "128") {
         screen.set128K(true);
-        screen.spectrum.loadRoms(1);
+        screen.spectrum.loadRoms(RomVariant::ROM_128_EN);
         screen.spectrum.set128K();
         screen.spectrum.ula.setUlaVersion(2);
-    }
-    else if (options["model"] == "128sp")
-    {
+    } else if (options["model"] == "128sp") {
         screen.set128K(true);
-        screen.spectrum.loadRoms(4);
+        screen.spectrum.loadRoms(RomVariant::ROM_128_ES);
         screen.spectrum.set128K();
         screen.spectrum.ula.setUlaVersion(2);
-    }
-    else if (options["model"] == "plus2")
-    {
+    } else if (options["model"] == "plus2") {
         screen.set128K(true);
-        screen.spectrum.loadRoms(2);
+        screen.spectrum.loadRoms(RomVariant::ROM_PLUS2_EN);
         screen.spectrum.setPlus2();
         screen.spectrum.ula.setUlaVersion(3);
-    }
-    else if (options["model"] == "plus2sp")
-    {
+    } else if (options["model"] == "plus2sp") {
         screen.set128K(true);
-        screen.spectrum.loadRoms(5);
+        screen.spectrum.loadRoms(RomVariant::ROM_PLUS2_ES);
         screen.spectrum.setPlus2();
         screen.spectrum.ula.setUlaVersion(3);
-    }
-    else if (options["model"] == "plus2a")
-    {
+    } else if (options["model"] == "plus2a") {
         screen.set128K(true);
-        screen.spectrum.loadRoms(3);
+        screen.spectrum.loadRoms(RomVariant::ROM_PLUS3_EN);
         screen.spectrum.setPlus2A();
         screen.spectrum.ula.setUlaVersion(4);
-    }
-    else if (options["model"] == "plus2asp")
-    {
+    } else if (options["model"] == "plus2asp") {
         screen.set128K(true);
-        screen.spectrum.loadRoms(6);
+        screen.spectrum.loadRoms(RomVariant::ROM_PLUS3_ES);
         screen.spectrum.setPlus2A();
         screen.spectrum.ula.setUlaVersion(4);
-    }
-    else if (options["model"] == "plus3")
-    {
+    } else if (options["model"] == "plus3") {
         screen.set128K(true);
-        screen.spectrum.loadRoms(3);
+        screen.spectrum.loadRoms(RomVariant::ROM_PLUS3_EN);
         screen.spectrum.setPlus3();
         screen.spectrum.ula.setUlaVersion(4);
-    }
-    else if (options["model"] == "plus3sp")
-    {
+    } else if (options["model"] == "plus3sp") {
         screen.set128K(true);
-        screen.spectrum.loadRoms(6);
+        screen.spectrum.loadRoms(RomVariant::ROM_PLUS3_ES);
         screen.spectrum.setPlus3();
         screen.spectrum.ula.setUlaVersion(4);
-    }
-    else
-    {
+    } else {
         options["model"] = "default";
         screen.set128K(false);
-        screen.spectrum.loadRoms(0);
+        screen.spectrum.loadRoms(RomVariant::ROM_48_EN);
         screen.spectrum.ula.setUlaVersion(1);
     }
     cout << "Model: " << options["model"] << endl;
@@ -310,8 +291,7 @@ int main(int argc, char* argv[])
     screen.spectrum.psgPlaySound((options["sound"] != "no"));
     cout << "Play sound: " << options["sound"] << endl;
 
-    if (options["forcepsg"] == "yes")
-    {
+    if (options["forcepsg"] == "yes") {
         screen.spectrum.psgPlaySound(true);
         screen.spectrum.psgPresent[0] = true;
         cout << "Enable AY interface on 128K ports: " << options["forcepsg"] << endl;
@@ -319,16 +299,14 @@ int main(int argc, char* argv[])
 
     if (options["stereo"] == "turbo"
             || options["stereo"] == "turboacb"
-            || options["stereo"] == "turboabc")
-    {
+            || options["stereo"] == "turboabc") {
         screen.spectrum.psgPlaySound(true);
         screen.spectrum.psgPresent[0] = true;
         screen.spectrum.psgPresent[1] = true;
         cout << "TurboSound (2 PSGs) active." << endl;
     }
 
-    if (options["stereo"] == "turbonext")
-    {
+    if (options["stereo"] == "turbonext") {
         screen.spectrum.psgPlaySound(true);
         screen.spectrum.psgPresent[0] = true;
         screen.spectrum.psgPresent[1] = true;
@@ -358,20 +336,15 @@ int main(int argc, char* argv[])
     cout << "PSG chip: " << options["psgtype"] << endl;
 
     // Screen settings.
-    if (options["scanmode"] == "scanlines")
-    {
+    if (options["scanmode"] == "scanlines") {
         screen.doubleScanMode = true;
         screen.spectrum.ula.scanlines = 1;
         screen.spectrum.ula.yInc = 2;
-    }
-    else if (options["scanmode"] == "average")
-    {
+    } else if (options["scanmode"] == "average") {
         screen.doubleScanMode = false;
         screen.spectrum.ula.scanlines = 2;
         screen.spectrum.ula.yInc = 1;
-    }
-    else
-    {
+    } else {
         screen.doubleScanMode = false;
         screen.spectrum.ula.scanlines = 0;
         screen.spectrum.ula.yInc = 1;
@@ -384,24 +357,20 @@ int main(int argc, char* argv[])
     screen.flashTap = (options["flashtap"] == "yes");
     cout << "FlashTAP: " << options["flashtap"] << endl;
 
-    if (options["sync"] == "yes")
-    {
+    if (options["sync"] == "yes") {
         screen.syncToVideo = true;
         screen.window.setVerticalSyncEnabled(true);
         cout << "Sync to video: " << options["sync"] << endl;
     }
 
-    if (options["sd1"] == "yes")
-    {
+    if (options["sd1"] == "yes") {
         screen.spectrum.idle = 0xDF;
         screen.spectrum.ula.inMask = 0x9F;
         cout << "SD1 dongle: " << options["sd1"] << endl;
     }
 
-    for (vector<string>::iterator it = files.begin(); it != files.end(); ++it)
-    {
-        switch (guessFileType(*it))
-        {
+    for (vector<string>::iterator it = files.begin(); it != files.end(); ++it) {
+        switch (guessFileType(*it)) {
             case FileTypes::FILETYPE_TZX:
                 screen.tape.loadTzx(*it);
                 break;
@@ -415,8 +384,7 @@ int main(int argc, char* argv[])
                     DSKFile dsk;
                     dsk.load(*it);
 
-                    if (dsk.validFile)
-                    {
+                    if (dsk.validFile) {
                         screen.spectrum.fdc.drive[0].images.push_back(dsk);
                         screen.spectrum.fdc.drive[0].imagenames.push_back(*it);
                         screen.spectrum.fdc.drive[0].disk = true;
@@ -435,20 +403,18 @@ int main(int argc, char* argv[])
     screen.run();
 }
 
-FileTypes guessFileType(string const& fileName)
-{
+FileTypes guessFileType(string const& fileName) {
     // Parse the file name, find the extension. We'll decide what to do
     // based on this.
     size_t dot = fileName.find_last_of('.');
     string extension;
-    if (dot != string::npos)
-    {
+    if (dot != string::npos) {
         // Get the extension in lowercase characters.
         extension = fileName.substr(dot);
-        for (size_t ii = 0; ii < extension.size(); ++ii)
-        {
-            if (extension[ii] >= 'A' && extension[ii] <= 'Z')
+        for (size_t ii = 0; ii < extension.size(); ++ii) {
+            if (extension[ii] >= 'A' && extension[ii] <= 'Z') {
                 extension[ii] += ('a' - 'A');
+            }
         }
     }
 
@@ -464,13 +430,12 @@ FileTypes guessFileType(string const& fileName)
     return FileTypes::FILETYPE_ERR;
 }
 
-void displayLicense()
-{
+void displayLicense() {
     cout << "SpecIde Version ";
     cout << SPECIDE_VERSION_MAJOR << ".";
     cout << SPECIDE_VERSION_MINOR << ".";
     cout << SPECIDE_VERSION_TWEAK << endl << endl;
-    cout << "(c) 2016-2018 Marta Sevillano Mancilla." << endl << endl;
+    cout << "(c) 2016-2019 Marta Sevillano Mancilla." << endl << endl;
     cout << "This program is free software: you can redistribute it and/or modify" << endl;
     cout << "it under the terms of the GNU General Public License as published by" << endl;
     cout << "the Free Software Foundation, version 3." << endl;
@@ -489,8 +454,7 @@ void displayLicense()
     cout << endl;
 }
 
-void readOptions(map<string, string>& options)
-{
+void readOptions(map<string, string>& options) {
     // Set default values first
     options["model"] = "default";
     options["joystick"] = "sinclair";
@@ -512,8 +476,7 @@ void readOptions(map<string, string>& options)
     char* pHome = getenv(SPECIDE_HOME_ENV);
 
     cfgPaths.push_back("");
-    if (pHome != nullptr)
-    {
+    if (pHome != nullptr) {
         string cfgPath(pHome);
 #if (SPECIDE_ON_UNIX==1)
         cfgPath += string("/") + string(SPECIDE_CONF_DIR) + string("/");
@@ -527,8 +490,7 @@ void readOptions(map<string, string>& options)
 
     size_t j = 0;
     bool fail = true;
-    do
-    {
+    do {
         string cfg = cfgPaths[j] + cfgName;
         cout << "Trying config file: " << cfg << endl;
         ifs.open(cfg);
@@ -536,8 +498,7 @@ void readOptions(map<string, string>& options)
         ++j;
     } while (fail && j < cfgPaths.size());
 
-    if (fail)
-    {
+    if (fail) {
         cout << "Config file SpecIde.cfg not found." << endl;
         return;
     }
@@ -545,8 +506,7 @@ void readOptions(map<string, string>& options)
     string entry;
     string key, val;
     size_t pos;
-    while (ifs.good())
-    {
+    while (ifs.good()) {
         getline(ifs, entry);
 
         // Remove comments with #
@@ -556,8 +516,7 @@ void readOptions(map<string, string>& options)
 
         // Find if there is a key and value. Otherwise, skip.
         pos = entry.find("=");
-        if (pos != string::npos)
-        {
+        if (pos != string::npos) {
             key = entry.substr(0, pos);
             val = entry.substr(pos + 1);
 
@@ -569,15 +528,11 @@ void readOptions(map<string, string>& options)
     }
 }
 
-size_t getScale(string const& scale)
-{
+size_t getScale(string const& scale) {
     size_t s = 1;
-    try
-    {
+    try {
         s = stoi(scale);
-    }
-    catch (invalid_argument &ia)
-    {
+    } catch (invalid_argument &ia) {
         cout << "Invalid scale value: '" << scale << "'" << endl;
     }
 

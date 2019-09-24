@@ -35,8 +35,7 @@
 
 using namespace std;
 
-enum class StereoMode
-{
+enum class StereoMode {
     STEREO_MONO,
     STEREO_ABC,
     STEREO_ACB,
@@ -46,8 +45,18 @@ enum class StereoMode
     STEREO_NEXT
 };
 
-class Spectrum
-{
+enum class RomVariant {
+    ROM_48_EN,
+    ROM_48_ES,
+    ROM_128_EN,
+    ROM_128_ES,
+    ROM_PLUS2_EN,
+    ROM_PLUS2_ES,
+    ROM_PLUS3_EN,
+    ROM_PLUS3_ES
+};
+
+class Spectrum {
     public:
         Spectrum();
 
@@ -100,7 +109,7 @@ class Spectrum
         void clock();
         void reset();
 
-        void loadRoms(size_t model);
+        void loadRoms(RomVariant model);
         void initMems(size_t model);
         void set128K();
         void setPlus2();
