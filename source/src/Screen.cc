@@ -247,8 +247,8 @@ void Screen::updateMenu()
     ss << "S-F2:  Antialiasing." << endl;
     ss << "F4:    Toggle PSG: AY-3-8912/YM-2149." << endl;
     ss << "F5:    Reset." << endl;
-    ss << "F7:    Add FlashTAP to SAVE buffer." << endl;
-    ss << "S-F7:  Clear SAVE buffer." << endl;
+    ss << "F7:    Clear SAVE buffer." << endl;
+    ss << "S-F7:  Add FlashTAP to SAVE buffer." << endl;
     ss << "F8:    Write SAVE buffer to disk." << endl;
     ss << "S-F8:  Use SAVE buffer as FlashTAP." << endl;
     ss << "F9:    Sound on / off." << endl;
@@ -351,169 +351,157 @@ void Screen::setFullScreen(bool fs)
     window.setJoystickThreshold(0.5);
 }
 
-void Screen::setSmooth(bool sm)
-{
+void Screen::setSmooth(bool sm) {
+
     scrTexture.setSmooth(sm);
 }
 
-void Screen::pollEvents()
-{
+void Screen::setTapeSound(bool value) {
+
+    tapeSound = value;
+    spectrum.ula.tapeSound = !tape.playing || tapeSound;
+}
+
+void Screen::pollEvents() {
+
     spectrum.ula.keyPoll = false;
 
     Event event;
-    while (window.pollEvent(event))
-    {
-        switch (event.type)
-        {
+    while (window.pollEvent(event)) {
+        switch (event.type) {
             case Event::Closed:
                 channel.stop();
                 done = true;
                 break;
 
             case Event::KeyPressed:
-                switch (event.key.code)
-                {
-                    // Scan function keys
-                    case Keyboard::F1:
+                switch (event.key.code) {
+                    case Keyboard::F1:  // Show menu
                         menu = true;
                         break;
-                    case Keyboard::F2:
-                        if (event.key.shift)
-                        {
+                    case Keyboard::F2:  // Window/Fullscreen
+                        if (event.key.shift) {
                             smooth = !smooth;
                             setSmooth(smooth);
-                        }
-                        else
-                        {
+                        } else {
                             fullscreen = !fullscreen;
                             reopenWindow(fullscreen);
                             setFullScreen(fullscreen);
                         }
                         break;
-                    case Keyboard::F4:
-                        {
-                            aychip = !aychip;
-                            spectrum.psgChip(aychip);
-                        }
+                    case Keyboard::F4:  // PSG chip type
+                        aychip = !aychip;
+                        spectrum.psgChip(aychip);
                         break;
-                    case Keyboard::F6:
-                        if (event.key.shift)
-                        {
+                    case Keyboard::F6:  // Select DSK from list
+                        if (event.key.shift) {
                             spectrum.fdc.drive[0].prevDisk();
-                        }
-                        else
-                        {
+                        } else {
                             spectrum.fdc.drive[0].nextDisk();
                         }
                         break;
-                    case Keyboard::F7:
-                        if (event.key.shift)
-                        {
+                    case Keyboard::F7:  // Clear save data
+                        if (event.key.shift) {
+                            tape.appendLoadData();
+                        } else {
                             tape.clearSaveData();
                         }
-                        else
-                        {
-                            tape.appendLoadData();
-                        }
                         break;
-                    case Keyboard::F8:
-                        if (event.key.shift)
-                        {
+                    case Keyboard::F8:  // Write save data
+                        if (event.key.shift) {
                             tape.useSaveData = !tape.useSaveData;
                             tape.selectTapData();
-                        }
-                        else
-                        {
+                        } else {
                             tape.writeSaveData();
                         }
                         break;
-                    case Keyboard::F9:
-                        if (event.key.shift)
-                        {
-                            spectrum.ula.tapeSound = !spectrum.ula.tapeSound;
-                        }
-                        else
-                        {
-                            spectrum.ula.playSound = !spectrum.ula.playSound;
-                            spectrum.psgPlaySound(!spectrum.psg[0].playSound);
+                    case Keyboard::F9:  // Toggle sound ON/OFF
+                        if (event.key.shift) {
+                            setTapeSound(!tapeSound);
+                        } else {
+                            playSound = !playSound;
+                            spectrum.ula.playSound = playSound;
+                            spectrum.psgPlaySound(psgSound && playSound);
                         }
                         break;
-                    case Keyboard::F5:
+                    case Keyboard::F5:  // Reset Spectrum
                         spectrum.reset();
                         break;
-                    case Keyboard::F10:
+                    case Keyboard::F10: // Quit
                         done = true;
                         break;
-                    case Keyboard::F11:
-                        if (event.key.shift)
+                    case Keyboard::F11: // Play/Stop tape
+                        if (event.key.shift) {
                             tape.resetCounter();
-                        else
+                        } else {
                             tape.play();
+                            setTapeSound(tapeSound);
+                        }
                         break;
                     case Keyboard::F12:
-                        if (event.key.shift)
+                        if (event.key.shift) {
                             tape.rewind(tape.counter);
-                        else
+                        } else {
                             tape.rewind();
+                        }
                         break;
 
                         // Scan Spectrum keyboard
                     default:
                         scanKeys(event);
-                        for (size_t ii = 0; ii < 8; ++ii)
+                        for (size_t ii = 0; ii < 8; ++ii) {
                             spectrum.ula.keys[ii] &= keyboardMask[ii];
+                        }
                         break;
                 }
                 break;
 
             case Event::KeyReleased:
                 scanKeys(event);
-                for (size_t ii = 0; ii < 8; ++ii)
+                for (size_t ii = 0; ii < 8; ++ii) {
                     spectrum.ula.keys[ii] |= ~keyboardMask[ii];
+                }
                 break;
 
             case Event::JoystickMoved:
-                switch (event.joystickMove.axis)
-                {
+                switch (event.joystickMove.axis) {
                     case Joystick::X:
                     case Joystick::U:
                     case Joystick::PovX:
-                        if (spectrum.kempston)
-                        {
+                        if (spectrum.kempston) {
                             spectrum.joystick &= 0xFC;
-                            if (event.joystickMove.position < -34.0)
+                            if (event.joystickMove.position < -34.0) {
                                 spectrum.joystick |= 0x02;
-                            else if (event.joystickMove.position > 34.0)
+                            } else if (event.joystickMove.position > 34.0) {
                                 spectrum.joystick |= 0x01;
-                        }
-                        else
-                        {
+                            }
+                        } else {
                             spectrum.ula.keys[3] |= 0x018;
-                            if (event.joystickMove.position < -34.0)
+                            if (event.joystickMove.position < -34.0) {
                                 spectrum.ula.keys[3] &= 0xEF;
-                            else if (event.joystickMove.position > 34.0)
+                            } else if (event.joystickMove.position > 34.0) {
                                 spectrum.ula.keys[3] &= 0xF7;
+                            }
                         }
                         break;
 
                     case Joystick::Y:
                     case Joystick::V:
                     case Joystick::PovY:
-                        if (spectrum.kempston)
-                        {
+                        if (spectrum.kempston) {
                             spectrum.joystick &= 0xF3;
-                            if (event.joystickMove.position < -34.0)
+                            if (event.joystickMove.position < -34.0) {
                                 spectrum.joystick |= 0x08;
-                            else if (event.joystickMove.position > 34.0)
+                            } else if (event.joystickMove.position > 34.0) {
                                 spectrum.joystick |= 0x04;
-                        }
-                        else
-                        {
+                            }
+                        } else {
                             spectrum.ula.keys[3] |= 0x06;
-                            if (event.joystickMove.position < -34.0)
+                            if (event.joystickMove.position < -34.0) {
                                 spectrum.ula.keys[3] &= 0xFD;
-                            else if (event.joystickMove.position > 34.0)
+                            } else if (event.joystickMove.position > 34.0) {
                                 spectrum.ula.keys[3] &= 0xFB;
+                            }
                         }
                         break;
 
@@ -523,10 +511,8 @@ void Screen::pollEvents()
                 break;
 
             case Event::JoystickButtonPressed:
-                if (pad)
-                {
-                    switch (event.joystickButton.button)
-                    {
+                if (pad) {
+                    switch (event.joystickButton.button) {
                         case 1: // Emulate press 'B'
                             spectrum.ula.keys[0] &= 0xEF; break;
                         case 2: // Emulate press 'N'
@@ -542,28 +528,25 @@ void Screen::pollEvents()
                         case 7: // Emulate press 'H'
                             spectrum.ula.keys[1] &= 0xEF; break;
                         default:    // Other buttons map to the joystick.
-                            if (spectrum.kempston)
+                            if (spectrum.kempston) {
                                 spectrum.joystick |= 0x10;
-                            else
+                            } else {
                                 spectrum.ula.keys[3] &= 0xFE;   // '0'
+                            }
                             break;
                     }
-
-                }
-                else
-                {
-                    if (spectrum.kempston)
+                } else {
+                    if (spectrum.kempston) {
                         spectrum.joystick |= 0x10;
-                    else
+                    } else {
                         spectrum.ula.keys[3] &= 0xFE;
+                    }
                 }
                 break;
 
             case Event::JoystickButtonReleased:
-                if (pad)
-                {
-                    switch (event.joystickButton.button)
-                    {
+                if (pad) {
+                    switch (event.joystickButton.button) {
                         case 1: // Emulate release 'B'
                             spectrum.ula.keys[0] |= 0x10; break;
                         case 2: // Emulate release 'N'
@@ -579,19 +562,19 @@ void Screen::pollEvents()
                         case 7: // Emulate release 'H'
                             spectrum.ula.keys[1] |= 0x10; break;
                         default:    // Other buttons map to the joystick.
-                            if (spectrum.kempston)
+                            if (spectrum.kempston) {
                                 spectrum.joystick &= 0xEF;
-                            else
+                            } else {
                                 spectrum.ula.keys[3] |= 0x01;
+                            }
                             break;
                     }
-                }
-                else
-                {
-                    if (spectrum.kempston)
+                } else {
+                    if (spectrum.kempston) {
                         spectrum.joystick &= 0xEF;
-                    else
+                    } else {
                         spectrum.ula.keys[3] |= 0x01;
+                    }
                 }
                 break;
 
@@ -601,13 +584,13 @@ void Screen::pollEvents()
     }
 }
 
-void Screen::scanKeys(Event const& event)
-{
-    for (size_t ii = 0; ii < 8; ++ii)
-        keyboardMask[ii] = 0xFF;
+void Screen::scanKeys(Event const& event) {
 
-    switch (event.key.code)
-    {
+    for (size_t ii = 0; ii < 8; ++ii) {
+        keyboardMask[ii] = 0xFF;
+    }
+
+    switch (event.key.code) {
         case Keyboard::B:
             keyboardMask[0] = 0xEF; break;
         case Keyboard::N:
@@ -751,21 +734,21 @@ void Screen::scanKeys(Event const& event)
     }
 }
 
-void Screen::texture(size_t x, size_t y)
-{
+void Screen::texture(size_t x, size_t y) {
+
     cout << "Allocating texture..." << endl;
-    if (!scrTexture.create(static_cast<Uint32>(x), static_cast<Uint32>(y)))
+    if (!scrTexture.create(static_cast<Uint32>(x), static_cast<Uint32>(y))) {
         assert(false);
+    }
     scrTexture.setRepeated(false);
     scrTexture.setSmooth(false);
 }
 
-void Screen::adjust()
-{
+void Screen::adjust() {
+
     size_t divider = 0;
 
-    do
-    {
+    do {
         ++divider;
         suggestedScansSingle = bestMode.height / divider;
     } while (suggestedScansSingle > 304); // 312 - 8 VBlank lines.
@@ -773,8 +756,7 @@ void Screen::adjust()
         << " scans for single scan mode." << endl;
 
     divider = 0;
-    do
-    {
+    do {
         ++divider;
         suggestedScansDouble = bestMode.height / divider;
     } while (suggestedScansDouble > 608); // 624 - 16 VBlank lines.
@@ -782,30 +764,31 @@ void Screen::adjust()
         << " scans for double scan mode." << endl;
 }
 
-void Screen::set128K(bool is128K)
-{
+void Screen::set128K(bool is128K) {
+
     sample = skip = ((is128K) ? ULA_CLOCK_128 : ULA_CLOCK_48) / SAMPLE_RATE + 1;
     cout << "Skipping " << skip << " samples." << endl;
     delay = is128K ? 19992 : 19968;
 }
 
-bool Screen::cpuInRefresh()
-{
+bool Screen::cpuInRefresh() {
+
     return (spectrum.z80.state == Z80State::ST_OCF_T4L_RFSH2);
 }
 
-void Screen::checkTapeTraps()
-{
-    switch (spectrum.z80.pc.w)
-    {
+void Screen::checkTapeTraps() {
+
+    switch (spectrum.z80.pc.w) {
         case 0x056D:    // LD_START
-            if (spectrum.rom48 && cpuInRefresh() && tape.tapData.size())
+            if (spectrum.rom48 && cpuInRefresh() && tape.tapData.size()) {
                 trapLdStart();
+            }
             break;
 
         case 0x04D1:    // SA_FLAG
-            if (spectrum.rom48 && cpuInRefresh())
+            if (spectrum.rom48 && cpuInRefresh()) {
                 trapSaBytes();
+            }
             break;
 
         default:
@@ -813,21 +796,22 @@ void Screen::checkTapeTraps()
     }
 }
 
-void Screen::writeMemory(uint_fast16_t a, uint_fast8_t d)
-{
+void Screen::writeMemory(uint_fast16_t a, uint_fast8_t d) {
+
     a &= 0xFFFF;
-    if (a > 0x3FFF) // Don't write ROM.
+    if (a > 0x3FFF) { // Don't write ROM.
         spectrum.map[a >> 14][a & 0x3FFF] = d;
+    }
 }
 
-uint_fast8_t Screen::readMemory(uint_fast16_t a)
-{
+uint_fast8_t Screen::readMemory(uint_fast16_t a) {
+
     a &= 0xFFFF;
     return spectrum.map[a >> 14][a & 0x3FFF];
 }
 
-void Screen::trapLdStart()
-{
+void Screen::trapLdStart() {
+
     // Find first block that matches flag byte (Flag is in AF')
     while (tape.foundTapBlock(spectrum.z80.af_.b.h) == false) {
         tape.nextTapBlock();
@@ -865,8 +849,8 @@ void Screen::trapLdStart()
     }
 }
 
-void Screen::trapSaBytes()
-{
+void Screen::trapSaBytes() {
+
     uint16_t start = spectrum.z80.ix.w;
     uint16_t bytes = spectrum.z80.de.w + 2;
     uint8_t checksum;

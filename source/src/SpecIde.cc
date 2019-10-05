@@ -284,15 +284,14 @@ int main(int argc, char* argv[]) {
     cout << "Map game pad extra buttons to keys: " << options["pad"] << endl;
 
     // Sound settings.
-    screen.spectrum.ula.tapeSound = (options["tapesound"] != "no");
+    screen.setTapeSound(options["tapesound"] != "no");
     cout << "Play tape sound: " << options["tapesound"] << endl;
 
-    screen.spectrum.ula.playSound = (options["sound"] != "no");
-    screen.spectrum.psgPlaySound((options["sound"] != "no"));
+    screen.playSound = (options["sound"] != "no");
     cout << "Play sound: " << options["sound"] << endl;
 
     if (options["forcepsg"] == "yes") {
-        screen.spectrum.psgPlaySound(true);
+        screen.psgSound = true;
         screen.spectrum.psgPresent[0] = true;
         cout << "Enable AY interface on 128K ports: " << options["forcepsg"] << endl;
     }
@@ -300,14 +299,14 @@ int main(int argc, char* argv[]) {
     if (options["stereo"] == "turbo"
             || options["stereo"] == "turboacb"
             || options["stereo"] == "turboabc") {
-        screen.spectrum.psgPlaySound(true);
+        screen.psgSound = true;
         screen.spectrum.psgPresent[0] = true;
         screen.spectrum.psgPresent[1] = true;
         cout << "TurboSound (2 PSGs) active." << endl;
     }
 
     if (options["stereo"] == "turbonext") {
-        screen.spectrum.psgPlaySound(true);
+        screen.psgSound = true;
         screen.spectrum.psgPresent[0] = true;
         screen.spectrum.psgPresent[1] = true;
         screen.spectrum.psgPresent[2] = true;
@@ -400,10 +399,13 @@ int main(int argc, char* argv[]) {
 
     screen.reopenWindow(screen.fullscreen);
     screen.setFullScreen(screen.fullscreen);
+    screen.spectrum.ula.playSound = screen.playSound;
+    screen.spectrum.psgPlaySound(screen.psgSound && screen.playSound);
     screen.run();
 }
 
 FileTypes guessFileType(string const& fileName) {
+
     // Parse the file name, find the extension. We'll decide what to do
     // based on this.
     size_t dot = fileName.find_last_of('.');
@@ -418,16 +420,17 @@ FileTypes guessFileType(string const& fileName) {
         }
     }
 
-    if (extension == ".tzx")
+    if (extension == ".tzx") {
         return FileTypes::FILETYPE_TZX;
-    else if (extension == ".cdt")
+    } else if (extension == ".cdt") {
         return FileTypes::FILETYPE_TZX;
-    else if (extension == ".tap")
+    } else if (extension == ".tap") {
         return FileTypes::FILETYPE_TAP;
-    else if (extension == ".dsk")
+    } else if (extension == ".dsk") {
         return FileTypes::FILETYPE_DSK;
-
-    return FileTypes::FILETYPE_ERR;
+    } else {
+        return FileTypes::FILETYPE_ERR;
+    }
 }
 
 void displayLicense() {

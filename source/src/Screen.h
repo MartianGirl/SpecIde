@@ -61,6 +61,9 @@ class Screen
         Tape tape;
         SoundChannel channel;
 
+        bool playSound = true;
+        bool tapeSound = true;
+        bool psgSound = true;
         int samples[2];
         size_t skip;
         size_t pulse = 0;
@@ -107,6 +110,7 @@ class Screen
         void setFullScreen(bool fs);
         void setSmooth(bool sm);
         void set128K(bool is128K);
+        void setTapeSound(bool tape);
 
         void pollEvents();
         void scanKeys(sf::Event const& event);
