@@ -136,6 +136,7 @@ void Screen::run()
             }
             else if (spectrum.ula.keyPoll) {
                 pollEvents();
+                pollCommands();
             }
         }
         channel.stop();
@@ -875,6 +876,18 @@ void Screen::trapSaBytes() {
     // Force RET
     spectrum.z80.decode(0xC9);
     spectrum.z80.startInstruction();
+}
+
+void Screen::pollCommands() {
+
+    string cmd = console.console.get();
+    if (!cmd.empty()) {
+        if (cmd == "exit") {
+            done = true;
+        } else {
+            cout << "Syntax error: " << cmd << endl;
+        }
+    }
 }
 
 // vim: et:sw=4:ts=4

@@ -17,7 +17,7 @@ find_package(Boost COMPONENTS chrono system thread unit_test_framework REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIR})
 
-add_executable(SpecIde SpecIde.cc Screen.cc
+add_executable(SpecIde SpecIde.cc Screen.cc Console.cc
         Z80.cc ULA.cc
         Spectrum.cc
         Memory.cc

@@ -34,6 +34,8 @@
 
 #include "SoundChannel.h"
 
+#include "Console.h"
+
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 
@@ -60,6 +62,7 @@ class Screen
         Spectrum spectrum;
         Tape tape;
         SoundChannel channel;
+        ConsoleThread console;
 
         bool playSound = true;
         bool tapeSound = true;
@@ -113,6 +116,7 @@ class Screen
         void setTapeSound(bool tape);
 
         void pollEvents();
+        void pollCommands();
         void scanKeys(sf::Event const& event);
 
         void updateMenu();
