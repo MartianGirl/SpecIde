@@ -28,7 +28,6 @@ bool z80RetI()
     {
         case 0:
             memRdCycles = 2;
-            memWrCycles = 0;
             memAddrMode = 0x000000BB;
             return true;
 

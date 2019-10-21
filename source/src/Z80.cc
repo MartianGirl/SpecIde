@@ -445,6 +445,7 @@ void Z80::clock()
     }
     // INT only happens if there is no NMI.
     else if (intAccept
+            && !intNotReady
             && ((iff_d & IFF1) == IFF1)
             && ((iff & IFF1) == IFF1)
             && prefix == PREFIX_NO)
@@ -498,6 +499,7 @@ void Z80::start()
     flg = 0xFF;
     iff = 0x00;
     im = 0x00;
+    intNotReady = 0x00;
 }
 
 void Z80::decode(uint_fast8_t byte)
@@ -520,6 +522,8 @@ void Z80::startInstruction()
     ioRdCycles = 0;
     ioWrCycles = 0;
     cpuProcCycles = 0;
+
+    intNotReady >>= 1;
 }
 
 uint_fast16_t Z80::getAddress()

@@ -160,6 +160,7 @@ class Z80
         uint_fast8_t flg;
         uint_fast8_t iff;
         uint_fast8_t im;
+        uint_fast8_t intNotReady;
 
         uint_fast8_t x, y, z, p, q;
         uint_fast8_t opcode;

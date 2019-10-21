@@ -444,21 +444,17 @@ void Spectrum::reset() {
     psgReset();
     fdc.reset();
 
+    setPage(0, 0, true, false);
+    setPage(1, 5, false, true);
+    setPage(2, 2, false, false);
+    setPage(3, 0, false, false);
+    setScreenPage(5);
+
     if (spectrum128K || spectrumPlus2A) {
-        setPage(0, 0, true, false);
-        setPage(1, 5, false, true);
-        setPage(2, 2, false, false);
-        setPage(3, 0, false, false);
-        setScreenPage(5);
         paging = 0x0000;
         set48 = false;
         rom48 = false;
     } else {
-        setPage(0, 0, true, false);
-        setPage(1, 5, false, true);
-        setPage(2, 2, false, false);
-        setPage(3, 0, false, false);
-        setScreenPage(5);
         paging = 0x0020;
         set48 = true;
         set48 = true;

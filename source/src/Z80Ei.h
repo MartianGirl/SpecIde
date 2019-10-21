@@ -25,6 +25,7 @@ bool z80Ei()
 {
     iff |= (IFF1 | IFF2);
     flg = 0;
+    intNotReady = 1;
     prefix = PREFIX_NO;
     return true;
 }

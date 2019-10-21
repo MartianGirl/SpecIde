@@ -170,6 +170,7 @@ void ULA::generateVideoControlSignals()
 
 void ULA::generateInterrupt()
 {
+
     if (interrupt)
         z80_c &= ~SIGNAL_INT_;
     else
@@ -463,6 +464,7 @@ void ULA::start()
     scan = 0;
     ulaReset = false;
     z80Clk = false;
+    cpuClock = true;
     video = true;
     border = false;
     z80_c_2 = z80_c_1 = 0xFFFF;
