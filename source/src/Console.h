@@ -24,7 +24,6 @@
 
 #ifdef USE_BOOST_THREADS
 #include <boost/thread.hpp>
-#include <boost/mutex.hpp>
 #else
 #include <thread>
 #include <mutex>
