@@ -28,7 +28,8 @@ target_link_libraries(TZXFileTest
     ${SFML_DEPENDENCIES})
 
 add_executable(DSKFileTest
-    DSKFileTest.cc)
+    DSKFileTest.cc
+    ${PROJECT_SOURCE_DIR}/src/DSKFile.cc)
 target_link_libraries(DSKFileTest
     ${Boost_LIBRARIES}
     ${SFML_LIBRARIES}
