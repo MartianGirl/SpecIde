@@ -19,6 +19,7 @@ include_directories(${Boost_INCLUDE_DIR})
 
 add_executable(SpecIde SpecIde.cc Screen.cc Console.cc
         Z80.cc ULA.cc
+        FDC.cc
         Spectrum.cc
         Memory.cc
         Tape.cc TAPFile.cc TZXFile.cc
