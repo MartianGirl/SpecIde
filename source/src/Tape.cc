@@ -41,6 +41,16 @@ void Tape::loadTap(string const& fileName)
     updateFlashTap();
 }
 
+void Tape::loadCsw(string const& fileName)
+{
+    counter = pulseData.size();
+
+    // Create a .csw object, load its contents in pulseData.
+    CSWFile csw;
+    csw.load(fileName);
+    csw.parse(pulseData);
+}
+
 void Tape::updateFlashTap()
 {
     cout << "FlashTAP: " << loadData.size() << " bytes." << endl;

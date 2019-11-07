@@ -34,6 +34,7 @@ enum class FileTypes {
     FILETYPE_TRD,
     FILETYPE_Z80,
     FILETYPE_SNA,
+    FILETYPE_CSW,
     FILETYPE_ERR
 };
 
@@ -378,6 +379,10 @@ int main(int argc, char* argv[]) {
                 screen.tape.loadTap(*it);
                 break;
 
+            case FileTypes::FILETYPE_CSW:
+                screen.tape.loadCsw(*it);
+                break;
+
             case FileTypes::FILETYPE_DSK:
                 {
                     DSKFile dsk;
@@ -428,6 +433,8 @@ FileTypes guessFileType(string const& fileName) {
         return FileTypes::FILETYPE_TAP;
     } else if (extension == ".dsk") {
         return FileTypes::FILETYPE_DSK;
+    } else if (extension == ".csw") {
+        return FileTypes::FILETYPE_CSW;
     } else {
         return FileTypes::FILETYPE_ERR;
     }

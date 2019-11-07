@@ -17,6 +17,7 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <set>
 #include <sstream>
@@ -25,6 +26,7 @@
 
 #include "TAPFile.h"
 #include "TZXFile.h"
+#include "CSWFile.h"
 
 using namespace std;
 
@@ -69,6 +71,7 @@ class Tape
 
         void loadTzx(string const& fileName);
         void loadTap(string const& fileName);
+        void loadCsw(string const& fileName);
         void updateFlashTap();
 
         void play()

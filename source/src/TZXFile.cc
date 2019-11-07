@@ -13,7 +13,16 @@
  * along with SpecIde.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+
 #include "TZXFile.h"
+
+using namespace std;
 
 // This one opens a TZX file, loads its contents, tries to put nextBlock
 // to the beginning of the first block.

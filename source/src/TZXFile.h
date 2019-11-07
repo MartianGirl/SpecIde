@@ -15,19 +15,11 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cassert>
-#include <cmath>
 #include <cstdint>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
 #include <set>
 #include <sstream>
 #include <string>
 #include <vector>
-
-using namespace std;
 
 /** TZXFile.h
  *
@@ -50,8 +42,8 @@ class TZXFile
         bool magicIsOk;
         uint8_t majorVersion, minorVersion;
 
-        vector<uint8_t> fileData;
-        vector<uint8_t> romData;
+        std::vector<uint8_t> fileData;
+        std::vector<uint8_t> romData;
 
         size_t pointer;
         size_t loopStart;
@@ -59,12 +51,12 @@ class TZXFile
 
         std::stringstream ss;   // For reporting.
 
-        void load(string const& fileName);
+        void load(std::string const& fileName);
         void parse(
-                vector<size_t> &pulseData,
-                set<size_t> &indexData,
-                set<size_t> &stopData,
-                set<size_t> &stopIf48K);
+                std::vector<size_t> &pulseData,
+                std::set<size_t> &indexData,
+                std::set<size_t> &stopData,
+                std::set<size_t> &stopIf48K);
 
         size_t dumpArchiveInfo();
         size_t dumpComment();
@@ -73,14 +65,14 @@ class TZXFile
         void loadSymbolData(size_t base,
                 size_t& numSym, size_t& maxLen, size_t& alphaSize);
         size_t loadSymbolAlphabet(size_t base, size_t numSym, size_t maxLen,
-                vector<size_t>& alphabet);
+                std::vector<size_t>& alphabet);
         size_t dumpPilotStream(size_t base, size_t numSym,
-                vector<size_t> const& alphabet, vector<size_t>& data);
+                std::vector<size_t> const& alphabet, std::vector<size_t>& data);
         size_t dumpDataStream(size_t base, size_t numSym, size_t bps,
-                vector<size_t> const& alphabet, vector<size_t>& data);
+                std::vector<size_t> const& alphabet, std::vector<size_t>& data);
         void pushSymbol(size_t rep, size_t sym,
-                vector<size_t> const& alphabet, vector<size_t>& data);
-        void addPause(size_t pause, vector<size_t>& data);
+                std::vector<size_t> const& alphabet, std::vector<size_t>& data);
+        void addPause(size_t pause, std::vector<size_t>& data);
 
 };
 

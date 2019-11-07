@@ -14,6 +14,7 @@ elseif(WIN32)
 endif()
 
 find_package(Boost COMPONENTS chrono system thread unit_test_framework REQUIRED)
+find_package(ZLIB REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIR})
 
@@ -24,13 +25,13 @@ add_executable(SpecIde SpecIde.cc Screen.cc Console.cc
         Memory.cc
         Tape.cc TAPFile.cc TZXFile.cc
         DSKFile.cc)
-target_link_libraries(SpecIde ${Boost_LIBRARIES}
+target_link_libraries(SpecIde ${Boost_LIBRARIES} ${ZLIB_LIBRARIES}
         sfml-audio sfml-graphics sfml-window sfml-system)
 
 # Set version information in a config.h file.
 set(SpecIde_VERSION_MAJOR 0)
 set(SpecIde_VERSION_MINOR 5)
-set(SpecIde_VERSION_TWEAK 7)
+set(SpecIde_VERSION_TWEAK 8)
 
 # Set endianness in config.h.
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
