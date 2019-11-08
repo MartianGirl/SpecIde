@@ -1,5 +1,5 @@
 @echo off
-set BOOST_ROOT=C:\libs\boost_1_68_0
+set BOOST_ROOT=C:\libs\boost_1_70_0
 set Boost_NO_BOOST_CMAKE=TRUE
 
 if .%1.==.. goto USAGE
@@ -38,33 +38,33 @@ goto END
 
 :GNU
 set MINGW_SYSROOT=C:\MinGW
-set CMAKE_PREFIX_PATH=C:\libs\MinGW\SFML-2.5.0
+set CMAKE_PREFIX_PATH=C:\libs\MinGW\SFML-2.5.1
 cmake -DCMAKE_BUILD_TYPE=%BUILD% -G "MinGW Makefiles" .
 goto END
 
 :MS32
-set CMAKE_PREFIX_PATH=C:\libs\MSVC\SFML-2.5.0\x86
+set CMAKE_PREFIX_PATH=C:\libs\MSVC\SFML-2.5.1\x86;C:\libs\MSVC\zlib-1.2.11\x86
 cmake -DCMAKE_BUILD_TYPE=%BUILD% -G "Visual Studio 15 2017" .
 goto END
 
 :MS64
-set CMAKE_PREFIX_PATH=C:\libs\MSVC\SFML-2.5.0\x64
+set CMAKE_PREFIX_PATH=C:\libs\MSVC\SFML-2.5.1\x64;C:\libs\MSVC\zlib-1.2.11\x64
 cmake -DCMAKE_BUILD_TYPE=%BUILD% -G "Visual Studio 15 2017 Win64" .
 goto END
 
 :NINJAGNU
 set MINGW_SYSROOT=C:\MinGW
-set CMAKE_PREFIX_PATH=C:\libs\MinGW\SFML-2.5.0
+set CMAKE_PREFIX_PATH=C:\libs\MinGW\SFML-2.5.1
 cmake -DCMAKE_BUILD_TYPE=%BUILD% -G "Ninja" .
 goto END
 
 :NINJAMS32
-set CMAKE_PREFIX_PATH=C:\libs\MSVC\SFML-2.5.0\x86
+set CMAKE_PREFIX_PATH=C:\libs\MSVC\SFML-2.5.1\x86;C:\libs\MSVC\zlib-1.2.11\x86
 cmake -DCMAKE_BUILD_TYPE=%BUILD% -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -G "Ninja" .
 goto END
 
 :NINJAMS64
-set CMAKE_PREFIX_PATH=C:\libs\MSVC\SFML-2.5.0\x64
+set CMAKE_PREFIX_PATH=C:\libs\MSVC\SFML-2.5.1\x64;C:\libs\MSVC\zlib-1.2.11\x64
 cmake -DCMAKE_BUILD_TYPE=%BUILD% -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -G "Ninja" .
 goto END
 
