@@ -48,7 +48,7 @@ void Tape::loadCsw(string const& fileName)
     // Create a .csw object, load its contents in pulseData.
     CSWFile csw;
     csw.load(fileName);
-    csw.parse(pulseData);
+    csw.parse(pulseData, indexData, stopData);
 }
 
 void Tape::updateFlashTap()

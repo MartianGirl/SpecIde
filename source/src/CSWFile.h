@@ -1,4 +1,6 @@
 #include <iostream>
+#include <set>
+#include <vector>
 
 #include <zlib.h>
 
@@ -56,7 +58,9 @@ class CSWFile
             }
         }
 
-        void parse(std::vector<size_t> &pulseData) {
+        void parse(std::vector<size_t> &pulseData,
+                std::set<size_t> &indexData,
+                std::set<size_t> &stopData) {
 
             size_t pointer = 0;
             size_t pulses = 0;
@@ -88,6 +92,11 @@ class CSWFile
             }
 
             cout << "Initial polarity: " << ((flags & 0x01) ? "HIGH" : "LOW") << endl;
+
+            if (!pulseData.empty()) {
+                indexData.insert(pulseData.size());
+                stopData.insert(pulseData.size());
+            }
 
             if (flags & 0x01) {
                 pulseData.push_back(3500);

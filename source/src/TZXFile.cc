@@ -99,8 +99,7 @@ void TZXFile::parse(
         // concatenated.
         pointer = 0x0A;
         romData.clear();
-        if (pulseData.size() != 0)
-        {
+        if (!pulseData.empty()) {
             indexData.insert(pulseData.size());
             stopData.insert(pulseData.size());
         }
