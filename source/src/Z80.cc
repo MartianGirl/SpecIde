@@ -500,6 +500,8 @@ void Z80::start()
     iff = 0x00;
     im = 0x00;
     intNotReady = 0x00;
+
+    prefix = PREFIX_NO;
 }
 
 void Z80::decode(uint_fast8_t byte)

@@ -457,7 +457,7 @@ void Spectrum::reset() {
     } else {
         paging = 0x0020;
         set48 = true;
-        set48 = true;
+        rom48 = true;
     }
 }
 
