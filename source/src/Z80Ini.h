@@ -47,8 +47,6 @@ bool z80Ini()
 
         case 1:
             wz.w = bc.w;
-            --wz.b.h;
-            bc.w = wz.w;
             return true;
 
         case 2:
@@ -57,6 +55,7 @@ bool z80Ini()
 
         case 3:
             ++hl.w;
+            --bc.b.h;
             flg = bc.b.h & (FLAG_S | FLAG_5 | FLAG_3); // S.5.3...
             flg |= (bc.b.h) ? 0x00 : FLAG_Z;           // SZ5.3...
             flg |= (iReg.b.h & 0x80) >> 6;             // SZ5.3.N.
@@ -67,8 +66,6 @@ bool z80Ini()
             acc.b.l ^= acc.b.l >> 2;
             acc.b.l ^= acc.b.l >> 4;
             flg |= (acc.b.l & 0x01) ? 0x00 : FLAG_PV;   // SZ5H3PNC
-
-            wz.w += 0x0100;
 
             af.b.l = flg;
             prefix = PREFIX_NO;

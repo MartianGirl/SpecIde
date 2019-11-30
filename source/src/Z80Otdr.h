@@ -53,12 +53,12 @@ bool z80Otdr()
 
         case 2:
             --hl.w;
+            --bc.b.h;
             wz.w = bc.w;
             oReg.b.l = iReg.b.h;
             return true;
 
         case 3:
-            --bc.b.h;
             flg = bc.b.h & (FLAG_S | FLAG_5 | FLAG_3); // S.5.3...
             flg |= (bc.b.h) ? 0x00 : FLAG_Z;           // SZ5.3...
 
@@ -72,7 +72,7 @@ bool z80Otdr()
             flg |= (acc.b.l & 0x01) ? 0x00 : FLAG_PV;  // SZ5H3PNC
             af.b.l = flg;
 
-            wz.w -= 0x0102;
+            wz.w -= 0x0002;
 
             if (bc.b.h != 0x00)
             {

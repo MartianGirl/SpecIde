@@ -49,8 +49,6 @@ bool z80Indr()
 
         case 1:
             wz.w = bc.w;
-            --wz.b.h;
-            bc.w = wz.w;
             return true;
 
         case 2:
@@ -59,6 +57,8 @@ bool z80Indr()
 
         case 3:
             --hl.w;
+            --bc.b.h;
+            wz.w -= 0x0002;
             flg = bc.b.h & (FLAG_S | FLAG_5 | FLAG_3); // S.5.3...
             flg |= (bc.b.h) ? 0x00 : FLAG_Z;           // SZ5.3...
             flg |= (iReg.b.h & 0x80) >> 6;              // SZ5.3.N.
@@ -70,8 +70,6 @@ bool z80Indr()
             acc.b.l ^= acc.b.l >> 4;
             flg |= (acc.b.l & 0x01) ? 0x00 : FLAG_PV;   // SZ5H3PNC
             af.b.l = flg;
-
-            wz.w += 0x00FE;
 
             if (bc.b.h != 0x00)
             {

@@ -50,12 +50,12 @@ bool z80Outi()
 
         case 2:
             ++hl.w;
+            --bc.b.h;
             wz.w = bc.w;
             oReg.b.l = iReg.b.h;
             return true;
 
         case 3:
-            --bc.b.h;
             flg = bc.b.h & (FLAG_S | FLAG_5 | FLAG_3);  // S.5H3PNC
             flg |= (bc.b.h) ? 0x00 : FLAG_Z;            // SZ5H3PNC
 
@@ -69,7 +69,6 @@ bool z80Outi()
             flg |= (acc.b.l & 0x01) ? 0x00 : FLAG_PV;   // ...b.H.PNC
             af.b.l = flg;
 
-            wz.w -= 0x0100;
             prefix = PREFIX_NO;
             return true;
 
