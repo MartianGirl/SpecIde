@@ -70,9 +70,9 @@ constexpr uint_fast8_t SREG_EXM = 1 << 5;
 constexpr uint_fast8_t SREG_DIO = 1 << 6;
 constexpr uint_fast8_t SREG_RQM = 1 << 7;
 
-constexpr size_t DELAY_1ms = 1000;     // Clocking at 1.000MHz
-constexpr size_t SERVICE_MFM = 52;
-constexpr size_t SERVICE_FM = 108;
+constexpr size_t DELAY_1ms = 875;     // Clocking at 1.000MHz
+constexpr size_t SERVICE_MFM = 46;
+constexpr size_t SERVICE_FM = 91;
 
 class FDC {
 
