@@ -246,12 +246,15 @@ void Screen::updateMenu()
     ss << "F1:    This help." << endl;
     ss << "F2:    Fullscreen." << endl;
     ss << "S-F2:  Antialiasing." << endl;
-    ss << "F4:    Toggle PSG: AY-3-8912/YM-2149." << endl;
+    ss << "F3:    Save DSK file to disk." << endl;
+    ss << "F4:    Select next disk image." << endl;
+    ss << "S-F4:  Select previous disk image." << endl;
     ss << "F5:    Reset." << endl;
-    ss << "F7:    Clear SAVE buffer." << endl;
-    ss << "S-F7:  Add FlashTAP to SAVE buffer." << endl;
-    ss << "F8:    Write SAVE buffer to disk." << endl;
-    ss << "S-F8:  Use SAVE buffer as FlashTAP." << endl;
+    ss << "F6:    Clear SAVE buffer." << endl;
+    ss << "S-F6:  Add FlashTAP to SAVE buffer." << endl;
+    ss << "F7:    Write SAVE buffer to disk." << endl;
+    ss << "S-F7:  Use SAVE buffer as FlashTAP." << endl;
+    ss << "F8:    Toggle PSG: AY-3-8912/YM-2149." << endl;
     ss << "F9:    Sound on / off." << endl;
     ss << "S-F9:  Tape sound on / off." << endl;
     ss << "F10:   Exit emulator." << endl;
@@ -390,31 +393,37 @@ void Screen::pollEvents() {
                             setFullScreen(fullscreen);
                         }
                         break;
-                    case Keyboard::F4:  // PSG chip type
-                        aychip = !aychip;
-                        spectrum.psgChip(aychip);
+                    case Keyboard::F3:  // Save DSK to disk
+                        cout << "Saving disk..." << endl;
                         break;
-                    case Keyboard::F6:  // Select DSK from list
+                    case Keyboard::F4:  // Select DSK from list
                         if (event.key.shift) {
                             spectrum.fdc.drive[0].prevDisk();
                         } else {
                             spectrum.fdc.drive[0].nextDisk();
                         }
                         break;
-                    case Keyboard::F7:  // Clear save data
+                    case Keyboard::F5:  // Reset Spectrum
+                        spectrum.reset();
+                        break;
+                    case Keyboard::F6:  // Clear save data
                         if (event.key.shift) {
                             tape.appendLoadData();
                         } else {
                             tape.clearSaveData();
                         }
                         break;
-                    case Keyboard::F8:  // Write save data
+                    case Keyboard::F7:  // Write save data
                         if (event.key.shift) {
                             tape.useSaveData = !tape.useSaveData;
                             tape.selectTapData();
                         } else {
                             tape.writeSaveData();
                         }
+                        break;
+                    case Keyboard::F8:  // PSG chip type
+                        aychip = !aychip;
+                        spectrum.psgChip(aychip);
                         break;
                     case Keyboard::F9:  // Toggle sound ON/OFF
                         if (event.key.shift) {
@@ -424,9 +433,6 @@ void Screen::pollEvents() {
                             spectrum.ula.playSound = playSound;
                             spectrum.psgPlaySound(psgSound && playSound);
                         }
-                        break;
-                    case Keyboard::F5:  // Reset Spectrum
-                        spectrum.reset();
                         break;
                     case Keyboard::F10: // Quit
                         done = true;
