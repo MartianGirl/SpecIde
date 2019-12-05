@@ -14,6 +14,7 @@
  */
 
 #include <algorithm>
+#include <iomanip>
 
 #include "FDC.h"
 
@@ -33,37 +34,20 @@ void FDC::clock() {
 
     switch (state) {
         case FDCState::FDC_STATE_IDLE:
+            mode = FDCMode::FDC_MODE_NONE;
             statusReg = SREG_RQM;
             if (byte) {
-                if (checkCommand()) {
-                    state = FDCState::FDC_STATE_COMMAND;
-                } else {
-                    sReg[0] = 0x80;
-                    resBuffer[0] = sReg[0];
-                    state = FDCState::FDC_STATE_RESULT;
-                }
+                checkCommand();
             }
             break;
 
         case FDCState::FDC_STATE_COMMAND:
+            mode = FDCMode::FDC_MODE_NONE;
             statusReg = SREG_RQM | SREG_CB;
             if (byte) {
                 byte = false;
                 if (cmdIndex == cmdBytes) {
-                    setup();    // TODO: FDCState as return value.
-                    switch (mode) {
-                        case FDCMode::FDC_MODE_READ:
-                        case FDCMode::FDC_MODE_NONE:
-                            state = FDCState::FDC_STATE_EXECUTION;
-                            break;
-
-                        case FDCMode::FDC_MODE_WRITE:
-                            state = FDCState::FDC_STATE_RECEIVE;
-                            break;
-
-                        default:
-                            reset();
-                    }
+                    setup();
                 } else if (cmdIndex > cmdBytes) {
                     reset();
                 }
@@ -71,30 +55,43 @@ void FDC::clock() {
             break;
 
         case FDCState::FDC_STATE_EXECUTION:
+            mode = FDCMode::FDC_MODE_WRITE;
             statusReg = SREG_EXM | SREG_CB;
             execute();
             break;
 
         case FDCState::FDC_STATE_RECEIVE:
+            mode = FDCMode::FDC_MODE_WRITE;
             statusReg = SREG_RQM | SREG_CB | SREG_EXM;
 
             if (byte) {
                 byte = false;
+                transfer = true;
+                serviceTimer = ((mfmModeBit) ? SERVICE_MFM : SERVICE_FM);
+                if (dataIndex >= dataBytes) {
+                    transfer = false;
+                    state = FDCState::FDC_STATE_EXECUTION;
+                }
+            }
+
+            // Signal Over Run if FDC is not serviced quickly enough.
+            if (transfer && --serviceTimer == 0) {
+                transfer = false;
+                sReg[1] |= 0x10;    // OR
+                sReg[0] |= 0x40;    // AT
+                interrupt = true;
+                state = FDCState::FDC_STATE_RECEIVE;
             }
             break;
 
         case FDCState::FDC_STATE_TRANSMIT:
+            mode = FDCMode::FDC_MODE_READ;
             statusReg = SREG_RQM | SREG_DIO | SREG_CB | SREG_EXM;
-
-            if (transfer) {
-                serviceTimer--;
-            }
 
             if (byte) {
                 byte = false;
                 transfer = true;
                 serviceTimer = (mfmModeBit) ? SERVICE_MFM : SERVICE_FM;
-
                 if (dataIndex >= dataBytes) {
                     transfer = false;
                     state = FDCState::FDC_STATE_RESULT;
@@ -102,7 +99,7 @@ void FDC::clock() {
             }
 
             // Signal Over Run if FDC is not serviced quickly enough.
-            if (serviceTimer == 0) {
+            if (transfer && --serviceTimer == 0) {
                 transfer = false;
                 sReg[1] |= 0x10;    // OR
                 sReg[0] |= 0x40;    // AT
@@ -112,6 +109,7 @@ void FDC::clock() {
             break;
 
         case FDCState::FDC_STATE_RESULT:
+            mode = FDCMode::FDC_MODE_NONE;
             statusReg = SREG_RQM | SREG_DIO | SREG_CB;
             if (byte) {
                 byte = false;
@@ -123,118 +121,120 @@ void FDC::clock() {
     }
 }
 
-bool FDC::checkCommand() {
+void FDC::checkCommand() {
 
     switch (cmdBuffer[0] & 0x1F)
     {
         case 0x02:  // Read Track (Diagnostic)
             cmdBytes = 9;   // 02+MF+SK    HU TR HD SC SZ NM GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD NM SZ
-            mode = FDCMode::FDC_MODE_READ;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         case 0x03:  // Specify SPD/DMA
             cmdBytes = 3;   // 03          XX YY
             resBytes = 0;   //
-            mode = FDCMode::FDC_MODE_NONE;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         case 0x04:  // Sense drive status
             cmdBytes = 2;   // 04          HU
             resBytes = 1;   //             S3
-            mode = FDCMode::FDC_MODE_NONE;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         case 0x05:  // Write sector(s)
             cout << "Write sector(s)." << endl;
             cmdBytes = 9;   // 05+MT+MF    HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            mode = FDCMode::FDC_MODE_WRITE;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         case 0x06:  // Read sector(s)
             cmdBytes = 9;   // 06+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            mode = FDCMode::FDC_MODE_READ;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         case 0x07:  // Recalibrate and seek physical track 0
             cmdBytes = 2;   // 07          HU
             resBytes = 0;
-            mode = FDCMode::FDC_MODE_NONE;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         case 0x08:  // Sense interrupt status
             cmdBytes = 1;   // 08
             resBytes = 2;   //             S0 TP
-            mode = FDCMode::FDC_MODE_NONE;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         case 0x09:  // Write deleted sector(s)
             cout << "Write deleted sector(s)." << endl;
             cmdBytes = 9;   // 09+MT+MF    HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            mode = FDCMode::FDC_MODE_WRITE;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         case 0x0A:  // Read ID
             cmdBytes = 2;   // 0A+MF       HU
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            mode = FDCMode::FDC_MODE_NONE;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         case 0x0C:  // Read deleted sector(s)
             cmdBytes = 9;   // 0C+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            mode = FDCMode::FDC_MODE_READ;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         case 0x0D:  // Format track
             cout << "Format track." << endl;
             cmdBytes = 6;   // 0D+MF       HU SZ NM GP FB
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            mode = FDCMode::FDC_MODE_WRITE;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         case 0x0F:  // Seek track N
             cmdBytes = 3;   // 0F          HU TP
             resBytes = 0;
-            mode = FDCMode::FDC_MODE_NONE;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         case 0x10:  // Version
             cmdBytes = 1;
             resBytes = 1;
-            mode = FDCMode::FDC_MODE_NONE;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         case 0x11:  // Scan equal
             cout << "Scan equal." << endl;
             cmdBytes = 9;   // 11+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            mode = FDCMode::FDC_MODE_WRITE;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         case 0x19:  // Scan low or equal
             cout << "Scan low or equal." << endl;
             cmdBytes = 9;   // 19+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            mode = FDCMode::FDC_MODE_WRITE;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         case 0x1D:  // Scan high or equal
             cout << "Scan high or equal." << endl;
             cmdBytes = 9;   // 1D+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            mode = FDCMode::FDC_MODE_WRITE;
-            return true;
+            state = FDCState::FDC_STATE_COMMAND;
+            break;
 
         default:
             cout << "Invalid command." << endl;
             cmdBytes = 1;   // XX
             resBytes = 1;   //             S0 (80)
-            mode = FDCMode::FDC_MODE_NONE;
-            return false;
+            sReg[0] = 0x80;
+            resBuffer[0] = sReg[0];
+            state = FDCState::FDC_STATE_RESULT;
+            break;
     }
 }
 
@@ -253,77 +253,64 @@ void FDC::setup() {
             ddmFound = false;
             eocFound = false;
             secFound = false;
+            drive[cmdDrive()].hole = 0;
             firstSector = cmdBuffer[4];
             lastSector = cmdBuffer[6];
             currSector = 0;
-            drive[cmdDrive()].hole = 0;
             stage = FDCAccess::FDC_ACCESS_LOAD;
-            break;
-
-        case 0x03:  // Specify SPD/DMA
-            break;
-
-        case 0x04:  // Sense drive status
-            break;
-
-        case 0x05:  // Write sector(s)
-            drive[cmdDrive()].hole = 0;
-            break;
-
-        case 0x06:  // Read sector(s)
-            eocFound = false;
-            drive[cmdDrive()].hole = 0;
-            firstSector = cmdBuffer[4];
-            lastSector = cmdBuffer[6];
-            useDeletedDAM = false;
-            stage = FDCAccess::FDC_ACCESS_LOAD;
-            break;
-
-        case 0x07:  // Recalibrate and seek physical track 0
-            break;
-
-        case 0x08:  // Sense interrupt status
-            break;
-
-        case 0x09:  // Write deleted sector(s)
+            state = FDCState::FDC_STATE_EXECUTION;
             break;
 
         case 0x0A:  // Read ID
-            drive[cmdDrive()].hole = 0;
-            eocFound = false;
-            ddmFound = false;
             idmFound = false;
+            ddmFound = false;
+            eocFound = false;
+            drive[cmdDrive()].hole = 0;
             stage = FDCAccess::FDC_ACCESS_DATA;
+            state = FDCState::FDC_STATE_EXECUTION;
             break;
 
+        case 0x06:  // Read sector(s)
         case 0x0C:  // Read deleted sector(s)
             eocFound = false;
             drive[cmdDrive()].hole = 0;
             firstSector = cmdBuffer[4];
             lastSector = cmdBuffer[6];
-            useDeletedDAM = true;
+            useDeletedDAM = ((cmdBuffer[0] & 0x1F) == 0x0C);
             stage = FDCAccess::FDC_ACCESS_LOAD;
+            state = FDCState::FDC_STATE_EXECUTION;
+            break;
+
+        case 0x05:  // Write sector(s)
+        case 0x09:  // Write deleted sector(s)
+            eocFound = false;
+            drive[cmdDrive()].hole = 0;
+            firstSector = cmdBuffer[4];
+            lastSector = cmdBuffer[6];
+            useDeletedDAM = ((cmdBuffer[0] & 0x1F) == 0x09);
+            stage = FDCAccess::FDC_ACCESS_LOAD;
+            state = FDCState::FDC_STATE_RECEIVE;
+            break;
+
+        case 0x03:  // Specify SPD/DMA
+        case 0x04:  // Sense drive status
+        case 0x07:  // Recalibrate and seek physical track 0
+        case 0x08:  // Sense interrupt status
+        case 0x0F:  // Seek track N
+        case 0x10:  // Version
+            state = FDCState::FDC_STATE_EXECUTION;
             break;
 
         case 0x0D:  // Format track
-            break;
-
-        case 0x0F:  // Seek track N
-            break;
-
-        case 0x10:  // Version
-            break;
-
         case 0x11:  // Scan equal
-            break;
-
         case 0x19:  // Scan low or equal
-            break;
-
         case 0x1D:  // Scan high or equal
+            cout << "Not implemented" << endl;
+            reset();
             break;
 
         default:
+            reset();
             break;
     }
 }
@@ -336,13 +323,7 @@ void FDC::execute() {
             break;
 
         case 0x03:  // Specify SPD/DMA
-            headUnloadTime = (cmdBuffer[1] & 0x0F) * 32 * DELAY_1ms;
-            stepRateTime = ((cmdBuffer[1] & 0xF0) >> 4) * 32 * DELAY_1ms;
-            headLoadTime = (cmdBuffer[2] >> 1) * 4 * DELAY_1ms;
-            useDma = ((cmdBuffer[2] & 0x01) == 0x00);
-            loadTimer = headLoadTime;
-            unloadTimer = headUnloadTime;
-            reset();
+            specifyCmd();
             break;
 
         case 0x04:  // Sense drive status
@@ -353,9 +334,12 @@ void FDC::execute() {
             break;
 
         case 0x05:  // Write sector(s)
+        case 0x09:  // Write deleted sector(s)
+            writeCmd();
             break;
 
         case 0x06:  // Read sector(s)
+        case 0x0C:  // Read deleted sector(s)
             readCmd();
             break;
 
@@ -386,15 +370,8 @@ void FDC::execute() {
             state = FDCState::FDC_STATE_RESULT;
             break;
 
-        case 0x09:  // Write deleted sector(s)
-            break;
-
         case 0x0A:  // Read ID
             readIdCmd();
-            break;
-
-        case 0x0C:  // Read deleted sector(s)
-            readCmd();
             break;
 
         case 0x0D:  // Format track
@@ -441,7 +418,7 @@ void FDC::execute() {
     }
 }
 
-bool FDC::seekOp() {
+bool FDC::seekForReadOp() {
 
     drive[cmdDrive()].readSector(cmdHead());
     drive[cmdDrive()].nextSector();
@@ -455,11 +432,11 @@ bool FDC::seekOp() {
 
     // Track and sector are checked.
     if (drive[cmdDrive()].idTrack != cmdBuffer[2]) {
-        sReg[2] |= 0x10;    // WC
+        sReg[2] |= 0x10;        // WC
         if (drive[cmdDrive()].idTrack == 0xFF) {
             sReg[2] |= 0x02;    // BC
         }
-        sReg[0] |= 0x40;    // AT
+        sReg[0] |= 0x40;        // AT
         return true;
     }
 
@@ -471,7 +448,7 @@ bool FDC::readOp() {
 
     bool done = false;
 
-    // We already have read the sector in the seekOp, and
+    // We already have read the sector in the seekForReadOp, and
     // currSector holds the current sector number.
     sReg[0] = cmdBuffer[1] & 0x07;
     sReg[1] = drive[cmdDrive()].statusReg1;
@@ -514,13 +491,8 @@ bool FDC::readRegularDataOp() {
     bool error = false;
 
     size_t actlen = drive[cmdDrive()].length;
-    size_t outlen = 0x80 << cmdBuffer[5];   // Use SL as sector length.
+    size_t outlen = (cmdBuffer[5] != 0x00) ? (0x80 << cmdBuffer[5]) : cmdBuffer[8];
     size_t offset = 0;
-
-    // If SL = 0, Use SZ as sector length.
-    if (cmdBuffer[5] == 0x00) {
-        outlen = cmdBuffer[8];
-    }
 
     // If actlen is a multiple of outlen, there are several
     // copies of this sector and we have to choose one.
@@ -535,7 +507,7 @@ bool FDC::readRegularDataOp() {
             &drive[cmdDrive()].buffer[finish]);
 
     // Complete length
-    buf.insert(buf.end(), (outlen - buf.size()), 0x00);
+    buf.resize(outlen, 0x00);
 
     // Detect Speedlock protection:
     // CRC error on track 00, sector 02, which is 512 bytes long.
@@ -578,7 +550,7 @@ bool FDC::readDeletedDataOp() {
             &drive[cmdDrive()].buffer[finish]);
 
     // Complete length
-    buf.insert(buf.end(), (outlen - buf.size()), 0x00);
+    buf.resize(outlen, 0x00);
 
     // Detect Speedlock protection:
     // CRC error on track 00, sector 02, which is 512 bytes long.
@@ -613,7 +585,7 @@ void FDC::readCmd() {
             // If during the seek we find the hole mark twice, this means
             // that the sector we're looking for does not exist, and we
             // end the operation with an error.
-            if (seekOp()) {
+            if (seekForReadOp()) {
                 if ((sReg[0] & 0xC0) == 0x00) {
                     stage = FDCAccess::FDC_ACCESS_DATA;
                 } else {
@@ -823,9 +795,8 @@ bool FDC::readTrackOp() {
         outlen = actlen;
     }
 
-    vector<uint8_t> buf(outlen, 0x00);
-    buf.assign(&drive[cmdDrive()].buffer[0],
-            &drive[cmdDrive()].buffer[outlen]);
+    vector<uint8_t> buf(
+            &drive[cmdDrive()].buffer[0], &drive[cmdDrive()].buffer[outlen]);
 
     // Detect Speedlock protection:
     // CRC error on track 00, sector 02, which is 512 bytes long.
@@ -856,10 +827,125 @@ bool FDC::readTrackOp() {
     return ((currSector == lastSector) || (drive[cmdDrive()].hole > 1));
 }
 
+bool FDC::seekForWriteOp() {
+
+    drive[cmdDrive()].readSector(cmdHead());
+    sReg[0] = cmdBuffer[1] & 0x07;
+    sReg[1] = drive[cmdDrive()].statusReg1;
+    sReg[2] = drive[cmdDrive()].statusReg2;
+
+    // Check bad CRC
+    if ((sReg[1] & 0x20) == 0x20) {
+        sReg[0] |= 0x40;        // AT
+        return true;
+    }
+
+    // Check No Data (ND) condition and IDR
+    if (drive[cmdDrive()].idTrack != cmdBuffer[2]
+            || drive[cmdDrive()].idHead != cmdBuffer[3]
+            || drive[cmdDrive()].idSector != firstSector
+            || drive[cmdDrive()].idSize != cmdBuffer[5]) {
+        drive[cmdDrive()].nextSector();
+        return false;
+    }
+
+    // If we arrive here, we've found our sector
+    currSector = drive[cmdDrive()].idSector;
+    return true;
+}
+
+void FDC::writeCmd() {
+
+    switch (stage) {
+        case FDCAccess::FDC_ACCESS_LOAD:
+            if (headLoadOp()) {
+                stage = FDCAccess::FDC_ACCESS_SEEK;
+            }
+            break;
+
+        case FDCAccess::FDC_ACCESS_SEEK:
+            // Seek stage. Here we read all the sectors in the track,
+            // until we find one whose coordinates (C, H, R, N) match
+            // the ones given in the command.
+            // If during the seek we find the hole mark twice, this means
+            // that the sector we're looking for does not exist, and we
+            // end the operation with an error.
+            if (seekForWriteOp()) {
+                if ((sReg[0] & 0xC0) == 0x00) {
+                    dataBytes = (cmdBuffer[5]) ? (0x80 << cmdBuffer[5]) : cmdBuffer[8];
+                    stage = FDCAccess::FDC_ACCESS_DATA;
+                    state = FDCState::FDC_STATE_RECEIVE;
+                } else {
+                    dataBytes = 0;
+                    stage = FDCAccess::FDC_ACCESS_UNLOAD;
+                }
+            } else if (drive[cmdDrive()].hole > 1) {
+                dataBytes = 0;
+                sReg[1] |= 0x05;    // xxxxx1x1 - ND - MAD
+                sReg[0] |= 0x40;    // 01000HUU - AT
+                stage = FDCAccess::FDC_ACCESS_UNLOAD;
+            }
+            break;
+
+        case FDCAccess::FDC_ACCESS_DATA:
+            {
+                vector<uint8_t> buffer = drive[cmdDrive()].buffer;
+                copy(&dataBuffer[0], &dataBuffer[dataIndex], &buffer[0]);
+
+                drive[cmdDrive()].buffer = buffer;
+                drive[cmdDrive()].statusReg1 = 0x00;
+                drive[cmdDrive()].statusReg2 |= useDeletedDAM ? 0x40 : 0x00;
+                drive[cmdDrive()].writeSector(cmdHead());
+                drive[cmdDrive()].nextSector();
+            }
+
+            if (((sReg[0] & 0xC0) != 0x00) || currSector == lastSector) {
+                eocFound = true;
+                setResultBytesOp();
+                stage = FDCAccess::FDC_ACCESS_UNLOAD;
+            } else {
+                // Sectors can be unordered.
+                drive[cmdDrive()].hole = 0;
+                ++firstSector;
+                stage = FDCAccess::FDC_ACCESS_SEEK;
+            }
+            break;
+
+        case FDCAccess::FDC_ACCESS_UNLOAD:
+            resBuffer[0] = sReg[0];
+            resBuffer[1] = sReg[1];
+            resBuffer[2] = sReg[2];
+            resBuffer[3] = resTrack;
+            resBuffer[4] = resHead;;
+            resBuffer[5] = resSector;
+            resBuffer[6] = resSize;
+            interrupt = true;
+            unload = true;
+            state = FDCState::FDC_STATE_RESULT;
+            break;
+
+        case FDCAccess::FDC_ACCESS_NONE:
+            reset();
+            break;
+    }
+}
+
+void FDC::specifyCmd() {
+
+    headUnloadTime = (cmdBuffer[1] & 0x0F) * 32 * DELAY_1ms;
+    stepRateTime = ((cmdBuffer[1] & 0xF0) >> 4) * 32 * DELAY_1ms;
+    headLoadTime = (cmdBuffer[2] >> 1) * 4 * DELAY_1ms;
+    useDma = ((cmdBuffer[2] & 0x01) == 0x00);
+    loadTimer = headLoadTime;
+    unloadTimer = headUnloadTime;
+    reset();
+}
+
 void FDC::reset() {
 
     state = FDCState::FDC_STATE_IDLE;
     stage = FDCAccess::FDC_ACCESS_NONE;
+    mode = FDCMode::FDC_MODE_NONE;
     byte = false;
     cmdIndex = resIndex = dataIndex = 0;
     cmdBytes = resBytes = dataBytes = 0;
@@ -871,21 +957,20 @@ uint_fast8_t FDC::read() {
     static uint_fast8_t retval = 0x00;
 
     if (!byte) {
-        if ((statusReg & SREG_EXM) == SREG_EXM) {
+        if (mode == FDCMode::FDC_MODE_READ) {
             retval = dataBuffer[dataIndex++];
         } else {
             retval = resBuffer[resIndex++];
         }
         byte = true;
     }
-
     return retval;
 }
 
 void FDC::write(uint_fast8_t value) {
 
     if (!byte) {
-        if ((statusReg & SREG_EXM) == SREG_EXM) {
+        if (mode == FDCMode::FDC_MODE_WRITE) {
             dataBuffer[dataIndex++] = value;
         } else {
             cmdBuffer[cmdIndex++] = value;

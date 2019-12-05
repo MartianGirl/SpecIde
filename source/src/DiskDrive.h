@@ -28,8 +28,8 @@
 
 using namespace std;
 
-class DiskDrive
-{
+class DiskDrive {
+
     public:
         DiskDrive(bool ready = false) :
             ready(ready) {}
@@ -63,55 +63,59 @@ class DiskDrive
         /**
          * Advance disk to next sector.
          */
-        void nextSector()
-        {
-            if (motor) ++sector;
-            if (disk)
-            {
+        void nextSector() {
+
+            if (motor) {
+                ++sector;
+            }
+
+            if (disk) {
                 size_t tr = (images[currentImage].numSides * cylinder);
 
-                if (images[currentImage].tracks[tr].trackSize)
-                {
-                    for (size_t ii = 0; ii < images[currentImage].numSides; ++ii)
+                if (images[currentImage].tracks[tr].trackSize) {
+                    for (size_t ii = 0; ii < images[currentImage].numSides; ++ii) {
                         next[ii] = sector % images[currentImage].tracks[tr + ii].numSectors;
-                }
-                else
-                {
+                    }
+                } else {
                     next[0] = 0;
                     next[1] = 0;
                 }
             }
 
-            if (next[0] == 0)
+            if (next[0] == 0) {
                 countHole();
+            }
         }
 
         /**
          * Seek next track.
          */
-        void nextTrack()
-        {
+        void nextTrack() {
+
             size_t limit = disk ? images[currentImage].numTracks : 76;
-            if (++cylinder > limit)
+
+            if (++cylinder > limit) {
                 cylinder = limit;
+            }
             track0 = (cylinder == 0);
         }
 
         /**
          * Seek previous track.
          */
-        void prevTrack()
-        {
-            if (cylinder > 0)
+        void prevTrack() {
+
+            if (cylinder > 0) {
                 --cylinder;
+            }
             track0 = (cylinder == 0);
         }
 
         /**
          * Return disk drive status byte.
          */
-        uint_fast8_t senseStatus()
-        {
+        uint_fast8_t senseStatus() {
+
             return (track0 ? 0x10 : 0x00)
                 | (ready ? 0x20 : 0x00)
                 | (writeprot ? 0x40 : 0x00)
@@ -122,19 +126,21 @@ class DiskDrive
          * Write sector data to disk.
          *
          * This function writes data from the disk drive buffer to
-         * the disk. It also checks if the disk hole has been detected.
+         * the disk's current sector.
          *
          */
-        void writeSector(int head)
-        {
-            if (disk && head < images[currentImage].numSides)
-            {
+        void writeSector(int head) {
+
+            if (disk && head < images[currentImage].numSides) {
                 size_t tr = (images[currentImage].numSides * cylinder) + head;
                 size_t sc = sector % images[currentImage].tracks[tr].numSectors;
-                if (sc == 0)
-                    countHole();
 
-                images[currentImage].tracks[tr].sectors[sc].data = buffer;
+                // If the track is formatted, write.
+                if (images[currentImage].tracks[tr].trackSize) {
+                    images[currentImage].tracks[tr].sectors[sc].data = buffer;
+                    images[currentImage].tracks[tr].sectors[sc].fdcStatusReg1 = statusReg1;
+                    images[currentImage].tracks[tr].sectors[sc].fdcStatusReg2 = statusReg2;
+                }
             }
         }
 
@@ -142,19 +148,16 @@ class DiskDrive
          * Read sector data into buffer.
          *
          * This function reads the data from the current sector, and
-         * copies it to the disk drive buffer. It also checks if the
-         * disk hole has been detected.
+         * copies it to the disk drive buffer.
          */
-        void readSector(int head)
-        {
-            if (disk && head < images[currentImage].numSides)
-            {
+        void readSector(int head) {
+
+            if (disk && head < images[currentImage].numSides) {
                 size_t tr = (images[currentImage].numSides * cylinder) + head;
                 size_t sc = sector % images[currentImage].tracks[tr].numSectors;
 
                 // If the track is formatted, read.
-                if (images[currentImage].tracks[tr].trackSize)
-                {
+                if (images[currentImage].tracks[tr].trackSize) {
                     idTrack = images[currentImage].tracks[tr].sectors[sc].track;
                     idHead = images[currentImage].tracks[tr].sectors[sc].side;
                     idSector = images[currentImage].tracks[tr].sectors[sc].sectorId;
@@ -164,9 +167,7 @@ class DiskDrive
                     buffer = images[currentImage].tracks[tr].sectors[sc].data;
                     length = images[currentImage].tracks[tr].sectors[sc].sectorLength;
                     filler = images[currentImage].tracks[tr].fillerByte;
-                }
-                else
-                {
+                } else {
                     idTrack = rand() & 0xFF;
                     idHead = rand() & 0xFF;
                     idSector = rand() & 0xFF;
@@ -183,13 +184,14 @@ class DiskDrive
         void formatTrack(int head,
                 uint_fast8_t trackNumber, uint_fast8_t sideNumber,
                 uint_fast8_t sectorSize, uint_fast8_t numSectors,
-                uint_fast8_t gapLength, uint_fast8_t fillerByte)
-        {
+                uint_fast8_t gapLength, uint_fast8_t fillerByte) {
+
             size_t tr = (images[currentImage].numSides * cylinder) + head;
 
-            if (tr >= images[currentImage].tracks.size())
+            if (tr >= images[currentImage].tracks.size()) {
                 images[currentImage].tracks.insert(images[currentImage].tracks.end(),
                         tr - images[currentImage].tracks.size() + 1, DSKFile::Track());
+            }
             
             images[currentImage].tracks[tr].trackNumber = trackNumber;
             images[currentImage].tracks[tr].sideNumber = sideNumber;
@@ -203,14 +205,14 @@ class DiskDrive
         void formatSector(int head,
                 uint_fast8_t idTr, uint_fast8_t idHd,
                 uint_fast8_t idSc, uint_fast8_t idSz,
-                uint_fast8_t byte)
-        {
-            if (disk && head < images[currentImage].numSides)
-            {
+                uint_fast8_t byte) {
+
+            if (disk && head < images[currentImage].numSides) {
                 size_t tr = (images[currentImage].numSides * cylinder) + head;
                 size_t sc = sector % images[currentImage].tracks[tr].numSectors;
-                if (sc == 0)
+                if (sc == 0) {
                     countHole();
+                }
 
                 images[currentImage].tracks[tr].sectors[sc].track = idTr;
                 images[currentImage].tracks[tr].sectors[sc].side = idHd;
@@ -221,16 +223,13 @@ class DiskDrive
             }
         }
 
-        void recalibrate()
-        {
+        void recalibrate() {
+
             // Maybe put here a delay.
-            if (cylinder < 78)
-            {
+            if (cylinder < 78) {
                 cylinder = 0;
                 track0 = true;
-            }
-            else
-            {
+            } else {
                 cylinder -= 77;
             }
         }
@@ -245,29 +244,28 @@ class DiskDrive
          * under the writing head from beginning to end.
          *
          */
-        void countHole()
-        {
+        void countHole() {
+
             sector = 0;
             ++hole;
         }
 
-        void nextDisk()
-        {
-            if (images.size() > 0)
-            {
+        void nextDisk() {
+            if (images.size() > 0) {
                 ++currentImage;
-                if (currentImage == images.size())
+                if (currentImage == images.size()) {
                     currentImage = 0;
+                }
                 cout << "Currently inserted disk: " << imagenames[currentImage] << endl;
             }
         }
 
-        void prevDisk()
-        {
-            if (images.size() > 0)
-            {
-                if (currentImage == 0)
+        void prevDisk() {
+
+            if (images.size() > 0) {
+                if (currentImage == 0) {
                     currentImage = images.size();
+                }
                 --currentImage;
                 cout << "Currently inserted disk: " << imagenames[currentImage] << endl;
             }

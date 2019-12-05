@@ -73,6 +73,7 @@ constexpr uint_fast8_t SREG_RQM = 1 << 7;
 constexpr size_t DELAY_1ms = 875;     // Clocking at 1.000MHz
 constexpr size_t SERVICE_MFM = 46;
 constexpr size_t SERVICE_FM = 91;
+constexpr size_t BYTE_DELAY = 100;
 
 class FDC {
 
@@ -109,6 +110,7 @@ class FDC {
         size_t loadTimer = 0;
         size_t unloadTimer = 0;
         size_t serviceTimer = 0;
+        size_t byteTimer = 0;
         size_t sectorCopy = 0;
 
         FDCState state;
@@ -141,11 +143,12 @@ class FDC {
 
         void clock();
         void reset();
-        bool checkCommand();
+        void checkCommand();
         void setup();
         void execute();
 
-        bool seekOp();
+        bool seekForReadOp();
+        bool seekForWriteOp();
         bool readOp();
         void setResultBytesOp();
         bool readRegularDataOp();
@@ -158,6 +161,8 @@ class FDC {
         void readCmd();
         void readIdCmd();
         void readTrackCmd();
+        void writeCmd();
+        void specifyCmd();
 
         uint_fast8_t read();
         void write(uint_fast8_t value);
