@@ -60,6 +60,8 @@ class DiskDrive {
         vector<string> imagenames;
         size_t currentImage;
 
+        uint_fast8_t disks = 0;
+
         /**
          * Advance disk to next sector.
          */
@@ -269,6 +271,16 @@ class DiskDrive {
                 --currentImage;
                 cout << "Currently inserted disk: " << imagenames[currentImage] << endl;
             }
+        }
+
+        void saveDisk() {
+
+            char name[256];
+            snprintf(name, 256, "savedisk%02u.dsk", disks);
+            cout << "Saving to " << name << endl;
+            disks = (disks + 1) % 100;
+
+            images[currentImage].save(name);
         }
 };
 

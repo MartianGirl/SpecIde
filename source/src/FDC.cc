@@ -890,6 +890,7 @@ void FDC::writeCmd() {
         case FDCAccess::FDC_ACCESS_DATA:
             {
                 vector<uint8_t> buffer = drive[cmdDrive()].buffer;
+                buffer.resize(dataBytes, 0);
                 copy(&dataBuffer[0], &dataBuffer[dataIndex], &buffer[0]);
 
                 drive[cmdDrive()].buffer = buffer;

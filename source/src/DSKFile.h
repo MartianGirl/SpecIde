@@ -48,7 +48,7 @@ class DSKFile {
 
                 Track(uint_fast16_t size = 0);
 
-                uint_fast8_t magic[12];
+                uint_fast8_t magic[13];
                 uint_fast8_t trackNumber;
                 uint_fast8_t sideNumber;
                 uint_fast8_t sectorSize;
@@ -62,14 +62,17 @@ class DSKFile {
                 bool magicOk;
 
                 bool load(std::vector<uint8_t> const& data, uint_fast32_t offset);
-                void readSector(std::vector<uint8_t>& data, uint_fast8_t id);
+                void dump(std::vector<uint8_t>& data);
+                // void readSector(std::vector<uint8_t>& data, uint_fast8_t id);
         };
 
         DSKFile();
 
-        uint_fast8_t stdMagic[34];
-        uint_fast8_t extMagic[34];
-        uint_fast8_t creator[16];
+        static uint8_t const specide[16];
+
+        uint8_t stdMagic[34];
+        uint8_t extMagic[34];
+        uint8_t creator[16];
         uint_fast8_t numTracks;
         uint_fast8_t numSides;
         std::vector<uint_fast16_t> trackSizeTable;
@@ -82,6 +85,7 @@ class DSKFile {
         std::vector<uint8_t> fileData;
 
         void load(std::string const& fileName);
+        void save(std::string const& fileName);
         void readNameOfCreator();
         void readNumberOfTracks();
         void readNumberOfSides();

@@ -25,13 +25,13 @@ using namespace std;
 
 DSKFile::Track::Track(uint_fast16_t size) :
     magic {
-        'T', 'r', 'a', 'c', 'k', '-', 'I', 'n', 'f', 'o', '\r', '\n'
+        'T', 'r', 'a', 'c', 'k', '-', 'I', 'n', 'f', 'o', '\r', '\n', '\0'
     },
     trackSize(size),
     magicOk(false) {
 }
 
-bool DSKFile::Track::load(vector<uint8_t> const& data, uint_fast32_t offset) {
+bool DSKFile::Track::load(vector<uint8_t> const& data, size_t offset) {
 
     // Validate magic
     magicOk = equal(&magic[0x00], &magic[0x0C], &data[offset]);
@@ -65,7 +65,7 @@ bool DSKFile::Track::load(vector<uint8_t> const& data, uint_fast32_t offset) {
             size_t size =
                 (s.sectorLength) ? s.sectorLength : (0x80 << s.sectorSize);
             if ((dataOffset + size) <= data.size()) {
-                s.data.assign( &data[dataOffset], &data[dataOffset + size]);
+                s.data.assign(&data[dataOffset], &data[dataOffset + size]);
                 dataOffset += size;
             }
 
@@ -88,6 +88,35 @@ bool DSKFile::Track::load(vector<uint8_t> const& data, uint_fast32_t offset) {
     return magicOk;
 }
 
+void DSKFile::Track::dump(vector<uint8_t>& buffer) {
+
+    size_t offset = buffer.size();
+    buffer.insert(buffer.end(), 0x100, 0x00);
+
+    copy(&magic[0x00], &magic[0x0D], &buffer[offset]);
+    buffer[offset + 0x10] = trackNumber;
+    buffer[offset + 0x11] = sideNumber;
+    buffer[offset + 0x14] = sectorSize;
+    buffer[offset + 0x15] = numSectors;
+    buffer[offset + 0x16] = gapLength;
+    buffer[offset + 0x17] = fillerByte;
+
+    for (size_t ii = 0; ii < numSectors; ++ii) {
+        size_t base = offset + 0x18 + 8 * ii;
+        size_t seclen = sectors[ii].data.size();
+        buffer[base] = sectors[ii].track;
+        buffer[base + 0x01] = sectors[ii].side;
+        buffer[base + 0x02] = sectors[ii].sectorId;
+        buffer[base + 0x03] = sectors[ii].sectorSize;
+        buffer[base + 0x04] = sectors[ii].fdcStatusReg1;
+        buffer[base + 0x05] = sectors[ii].fdcStatusReg2;
+        buffer[base + 0x06] = (seclen & 0x00FF);
+        buffer[base + 0x07] = (seclen & 0xFF00) >> 8;
+        buffer.insert(buffer.end(), sectors[ii].data.begin(), sectors[ii].data.end());
+    }
+}
+
+/*
 void DSKFile::Track::readSector(vector<uint8_t>& data, uint_fast8_t id) {
 
     for (vector<Sector>::iterator it = sectors.begin();
@@ -98,7 +127,9 @@ void DSKFile::Track::readSector(vector<uint8_t>& data, uint_fast8_t id) {
         }
     }
 }
+*/
 
+uint8_t const DSKFile::specide[16] = "DSK by SpecIDE";
 
 DSKFile::DSKFile() :
     stdMagic {
@@ -121,7 +152,7 @@ DSKFile::DSKFile() :
 
 void DSKFile::load(string const& fileName) {
 
-    ifstream ifs(fileName.c_str(), ifstream::binary);
+    ifstream ifs(fileName.c_str(), ios::binary);
     if (ifs.good()) {
         fileData.clear();
 
@@ -147,7 +178,9 @@ void DSKFile::load(string const& fileName) {
         readNumberOfTracks();
         readNumberOfSides();
         buildTrackSizeTable();
-        loadTracks();
+        if (validFile) {
+            loadTracks();
+        }
     } else {
         cout << fileName << ": Not a DSK image file." << endl;
     }
@@ -176,7 +209,7 @@ void DSKFile::buildTrackSizeTable() {
 
     // We can't have so many tracks that we exceed the
     // Disk Information Block size.
-    if (extMagicOk && (totalTracks * 2 + 0x34) > 0x100) {
+    if (extMagicOk && (totalTracks + 0x34) > 0x100) {
         validFile = false;
         return;
     }
@@ -185,8 +218,8 @@ void DSKFile::buildTrackSizeTable() {
         uint_fast16_t trackSize = fileData[0x33] * 0x100 + fileData[0x32];
         trackSizeTable.assign(totalTracks, trackSize);
     } else if (extMagicOk) {
-        for (uint_fast16_t track = 0; track < totalTracks; ++track) {
-            uint_fast16_t trackSize = fileData[0x34 + track] * 0x100;
+        for (uint_fast16_t tt = 0; tt < totalTracks; ++tt) {
+            uint_fast16_t trackSize = fileData[0x34 + tt] * 0x100;
             trackSizeTable.push_back(trackSize);
         }
     }
@@ -206,6 +239,37 @@ void DSKFile::loadTracks() {
         }
 
         offset += trackSizeTable[tt];
+    }
+}
+
+void DSKFile::save(string const& fileName) {
+
+    size_t totalTracks = numTracks * numSides;
+    if (totalTracks > 208) {
+        cout << "Error: Too many tracks." << endl;
+    }
+
+    vector<uint8_t> buffer(&extMagic[0], &extMagic[34]);
+    buffer.insert(buffer.end(), &specide[0], &specide[14]);
+    buffer.push_back(numTracks);
+    buffer.push_back(numSides);
+
+    // Limit header to 0x100 bytes
+    buffer.resize(0x100, 0);
+
+    // Dump tracks
+    for (size_t ii = 0; ii < totalTracks; ++ii) {
+        buffer[0x34 + ii] = (trackSizeTable[ii] & 0xFF00) >> 8;
+        if (trackSizeTable[ii]) {
+            tracks[ii].dump(buffer);
+        }
+    }
+
+    ofstream ofs(fileName.c_str(), ios::binary);
+    if (ofs.good()) {
+        for (size_t ii = 0; ii < buffer.size(); ++ii) {
+            ofs.put(buffer[ii]);
+        }
     }
 }
 // vim: et:sw=4:ts=4:

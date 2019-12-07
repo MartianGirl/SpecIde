@@ -35,12 +35,12 @@ Spectrum::Spectrum() :
     set48(true), rom48(true),
     stereo(StereoMode::STEREO_MONO) {
 
-    // This is just for the laughs. We initialize the whole RAM to random
-    // values to see the random attributes that appeared in the Spectrum
-    // at boot time.
-    srand(static_cast<unsigned int>(time(0)));
-    for (size_t a = 0; a < (2 << 17); ++a)
-        ram[a] = rand() & 0xFF;
+    // This is just for the laughs. We initialize the whole RAM to the
+    // values that appeared in the Spectrum at boot time.
+    for (size_t ii = 0; ii < (1 << 16); ii += 2) {
+        *(reinterpret_cast<uint32_t*>(ram) + ii) = 0x00000000;
+        *(reinterpret_cast<uint32_t*>(ram) + ii + 1) = 0xFFFFFFFF;
+    }
 
     setPage(0, 0, true, false);
     setPage(1, 5, false, true);
