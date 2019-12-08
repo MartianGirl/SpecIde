@@ -191,8 +191,7 @@ class DiskDrive {
             size_t tr = (images[currentImage].numSides * cylinder) + head;
 
             if (tr >= images[currentImage].tracks.size()) {
-                images[currentImage].tracks.insert(images[currentImage].tracks.end(),
-                        tr - images[currentImage].tracks.size() + 1, DSKFile::Track());
+                images[currentImage].tracks.resize(tr, DSKFile::Track());
             }
             
             images[currentImage].tracks[tr].trackNumber = trackNumber;
@@ -206,22 +205,18 @@ class DiskDrive {
 
         void formatSector(int head,
                 uint_fast8_t idTr, uint_fast8_t idHd,
-                uint_fast8_t idSc, uint_fast8_t idSz,
-                uint_fast8_t byte) {
+                uint_fast8_t idSc, uint_fast8_t idSz) {
 
             if (disk && head < images[currentImage].numSides) {
                 size_t tr = (images[currentImage].numSides * cylinder) + head;
                 size_t sc = sector % images[currentImage].tracks[tr].numSectors;
-                if (sc == 0) {
-                    countHole();
-                }
 
                 images[currentImage].tracks[tr].sectors[sc].track = idTr;
                 images[currentImage].tracks[tr].sectors[sc].side = idHd;
                 images[currentImage].tracks[tr].sectors[sc].sectorId = idSc;
                 images[currentImage].tracks[tr].sectors[sc].sectorSize = idSz;
-                images[currentImage].tracks[tr].sectors[sc].sectorLength = idSz;
-                images[currentImage].tracks[tr].sectors[sc].data.assign(idSz, byte);
+                images[currentImage].tracks[tr].sectors[sc].sectorLength = buffer.size();
+                images[currentImage].tracks[tr].sectors[sc].data = buffer;
             }
         }
 

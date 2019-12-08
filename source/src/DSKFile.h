@@ -63,7 +63,6 @@ class DSKFile {
 
                 bool load(std::vector<uint8_t> const& data, uint_fast32_t offset);
                 void dump(std::vector<uint8_t>& data);
-                // void readSector(std::vector<uint8_t>& data, uint_fast8_t id);
         };
 
         DSKFile();

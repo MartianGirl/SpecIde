@@ -162,6 +162,7 @@ class FDC {
         void readIdCmd();
         void readTrackCmd();
         void writeCmd();
+        void formatCmd();
         void specifyCmd();
 
         uint_fast8_t read();

@@ -144,7 +144,6 @@ void FDC::checkCommand() {
             break;
 
         case 0x05:  // Write sector(s)
-            cout << "Write sector(s)." << endl;
             cmdBytes = 9;   // 05+MT+MF    HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDCState::FDC_STATE_COMMAND;
@@ -169,7 +168,6 @@ void FDC::checkCommand() {
             break;
 
         case 0x09:  // Write deleted sector(s)
-            cout << "Write deleted sector(s)." << endl;
             cmdBytes = 9;   // 09+MT+MF    HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDCState::FDC_STATE_COMMAND;
@@ -188,7 +186,6 @@ void FDC::checkCommand() {
             break;
 
         case 0x0D:  // Format track
-            cout << "Format track." << endl;
             cmdBytes = 6;   // 0D+MF       HU SZ NM GP FB
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDCState::FDC_STATE_COMMAND;
@@ -228,7 +225,6 @@ void FDC::checkCommand() {
             break;
 
         default:
-            cout << "Invalid command." << endl;
             cmdBytes = 1;   // XX
             resBytes = 1;   //             S0 (80)
             sReg[0] = 0x80;
@@ -302,6 +298,16 @@ void FDC::setup() {
             break;
 
         case 0x0D:  // Format track
+            dataBytes = 4 * cmdBuffer[3];
+            currSector = 0;
+            // Clear the track here...
+            drive[cmdDrive()].formatTrack(cmdHead(),
+                    presCylNum[cmdDrive()], cmdHead(),
+                    cmdBuffer[2], cmdBuffer[3], cmdBuffer[4], cmdBuffer[5]);
+            stage = FDCAccess::FDC_ACCESS_LOAD;
+            state = FDCState::FDC_STATE_RECEIVE;
+            break;
+
         case 0x11:  // Scan equal
         case 0x19:  // Scan low or equal
         case 0x1D:  // Scan high or equal
@@ -375,6 +381,7 @@ void FDC::execute() {
             break;
 
         case 0x0D:  // Format track
+            formatCmd();
             break;
 
         case 0x0F:  // Seek track N
@@ -414,6 +421,67 @@ void FDC::execute() {
             break;
 
         default:
+            break;
+    }
+}
+
+void FDC::formatCmd() {
+
+    switch (stage) {
+        case FDCAccess::FDC_ACCESS_LOAD:
+            if (headLoadOp()) {
+                stage = FDCAccess::FDC_ACCESS_SEEK;
+            }
+            break;
+
+        case FDCAccess::FDC_ACCESS_SEEK:
+            // Seek stage. Here we try to find the disk hole.
+            if (findHoleOp()) {
+                stage = FDCAccess::FDC_ACCESS_DATA;
+            }
+            // If we don't find the hole, the diskette is weird or
+            // the LED is broken...
+            break;
+
+        case FDCAccess::FDC_ACCESS_DATA:
+            // Get four id bytes for each sector
+            if (currSector < cmdBuffer[3]) {
+                uint_fast8_t fmtTrack = dataBuffer[4 * currSector];
+                uint_fast8_t fmtHead = dataBuffer[4 * currSector + 1];
+                uint_fast8_t fmtSector = dataBuffer[4 * currSector + 2];
+                uint_fast8_t fmtSize = dataBuffer[4 * currSector + 3];
+                drive[cmdDrive()].buffer.assign(0x80 << fmtSize, cmdBuffer[5]);
+                drive[cmdDrive()].formatSector(cmdHead(),
+                        fmtTrack, fmtHead, fmtSector, fmtSize);
+                drive[cmdDrive()].nextSector();
+                ++currSector;
+            } else {
+                sReg[0] = (cmdBuffer[1] & 0x07);
+                sReg[1] = 0x00;
+                sReg[2] = 0x00;
+                resTrack = dataBuffer[dataBytes - 4];
+                resHead = dataBuffer[dataBytes - 3];
+                resSector = dataBuffer[dataBytes - 2] + 1;
+                resSize = dataBuffer[dataBytes - 1];
+                stage = FDCAccess::FDC_ACCESS_UNLOAD;
+            }
+            break;
+
+        case FDCAccess::FDC_ACCESS_UNLOAD:
+            resBuffer[0] = sReg[0];
+            resBuffer[1] = sReg[1];
+            resBuffer[2] = sReg[2];
+            resBuffer[3] = resTrack;
+            resBuffer[4] = resHead;
+            resBuffer[5] = resSector;
+            resBuffer[6] = resSize;
+            unload = true;
+            interrupt = true;
+            state = FDCState::FDC_STATE_RESULT;
+            break;
+
+        default:
+            reset();
             break;
     }
 }

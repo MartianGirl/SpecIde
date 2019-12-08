@@ -116,19 +116,6 @@ void DSKFile::Track::dump(vector<uint8_t>& buffer) {
     }
 }
 
-/*
-void DSKFile::Track::readSector(vector<uint8_t>& data, uint_fast8_t id) {
-
-    for (vector<Sector>::iterator it = sectors.begin();
-            it != sectors.end();
-            ++it) {
-        if (it->sectorId == id) {
-            data.insert(data.end(), it->data.begin(), it->data.end());
-        }
-    }
-}
-*/
-
 uint8_t const DSKFile::specide[16] = "DSK by SpecIDE";
 
 DSKFile::DSKFile() :
