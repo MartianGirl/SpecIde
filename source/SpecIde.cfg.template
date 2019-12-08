@@ -24,7 +24,7 @@ model=plus2a
 # Option: joystick
 # Selects the emulated joystick interface.
 # Values: kempston, sinclair
-joystick=kempston
+joystick=sinclair
 
 # Option: pad
 # If using a joystick with more than 1 fire button, this
@@ -67,10 +67,10 @@ pad=yes
 # stereo=none
 
 # Option: psgtype
-# Selects the type of DAC used in the AY chip.
-# A logarithmic PSG is used by default.
-# Values: logarithmic, linear
-# psgtype=logarithmic
+# Selects the type of PSG chip between AY-3-8912 and YM-2149
+# Default is AY-3-8912
+# Values: ay, ym
+# psgtype=ay
 
 # Option: fullscreen
 # Selects fullscreen or windowed mode.
