@@ -23,12 +23,30 @@
 
 using namespace std;
 
-DSKFile::Track::Track(uint_fast16_t size) :
+DSKFile::Track::Sector::Sector(uint_fast8_t track, uint_fast8_t side,
+        uint_fast8_t id, uint_fast8_t size,
+        uint_fast8_t status1, uint_fast8_t status2) :
+    track(track),
+    side(side),
+    sectorId(id),
+    sectorSize(size),
+    fdcStatusReg1(status1),
+    fdcStatusReg2(status2),
+    sectorLength(0x80 << size),
+    data(sectorLength, 0xFF) {
+}
+
+DSKFile::Track::Track() :
     magic {
         'T', 'r', 'a', 'c', 'k', '-', 'I', 'n', 'f', 'o', '\r', '\n', '\0'
     },
-    trackSize(size),
-    magicOk(false) {
+    sectorSize(2),
+    numSectors(1),
+    gapLength(0x52),
+    fillerByte(0xE5),
+    trackSize(0x100 + (0x80 << sectorSize) * numSectors),
+    magicOk(false),
+    sectors(1, Sector(1, 0, 1, 2, 0, 0)) {
 }
 
 bool DSKFile::Track::load(vector<uint8_t> const& data, size_t offset) {
@@ -51,17 +69,18 @@ bool DSKFile::Track::load(vector<uint8_t> const& data, size_t offset) {
 
         size_t dataOffset = offset + 0x100;
         for (size_t ss = 0; ss < numSectors; ++ss) {
-            Sector s;
-
             size_t secEntry = offset + 0x18 + 8 * ss;
-            s.track = data[secEntry];
-            s.side = data[secEntry + 1];
-            s.sectorId = data[secEntry + 2];
-            s.sectorSize = data[secEntry + 3];
-            s.fdcStatusReg1 = data[secEntry + 4];
-            s.fdcStatusReg2 = data[secEntry + 5];
-            s.sectorLength = data[secEntry + 7] * 0x100 + data[secEntry + 6];
 
+            uint_fast8_t secTrack = data[secEntry];
+            uint_fast8_t secSide = data[secEntry + 1];
+            uint_fast8_t secId = data[secEntry + 2];
+            uint_fast8_t secSize = data[secEntry + 3];
+            uint_fast8_t secSreg1 = data[secEntry + 4];
+            uint_fast8_t secSreg2 = data[secEntry + 5];
+
+            Sector s(secTrack, secSide, secId, secSize, secSreg1, secSreg2);
+
+            s.sectorLength = data[secEntry + 7] * 0x100 + data[secEntry + 6];
             size_t size =
                 (s.sectorLength) ? s.sectorLength : (0x80 << s.sectorSize);
             if ((dataOffset + size) <= data.size()) {
@@ -114,6 +133,20 @@ void DSKFile::Track::dump(vector<uint8_t>& buffer) {
         buffer[base + 0x07] = (seclen & 0xFF00) >> 8;
         buffer.insert(buffer.end(), sectors[ii].data.begin(), sectors[ii].data.end());
     }
+}
+
+void DSKFile::Track::makeEmpty(size_t track, size_t side) {
+
+    trackNumber = track;
+    sideNumber = side;
+    sectorSize = 0x01;
+    numSectors = 0x01;
+    gapLength = 0x45;
+    fillerByte = 0xe5;
+    sectors.clear();
+
+    Sector s(track, side, 0xFF, 0x01, 0x01, 0x01);
+    sectors.push_back(s);
 }
 
 uint8_t const DSKFile::specide[16] = "DSK by SpecIDE";
@@ -215,10 +248,11 @@ void DSKFile::buildTrackSizeTable() {
 void DSKFile::loadTracks() {
 
     size_t totalTracks = numTracks * numSides;
-    tracks.assign(totalTracks, Track());
+    tracks.clear();
 
     size_t offset = 0x100;
     for (size_t tt = 0; tt < totalTracks; ++tt) {
+        tracks.push_back(Track());
         tracks[tt].trackSize = trackSizeTable[tt];
 
         if (trackSizeTable[tt]) {
@@ -246,8 +280,8 @@ void DSKFile::save(string const& fileName) {
 
     // Dump tracks
     for (size_t ii = 0; ii < totalTracks; ++ii) {
-        buffer[0x34 + ii] = (trackSizeTable[ii] & 0xFF00) >> 8;
-        if (trackSizeTable[ii]) {
+        buffer[0x34 + ii] = ((tracks[ii].trackSize & 0xFF00) >> 8);
+        if (tracks[ii].trackSize) {
             tracks[ii].dump(buffer);
         }
     }
@@ -256,6 +290,23 @@ void DSKFile::save(string const& fileName) {
     if (ofs.good()) {
         for (size_t ii = 0; ii < buffer.size(); ++ii) {
             ofs.put(buffer[ii]);
+        }
+    }
+}
+
+void DSKFile::makeEmpty() {
+
+    // Create a standard 3" disk
+    numTracks = 0x28;
+    numSides = 0x01;
+    extMagicOk = true;
+    validFile = true;
+    tracks.clear();
+
+    for (size_t tr = 0; tr < numTracks; ++tr) {
+        for (size_t sc = 0; sc < numSides; ++sc) {
+            tracks.push_back(Track());
+            tracks[numSides * sc + tr].makeEmpty(tr, sc);
         }
     }
 }

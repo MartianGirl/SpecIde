@@ -390,7 +390,7 @@ int main(int argc, char* argv[]) {
 
                     if (dsk.validFile) {
                         screen.spectrum.fdc.drive[0].images.push_back(dsk);
-                        screen.spectrum.fdc.drive[0].imagenames.push_back(*it);
+                        screen.spectrum.fdc.drive[0].imageNames.push_back(*it);
                         screen.spectrum.fdc.drive[0].disk = true;
                     }
                 }

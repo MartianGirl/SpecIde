@@ -44,9 +44,13 @@ class DSKFile {
                         uint_fast16_t sectorLength;
 
                         std::vector<uint8_t> data;
+
+                        Sector(uint_fast8_t track, uint_fast8_t side,
+                                uint_fast8_t id, uint_fast8_t size,
+                                uint_fast8_t status1, uint_fast8_t status2);
                 };
 
-                Track(uint_fast16_t size = 0);
+                Track();
 
                 uint_fast8_t magic[13];
                 uint_fast8_t trackNumber;
@@ -57,12 +61,13 @@ class DSKFile {
                 uint_fast8_t fillerByte;
                 uint_fast16_t trackSize;
 
-                std::vector<Sector> sectors;
-
                 bool magicOk;
+
+                std::vector<Sector> sectors;
 
                 bool load(std::vector<uint8_t> const& data, uint_fast32_t offset);
                 void dump(std::vector<uint8_t>& data);
+                void makeEmpty(size_t track, size_t side);
         };
 
         DSKFile();
@@ -90,6 +95,7 @@ class DSKFile {
         void readNumberOfSides();
         void buildTrackSizeTable();
         void loadTracks();
+        void makeEmpty();
 };
 
 // vim: et:sw=4:ts=4:

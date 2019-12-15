@@ -24,7 +24,9 @@
 #include "DSKFile.h"
 
 #include <cstdint>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -57,10 +59,8 @@ class DiskDrive {
         vector<uint8_t> buffer;
 
         vector<DSKFile> images;
-        vector<string> imagenames;
+        vector<string> imageNames;
         size_t currentImage;
-
-        uint_fast8_t disks = 0;
 
         /**
          * Advance disk to next sector.
@@ -190,8 +190,8 @@ class DiskDrive {
 
             size_t tr = (images[currentImage].numSides * cylinder) + head;
 
-            if (tr >= images[currentImage].tracks.size()) {
-                images[currentImage].tracks.resize(tr, DSKFile::Track());
+            while (tr >= images[currentImage].tracks.size()) {
+                images[currentImage].tracks.push_back(DSKFile::Track());
             }
             
             images[currentImage].tracks[tr].trackNumber = trackNumber;
@@ -200,7 +200,10 @@ class DiskDrive {
             images[currentImage].tracks[tr].numSectors = numSectors;
             images[currentImage].tracks[tr].gapLength = gapLength;
             images[currentImage].tracks[tr].fillerByte = fillerByte;
-            images[currentImage].tracks[tr].sectors.assign(numSectors, DSKFile::Track::Sector());
+            images[currentImage].tracks[tr].sectors.assign(numSectors, DSKFile::Track::Sector(
+                        trackNumber, sideNumber, 0x00, sectorSize, 0x00, 0x00));
+            images[currentImage].tracks[tr].trackSize = ((0x80 << sectorSize) * numSectors) + 0x100;
+            images[currentImage].tracks[tr].magicOk = true;
         }
 
         void formatSector(int head,
@@ -215,6 +218,8 @@ class DiskDrive {
                 images[currentImage].tracks[tr].sectors[sc].side = idHd;
                 images[currentImage].tracks[tr].sectors[sc].sectorId = idSc;
                 images[currentImage].tracks[tr].sectors[sc].sectorSize = idSz;
+                images[currentImage].tracks[tr].sectors[sc].fdcStatusReg1 = 0x00;
+                images[currentImage].tracks[tr].sectors[sc].fdcStatusReg2 = 0x00;
                 images[currentImage].tracks[tr].sectors[sc].sectorLength = buffer.size();
                 images[currentImage].tracks[tr].sectors[sc].data = buffer;
             }
@@ -253,7 +258,7 @@ class DiskDrive {
                 if (currentImage == images.size()) {
                     currentImage = 0;
                 }
-                cout << "Currently inserted disk: " << imagenames[currentImage] << endl;
+                cout << "Currently inserted disk: " << imageNames[currentImage] << endl;
             }
         }
 
@@ -264,18 +269,40 @@ class DiskDrive {
                     currentImage = images.size();
                 }
                 --currentImage;
-                cout << "Currently inserted disk: " << imagenames[currentImage] << endl;
+                cout << "Currently inserted disk: " << imageNames[currentImage] << endl;
             }
+        }
+
+        void emptyDisk() {
+
+            static size_t disks = 0;
+
+            stringstream ss;
+            ss << "Empty Disk " << disks;
+            ++disks;
+
+            DSKFile dsk;
+            dsk.makeEmpty();
+            images.push_back(dsk);
+            imageNames.push_back(ss.str());
+            disk = true;
+
+            currentImage = images.size() - 1;
+            cout << "Currently inserted disk: " << imageNames[currentImage] << endl;
         }
 
         void saveDisk() {
 
-            char name[256];
-            snprintf(name, 256, "savedisk%02u.dsk", disks);
-            cout << "Saving to " << name << endl;
-            disks = (disks + 1) % 100;
+            static size_t disks = 0;
 
+            stringstream ss;
+            ss << "savedisk" << dec << setw(2) << setfill('0') << disks << ".dsk";
+            string name = ss.str();
+
+            cout << "Saving to " << name << endl;
             images[currentImage].save(name);
+
+            disks = (disks + 1) % 100;
         }
 };
 
