@@ -46,3 +46,13 @@ SpecIde
 *.scr
 *.tap
 *.tzx
+*.dsk
+*.csw
+*.cdt
+*.z80
+*.sna
+
+# These files can also be ignored.
+*.asm
+*.txt
+*.zip
