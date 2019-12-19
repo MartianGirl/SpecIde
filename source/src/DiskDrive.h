@@ -295,14 +295,16 @@ class DiskDrive {
 
             static size_t disks = 0;
 
-            stringstream ss;
-            ss << "savedisk" << dec << setw(2) << setfill('0') << disks << ".dsk";
-            string name = ss.str();
+            if (disk) {
+                stringstream ss;
+                ss << "savedisk" << dec << setw(2) << setfill('0') << disks << ".dsk";
+                string name = ss.str();
 
-            cout << "Saving to " << name << endl;
-            images[currentImage].save(name);
+                cout << "Saving to " << name << endl;
+                images[currentImage].save(name);
 
-            disks = (disks + 1) % 100;
+                disks = (disks + 1) % 100;
+            }
         }
 };
 
