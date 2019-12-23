@@ -65,7 +65,7 @@ class DSKFile {
 
                 std::vector<Sector> sectors;
 
-                bool load(std::vector<uint8_t> const& data, uint_fast32_t offset);
+                bool load(std::vector<uint8_t> const& data, size_t offset);
                 void dump(std::vector<uint8_t>& data);
                 void makeEmpty(size_t track, size_t side);
         };
