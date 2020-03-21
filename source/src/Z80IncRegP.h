@@ -19,6 +19,17 @@
  *
  * Instruction: INC rr
  *
+ * Encoding: 00 rr0 011
+ * M Cycles: 1 (OCF(6))
+ * T States: 6
+ *
+ *  Reg   rr
+ *  ---- ----
+ *   BC   00
+ *   DE   01
+ *   HL   10
+ *   SP   11
+ *
  */
 
 bool z80IncRegP()

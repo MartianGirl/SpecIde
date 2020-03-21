@@ -91,7 +91,7 @@ void TAPFile::parse(
         }
 
         // Insert the pause. Annotate the pause.
-        pulseData.push_back(((flagByte & 0x80) ? 5000 : 1000) * MILLISECOND_PAUSE);
+        pulseData.push_back(1000 * MILLISECOND_PAUSE);
         pulseData.push_back(100);
         indexData.insert(pulseData.size());
 

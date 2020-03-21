@@ -208,10 +208,24 @@ void ULA::generateVideoDataUla()
     bool ioContention = ioUlaPort && iorqLow && z80Clk;         // T2 TW T3
     bool ioContentionOff = ioUlaPort && iorqLow_d;              // TW T3 NN
 
-    // We use the same contention manager, and we consider contention when
-    // there is any contention, and when no contention is not disabled.
-    contention = (memContention || ioContention)        // Contention On?
-        && !(memContentionOff || ioContentionOff);      // Contention Off?
+    // Now, we have two different contention schemes in accesses
+    // 1. We have pure memory accesses. Here, the contention will happen if
+    //    the address is in 0x4000-0x7FFF range or 0xC000-0xFFFF for contended
+    //    RAM pages. The contention is disabled when MREQ goes low. The first
+    //    term handles this contention type.
+    // 2. We have I/O ULA accesses when the port address is not like a contended
+    //    memory address. In this case, the contention is disabled after IORQ
+    //    is low for one cycle.
+    // 3. We have I/O ULA accesses when the port address is like a contended memory
+    //    address. Here we have the memory contention part before the I/O
+    //    contention happens, then we have the I/O contention, until the I/O
+    //    contention is lifted. The second term handles both cases.
+    // 4. Finally, we have other I/O accesses where the I/O address looks
+    //    like a contended memory address. In this case, no I/O
+    //    contention happens, but MREQ never goes low, so every cycle is
+    //    contended.
+    contention = (memContention && !ioContention && !memContentionOff)
+        || (ioContention && !ioContentionOff);
 
     // Resolve contention and generate CPU clock.
     cpuClock = !(contention && delayTable[pixel & 0x0F]);
