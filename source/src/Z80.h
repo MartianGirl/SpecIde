@@ -39,24 +39,13 @@ class Z80
 #include "Z80EDPrefixedTable.h"
 #include "Z80FDPrefixedTable.h"
 #include "Z80XXCBPrefixedTable.h"
-        a(0xFFFF), d(0xFF), c(0xFFFF),
-        state(Z80State::ST_RESET),
         reg8{&bc.b.h, &bc.b.l, &de.b.h, &de.b.l, &hl.b.h, &hl.b.l, nullptr, &af.b.h},
         regx8{&bc.b.h, &bc.b.l, &de.b.h, &de.b.l, &ix.b.h, &ix.b.l, nullptr, &af.b.h},
         regy8{&bc.b.h, &bc.b.l, &de.b.h, &de.b.l, &iy.b.h, &iy.b.l, nullptr, &af.b.h},
         regp{&bc.w, &de.w, &hl.w, &sp.w},
         regp2{&bc.w, &de.w, &hl.w, &af.w},
         regpx{&bc.w, &de.w, &ix.w, &sp.w},
-        regpy{&bc.w, &de.w, &iy.w, &sp.w},
-        x(0), y(0), z(0), p(0), q(0),
-        prefix(0),
-        executionStep(0), skipCycles(0),
-        memRdCycles(0), memWrCycles(0),
-        ioRdCycles(0), ioWrCycles(0),
-        cpuProcCycles(0),
-        nmiAccept(false), nmiProcess(false),
-        intProcess(false), access(false),
-        c_d(0xFFFF), iff_d(0x00), dout(0xFF)
+        regpy{&bc.w, &de.w, &iy.w, &sp.w}
         {
             if (!flagsReady)
             {
@@ -122,12 +111,12 @@ class Z80
 #include "Z80IntMode2.h"
 
         // Signals
-        uint_fast16_t a;
-        uint_fast8_t d;
-        uint_fast16_t c;
+        uint_fast16_t a = 0xFFFF;
+        uint_fast8_t d = 0xFF;
+        uint_fast16_t c = 0xFFFF;
 
         // State
-        Z80State state;
+        Z80State state = Z80State::ST_RESET;
 
         // Registers
         Z80Register pc;
@@ -161,26 +150,33 @@ class Z80
         uint_fast8_t iff;
         uint_fast8_t im;
         uint_fast8_t intNotReady;
+        uint_fast8_t zeroByte = 0x00;  // For OUT(C), 0
 
-        uint_fast8_t x, y, z, p, q;
-        uint_fast8_t opcode;
-        uint_fast8_t prefix;
-        uint_fast8_t executionStep;
-        uint_fast8_t skipCycles;
-        uint_fast8_t memRdCycles, memWrCycles;
-        uint_fast8_t ioRdCycles, ioWrCycles;
-        uint_fast8_t cpuProcCycles;
-        uint_fast32_t memAddrMode;
+        uint_fast8_t x = 0;
+        uint_fast8_t y = 0;
+        uint_fast8_t z = 0;
+        uint_fast8_t p = 0;
+        uint_fast8_t q = 0;
+        uint_fast8_t opcode = 0x00;
+        uint_fast8_t prefix = 0x00;
+        uint_fast8_t executionStep = 0;
+        uint_fast8_t skipCycles = 0;
+        uint_fast8_t memRdCycles = 0;
+        uint_fast8_t memWrCycles = 0;
+        uint_fast8_t ioRdCycles = 0;
+        uint_fast8_t ioWrCycles = 0;
+        uint_fast8_t cpuProcCycles = 0;
+        uint_fast32_t memAddrMode = 0x00000000;
 
-        bool nmiAccept;
-        bool nmiProcess;
-        bool intAccept;
-        bool intProcess;
-        bool access;
+        bool nmiAccept = false;
+        bool nmiProcess = false;
+        bool intAccept = false;
+        bool intProcess = false;
+        bool access = false;
 
-        uint_fast16_t c_d;
-        uint_fast8_t iff_d;
-        uint_fast8_t dout;
+        uint_fast16_t c_d = 0xFFFF;
+        uint_fast8_t iff_d = 0x00;
+        uint_fast8_t dout = 0xFF;
 
         // Precalculated flags
         static uint8_t addFlags[2][256][256];

@@ -83,6 +83,7 @@ int main(int argc, char* argv[]) {
             cout << "--abc|--acb|--mono     Select stereo mode." << endl;
             cout << "--ay|--ym              Select PSG: AY-3-8912/YM-2149." << endl;
             cout << "--sd1                  Emulate Dinamic SD1 dongle." << endl;
+            cout << "--cmos                 Z80 is CMOS - OUT(C),0 outputs FFh." << endl;
             cout << endl;
             cout << "Video options:" << endl;
             cout << "--fullscreen           Start SpecIde in full screen mode." << endl;
@@ -211,6 +212,8 @@ int main(int argc, char* argv[]) {
             options["sd1"] = "yes";
         if (*it == "--nosd1")
             options["sd1"] = "no";
+        if (*it == "--cmos")
+            options["z80type"] = "cmos";
 
         if (it->find('.') != string::npos)
             files.push_back(*it);
@@ -369,6 +372,9 @@ int main(int argc, char* argv[]) {
         cout << "SD1 dongle: " << options["sd1"] << endl;
     }
 
+    screen.spectrum.z80.zeroByte = options["z80type"] == "cmos" ? 0xFF : 0x00;
+    cout << "Z80 type: " << options["z80type"] << endl;
+
     for (vector<string>::iterator it = files.begin(); it != files.end(); ++it) {
         switch (guessFileType(*it)) {
             case FileTypes::FILETYPE_TZX:
@@ -480,6 +486,7 @@ void readOptions(map<string, string>& options) {
     options["sync"] = "no";
     options["sd1"] = "no";
     options["scale"] = "1";
+    options["z80type"] = "nmos";
 
     vector<string> cfgPaths;
     string cfgName("SpecIde.cfg");

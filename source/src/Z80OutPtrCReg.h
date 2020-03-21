@@ -45,7 +45,7 @@ bool z80OutPtrCReg()
             memAddrMode = 0x0000000E;
 
             wz.w = bc.w;
-            oReg.b.l = (y == 6) ? 0x00 : *reg8[y];
+            oReg.b.l = (y == 6) ? zeroByte : *reg8[y];
             return true;
         case 1:
             flg = 0;
