@@ -291,6 +291,35 @@ void ULA::generateVideoDataGa()
     }
 }
 
+void ULA::generateVideoDataPentagon()
+{
+    // Check for contended memory or I/O accesses.
+    idle = idleTable[pixel & 0x0F];
+    mem = memTable[pixel & 0x0F];
+
+    // Read from memory.
+    switch (pixel & 0x0F)
+    {
+        case 0x00: break;
+        case 0x01: break;
+        case 0x02: break;
+        case 0x03: break;
+        case 0x04: break;
+        case 0x05: break;
+        case 0x06: break;
+        case 0x07: break;
+        case 0x08: a = dataAddr++; break;
+        case 0x09: dataReg = d; break;
+        case 0x0A: a = attrAddr++; break;
+        case 0x0B: attrReg = d; break;
+        case 0x0C: a = dataAddr++; break;
+        case 0x0D: dataReg = d; break;
+        case 0x0E: a = attrAddr++; break;
+        case 0x0F: attrReg = d; break;
+        default: break;
+    }
+}
+
 void ULA::paint()
 {
     data = video ? dataReg : 0xFF;
@@ -447,10 +476,17 @@ void ULA::clock()
 
     if (!border)
     {
-        if (ulaVersion == 4)
-            generateVideoDataGa();
-        else
-            generateVideoDataUla();
+        switch (ulaVersion) {
+            case 4:
+                generateVideoDataGa();
+                break;
+            case 5:
+                generateVideoDataPentagon();
+                break;
+            default:
+                generateVideoDataUla();
+                break;
+        }
     }
 
     tapeEarMic();
@@ -501,6 +537,8 @@ void ULA::setUlaVersion(uint_fast8_t version)
     hBlankStart = 0x140;
     hBlankEnd = 0x19F;
 
+    hBorderStart = 0x101;
+
     vBorderStart = 0x0C0;
     vBlankStart = 0x0F8;
     vBlankEnd = 0x0FF;
@@ -510,7 +548,6 @@ void ULA::setUlaVersion(uint_fast8_t version)
     switch (ulaVersion)
     {
         case 0: // 48K, Issue 2
-            hBorderStart = 0x101;
             hSyncEnd = 0x170;
             maxPixel = 0x1C0;
             interruptStart = 0x000;
@@ -518,7 +555,6 @@ void ULA::setUlaVersion(uint_fast8_t version)
             maxScan = 0x138;
             break;
         case 1: // 48K, Issue 3
-            hBorderStart = 0x101;
             hSyncEnd = 0x178;
             maxPixel = 0x1C0;
             interruptStart = 0x000;
@@ -526,7 +562,6 @@ void ULA::setUlaVersion(uint_fast8_t version)
             maxScan = 0x138;
             break;
         case 2: // 128K
-            hBorderStart = 0x101;
             hSyncEnd = 0x178;
             maxPixel = 0x1C8;
             interruptStart = 0x004;
@@ -535,7 +570,6 @@ void ULA::setUlaVersion(uint_fast8_t version)
             micMask = 0x01;
             break;
         case 3: // +2 (128K with late timings)
-            hBorderStart = 0x101;
             hSyncEnd = 0x178;
             maxPixel = 0x1C8;
             interruptStart = 0x002;
@@ -554,18 +588,17 @@ void ULA::setUlaVersion(uint_fast8_t version)
             cpuClock = true;
             micMask = 0x01;
             break;
-            // case 4: // Pentagon
-            // hSyncEnd = 0x158;
-            // hBlankStart = 0x138;
-            // hBlankEnd = 0x177;
-            // maxPixel = 0x1C0;
-            // vBlankStart = 0x0F0;
-            // vSyncStart = 0x0F0;
-            // maxScan = 0x140;
-            // interruptStart = 0x000;
-            // interruptEnd = 0x03F;
-            // break;
-
+        case 5: // Pentagon
+            hSyncEnd = 0x158;
+            hBlankStart = 0x138;
+            hBlankEnd = 0x198;
+            maxPixel = 0x1C0;
+            vBlankStart = 0x0F0;
+            vSyncStart = 0x0F0;
+            maxScan = 0x140;
+            interruptStart = 0x158;
+            interruptEnd = 0x198;
+            break;
         default:
             hBorderStart = 0x101;
             hSyncEnd = 0x178;
@@ -603,16 +636,15 @@ void ULA::setUlaVersion(uint_fast8_t version)
     };
 
 
-    for (uint_fast8_t ii = 0; ii < 16; ++ii)
-    {
-        if (ulaVersion == 4)
-        {
+    for (uint_fast8_t ii = 0; ii < 16; ++ii) {
+        if (ulaVersion == 4) {
             delayTable[ii] = delayGa[ii];
             idleTable[ii] = idleGa[ii];
             memTable[ii] = memGa[ii];
-        }
-        else
-        {
+        } else if (ulaVersion == 5) {
+            idleTable[ii] = idleGa[ii];
+            memTable[ii] = memGa[ii];
+        } else {
             delayTable[ii] = delayUla[ii];
             idleTable[ii] = idleUla[ii];
             memTable[ii] = memUla[ii];

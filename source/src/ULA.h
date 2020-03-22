@@ -46,6 +46,7 @@ class ULA
         void generateInterrupt();
         void generateVideoDataUla();
         void generateVideoDataGa();
+        void generateVideoDataPentagon();
         void tapeEarMic();
         uint_fast8_t ioRead();
         void ioWrite(uint_fast8_t byte);

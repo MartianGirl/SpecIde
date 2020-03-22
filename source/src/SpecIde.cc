@@ -132,6 +132,8 @@ int main(int argc, char* argv[]) {
             options["model"] = "plus3";
         if (*it == "--plus3sp")
             options["model"] = "plus3sp";
+        if (*it == "--pentagon")
+            options["model"] = "pentagon";
 
         // Joystick options
         if (*it == "--kempston")
@@ -272,6 +274,11 @@ int main(int argc, char* argv[]) {
         screen.spectrum.loadRoms(RomVariant::ROM_PLUS3_ES);
         screen.spectrum.setPlus3();
         screen.spectrum.ula.setUlaVersion(4);
+    } else if (options["model"] == "pentagon") {
+        screen.set128K(true);
+        screen.spectrum.loadRoms(RomVariant::ROM_128_EN);
+        screen.spectrum.set128K();
+        screen.spectrum.ula.setUlaVersion(5);
     } else {
         options["model"] = "default";
         screen.set128K(false);
