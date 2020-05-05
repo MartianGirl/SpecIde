@@ -155,6 +155,7 @@ class ULA
         uint_fast8_t soundBits = 0x00;
         uint_fast8_t inMask = 0xBF;
         uint_fast8_t borderAttr = 0x00;
+        uint_fast8_t borderMask = 0xFF;
         uint_fast8_t tapeIn = 0x00;
 
         // Keyboard half rows

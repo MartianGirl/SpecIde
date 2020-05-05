@@ -322,10 +322,11 @@ void ULA::generateVideoDataPentagon()
 
 void ULA::paint()
 {
-    data = video ? dataReg : 0xFF;
+    data = video ? dataReg : borderMask;
     attr = video ? attrReg : borderAttr;
     colour[0] = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
     colour[1] = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+    borderMask = 0xFF;
 
     if (!blanking)
     {
@@ -430,52 +431,54 @@ uint_fast8_t ULA::ioRead()
     return byte;
 }
 
-void ULA::ioWrite(uint_fast8_t byte)
-{
+void ULA::ioWrite(uint_fast8_t byte) {
+
     soundBits = (byte & 0x18) >> 3;
-    borderAttr = byte & 0x07;
+
+    borderMask = 0xFF;
+    borderAttr = ((borderAttr << 3) | (byte & 0x07)) & 0x3F;
+    if (ulaVersion == 5) {
+        borderMask &= (1 << (pixel & 0x07)) - 1;
+    }
 }
 
-void ULA::beeper()
-{
+void ULA::beeper() {
+
     // Smooth the signal directly from the ULA.
-    if (playSound)
-    {
+    if (playSound) {
         filter[index] = (soundBits & 0x02) ? SOUND_VOLUME : 0;
-        if (tapeSound)
-        {
+        if (tapeSound) {
             // In Spectrum 48K, ULA.b3 only causes sound if ULA.b4 is set.
             // In Spectrum 128K, ULA.b3 causes sound on its own.
             filter[index] +=
                 + (((soundBits & micMask) == micMask) ? SAVE_VOLUME : 0)
                 + ((tapeIn & 0x40) ? LOAD_VOLUME : 0);
         }
-    }
-    else
-    {
+    } else {
         filter[index] = 0x00;
     }
 
     index = (index + 1) % FILTER_BZZ_SIZE;
 }
 
-void ULA::sample()
-{
+void ULA::sample() {
+
     sound = 0;
-    for (size_t i = 0; i < FILTER_BZZ_SIZE; ++i)
+    for (size_t i = 0; i < FILTER_BZZ_SIZE; ++i) {
         sound += filter[i];
+    }
     sound /= FILTER_BZZ_SIZE;
 }
 
-void ULA::clock()
-{
+void ULA::clock() {
+
     generateVideoControlSignals();
 
-    if (scan == vSyncStart)
+    if (scan == vSyncStart) {
         generateInterrupt();
+    }
 
-    if (!border)
-    {
+    if (!border) {
         switch (ulaVersion) {
             case 4:
                 generateVideoDataGa();
@@ -499,17 +502,19 @@ void ULA::clock()
         z80Clk = !z80Clk;
     }
 
-    if ((pixel & 0x07) == paintPixel)
+    if ((pixel & 0x07) == paintPixel) {
         paint();
+    }
 
     ++pixel;
 
-    if (ulaReset)
+    if (ulaReset) {
         start();
+    }
 }
 
-void ULA::start()
-{
+void ULA::start() {
+
     pixel = 0;
     scan = 0;
     ulaReset = false;
@@ -521,13 +526,13 @@ void ULA::start()
 
 }
 
-void ULA::reset()
-{
+void ULA::reset() {
+
     ulaReset = true;
 }
 
-void ULA::setUlaVersion(uint_fast8_t version)
-{
+void ULA::setUlaVersion(uint_fast8_t version) {
+
     ulaVersion = version;
     paintPixel = 0x04;
     micMask = 0x03;
@@ -545,8 +550,7 @@ void ULA::setUlaVersion(uint_fast8_t version)
     vSyncStart = 0x0F8;
     vSyncEnd = 0x0FC;
 
-    switch (ulaVersion)
-    {
+    switch (ulaVersion) {
         case 0: // 48K, Issue 2
             hSyncEnd = 0x170;
             maxPixel = 0x1C0;
@@ -626,10 +630,6 @@ void ULA::setUlaVersion(uint_fast8_t version)
         true, true, false, false, true, true, true, true,
         true, true, true, true, true, true, true, true
     };
-    bool idleGa[16] = {
-        true, true, true, true, true, true, true, true,
-        true, true, true, true, true, true, true, true
-    };
     bool memGa[16] = {
         true, true, true, true, true, true, true, true,
         false, true, false, true, false, true, false, true
@@ -639,10 +639,11 @@ void ULA::setUlaVersion(uint_fast8_t version)
     for (uint_fast8_t ii = 0; ii < 16; ++ii) {
         if (ulaVersion == 4) {
             delayTable[ii] = delayGa[ii];
-            idleTable[ii] = idleGa[ii];
+            idleTable[ii] = true;       // +2A/+3 has no floating bus
             memTable[ii] = memGa[ii];
         } else if (ulaVersion == 5) {
-            idleTable[ii] = idleGa[ii];
+            delayTable[ii] = false;     // Pentagon has No contention
+            idleTable[ii] = true;       // Pentagon has no floating bus
             memTable[ii] = memGa[ii];
         } else {
             delayTable[ii] = delayUla[ii];
@@ -651,7 +652,8 @@ void ULA::setUlaVersion(uint_fast8_t version)
         }
     }
 
-    for (uint_fast32_t ii = 0; ii < 4; ++ii)
+    for (uint_fast32_t ii = 0; ii < 4; ++ii) {
         voltage[ii] = voltages[ulaVersion][ii];
+    }
 }
 // vim: et:sw=4:ts=4:
