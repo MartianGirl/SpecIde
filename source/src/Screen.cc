@@ -393,6 +393,13 @@ void Screen::pollEvents() {
                             setFullScreen(fullscreen);
                         }
                         break;
+                    case Keyboard::F:
+                        if (event.key.alt) {
+                            fullscreen = !fullscreen;
+                            reopenWindow(fullscreen);
+                            setFullScreen(fullscreen);
+                        }
+                        break;
                     case Keyboard::F3:  // Save DSK to disk
                         if (event.key.shift) {
                             spectrum.fdc.drive[0].emptyDisk();
@@ -597,6 +604,9 @@ void Screen::pollEvents() {
 
 void Screen::scanKeys(Event const& event) {
 
+    static bool lshift = false;
+    static bool rshift = false;
+
     for (size_t ii = 0; ii < 8; ++ii) {
         keyboardMask[ii] = 0xFF;
     }
@@ -618,10 +628,10 @@ void Screen::scanKeys(Event const& event) {
             keyboardMask[0] = 0xF5; break;
         case Keyboard::Period:      // Symbol Shift + M
             keyboardMask[0] = 0xF9; break;
-        case Keyboard::LAlt:    // Extend Mode = Caps Shift + Symbol Shift
+        case Keyboard::Tab:         // Extend Mode = Caps Shift + Symbol Shift
             keyboardMask[0] = 0xFD;
             keyboardMask[7] = 0xFE; break;
-        case Keyboard::Escape:  // Break = Caps Shift + Space
+        case Keyboard::Escape:      // Break = Caps Shift + Space
             keyboardMask[0] = 0xFE;
             keyboardMask[7] = 0xFE; break;
 
@@ -647,7 +657,7 @@ void Screen::scanKeys(Event const& event) {
         case Keyboard::P:
             keyboardMask[2] = 0xFE; break;
 
-        case Keyboard::Quote:   // Symbol Shift + P
+        case Keyboard::Quote:       // Symbol Shift + P
             keyboardMask[0] = 0xFD;
             keyboardMask[2] = 0xFE; break;
 
@@ -671,7 +681,6 @@ void Screen::scanKeys(Event const& event) {
         case Keyboard::Right:       // Caps Shift + 8
             keyboardMask[3] = 0xFB;
             keyboardMask[7] = 0xFE; break;
-        case Keyboard::Tab:
         case Keyboard::Insert:      // Graph Mode: Caps Shift + 9
             keyboardMask[3] = 0xFD;
             keyboardMask[7] = 0xFE; break;
@@ -698,9 +707,6 @@ void Screen::scanKeys(Event const& event) {
             keyboardMask[7] = 0xFE; break;
         case Keyboard::End:         // True Video: Caps Shift + 3
             keyboardMask[4] = 0xFB;
-            keyboardMask[7] = 0xFE; break;
-        case Keyboard::Unknown:      // Caps Lock: Caps Shift + 2
-            keyboardMask[4] = 0xFD;
             keyboardMask[7] = 0xFE; break;
         case Keyboard::Delete:   // Edit: Caps Shift + 1
             keyboardMask[4] = 0xFE;
@@ -736,9 +742,27 @@ void Screen::scanKeys(Event const& event) {
             keyboardMask[7] = 0xFB; break;
         case Keyboard::Z:
             keyboardMask[7] = 0xFD; break;
-        case Keyboard::LShift:
+        case Keyboard::LShift:      // Handle Caps Lock (Caps Shift + 2) when
+                                    // both Shifts are pressed
+            keyboardMask[7] = 0xFE;
+            if (event.type == Event::KeyPressed) {
+                lshift = true;
+                if (rshift) keyboardMask[4] = 0xFD;
+            } else if (event.type == Event::KeyReleased) {
+                lshift = false;
+                if (rshift) keyboardMask[4] = 0xFD;
+            }
+            break;
         case Keyboard::RShift:
-            keyboardMask[7] = 0xFE; break;
+            keyboardMask[7] = 0xFE;
+            if (event.type == Event::KeyPressed) {
+                rshift = true;
+                if (lshift) keyboardMask[4] = 0xFD;
+            } else if (event.type == Event::KeyReleased) {
+                rshift = false;
+                if (lshift) keyboardMask[4] = 0xFD;
+            }
+            break;
 
         default:
             break;
