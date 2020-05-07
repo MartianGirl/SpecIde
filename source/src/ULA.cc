@@ -438,7 +438,17 @@ void ULA::ioWrite(uint_fast8_t byte) {
     borderMask = 0xFF;
     borderAttr = ((borderAttr << 3) | (byte & 0x07)) & 0x3F;
     if (ulaVersion == 5) {
-        borderMask &= (1 << (pixel & 0x07)) - 1;
+        switch (pixel & 0x07) {
+            case 0x00: borderMask = 0x3f; break;
+            case 0x01: borderMask = 0x0f; break;
+            case 0x02: borderMask = 0x0f; break;
+            case 0x03: borderMask = 0x03; break;
+            case 0x04: borderMask = 0x03; break;
+            case 0x05: borderMask = 0xff; break;
+            case 0x06: borderMask = 0xff; break;
+            case 0x07: borderMask = 0x3f; break;
+            default: break;
+        }
     }
 }
 
@@ -593,15 +603,15 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             micMask = 0x01;
             break;
         case 5: // Pentagon
-            hSyncEnd = 0x158;
-            hBlankStart = 0x138;
-            hBlankEnd = 0x198;
+            hSyncEnd = 0x160;
+            hBlankEnd = 0x1A0;
             maxPixel = 0x1C0;
             vBlankStart = 0x0F0;
+            vBlankEnd = 0x100;
             vSyncStart = 0x0F0;
             maxScan = 0x140;
-            interruptStart = 0x158;
-            interruptEnd = 0x198;
+            interruptStart = 0x140;
+            interruptEnd = 0x180;
             break;
         default:
             hBorderStart = 0x101;
