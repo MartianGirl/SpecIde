@@ -53,6 +53,7 @@ class ULA
         void beeper();
         void sample();
         void start();
+        void updateAttributes();
 
         void setUlaVersion(uint_fast8_t version);
 

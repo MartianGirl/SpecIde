@@ -320,64 +320,37 @@ void ULA::generateVideoDataPentagon()
     }
 }
 
-void ULA::paint()
-{
-    data = video ? dataReg : borderMask;
+void ULA::updateAttributes() {
+
+    data = video ? dataReg : 0xFF;
     attr = video ? attrReg : borderAttr;
     colour[0] = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
     colour[1] = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-    borderMask = 0xFF;
+}
 
-    if (!blanking)
-    {
-        xPos += 8;
+void ULA::paint() {
 
-        uint32_t *ptr, *ptr1;
-        switch (scanlines)
-        {
+    if (!blanking) {
+        ++xPos;
+
+        uint32_t col = colour[(data >> 7)];
+        data <<= 1;
+
+        switch (scanlines) {
             case 1:     // Scanlines
-                ptr1 = pixelsX2 + ((yPos + frame) * xSize) + xPos;
-                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
-                --ptr1; *ptr1 = colour[data & 0x01]; data >>= 1;
+                pixelsX2[(xSize * (yPos + frame)) + xPos] = col;
                 break;
 
             case 2:     // Averaged scanlines
-                ptr = ptr1 = pixelsX2 + 2 * (yPos * xSize + xPos);
-                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                ptr -= 2; ptr[frame] = colour[data & 0x01]; data >>= 1;
-                ptr = pixelsX1 + (yPos * xSize) + xPos;
-                ptr1 -= 2; --ptr; *ptr = average(ptr1);
-                ptr1 -= 2; --ptr; *ptr = average(ptr1);
-                ptr1 -= 2; --ptr; *ptr = average(ptr1);
-                ptr1 -= 2; --ptr; *ptr = average(ptr1);
-                ptr1 -= 2; --ptr; *ptr = average(ptr1);
-                ptr1 -= 2; --ptr; *ptr = average(ptr1);
-                ptr1 -= 2; --ptr; *ptr = average(ptr1);
-                ptr1 -= 2; --ptr; *ptr = average(ptr1);
+                {
+                    uint32_t *ptr = pixelsX2 + (2 * (yPos * xSize + xPos));
+                    ptr[frame] = col;
+                    pixelsX1[yPos * xSize + xPos] = average(ptr);
+                }
                 break;
 
             default:    // No scanlines
-                ptr = pixelsX1 + (yPos * xSize) + xPos;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
-                --ptr; *ptr = colour[data & 0x01]; data >>= 1;
+                pixelsX1[yPos * xSize + xPos] = col;
                 break;
         }
     }
@@ -435,19 +408,10 @@ void ULA::ioWrite(uint_fast8_t byte) {
 
     soundBits = (byte & 0x18) >> 3;
 
-    borderMask = 0xFF;
-    borderAttr = ((borderAttr << 3) | (byte & 0x07)) & 0x3F;
+    borderAttr = byte & 0x07;
     if (ulaVersion == 5) {
-        switch (pixel & 0x07) {
-            case 0x00: borderMask = 0x3f; break;
-            case 0x01: borderMask = 0x0f; break;
-            case 0x02: borderMask = 0x0f; break;
-            case 0x03: borderMask = 0x03; break;
-            case 0x04: borderMask = 0x03; break;
-            case 0x05: borderMask = 0xff; break;
-            case 0x06: borderMask = 0xff; break;
-            case 0x07: borderMask = 0x3f; break;
-            default: break;
+        if (!video) {
+            colour[1] = colourTable[0x80 | borderAttr];
         }
     }
 }
@@ -513,8 +477,9 @@ void ULA::clock() {
     }
 
     if ((pixel & 0x07) == paintPixel) {
-        paint();
+        updateAttributes();
     }
+    paint();
 
     ++pixel;
 
@@ -533,7 +498,6 @@ void ULA::start() {
     video = true;
     border = false;
     z80_c_2 = z80_c_1 = 0xFFFF;
-
 }
 
 void ULA::reset() {
@@ -552,7 +516,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
     hBlankStart = 0x140;
     hBlankEnd = 0x19F;
 
-    hBorderStart = 0x101;
+    hBorderStart = 0x100;
 
     vBorderStart = 0x0C0;
     vBlankStart = 0x0F8;
@@ -603,6 +567,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             micMask = 0x01;
             break;
         case 5: // Pentagon
+            paintPixel = 0x03;
             hSyncEnd = 0x160;
             hBlankEnd = 0x1A0;
             maxPixel = 0x1C0;

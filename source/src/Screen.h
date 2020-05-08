@@ -32,6 +32,7 @@
 #include "Spectrum.h"
 #include "Tape.h"
 
+#include "SoundDefs.h"
 #include "SoundChannel.h"
 
 #include "Console.h"
@@ -112,7 +113,7 @@ class Screen
         void reopenWindow(bool fs);
         void setFullScreen(bool fs);
         void setSmooth(bool sm);
-        void set128K(bool is128K);
+        void setSoundRate(SoundRate rate);
         void setTapeSound(bool tape);
 
         void pollEvents();

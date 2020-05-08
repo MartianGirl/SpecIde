@@ -223,65 +223,65 @@ int main(int argc, char* argv[]) {
 
     // Model selection
     if (options["model"] == "issue2") {
-        screen.set128K(false);
+        screen.setSoundRate(SoundRate::SOUNDRATE_48K);
         screen.spectrum.loadRoms(RomVariant::ROM_48_EN);
         screen.spectrum.ula.setUlaVersion(0);
     } else if (options["model"] == "issue3") {
-        screen.set128K(false);
+        screen.setSoundRate(SoundRate::SOUNDRATE_48K);
         screen.spectrum.loadRoms(RomVariant::ROM_48_EN);
         screen.spectrum.ula.setUlaVersion(1);
     } else if (options["model"] == "48sp") {
-        screen.set128K(false);
+        screen.setSoundRate(SoundRate::SOUNDRATE_48K);
         screen.spectrum.loadRoms(RomVariant::ROM_48_ES);
         screen.spectrum.ula.setUlaVersion(1);
     } else if (options["model"] == "128") {
-        screen.set128K(true);
+        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
         screen.spectrum.loadRoms(RomVariant::ROM_128_EN);
         screen.spectrum.set128K();
         screen.spectrum.ula.setUlaVersion(2);
     } else if (options["model"] == "128sp") {
-        screen.set128K(true);
+        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
         screen.spectrum.loadRoms(RomVariant::ROM_128_ES);
         screen.spectrum.set128K();
         screen.spectrum.ula.setUlaVersion(2);
     } else if (options["model"] == "plus2") {
-        screen.set128K(true);
+        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
         screen.spectrum.loadRoms(RomVariant::ROM_PLUS2_EN);
         screen.spectrum.setPlus2();
         screen.spectrum.ula.setUlaVersion(3);
     } else if (options["model"] == "plus2sp") {
-        screen.set128K(true);
+        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
         screen.spectrum.loadRoms(RomVariant::ROM_PLUS2_ES);
         screen.spectrum.setPlus2();
         screen.spectrum.ula.setUlaVersion(3);
     } else if (options["model"] == "plus2a") {
-        screen.set128K(true);
+        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
         screen.spectrum.loadRoms(RomVariant::ROM_PLUS3_EN);
         screen.spectrum.setPlus2A();
         screen.spectrum.ula.setUlaVersion(4);
     } else if (options["model"] == "plus2asp") {
-        screen.set128K(true);
+        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
         screen.spectrum.loadRoms(RomVariant::ROM_PLUS3_ES);
         screen.spectrum.setPlus2A();
         screen.spectrum.ula.setUlaVersion(4);
     } else if (options["model"] == "plus3") {
-        screen.set128K(true);
+        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
         screen.spectrum.loadRoms(RomVariant::ROM_PLUS3_EN);
         screen.spectrum.setPlus3();
         screen.spectrum.ula.setUlaVersion(4);
     } else if (options["model"] == "plus3sp") {
-        screen.set128K(true);
+        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
         screen.spectrum.loadRoms(RomVariant::ROM_PLUS3_ES);
         screen.spectrum.setPlus3();
         screen.spectrum.ula.setUlaVersion(4);
     } else if (options["model"] == "pentagon") {
-        screen.set128K(true);
+        screen.setSoundRate(SoundRate::SOUNDRATE_PENTAGON);
         screen.spectrum.loadRoms(RomVariant::ROM_128_EN);
         screen.spectrum.set128K();
         screen.spectrum.ula.setUlaVersion(5);
     } else {
         options["model"] = "default";
-        screen.set128K(false);
+        screen.setSoundRate(SoundRate::SOUNDRATE_48K);
         screen.spectrum.loadRoms(RomVariant::ROM_48_EN);
         screen.spectrum.ula.setUlaVersion(1);
     }

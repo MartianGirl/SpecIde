@@ -36,7 +36,7 @@ using namespace std;
 using namespace sf;
 
 Screen::Screen(size_t scale) :
-    w(704 * scale), h(576 * scale),
+    w(688 * scale), h(576 * scale),
     window(),
     modes(sf::VideoMode::getFullscreenModes()),
     bestMode(sf::VideoMode::getDesktopMode()),
@@ -335,7 +335,7 @@ void Screen::setFullScreen(bool fs)
         size_t lines = bestMode.height;
 
         scrSprite.setTexture(scrTexture);
-        scrSprite.setTextureRect(sf::IntRect(0, static_cast<uint_fast32_t>(start),
+        scrSprite.setTextureRect(sf::IntRect(8, static_cast<uint_fast32_t>(start),
                     static_cast<uint_fast32_t>(xSize - 8), static_cast<uint_fast32_t>(lines)));
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(xModifier * sScale, sScale));
@@ -343,7 +343,7 @@ void Screen::setFullScreen(bool fs)
     else
     {
         scrSprite.setTexture(scrTexture);
-        scrSprite.setTextureRect(sf::IntRect(0, 16 / yModifier, 352, 588 / yModifier));
+        scrSprite.setTextureRect(sf::IntRect(8, 16 / yModifier, 352, 588 / yModifier));
         scrSprite.setPosition(0, 0);
         scrSprite.setScale(Vector2f(2 * static_cast<float>(scale), yModifier * static_cast<float>(scale)));
     }
@@ -799,11 +799,24 @@ void Screen::adjust() {
         << " scans for double scan mode." << endl;
 }
 
-void Screen::set128K(bool is128K) {
+void Screen::setSoundRate(SoundRate rate) {
 
-    sample = skip = ((is128K) ? ULA_CLOCK_128 : ULA_CLOCK_48) / SAMPLE_RATE + 1;
+    switch (rate) {
+        case SoundRate::SOUNDRATE_48K:
+            skip = ULA_CLOCK_48 / SAMPLE_RATE + 1;
+            delay = 19968;
+            break;
+        case SoundRate::SOUNDRATE_128K:
+            skip = ULA_CLOCK_128 / SAMPLE_RATE + 1;
+            delay = 19992;
+            break;
+        case SoundRate::SOUNDRATE_PENTAGON:
+            skip = ULA_CLOCK_48 / SAMPLE_RATE + 1;
+            delay = 20480;
+            break;
+    }
+    sample = skip;
     cout << "Skipping " << skip << " samples." << endl;
-    delay = is128K ? 19992 : 19968;
 }
 
 bool Screen::cpuInRefresh() {

@@ -22,4 +22,10 @@ constexpr size_t ULA_CLOCK_128 = 7093800;
 
 constexpr size_t SAMPLE_RATE = 44100;
 
+enum class SoundRate {
+    SOUNDRATE_48K,
+    SOUNDRATE_128K,
+    SOUNDRATE_PENTAGON
+};
+
 // vim: et:sw=4:ts=4
