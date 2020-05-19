@@ -393,13 +393,6 @@ void Screen::pollEvents() {
                             setFullScreen(fullscreen);
                         }
                         break;
-                    case Keyboard::F:
-                        if (event.key.alt) {
-                            fullscreen = !fullscreen;
-                            reopenWindow(fullscreen);
-                            setFullScreen(fullscreen);
-                        }
-                        break;
                     case Keyboard::F3:  // Save DSK to disk
                         if (event.key.shift) {
                             spectrum.fdc.drive[0].emptyDisk();
