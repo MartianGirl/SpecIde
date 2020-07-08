@@ -110,24 +110,40 @@ Screen::Screen(size_t scale) :
 void Screen::run()
 {
     steady_clock::time_point tick = steady_clock::now();
+    steady_clock::time_point frame;
+    steady_clock::time_point wakeup;
 
     for (;;) {
-        channel.play();
         for (;;) {
-
-            // Update Spectrum hardware.
+            // Update Spectrum hardware
             clock();
 
             if (spectrum.ula.vSync) {
-                // Update the screen.
+                // Update the screen
                 update();
+
+                // Delay starting playing sound (if disabled) until first frame
+                // is complete
+                if (!streaming) {
+                    streaming = true;
+                    channel.play();
+                }
+
                 if (!syncToVideo)
                 {
+                    // By not sleeping until the next frame is due, we get some
+                    // better adjustment
 #ifdef USE_BOOST_THREADS
-                    sleep_until(tick + boost::chrono::microseconds(delay));
+                    frame = tick + boost::chrono::microseconds(delay);
+                    wakeup = tick + boost::chrono::microseconds(18000);
 #else
-                    sleep_until(tick + std::chrono::microseconds(delay));
+                    frame = tick + std::chrono::microseconds(delay);
+                    wakeup = tick + std::chrono::microseconds(18000);
 #endif
+#ifndef DO_NOT_SLEEP
+                    sleep_until(wakeup);
+#endif
+                    while (steady_clock::now() < frame);
                     tick = steady_clock::now();
                 }
 
@@ -139,10 +155,13 @@ void Screen::run()
                 pollCommands();
             }
         }
+
+        // Disable sound for menus
         channel.stop();
+        streaming = false;
 
         for (;;) {
-            // Menu thingy.
+            // Menu thingy
             updateMenu();
 
             if (!syncToVideo) {
@@ -161,6 +180,8 @@ void Screen::run()
 
 void Screen::clock()
 {
+    static size_t remaining = 0;
+
     if (flashTap) checkTapeTraps();
 
     spectrum.clock();
@@ -183,6 +204,11 @@ void Screen::clock()
     if (!sample)
     {
         sample = skip;
+        remaining += tail;
+        if (remaining >= 1000000) {
+            ++sample;
+            remaining -= 1000000;
+        }
 
         spectrum.sample();
         channel.push(spectrum.l, spectrum.r);
@@ -794,22 +820,24 @@ void Screen::adjust() {
 
 void Screen::setSoundRate(SoundRate rate) {
 
+    size_t value = 0;
     switch (rate) {
-        case SoundRate::SOUNDRATE_48K:
-            skip = ULA_CLOCK_48 / SAMPLE_RATE + 1;
-            delay = 19968;
-            break;
         case SoundRate::SOUNDRATE_128K:
-            skip = ULA_CLOCK_128 / SAMPLE_RATE + 1;
+            value = 1000000 * ULA_CLOCK_128 / SAMPLE_RATE;
             delay = 19992;
             break;
         case SoundRate::SOUNDRATE_PENTAGON:
-            skip = ULA_CLOCK_48 / SAMPLE_RATE + 1;
+            value = 1000000 * ULA_CLOCK_48 / SAMPLE_RATE;
             delay = 20480;
             break;
+        default:
+            value = 1000000 * ULA_CLOCK_48 / SAMPLE_RATE;
+            delay = 19968;
+            break;
     }
+    skip = value / 1000000;
+    tail = value - 1000000 * skip;
     sample = skip;
-    cout << "Skipping " << skip << " samples." << endl;
 }
 
 bool Screen::cpuInRefresh() {

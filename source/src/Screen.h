@@ -68,8 +68,10 @@ class Screen
         bool playSound = true;
         bool tapeSound = true;
         bool psgSound = true;
+        bool streaming = false;
         int samples[2];
         size_t skip;
+        size_t tail;
         size_t pulse = 0;
         size_t sample = 0;
 
