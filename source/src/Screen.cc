@@ -205,9 +205,9 @@ void Screen::clock()
     {
         sample = skip;
         remaining += tail;
-        if (remaining >= 1000000) {
+        if (remaining >= 1000000000) {
             ++sample;
-            remaining -= 1000000;
+            remaining -= 1000000000;
         }
 
         spectrum.sample();
@@ -823,20 +823,20 @@ void Screen::setSoundRate(SoundRate rate) {
     size_t value = 0;
     switch (rate) {
         case SoundRate::SOUNDRATE_128K:
-            value = 1000000 * ULA_CLOCK_128 / SAMPLE_RATE;
+            value = 1000000000 * ULA_CLOCK_128 / SAMPLE_RATE;
             delay = 19992;
             break;
         case SoundRate::SOUNDRATE_PENTAGON:
-            value = 1000000 * ULA_CLOCK_48 / SAMPLE_RATE;
+            value = 1000000000 * ULA_CLOCK_48 / SAMPLE_RATE;
             delay = 20480;
             break;
         default:
-            value = 1000000 * ULA_CLOCK_48 / SAMPLE_RATE;
+            value = 1000000000 * ULA_CLOCK_48 / SAMPLE_RATE;
             delay = 19968;
             break;
     }
-    skip = value / 1000000;
-    tail = value - 1000000 * skip;
+    skip = value / 1000000000;
+    tail = value - 1000000000 * skip;
     sample = skip;
 }
 
