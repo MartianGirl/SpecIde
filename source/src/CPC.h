@@ -15,13 +15,16 @@
 
 #pragma once
 
-/** Spectrum
+/** CPC
  *
- * A Spectrum computer
+ * An Amstrad CPC computer
  *
  */
 
-#include "ULA.h"
+#include "Memory.h"
+#include "CRTC.h"
+#include "GateArray.h"
+#include "PPI.h"
 #include "Z80.h"
 #include "Z80Defs.h"
 #include "PSG.h"
@@ -34,55 +37,23 @@
 
 using namespace std;
 
-enum class StereoMode {
-    STEREO_MONO,
-    STEREO_ABC,
-    STEREO_ACB,
-    STEREO_TURBO_MONO,
-    STEREO_TURBO_ABC,
-    STEREO_TURBO_ACB,
-    STEREO_NEXT
-};
-
-enum class RomVariant {
-    ROM_48_EN,
-    ROM_48_ES,
-    ROM_128_EN,
-    ROM_128_ES,
-    ROM_PLUS2_EN,
-    ROM_PLUS2_ES,
-    ROM_PLUS3_EN,
-    ROM_PLUS3_ES
-};
-
-class Spectrum {
+class CPC
+{
     public:
-        Spectrum();
+        CPC();
 
         // Required hardware.
         Z80 z80;
-        ULA ula;
-        PSG psg[4];
+        CRTC crtc;
+        GateArray ga;
+        PPI ppi;
+        PSG psg;
         FDC fdc;
 
         uint_fast8_t bus;
-        uint_fast8_t bus_1;
 
-        // Kempston Joystick.
         uint_fast8_t joystick;
-        bool kempston;
-        bool spectrum128K;
-        bool spectrumPlus2;
-        bool spectrumPlus2A;
-        bool spectrumPlus3;
-        bool psgPresent[8];
-        size_t currentPsg;
-        uint_fast8_t idle;
         uint_fast16_t paging;
-        uint_fast16_t mask;
-
-        int l = 0;
-        int r = 0;
 
         bool contendedPage[4];
         bool romPage[4];
@@ -91,36 +62,38 @@ class Spectrum {
         uint_fast8_t rom[2 << 16];
         uint_fast8_t* map[4];
         uint_fast8_t* scr;
-        uint_fast8_t* sno;
-
-        bool set48;
-        bool rom48;
 
         size_t count = 0;
 
-        StereoMode stereo;
-
-        // This one is going to be called at 7MHz, and is going to:
-        // 1. Clock the ULA. This starts the ULA counters.
-        // 2. Access memory for the ULA, if the ULA is not high impedance.
-        // 3. Clock the Z80, if the ULA says so.
+        // This one is going to be called at 8MHz, and is going to:
+        // 1. Clock the GA. This starts the GA counters.
+        // 2. Access memory for the GA, if the GA is not high impedance.
+        // 3. Clock the Z80, if the GA says so.
         // 4. Access the memory for the Z80.
         void clock();
         void reset();
 
-        void loadRoms(RomVariant model);
+        void loadRoms(size_t model);
         void initMems(size_t model);
-        void set128K();
-        void setPlus2();
-        void setPlus2A();
-        void setPlus3();
+        void set464();
+        void set664();
+        void set6128();
         void updatePage(uint_fast8_t reg);
-        void setPage(uint_fast8_t page,
-                uint_fast8_t bank, bool isRom, bool isContended);
-        void setScreenPage(uint_fast8_t page);
-        void setSnowPage(uint_fast8_t page);
+        void setPage(
+                uint_fast8_t page, uint_fast8_t bank,
+                bool isRom, bool isContended)
+        {
+            size_t addr = bank * (2 << 14);
+            map[page] = (isRom) ? &rom[addr] : &ram[addr];
+            romPage[page] = isRom;
+            contendedPage[page] = isContended;
+        }
 
-        void psgSelect();
+        void setScreen(uint_fast8_t page)
+        {
+            scr = &ram[page * (2 << 14)];
+        }
+
         void psgRead();
         void psgWrite();
         void psgAddr();
@@ -130,7 +103,7 @@ class Spectrum {
         void psgChip(bool play);
         void psgPlaySound(bool play);
 
-        void sample();
+        void sample(int& l, int& r);
 };
 
 // vim: et:sw=4:ts=4
