@@ -233,14 +233,6 @@ void ULA::generateVideoDataUla()
     // Read from memory.
     switch (pixel & 0x0F)
     {
-        case 0x00: break;
-        case 0x01: break;
-        case 0x02: break;
-        case 0x03: break;
-        case 0x04: break;
-        case 0x05: break;
-        case 0x06: break;
-        case 0x07: break;
         case 0x08: a = dataAddr++; break;
         case 0x09: dataReg = d; break;
         case 0x0A: a = attrAddr++; break;
@@ -271,14 +263,7 @@ void ULA::generateVideoDataGa()
     // Read from memory.
     switch (pixel & 0x0F)
     {
-        case 0x00: break;
         case 0x01: attrReg = latch; break;
-        case 0x02: break;
-        case 0x03: break;
-        case 0x04: break;
-        case 0x05: break;
-        case 0x06: break;
-        case 0x07: break;
         case 0x08: a = dataAddr++; break;
         case 0x09: latch = d; break;
         case 0x0A: a = attrAddr++; break;
@@ -300,22 +285,14 @@ void ULA::generateVideoDataPentagon()
     // Read from memory.
     switch (pixel & 0x0F)
     {
-        case 0x00: break;
-        case 0x01: break;
-        case 0x02: break;
-        case 0x03: break;
-        case 0x04: break;
-        case 0x05: break;
-        case 0x06: break;
-        case 0x07: break;
-        case 0x08: a = dataAddr++; break;
-        case 0x09: dataReg = d; break;
-        case 0x0A: a = attrAddr++; break;
-        case 0x0B: attrReg = d; break;
-        case 0x0C: a = dataAddr++; break;
-        case 0x0D: dataReg = d; break;
-        case 0x0E: a = attrAddr++; break;
-        case 0x0F: attrReg = d; break;
+        case 0x06: a = dataAddr++; break;
+        case 0x07: dataReg = d; break;
+        case 0x08: a = attrAddr++; break;
+        case 0x09: attrReg = d; break;
+        case 0x0A: a = dataAddr++; break;
+        case 0x0B: dataReg = d; break;
+        case 0x0C: a = attrAddr++; break;
+        case 0x0D: attrReg = d; break;
         default: break;
     }
 }
@@ -567,7 +544,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             micMask = 0x01;
             break;
         case 5: // Pentagon
-            paintPixel = 0x03;
+            paintPixel = 0x02;
             hSyncEnd = 0x160;
             hBlankEnd = 0x1A0;
             maxPixel = 0x1C0;
@@ -609,6 +586,10 @@ void ULA::setUlaVersion(uint_fast8_t version) {
         true, true, true, true, true, true, true, true,
         false, true, false, true, false, true, false, true
     };
+    bool memPent[16] = {
+        true, true, true, true, true, true, false, true,
+        false, true, false, true, false, true, true, true
+    };
 
 
     for (uint_fast8_t ii = 0; ii < 16; ++ii) {
@@ -619,7 +600,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
         } else if (ulaVersion == 5) {
             delayTable[ii] = false;     // Pentagon has No contention
             idleTable[ii] = true;       // Pentagon has no floating bus
-            memTable[ii] = memGa[ii];
+            memTable[ii] = memPent[ii];
         } else {
             delayTable[ii] = delayUla[ii];
             idleTable[ii] = idleUla[ii];
