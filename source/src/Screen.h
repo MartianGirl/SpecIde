@@ -71,7 +71,7 @@ class Screen
         bool streaming = false;
         int samples[2];
         size_t skip;
-        size_t tail;
+        double tail;
         size_t pulse = 0;
         size_t sample = 0;
 
