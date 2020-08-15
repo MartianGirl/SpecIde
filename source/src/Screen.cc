@@ -147,8 +147,7 @@ void Screen::run()
                     tick = steady_clock::now();
                 }
 
-                if (done) return;
-                if (menu) break;
+                if (done || menu) break;
             }
             else if (spectrum.ula.keyPoll) {
                 pollEvents();
@@ -159,6 +158,7 @@ void Screen::run()
         // Disable sound for menus
         channel.stop();
         streaming = false;
+        if (done) return;
 
         for (;;) {
             // Menu thingy
@@ -260,7 +260,7 @@ void Screen::updateMenu()
     else
     {
         rectangle.setPosition(24, 24);
-        rectangle.setScale(Vector2f(scale, scale));
+        rectangle.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
     }
 
     Text text;
@@ -294,12 +294,12 @@ void Screen::updateMenu()
     if (fullscreen)
     {
         text.setPosition(xOffset + 36, yOffset + 36);
-        text.setCharacterSize(4 * sScale);
+        text.setCharacterSize(static_cast<uint32_t>(4 * sScale));
     }
     else
     {
         text.setPosition(36, 36);
-        text.setCharacterSize(8 * scale);
+        text.setCharacterSize(static_cast<uint32_t>(8 * scale));
     }
 
     window.clear(Color::Black);

@@ -557,7 +557,7 @@ size_t getScale(string const& scale) {
     try {
         s = stoi(scale);
     } catch (invalid_argument &ia) {
-        cout << "Invalid scale value: '" << scale << "'" << endl;
+        cout << "Invalid scale value: '" << scale << "' - " << ia.what() << endl;
     }
 
     if (s < 1)

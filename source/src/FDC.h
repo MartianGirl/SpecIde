@@ -126,10 +126,10 @@ class FDC {
         size_t currSector = 0x00;
         size_t lastSector = 0x00;
 
-        size_t resTrack = 0x00;
-        size_t resHead = 0x00;
-        size_t resSector = 0x00;
-        size_t resSize = 0x00;
+        uint_fast8_t resTrack = 0x00;
+        uint_fast8_t resHead = 0x00;
+        uint_fast8_t resSector = 0x00;
+        uint_fast8_t resSize = 0x00;
 
         size_t headUnloadTime;
         size_t stepRateTime;
@@ -169,8 +169,8 @@ class FDC {
         void write(uint_fast8_t value);
 
         uint_fast8_t status() { return statusReg; }
-        size_t cmdDrive() { return (cmdBuffer[1] & 0x01); } // 2 drives max.
-        size_t cmdHead() { return ((cmdBuffer[1] & 0x04) >> 2); }
+        uint_fast8_t cmdDrive() { return (cmdBuffer[1] & 0x01); } // 2 drives max.
+        uint_fast8_t cmdHead() { return ((cmdBuffer[1] & 0x04) >> 2); }
 
         void checkDrive();
         void motor(bool status);

@@ -421,8 +421,8 @@ void Spectrum::updatePage(uint_fast8_t reg) {
                     assert(false);
             }
         } else {                    // Normal paging mode.
-            size_t ramBank = paging & 0x0007;
-            size_t romBank =
+            uint_fast8_t ramBank = paging & 0x0007;
+            uint_fast8_t romBank =
                 ((paging & 0x0010) >> 4) | ((paging & 0x0400) >> 9);
 
             setPage(0, romBank, true, false);

@@ -693,22 +693,22 @@ bool Z80::executeInt()
 
 void Z80::loadAddFlags()
 {
-    for (uint16_t c = 0; c < 2; ++c)
+    for (uint16_t cc = 0; cc < 2; ++cc)
     {
-        for (uint16_t a = 0; a < 0x100; ++a)
+        for (uint16_t aa = 0; aa < 0x100; ++aa)
         {
-            for (uint16_t b = 0; b < 0x100; ++b)
+            for (uint16_t bb = 0; bb < 0x100; ++bb)
             {
-                uint16_t s = a + b + c;
+                uint16_t s = aa + bb + cc;
                 uint8_t sh = (s >> 8) & 0x00FF;
                 uint8_t sl = s & 0x00FF;
 
                 uint8_t f = sl & (FLAG_S | FLAG_5 | FLAG_3);
-                f |= (sl ^ b ^ a) & FLAG_H;
-                f |= (((sl ^ b ^ a) >> 5) ^ (sh << 2)) & FLAG_PV;
+                f |= (sl ^ bb ^ aa) & FLAG_H;
+                f |= (((sl ^ bb ^ aa) >> 5) ^ (sh << 2)) & FLAG_PV;
                 f |= sh & FLAG_C;
                 f |= sl ? 0x00 : FLAG_Z;
-                addFlags[c][a][b] = f;
+                addFlags[cc][aa][bb] = f;
             }
         }
     }
@@ -716,23 +716,23 @@ void Z80::loadAddFlags()
 
 void Z80::loadSubFlags()
 {
-    for (uint16_t c = 0; c < 2; ++c)
+    for (uint16_t cc = 0; cc < 2; ++cc)
     {
-        for (uint16_t a = 0; a < 0x100; ++a)
+        for (uint16_t aa = 0; aa < 0x100; ++aa)
         {
-            for (uint16_t b = 0; b < 0x100; ++b)
+            for (uint16_t bb = 0; bb < 0x100; ++bb)
             {
-                uint16_t s = a - b - c;
+                uint16_t s = aa - bb - cc;
                 uint8_t sh = (s >> 8) & 0x00FF;
                 uint8_t sl = s & 0x00FF;
 
                 uint8_t f = sl & (FLAG_S | FLAG_5 | FLAG_3);
                 f |= FLAG_N;
-                f |= (sl ^ b ^ a) & FLAG_H;
-                f |= (((sl ^ b ^ a) >> 5) ^ (sh << 2)) & FLAG_PV;
+                f |= (sl ^ bb ^ aa) & FLAG_H;
+                f |= (((sl ^ bb ^ aa) >> 5) ^ (sh << 2)) & FLAG_PV;
                 f |= sh & FLAG_C;
                 f |= sl ? 0x00 : FLAG_Z;
-                subFlags[c][a][b] = f;
+                subFlags[cc][aa][bb] = f;
             }
         }
     }
@@ -740,12 +740,12 @@ void Z80::loadSubFlags()
 
 void Z80::loadAndFlags()
 {
-    for (uint16_t a = 0; a < 0x100; ++a)
+    for (uint16_t aa = 0; aa < 0x100; ++aa)
     {
-        for (uint16_t b = 0; b < 0x100; ++b)
+        for (uint16_t bb = 0; bb < 0x100; ++bb)
         {
-            uint8_t sh = a & b;
-            uint8_t sl = a & b;
+            uint8_t sh = static_cast<uint8_t>(aa & bb);
+            uint8_t sl = static_cast<uint8_t>(aa & bb);
             uint8_t f;
 
             sh ^= sh >> 1;
@@ -754,19 +754,19 @@ void Z80::loadAndFlags()
             f = (sh & 0x01) ? FLAG_H : FLAG_H | FLAG_PV;
             f |= sl & (FLAG_S | FLAG_5 | FLAG_3);
             f |= sl ? 0x00 : FLAG_Z;
-            andFlags[a][b] = f;
+            andFlags[aa][bb] = f;
         }
     }
 }
 
 void Z80::loadOrFlags()
 {
-    for (uint16_t a = 0; a < 0x100; ++a)
+    for (uint16_t aa = 0; aa < 0x100; ++aa)
     {
-        for (uint16_t b = 0; b < 0x100; ++b)
+        for (uint16_t bb = 0; bb < 0x100; ++bb)
         {
-            uint8_t sh = a | b;
-            uint8_t sl = a | b;
+            uint8_t sh = static_cast<uint8_t>(aa | bb);
+            uint8_t sl = static_cast<uint8_t>(aa | bb);
             uint8_t f;
 
             sh ^= sh >> 1;
@@ -775,19 +775,19 @@ void Z80::loadOrFlags()
             f = (sh & 0x01) ? 0 : FLAG_PV;
             f |= sl & (FLAG_S | FLAG_5 | FLAG_3);
             f |= sl ? 0x00 : FLAG_Z;
-            orFlags[a][b] = f;
+            orFlags[aa][bb] = f;
         }
     }
 }
 
 void Z80::loadXorFlags()
 {
-    for (uint16_t a = 0; a < 0x100; ++a)
+    for (uint16_t aa = 0; aa < 0x100; ++aa)
     {
-        for (uint16_t b = 0; b < 0x100; ++b)
+        for (uint16_t bb = 0; bb < 0x100; ++bb)
         {
-            uint8_t sh = a ^ b;
-            uint8_t sl = a ^ b;
+            uint8_t sh = static_cast<uint8_t>(aa ^ bb);
+            uint8_t sl = static_cast<uint8_t>(aa ^ bb);
             uint8_t f;
 
             sh ^= sh >> 1;
@@ -796,229 +796,229 @@ void Z80::loadXorFlags()
             f = (sh & 0x01) ? 0 : FLAG_PV;
             f |= sl & (FLAG_S | FLAG_5 | FLAG_3);
             f |= sl ? 0x00 : FLAG_Z;
-            xorFlags[a][b] = f;
+            xorFlags[aa][bb] = f;
         }
     }
 }
 
 void Z80::loadCpFlags()
 {
-    for (uint16_t a = 0; a < 0x100; ++a)
+    for (uint16_t aa = 0; aa < 0x100; ++aa)
     {
-        for (uint16_t b = 0; b < 0x100; ++b)
+        for (uint16_t bb = 0; bb < 0x100; ++bb)
         {
-            uint16_t s = a - b;
+            uint16_t s = aa - bb;
             uint8_t sh = (s >> 8) & 0x00FF;
             uint8_t sl = s & 0x00FF;
 
-            uint8_t f = b & (FLAG_5 | FLAG_3);
+            uint8_t f = bb & (FLAG_5 | FLAG_3);
             f |= sl & FLAG_S;
             f |= sh & FLAG_C;
             f |= FLAG_N;
-            f |= (sl ^ b ^ a) & FLAG_H;
-            f |= (((sl ^ b ^ a) >> 5) ^ (sh << 2)) & FLAG_PV;
+            f |= (sl ^ bb ^ aa) & FLAG_H;
+            f |= (((sl ^ bb ^ aa) >> 5) ^ (sh << 2)) & FLAG_PV;
             f |= sl ? 0x00 : FLAG_Z;
-            cpFlags[a][b] = f;
+            cpFlags[aa][bb] = f;
         }
     }
 }
 
 void Z80::loadIncFlags()
 {
-    for (uint16_t a = 0; a < 0x100; ++a)
+    for (uint16_t aa = 0; aa < 0x100; ++aa)
     {
-        uint16_t s = a + 1;
+        uint16_t s = aa + 1;
         uint8_t sh = (s >> 8) & 0x00FF;
         uint8_t sl = s & 0x00FF;
 
         uint8_t f = sl & (FLAG_S | FLAG_5 | FLAG_3);
-        f |= (sl ^ a) & FLAG_H;
-        f |= (((sl ^ a) >> 5) ^ (sh << 2)) & FLAG_PV;
+        f |= (sl ^ aa) & FLAG_H;
+        f |= (((sl ^ aa) >> 5) ^ (sh << 2)) & FLAG_PV;
         f |= sl ? 0x00 : FLAG_Z;
-        incFlags[a] = f;
+        incFlags[aa] = f;
     }
 }
 
 void Z80::loadDecFlags()
 {
-    for (uint16_t a = 0; a < 0x100; ++a)
+    for (uint16_t aa = 0; aa < 0x100; ++aa)
     {
-        uint16_t s = a - 1;
+        uint16_t s = aa - 1;
         uint8_t sh = (s >> 8) & 0x00FF;
         uint8_t sl = s & 0x00FF;
 
         uint8_t f = sl & (FLAG_S | FLAG_5 | FLAG_3);
-        f |= (sl ^ a) & FLAG_H;
-        f |= (((sl ^ a) >> 5) ^ (sh << 2)) & FLAG_PV;
+        f |= (sl ^ aa) & FLAG_H;
+        f |= (((sl ^ aa) >> 5) ^ (sh << 2)) & FLAG_PV;
         f |= sl ? 0x00 : FLAG_Z;
         f |= FLAG_N;
-        decFlags[a] = f;
+        decFlags[aa] = f;
     }
 }
 
 void Z80::loadRlFlags()
 {
-    for (uint16_t c = 0; c < 2; ++c)
+    for (uint16_t cc = 0; cc < 2; ++cc)
     {
-        for (uint16_t a = 0; a < 0x100; ++a)
+        for (uint16_t aa = 0; aa < 0x100; ++aa)
         {
             Z80Register r;
-            r.w = (a << 1) | c;
+            r.w = (aa << 1) | cc;
             uint8_t f = r.b.h;
-            uint8_t p = r.b.l;
-            p ^= p >> 1;
-            p ^= p >> 2;
-            p ^= p >> 4;
+            uint8_t pp = r.b.l;
+            pp ^= pp >> 1;
+            pp ^= pp >> 2;
+            pp ^= pp >> 4;
             f |= r.b.l & (FLAG_S | FLAG_5 | FLAG_3);
             f |= r.b.l ? 0x00 : FLAG_Z;
-            f |= (p & 0x01) ? 0x00 : FLAG_PV;
-            rlFlags[c][a] = f;
+            f |= (pp & 0x01) ? 0x00 : FLAG_PV;
+            rlFlags[cc][aa] = f;
         }
     }
 }
 
 void Z80::loadRrFlags()
 {
-    for (uint16_t c = 0; c < 2; ++c)
+    for (uint16_t cc = 0; cc < 2; ++cc)
     {
-        for (uint16_t a = 0; a < 0x100; ++a)
+        for (uint16_t aa = 0; aa < 0x100; ++aa)
         {
             Z80Register r;
-            r.b.l = a;
-            r.b.h = c;
+            r.b.l = static_cast<uint8_t>(aa);
+            r.b.h = static_cast<uint8_t>(cc);
             r.w >>= 1;
-            uint8_t f = a & FLAG_C;
-            uint8_t p = r.b.l;
-            p ^= p >> 1;
-            p ^= p >> 2;
-            p ^= p >> 4;
+            uint8_t f = aa & FLAG_C;
+            uint8_t pp = r.b.l;
+            pp ^= pp >> 1;
+            pp ^= pp >> 2;
+            pp ^= pp >> 4;
             f |= r.b.l & (FLAG_S | FLAG_5 | FLAG_3);
             f |= r.b.l ? 0x00 : FLAG_Z;
-            f |= (p & 0x01) ? 0x00 : FLAG_PV;
-            rrFlags[c][a] = f;
+            f |= (pp & 0x01) ? 0x00 : FLAG_PV;
+            rrFlags[cc][aa] = f;
         }
     }
 }
 
 void Z80::loadRlcFlags()
 {
-    for (uint16_t a = 0; a < 0x100; ++a)
+    for (uint16_t aa = 0; aa < 0x100; ++aa)
     {
         Z80Register r;
-        r.w = a << 1;
+        r.w = aa << 1;
         r.b.l |= r.b.h;
-        uint8_t p = r.b.l;
-        p ^= p >> 1;
-        p ^= p >> 2;
-        p ^= p >> 4;
+        uint8_t pp = r.b.l;
+        pp ^= pp >> 1;
+        pp ^= pp >> 2;
+        pp ^= pp >> 4;
         uint8_t f = r.b.l & (FLAG_S | FLAG_5 | FLAG_3 | FLAG_C);
         f |= r.b.l ? 0x00 : FLAG_Z;
-        f |= (p & 0x01) ? 0x00 : FLAG_PV;
-        rlcFlags[a] = f;
+        f |= (pp & 0x01) ? 0x00 : FLAG_PV;
+        rlcFlags[aa] = f;
     }
 }
 
 void Z80::loadRrcFlags()
 {
-    for (uint16_t a = 0; a < 0x100; ++a)
+    for (uint16_t aa = 0; aa < 0x100; ++aa)
     {
         Z80Register r;
-        r.b.l = a;
-        r.b.h = a & FLAG_C;
+        r.b.l = static_cast<uint8_t>(aa);
+        r.b.h = aa & FLAG_C;
         uint8_t f = r.b.h;
         r.w >>= 1;
-        uint8_t p = r.b.l;
-        p ^= p >> 1;
-        p ^= p >> 2;
-        p ^= p >> 4;
+        uint8_t pp = r.b.l;
+        pp ^= pp >> 1;
+        pp ^= pp >> 2;
+        pp ^= pp >> 4;
         f |= r.b.l & (FLAG_S | FLAG_5 | FLAG_3);
         f |= r.b.l ? 0x00 : FLAG_Z;
-        f |= (p & 0x01) ? 0x00 : FLAG_PV;
-        rrcFlags[a] = f;
+        f |= (pp & 0x01) ? 0x00 : FLAG_PV;
+        rrcFlags[aa] = f;
     }
 }
 
 void Z80::loadSlaFlags()
 {
-    for (uint16_t a = 0; a < 0x100; ++a)
+    for (uint16_t aa = 0; aa < 0x100; ++aa)
     {
         Z80Register r;
-        r.w = a << 1;
+        r.w = aa << 1;
         uint8_t f = r.b.h & FLAG_C;
-        uint8_t p = r.b.l;
-        p ^= p >> 1;
-        p ^= p >> 2;
-        p ^= p >> 4;
+        uint8_t pp = r.b.l;
+        pp ^= pp >> 1;
+        pp ^= pp >> 2;
+        pp ^= pp >> 4;
         f |= r.b.l & (FLAG_S | FLAG_5 | FLAG_3);
         f |= r.b.l ? 0x00 : FLAG_Z;
-        f |= (p & 0x01) ? 0x00 : FLAG_PV;
-        slaFlags[a] = f;
+        f |= (pp & 0x01) ? 0x00 : FLAG_PV;
+        slaFlags[aa] = f;
     }
 }
 
 void Z80::loadSllFlags()
 {
-    for (uint16_t a = 0; a < 0x100; ++a)
+    for (uint16_t aa = 0; aa < 0x100; ++aa)
     {
         Z80Register r;
-        r.w = a << 1 | 0x01;
+        r.w = aa << 1 | 0x01;
         uint8_t f = r.b.h & FLAG_C;
-        uint8_t p = r.b.l;
-        p ^= p >> 1;
-        p ^= p >> 2;
-        p ^= p >> 4;
+        uint8_t pp = r.b.l;
+        pp ^= pp >> 1;
+        pp ^= pp >> 2;
+        pp ^= pp >> 4;
         f |= r.b.l & (FLAG_S | FLAG_5 | FLAG_3);
         f |= r.b.l ? 0x00 : FLAG_Z;
-        f |= (p & 0x01) ? 0x00 : FLAG_PV;
-        sllFlags[a] = f;
+        f |= (pp & 0x01) ? 0x00 : FLAG_PV;
+        sllFlags[aa] = f;
     }
 }
 
 void Z80::loadSraFlags()
 {
-    for (uint16_t a = 0; a < 0x100; ++a)
+    for (uint16_t aa = 0; aa < 0x100; ++aa)
     {
         Z80Register r;
-        r.b.l = a;
+        r.b.l = static_cast<uint8_t>(aa);
         r.b.h = (r.b.l & 0x80) ? 0x01 : 0x00;
         r.w >>= 1;
-        uint8_t f = a & FLAG_C;
-        uint8_t p = r.b.l;
-        p ^= p >> 1;
-        p ^= p >> 2;
-        p ^= p >> 4;
+        uint8_t f = aa & FLAG_C;
+        uint8_t pp = r.b.l;
+        pp ^= pp >> 1;
+        pp ^= pp >> 2;
+        pp ^= pp >> 4;
         f |= r.b.l & (FLAG_S | FLAG_5 | FLAG_3);
         f |= r.b.l ? 0x00 : FLAG_Z;
-        f |= (p & 0x01) ? 0x00 : FLAG_PV;
-        sraFlags[a] = f;
+        f |= (pp & 0x01) ? 0x00 : FLAG_PV;
+        sraFlags[aa] = f;
     }
 }
 
 void Z80::loadSrlFlags()
 {
-    for (uint16_t a = 0; a < 0x100; ++a)
+    for (uint16_t aa = 0; aa < 0x100; ++aa)
     {
         Z80Register r;
-        r.w = a >> 1;
-        uint8_t f = a & FLAG_C;
-        uint8_t p = r.b.l;
-        p ^= p >> 1;
-        p ^= p >> 2;
-        p ^= p >> 4;
+        r.w = aa >> 1;
+        uint8_t f = aa & FLAG_C;
+        uint8_t pp = r.b.l;
+        pp ^= pp >> 1;
+        pp ^= pp >> 2;
+        pp ^= pp >> 4;
         f |= r.b.l & (FLAG_S | FLAG_5 | FLAG_3);
         f |= r.b.l ? 0x00 : FLAG_Z;
-        f |= (p & 0x01) ? 0x00 : FLAG_PV;
-        srlFlags[a] = f;
+        f |= (pp & 0x01) ? 0x00 : FLAG_PV;
+        srlFlags[aa] = f;
     }
 }
 
 void Z80::loadDaaTable()
 {
-    for (uint32_t a = 0; a < 0x10000; ++a)
+    for (uint32_t aa = 0; aa < 0x10000; ++aa)
     {
         Z80Register r;
         Z80Register t;
-        r.w = a;
+        r.w = static_cast<uint16_t>(aa);
 
         // Keep the relevant flags.
         uint8_t f = r.b.l & (FLAG_H | FLAG_N | FLAG_C);  // ...b.H..NC
@@ -1053,16 +1053,16 @@ void Z80::loadDaaTable()
 
         f |= t.b.l & (FLAG_S | FLAG_5 | FLAG_3);   // S.5H3.NC
 
-        uint8_t p = t.b.l;
-        p ^= p >> 1;
-        p ^= p >> 2;
-        p ^= p >> 4;
-        f |= (p & 0x01) ? 0x00 : FLAG_PV;  // S.5H3PNC
+        uint8_t pp = t.b.l;
+        pp ^= pp >> 1;
+        pp ^= pp >> 2;
+        pp ^= pp >> 4;
+        f |= (pp & 0x01) ? 0x00 : FLAG_PV;  // S.5H3PNC
         f |= (t.b.l) ? 0x00 : FLAG_Z;      // SZ5H3PNC
         r.b.h = t.b.l;
         r.b.l = f;
 
-        daaTable[a] = r.w;
+        daaTable[aa] = r.w;
     }
 }
 // vim: et:sw=4:ts=4
