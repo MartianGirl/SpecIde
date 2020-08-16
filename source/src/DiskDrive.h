@@ -118,7 +118,8 @@ class DiskDrive {
          */
         uint_fast8_t senseStatus() {
 
-            return (track0 ? 0x10 : 0x00)
+            return ((disk && images[currentImage].numSides == 2) ? 0x08 : 0x00)
+                | (track0 ? 0x10 : 0x00)
                 | (ready ? 0x20 : 0x00)
                 | (writeprot ? 0x40 : 0x00)
                 | (fault ? 0x80 : 0x00);        // Don't really know...
