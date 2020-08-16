@@ -1,6 +1,5 @@
 @echo off
-set BOOST_ROOT=C:\libs\boost_1_70_0
-set Boost_NO_BOOST_CMAKE=TRUE
+set BOOST_ROOT=C:\libs\boost_1_74_0
 
 if .%1.==.. goto USAGE
 
@@ -43,13 +42,13 @@ cmake -DCMAKE_BUILD_TYPE=%BUILD% -G "MinGW Makefiles" .
 goto END
 
 :MS32
-set CMAKE_PREFIX_PATH=C:\libs\MSVC\SFML-2.5.1\x86;C:\libs\MSVC\zlib-1.2.11\x86
-cmake -DCMAKE_BUILD_TYPE=%BUILD% -G "Visual Studio 15 2017" .
+set CMAKE_PREFIX_PATH=C:\libs\SFML\x86;C:\libs\zlib\x86
+cmake -DCMAKE_BUILD_TYPE=%BUILD% -G "Visual Studio 16 2019" -A Win32 .
 goto END
 
 :MS64
-set CMAKE_PREFIX_PATH=C:\libs\MSVC\SFML-2.5.1\x64;C:\libs\MSVC\zlib-1.2.11\x64
-cmake -DCMAKE_BUILD_TYPE=%BUILD% -G "Visual Studio 15 2017 Win64" .
+set CMAKE_PREFIX_PATH=C:\libs\SFML\x64;C:\libs\zlib\x64
+cmake -DCMAKE_BUILD_TYPE=%BUILD% -G "Visual Studio 16 2019" -A x64 .
 goto END
 
 :NINJAGNU
@@ -59,12 +58,12 @@ cmake -DCMAKE_BUILD_TYPE=%BUILD% -G "Ninja" .
 goto END
 
 :NINJAMS32
-set CMAKE_PREFIX_PATH=C:\libs\MSVC\SFML-2.5.1\x86;C:\libs\MSVC\zlib-1.2.11\x86
+set CMAKE_PREFIX_PATH=C:\libs\SFML\x86;C:\libs\zlib\x86
 cmake -DCMAKE_BUILD_TYPE=%BUILD% -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -G "Ninja" .
 goto END
 
 :NINJAMS64
-set CMAKE_PREFIX_PATH=C:\libs\MSVC\SFML-2.5.1\x64;C:\libs\MSVC\zlib-1.2.11\x64
+set CMAKE_PREFIX_PATH=C:\libs\SFML\x64;C:\libs\zlib\x64
 cmake -DCMAKE_BUILD_TYPE=%BUILD% -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -G "Ninja" .
 goto END
 
