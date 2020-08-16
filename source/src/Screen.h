@@ -70,7 +70,7 @@ class Screen
         bool psgSound = true;
         bool streaming = false;
         int samples[2];
-        size_t skip;
+        uint32_t skip;
         double tail;
         size_t pulse = 0;
         size_t sample = 0;

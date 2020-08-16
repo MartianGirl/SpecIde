@@ -823,19 +823,19 @@ void Screen::setSoundRate(SoundRate rate) {
     double value = 0;
     switch (rate) {
         case SoundRate::SOUNDRATE_128K:
-            value = ULA_CLOCK_128 / SAMPLE_RATE;
+            value = static_cast<double>(ULA_CLOCK_128) / static_cast<double>(SAMPLE_RATE);
             delay = 19992;
             break;
         case SoundRate::SOUNDRATE_PENTAGON:
-            value = ULA_CLOCK_48 / SAMPLE_RATE;
+            value = static_cast<double>(ULA_CLOCK_48) / static_cast<double>(SAMPLE_RATE);
             delay = 20480;
             break;
         default:
-            value = ULA_CLOCK_48 / SAMPLE_RATE;
+            value = static_cast<double>(ULA_CLOCK_48) / static_cast<double>(SAMPLE_RATE);
             delay = 19968;
             break;
     }
-    skip = static_cast<size_t>(value);
+    skip = static_cast<uint32_t>(value);
     tail = value - skip;
     sample = skip;
 }
