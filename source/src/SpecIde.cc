@@ -176,7 +176,7 @@ int main(int argc, char* argv[]) {
         if (*it == "--turbonext")
             options["stereo"] = "turbonext";
         if (*it == "--mono")
-            options["stereo"] = "none";
+            options["stereo"] = "mono";
 
         if (*it == "--ay")
             options["psgtype"] = "ay";
@@ -325,20 +325,28 @@ int main(int argc, char* argv[]) {
         cout << "Generalized NEXT sound (4 PSGs) active." << endl;
     }
 
-    if (options["stereo"] == "acb")
+    // Set ACB stereo as default for Pentagon
+    if (options["model"] == "pentagon" && options["stereo"] == "none") {
+        options["stereo"] = "acb";
+    }
+
+    if (options["stereo"] == "acb") {
         screen.spectrum.stereo = StereoMode::STEREO_ACB;
-    else if (options["stereo"] == "abc")
+    } else if (options["stereo"] == "abc") {
         screen.spectrum.stereo = StereoMode::STEREO_ABC;
-    else if (options["stereo"] == "turbo")
+    } else if (options["stereo"] == "turbo") {
         screen.spectrum.stereo = StereoMode::STEREO_TURBO_MONO;
-    else if (options["stereo"] == "turboabc")
+    } else if (options["stereo"] == "turboabc") {
         screen.spectrum.stereo = StereoMode::STEREO_TURBO_ABC;
-    else if (options["stereo"] == "turboacb")
+    } else if (options["stereo"] == "turboacb") {
         screen.spectrum.stereo = StereoMode::STEREO_TURBO_ACB;
-    else if (options["stereo"] == "turbonext")
+    } else if (options["stereo"] == "turbonext") {
         screen.spectrum.stereo = StereoMode::STEREO_NEXT;
-    else
+    } else if (options["stereo"] == "mono") {
         screen.spectrum.stereo = StereoMode::STEREO_MONO;
+    } else {
+        screen.spectrum.stereo = StereoMode::STEREO_MONO;
+    }
     cout << "Stereo type: " << options["stereo"] << endl;
 
     screen.aychip = (options["psgtype"] != "ym");
