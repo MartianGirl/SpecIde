@@ -24,7 +24,6 @@
 #include <cassert>
 #include <cstdint>
 #include <iostream>
-// #include <random>
 
 #include "SoundDefs.h"
 
@@ -39,6 +38,7 @@ class PSG
 
         uint_fast8_t a;
         uint_fast8_t r[16];
+        uint_fast8_t m[16];
 
         bool wr;
 
@@ -69,13 +69,11 @@ class PSG
         bool lchan = false;
         bool rchan = false;
 
-        // random_device rd;
-        // mt19937 gen;
-        // uniform_int_distribution<> uniform;
-
         PSG() :
             r{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+            m{0xFF, 0x0F, 0xFF, 0x0F, 0xFF, 0x0F, 0x1F, 0xFF,
+                0x1F, 0x1F, 0x1F, 0xFF, 0xFF, 0x0F, 0xFF, 0xFF},
             wr(false),
             signalA(0), signalB(0), signalC(0),
             channelA(0), channelB(0), channelC(0),
@@ -91,7 +89,6 @@ class PSG
             counterA(0), counterB(0), counterC(0), counterN(0), counterE(0),
             periodA(0), periodB(0), periodC(0), periodN(0), periodE(0),
             playSound(true) {}
-            // gen(rd()), uniform(0, 1) {} 
 
         void clock()
         {
@@ -102,8 +99,8 @@ class PSG
 
             if (wr)
             {
-                // Write registers.
-                r[a] = latch_di;
+                // Write registers (take only actual bits)
+                r[a] = latch_di & m[a];
                 wr = false;
 
                 switch (a)
@@ -111,24 +108,24 @@ class PSG
                     case 000:
                     case 001:
                         // Update tone period for channel A.
-                        periodA = (((r[1] & 0x0F) << 8) + r[0]);
+                        periodA = r[1] * 0x100 + r[0];
                         break;
 
                     case 002:
                     case 003:
                         // Update tone period for channel B.
-                        periodB = (((r[3] & 0x0F) << 8) + r[2]);
+                        periodB = r[3] * 0x100 + r[2];
                         break;
 
                     case 004:
                     case 005:
                         // Update tone period for channel C.
-                        periodC = (((r[5] & 0x0F) << 8) + r[4]);
+                        periodC = r[5] * 0x100 + r[4];
                         break;
 
                     case 006:
                         // Update noise period.
-                        periodN = (r[6] & 0x1F);
+                        periodN = r[6];
                         break;
 
                     case 010:
@@ -152,7 +149,7 @@ class PSG
                     case 013:
                     case 014:
                         // Update period for Envelope generator.
-                        periodE = ((r[12] * 0x100) + r[11]);
+                        periodE = r[12] * 0x100 + r[11];
                         break;
 
                     case 015:
@@ -336,5 +333,4 @@ class PSG
             return ((seed >> 16) & 1);
         }
 };
-
 // vim: et:sw=4:ts=4
