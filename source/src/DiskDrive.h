@@ -94,7 +94,7 @@ class DiskDrive {
          */
         void nextTrack() {
 
-            size_t limit = disk ? images[currentImage].numTracks : 76;
+            size_t limit = disk ? images[currentImage].numTracks - 1 : 76;
 
             if (++cylinder > limit) {
                 cylinder = limit;
@@ -139,7 +139,7 @@ class DiskDrive {
                 size_t sc = sector % images[currentImage].tracks[tr].numSectors;
 
                 // If the track is formatted, write.
-                if (images[currentImage].tracks[tr].trackSize) {
+                if (tr < images[currentImage].numTracks && images[currentImage].tracks[tr].trackSize) {
                     images[currentImage].tracks[tr].sectors[sc].data = buffer;
                     images[currentImage].tracks[tr].sectors[sc].fdcStatusReg1 = statusReg1;
                     images[currentImage].tracks[tr].sectors[sc].fdcStatusReg2 = statusReg2;
@@ -160,7 +160,7 @@ class DiskDrive {
                 size_t sc = sector % images[currentImage].tracks[tr].numSectors;
 
                 // If the track is formatted, read.
-                if (images[currentImage].tracks[tr].trackSize) {
+                if (tr < images[currentImage].numTracks && images[currentImage].tracks[tr].trackSize) {
                     idTrack = images[currentImage].tracks[tr].sectors[sc].track;
                     idHead = images[currentImage].tracks[tr].sectors[sc].side;
                     idSector = images[currentImage].tracks[tr].sectors[sc].sectorId;
