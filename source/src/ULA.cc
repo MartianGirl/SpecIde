@@ -19,34 +19,29 @@
 
 using namespace std;
 
-uint_fast32_t ULA::voltages[4][4] =
-{
+uint_fast32_t ULA::voltages[4][4] = {
     {391, 728, 3653, 3790}, // ULA 5C (Issue 2)
     {342, 652, 3591, 3753}, // ULA 6C (Issue 3)
     {342, 652, 3591, 3753}, // ULA 7C (128K)
     {342, 652, 3591, 3753}  // GA40085 (+2A/+3)
 };
 
-bool ULA::delayTable[16] = 
-{
+bool ULA::delayTable[16] = {
     false, false, false, true, true, true, true, true,
     true, true, true, true, true, true, true, false
 };
 
-bool ULA::idleTable[16] =
-{
+bool ULA::idleTable[16] = {
     true, true, true, true, true, true, true, true,
     false, false, false, false, false, false, false, false
 };
 
-bool ULA::memTable[16] =
-{
+bool ULA::memTable[16] = {
     true, true, true, true, true, true, true, true,
     false, true, false, true, false, true, false, true
 };
 
-bool ULA::snowTable[16] =
-{
+bool ULA::snowTable[16] = {
     false, false, false, false, false, false, false, false,
     false, false, true, true, true, true, false, false
 };
@@ -58,10 +53,9 @@ uint32_t ULA::pixelsX2[0x38000];
 
 ULA::ULA() :
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
-    c(0xFFFF)
-{
-    for (uint_fast32_t i = 0; i < 0x100; ++i)
-    {
+    c(0xFFFF) {
+
+    for (uint_fast32_t i = 0; i < 0x100; ++i) {
         // Generate colour table.
         // dhpppiii
 #if SPECIDE_BYTE_ORDER == 1
@@ -73,7 +67,7 @@ ULA::ULA() :
             ((i & 0x02) >> 1) | ((i & 0x04) << 6) | ((i & 0x01) << 16) :
             ((i & 0x10) >> 4) | ((i & 0x20) << 3) | ((i & 0x08) << 13);
 #endif
-        colour *= (i & 0x40) ? 0xF0 : 0xD7;
+        colour *= (i & 0x40) ? 0xF0 : 0xC0;
 #if SPECIDE_BYTE_ORDER == 1
         colour |= 0xFF;
 #else
@@ -82,18 +76,17 @@ ULA::ULA() :
         colourTable[i] = colour;
     }
 
-    for (size_t i = 0x00; i < 0x100; ++i)
-    {
-        for (size_t j = 0x00; j < 0x100; ++j)
-            averageTable[i][j] =
-                static_cast<uint8_t>(sqrt(((i * i) + (j * j)) / 2));
+    for (size_t i = 0x00; i < 0x100; ++i) {
+        for (size_t j = 0x00; j < 0x100; ++j) {
+            averageTable[i][j] = static_cast<uint8_t>(sqrt(((i * i) + (j * j)) / 2));
+        }
     }
 }
 
 /** Average two colours in consecutive positions.
  */
-uint32_t ULA::average(uint32_t *ptr)
-{
+uint32_t ULA::average(uint32_t *ptr) {
+
     uint8_t *pSrc = reinterpret_cast<uint8_t*>(ptr);
 #if SPECIDE_BYTE_ORDER == 1
     return (0xFF
@@ -108,54 +101,37 @@ uint32_t ULA::average(uint32_t *ptr)
 #endif
 }
 
-void ULA::generateVideoControlSignals()
-{
-    if (pixel == videoStart)
-    {
+void ULA::generateVideoControlSignals() {
+
+    if (pixel == videoStart) {
         video = (scan < vBorderStart);
-    }
-    else if (pixel == hBorderStart)
-    {
+    } else if (pixel == hBorderStart) {
         border = true;
-    }
-    else if (pixel == videoEnd)
-    {
+    } else if (pixel == videoEnd) {
         video = false;
-    }
-    else if (pixel == hBlankStart)
-    {
+    } else if (pixel == hBlankStart) {
         blanking = true;
         ++scan;
         retrace = (scan >= vSyncStart) && (scan < vSyncEnd);
 
-        if (scan == vBlankEnd)
-        {
+        if (scan == vBlankEnd) {
             keyPoll = true;
             flash += 0x08;
-        }
-        else if (scan == vSyncEnd)
-        {
+        } else if (scan == vSyncEnd) {
             vSync = true;
             frame = 1 - frame;
             yPos = 0;
-        }
-        else if (scan == maxScan)
-        {
+        } else if (scan == maxScan) {
             scan = 0;
         }
-    }
-    else if (pixel == hSyncEnd)
-    {
+    } else if (pixel == hSyncEnd) {
         xPos = 0;
-        if (retrace == false)
+        if (retrace == false) {
             yPos += yInc;
-    }
-    else if (pixel == hBlankEnd)
-    {
+        }
+    } else if (pixel == hBlankEnd) {
         blanking = (scan >= vBlankStart) && (scan <= vBlankEnd);
-    }
-    else if (pixel == maxPixel)
-    {
+    } else if (pixel == maxPixel) {
         pixel = 0;
         border = (scan >= vBorderStart);
         ulaReset = false;
@@ -168,22 +144,23 @@ void ULA::generateVideoControlSignals()
     }
 }
 
-void ULA::generateInterrupt()
-{
+void ULA::generateInterrupt() {
 
-    if (interrupt)
+    if (interrupt) {
         z80_c &= ~SIGNAL_INT_;
-    else
+    } else {
         z80_c |= SIGNAL_INT_;
+    }
 
-    if (pixel == interruptStart)
+    if (pixel == interruptStart) {
         interrupt = true;
-    else if (pixel == interruptEnd)
+    } else if (pixel == interruptEnd) {
         interrupt = false;
+    }
 }
 
-void ULA::generateVideoDataUla()
-{
+void ULA::generateVideoDataUla() {
+
     // Check for contended memory or I/O accesses.
     idle = idleTable[pixel & 0x0F];
     mem = memTable[pixel & 0x0F];
@@ -231,8 +208,7 @@ void ULA::generateVideoDataUla()
     cpuClock = !(contention && delayTable[pixel & 0x0F]);
 
     // Read from memory.
-    switch (pixel & 0x0F)
-    {
+    switch (pixel & 0x0F) {
         case 0x08: a = dataAddr++; break;
         case 0x09: dataReg = d; break;
         case 0x0A: a = attrAddr++; break;
@@ -245,8 +221,8 @@ void ULA::generateVideoDataUla()
     }
 }
 
-void ULA::generateVideoDataGa()
-{
+void ULA::generateVideoDataGa() {
+
     // Check for contended memory or I/O accesses.
     idle = idleTable[pixel & 0x0F];
     mem = memTable[pixel & 0x0F];
@@ -255,14 +231,14 @@ void ULA::generateVideoDataGa()
     // +2A/+3 only apply contention if MREQ is low.
     contention = contendedBank && !(z80_c & SIGNAL_MREQ_);
 
-    if (contention && delayTable[pixel & 0x0F])
+    if (contention && delayTable[pixel & 0x0F]) {
         z80_c &= ~SIGNAL_WAIT_;
-    else
+    } else {
         z80_c |= SIGNAL_WAIT_;
+    }
 
     // Read from memory.
-    switch (pixel & 0x0F)
-    {
+    switch (pixel & 0x0F) {
         case 0x01: attrReg = latch; break;
         case 0x08: a = dataAddr++; break;
         case 0x09: latch = d; break;
@@ -276,15 +252,14 @@ void ULA::generateVideoDataGa()
     }
 }
 
-void ULA::generateVideoDataPentagon()
-{
+void ULA::generateVideoDataPentagon() {
+
     // Check for contended memory or I/O accesses.
     idle = idleTable[pixel & 0x0F];
     mem = memTable[pixel & 0x0F];
 
     // Read from memory.
-    switch (pixel & 0x0F)
-    {
+    switch (pixel & 0x0F) {
         case 0x06: a = dataAddr++; break;
         case 0x07: dataReg = d; break;
         case 0x08: a = attrAddr++; break;
@@ -333,30 +308,26 @@ void ULA::paint() {
     }
 }
 
-void ULA::tapeEarMic()
-{
+void ULA::tapeEarMic() {
+
     // First attempt at MIC/EAR feedback loop.
     // Let's keep this here for the moment.
-    if (ulaVersion < 2)
-    {
+    if (ulaVersion < 2) {
         uint_fast32_t v = voltage[soundBits];
 
-        if (v > 3000)
-        {
+        if (v > 3000) {
             ear = v;
-            if (chargeDelay < 86400)
-            {
+            if (chargeDelay < 86400) {
                 capacitor = 368 + (chargeDelay / 16);
                 ++chargeDelay;
             }
-        }
-        else
-        {
+        } else {
             chargeDelay = 0;
-            if (!capacitor)
+            if (!capacitor) {
                 ear = v;
-            else
+            } else {
                 --capacitor;
+            }
         }
     }
 
@@ -365,18 +336,16 @@ void ULA::tapeEarMic()
     if ((tapeIn & 0xC0) == 0xC0) ear = 3790;
 }
 
-uint_fast8_t ULA::ioRead()
-{
+uint_fast8_t ULA::ioRead() {
+
     uint_fast8_t byte = inMask;
     byte |= (ear < 700) ? 0x00 : 0x40;
-    if (!(z80_a & 0x8000)) byte &= keys[0];
-    if (!(z80_a & 0x4000)) byte &= keys[1];
-    if (!(z80_a & 0x2000)) byte &= keys[2];
-    if (!(z80_a & 0x1000)) byte &= keys[3];
-    if (!(z80_a & 0x0800)) byte &= keys[4];
-    if (!(z80_a & 0x0400)) byte &= keys[5];
-    if (!(z80_a & 0x0200)) byte &= keys[6];
-    if (!(z80_a & 0x0100)) byte &= keys[7];
+
+    for (uint_fast8_t ii = 0; ii < 8; ++ii) {
+        if (!(z80_a & (0x8000 >> ii))) {
+            byte &= keys[ii];
+        }
+    }
 
     return byte;
 }

@@ -49,8 +49,8 @@ Screen::Screen(size_t scale) :
     xSize(360), ySize(625),
     delay(19968),
     pad(false),
-    flashTap(false)
-{
+    flashTap(false) {
+
     cout << "Selected Full Screen Mode: " << bestMode.width
         << "x" << bestMode.height << "-" << bestMode.bitsPerPixel << endl;
     adjust();
@@ -64,8 +64,7 @@ Screen::Screen(size_t scale) :
     char* pHome = getenv(SPECIDE_HOME_ENV);
 
     fontPaths.push_back("");
-    if (pHome != nullptr)
-    {
+    if (pHome != nullptr) {
 #if (SPECIDE_ON_UNIX==1)
         string home(pHome);
         home += string("/") + string(SPECIDE_CONF_DIR) + string("/font/");
@@ -87,16 +86,14 @@ Screen::Screen(size_t scale) :
 
     size_t j = 0;
     bool success = false;
-    do
-    {
+    do {
         string font = fontPaths[j] + fontName;
         cout << "Trying font: " << font << endl;
         success = zxFont.loadFromFile(font);
         ++j;
     } while (!success && j < fontPaths.size());
 
-    if (!success)
-    {
+    if (!success) {
         cout << "Could not load menu font." << endl;
         assert(false);
     }
@@ -107,8 +104,8 @@ Screen::Screen(size_t scale) :
     channel.open(2, SAMPLE_RATE);
 }
 
-void Screen::run()
-{
+void Screen::run() {
+
     steady_clock::time_point tick = steady_clock::now();
     steady_clock::time_point frame;
     steady_clock::time_point wakeup;
@@ -129,8 +126,7 @@ void Screen::run()
                     channel.play();
                 }
 
-                if (!syncToVideo)
-                {
+                if (!syncToVideo) {
                     // By not sleeping until the next frame is due, we get some
                     // better adjustment
 #ifdef USE_BOOST_THREADS
@@ -148,8 +144,7 @@ void Screen::run()
                 }
 
                 if (done || menu) break;
-            }
-            else if (spectrum.ula.keyPoll) {
+            } else if (spectrum.ula.keyPoll) {
                 pollEvents();
                 pollCommands();
             }
@@ -178,31 +173,27 @@ void Screen::run()
     }
 }
 
-void Screen::clock()
-{
+void Screen::clock() {
+
     static double remaining = 0;
 
-    if (flashTap) checkTapeTraps();
+    if (flashTap) {
+        checkTapeTraps();
+    }
 
     spectrum.clock();
 
-    if (tape.playing)
-    {
-        if (!pulse--)
-        {
+    if (tape.playing) {
+        if (!pulse--) {
             spectrum.ula.tapeIn = tape.advance() | 0x80;
             pulse = tape.sample;
         }
-    }
-    else
-    {
+    } else {
         spectrum.ula.tapeIn &= 0x7F;
     }
 
     // Generate sound
-    --sample;
-    if (!sample)
-    {
+    if (!(--sample)) {
         sample = skip;
         remaining += tail;
         if (remaining >= 1.0) {
@@ -215,13 +206,14 @@ void Screen::clock()
     }
 }
 
-void Screen::update()
-{
+void Screen::update() {
+
     // These conditions cannot happen at the same time:
     // - HSYNC and VSYNC only happen during the blanking interval.
     // - VSYNC happens at the end of blanking interval. (0x140)
     // - HSYNC happens at the beginning of HSYNC interval. (0x170-0x178)
     // If not blanking, draw.
+
     spectrum.ula.vSync = false;
 
     scrTexture.update(reinterpret_cast<Uint8*>(doubleScanMode ?
@@ -230,8 +222,7 @@ void Screen::update()
     window.draw(scrSprite);
     window.display();
 
-    if (tape.pulseData.size())
-    {
+    if (tape.pulseData.size()) {
         char str[64];
         unsigned int percent = 100 * tape.pointer / tape.pulseData.size();
         snprintf(str, 64, "SpecIde %d.%d.%d [%03u%%]",
@@ -245,20 +236,17 @@ void Screen::update()
     tape.is48K = spectrum.set48;
 }
 
-void Screen::updateMenu()
-{
+void Screen::updateMenu() {
+
     RectangleShape rectangle(sf::Vector2f(100, 100));
     rectangle.setFillColor(Color::White - Color(0, 0, 0, 64));
     rectangle.setOutlineThickness(2);
     rectangle.setOutlineColor(Color::Black);
     rectangle.setSize(Vector2f(296, 232));
-    if (fullscreen)
-    {
+    if (fullscreen) {
         rectangle.setPosition(xOffset + 24, yOffset + 24);
         rectangle.setScale(Vector2f(sScale, sScale));
-    }
-    else
-    {
+    } else {
         rectangle.setPosition(24, 24);
         rectangle.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
     }
@@ -291,13 +279,10 @@ void Screen::updateMenu()
     ss << endl;
     text.setString(ss.str());
 
-    if (fullscreen)
-    {
+    if (fullscreen) {
         text.setPosition(xOffset + 36, yOffset + 36);
         text.setCharacterSize(static_cast<uint32_t>(4 * sScale));
-    }
-    else
-    {
+    } else {
         text.setPosition(36, 36);
         text.setCharacterSize(static_cast<uint32_t>(8 * scale));
     }
@@ -309,16 +294,17 @@ void Screen::updateMenu()
     window.display();
 
     Event event;
-    while (window.pollEvent(event))
-    {
-        if (event.type == Event::KeyPressed)
-            if (event.key.code == Keyboard::F1)
+    while (window.pollEvent(event)) {
+        if (event.type == Event::KeyPressed) {
+            if (event.key.code == Keyboard::F1) {
                 menu = false;
+            }
+        }
     }
 }
 
-void Screen::reopenWindow(bool fs)
-{
+void Screen::reopenWindow(bool fs) {
+
     char str[64];
     snprintf(str, 64, "SpecIde %d.%d.%d [NO TAPE]",
             SPECIDE_VERSION_MAJOR,
@@ -327,22 +313,23 @@ void Screen::reopenWindow(bool fs)
 
     window.close();
 
-    if (fs)
+    if (fs) {
         window.create(bestMode, str, sf::Style::Fullscreen);
-    else
+    } else {
         window.create(
                 sf::VideoMode(static_cast<sf::Uint32>(w), static_cast<sf::Uint32>(h)),
                 str, sf::Style::Close | sf::Style::Titlebar);
+    }
 }
 
-void Screen::setFullScreen(bool fs)
-{
+void Screen::setFullScreen(bool fs) {
+
     size_t suggestedScans = doubleScanMode ? suggestedScansDouble : suggestedScansSingle;
     size_t xModifier = doubleScanMode ? 2 : 1;
     size_t yModifier = doubleScanMode ? 1 : 2;
     size_t totalScans = doubleScanMode ? 625 : 312;
-    if (fs)
-    {
+
+    if (fs) {
         // Use best mode available.
         fesetround(FE_TONEAREST);
         xScale = bestMode.width / static_cast<float>(xSize);
@@ -365,9 +352,7 @@ void Screen::setFullScreen(bool fs)
                     static_cast<uint_fast32_t>(xSize - 8), static_cast<uint_fast32_t>(lines)));
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(xModifier * sScale, sScale));
-    }
-    else
-    {
+    } else {
         scrSprite.setTexture(scrTexture);
         scrSprite.setTextureRect(sf::IntRect(8, 16 / yModifier, 352, 588 / yModifier));
         scrSprite.setPosition(0, 0);
