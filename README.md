@@ -5,11 +5,12 @@ SpecIde is (yet another) ZX Spectrum emulator.  Currently, the emulator is funct
 actually, it is *very* accurate. Some of the supported features are:
 
 - Emulation of ZX Spectrum 48K (Issue 2/3), 128K, +2, +2A and +3.
-- +3 disk drive emulation. (Read-only yet)
+- +3 disk drive emulation. (Scan commands are missing yet)
 - Emulation of Spanish 128K, +2, +2A and +3.
+- Emulation of Pentagon timings (with 128K ROMs and no BetaDisk yet! Sorry for that!)
 - PSG (AY-3-8912/YM-2149) sound emulation.
 - Turbosound emulation. Supports two and four PSG modes.
-- Loading of tapes via .tap and .tzx tape images.
+- Loading of tapes via .tap and .tzx tape images, and .csw files.
 - Loading of disks via .dsk disk images.
 - Flashloading of .tap files and .tzx that use the ROM routines.
 - Saving to .tap files.
@@ -94,6 +95,7 @@ Model selection options:
 --plus2asp             Spectrum +2A. (Spanish ROM)
 --plus3                Spectrum +3.
 --plus3sp              Spectrum +3. (Spanish ROM)
+--pentagon             Spectrum 128K, Pentagon timings.
 
 Joystick options:
 --kempston             Map joystick to Kempston interface.
@@ -135,12 +137,15 @@ When the emulator is running, pressing F1 displays help about the function keys.
 | F1        | Display help. |
 | F2        | Switch between fullscreen and windowed mode. |
 | Shift-F2  | Toggle antialiasing on/off. |
-| F4        | Switch PSG between AY-3-8910 and YM-2149. |
+| F3        | Save DSK file to disk. |
+| F4        | Select next disk image. |
+| Shift-F4  | Select previous disk image. |
 | F5        | Reset the Spectrum. |
-| F7        | Add FlashTAP to SAVE buffer. |
-| Shift-F7  | Clear SAVE buffer. |
-| F8        | Write SAVE buffer to a file named savetapeXX.tap. |
-| Shift-F8  | Use SAVE buffer as LOAD buffer. |
+| F6        | Clear SAVE buffer. |
+| Shift-F6  | Add FlashTAP to SAVE buffer. |
+| F7        | Write SAVE buffer to disk. |
+| Shift-F7  | Use SAVE buffer as FlashTAP. |
+| F8        | Toggle PSG: AY-3-8912/YM-2149. |
 | F9        | Turn sound on/off. |
 | Shift-F9  | Turn tape sounds on/off. |
 | F10       | Exit the emulator. |
