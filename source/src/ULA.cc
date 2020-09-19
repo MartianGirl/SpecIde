@@ -511,6 +511,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             maxScan = 0x137;
             cpuClock = true;
             micMask = 0x01;
+            snow = false;
             break;
         case 5: // Pentagon
             paintPixel = 0x02;
@@ -521,8 +522,10 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             vBlankEnd = 0x100;
             vSyncStart = 0x0F0;
             maxScan = 0x140;
+            cpuClock = true;
             interruptStart = 0x140;
             interruptEnd = 0x180;
+            snow = false;
             break;
         default:
             hBorderStart = 0x101;
@@ -534,6 +537,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             break;
     }
 
+    // Cycle states for ULA-based Spectrums (48K/128K/+2)
     bool delayUla[16] = {
         false, false, false, true, true, true, true, true,
         true, true, true, true, true, true, true, false
@@ -547,6 +551,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
         false, true, false, true, false, true, false, true
     };
 
+    // Cycle states for Gate Array based Spectrums (+2A/+3)
     bool delayGa[16] = {
         true, true, false, false, true, true, true, true,
         true, true, true, true, true, true, true, true
@@ -555,6 +560,8 @@ void ULA::setUlaVersion(uint_fast8_t version) {
         true, true, true, true, true, true, true, true,
         false, true, false, true, false, true, false, true
     };
+
+    // Cycle states for Pentagon
     bool memPent[16] = {
         true, true, true, true, true, true, false, true,
         false, true, false, true, false, true, true, true

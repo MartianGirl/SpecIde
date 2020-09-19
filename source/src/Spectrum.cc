@@ -225,30 +225,28 @@ void Spectrum::clock() {
     // Speccies.
     bus_1 = bus;
 
+    bool contendedAccess = contendedPage[memArea] && !as_;
     if (!ula.mem) {
-        if (!spectrumPlus2A) {
-            // Snow effect
-            if (contendedPage[memArea] && ula.snow && !as_) {
-                if (memArea == 1)
-                    bus = scr[(ula.a & 0x3F80) | (z80.a & 0x007F)];
-                else
-                    bus = sno[(ula.a & 0x3F80) | (z80.a & 0x007F)];
+        // Snow effect. ULA::snow is always false for +2A/+3/Pentagon
+        if (ula.snow && contendedAccess) {
+            if (memArea == 1) {
+                bus = scr[(ula.a & 0x3F80) | (z80.a & 0x007F)];
             } else {
-                bus = scr[ula.a];
+                bus = sno[(ula.a & 0x3F80) | (z80.a & 0x007F)];
             }
         } else {
             bus = scr[ula.a];
         }
-    } else {
-        if (!spectrumPlus2A)
-            bus = z80.d;
-        else if (contendedPage[memArea] && !as_)
-            bus = z80.d;
+    } else if (!spectrumPlus2A || contendedAccess) {
+        // For +2A/+3 machines, the Gate Array stores all bytes that pass
+        // though it. This means, any contended access will alter this byte.
+        // For other machines, this byte is altered with each access.
+        bus = z80.d;
     }
 
     ula.d = bus;
-
     ula.clock();
+
     z80.c = ula.z80_c;
 
     ++count;
@@ -357,16 +355,16 @@ void Spectrum::clock() {
                     z80.d = ula.ioRead();
                 }
             }
-        }
-        else if (!as_) {
+        } else if (!as_) {
             // Bank 0: 0000h - ROM
             // Bank 1: 4000h - Contended memory
             // Bank 2: 8000h - Extended memory
             // Bank 3: C000h - Extended memory (can be contended)
-            if (rd)
+            if (rd) {
                 z80.d = map[memArea][z80.a & 0x3FFF];
-            else if (!romPage[memArea] && wr)
+            } else if (!romPage[memArea] && wr) {
                 map[memArea][z80.a & 0x3FFF] = z80.d;
+            }
         } else {
             z80.d = 0xFF;
         }
@@ -499,10 +497,14 @@ void Spectrum::psgReset() {
 
 void Spectrum::psgClock() {
 
-    if (psgPresent[0]) psg[0].clock();
-    if (psgPresent[1]) psg[1].clock();
-    if (psgPresent[2]) psg[2].clock();
-    if (psgPresent[3]) psg[3].clock();
+    if (psgPresent[0]) {
+        psg[0].clock();
+        if (psgPresent[1]) {
+            psg[1].clock();
+            if (psgPresent[2]) psg[2].clock();
+            if (psgPresent[3]) psg[3].clock();
+        }
+    }
 }
 
 void Spectrum::psgPlaySound(bool play) {
@@ -515,10 +517,14 @@ void Spectrum::psgPlaySound(bool play) {
 
 void Spectrum::psgSample() {
 
-    if (psgPresent[0]) psg[0].sample();
-    if (psgPresent[1]) psg[1].sample();
-    if (psgPresent[2]) psg[2].sample();
-    if (psgPresent[3]) psg[3].sample();
+    if (psgPresent[0]) {
+        psg[0].sample();
+        if (psgPresent[1]) {
+            psg[1].sample();
+            if (psgPresent[2]) psg[2].sample();
+            if (psgPresent[3]) psg[3].sample();
+        }
+    }
 }
 
 void Spectrum::psgChip(bool aychip) {
@@ -552,19 +558,19 @@ void Spectrum::sample() {
             break;
 
         case StereoMode::STEREO_TURBO_MONO: // TurboSound with 2 PSGs, mono.
-            l += psg[0].channelA >> 1;
-            l += psg[0].channelB >> 1;
-            l += psg[0].channelC >> 1;
-            r += psg[0].channelA >> 1;
-            r += psg[0].channelB >> 1;
-            r += psg[0].channelC >> 1;
+            l += psg[0].channelA;
+            l += psg[0].channelB;
+            l += psg[0].channelC;
+            r += psg[0].channelA;
+            r += psg[0].channelB;
+            r += psg[0].channelC;
 
-            l += psg[1].channelA >> 1;
-            l += psg[1].channelB >> 1;
-            l += psg[1].channelC >> 1;
-            r += psg[1].channelA >> 1;
-            r += psg[1].channelB >> 1;
-            r += psg[1].channelC >> 1;
+            l += psg[1].channelA;
+            l += psg[1].channelB;
+            l += psg[1].channelC;
+            r += psg[1].channelA;
+            r += psg[1].channelB;
+            r += psg[1].channelC;
             break;
 
         case StereoMode::STEREO_TURBO_ACB:  // TurboSound with 2 PSGs, ACB

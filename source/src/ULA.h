@@ -134,7 +134,7 @@ class ULA
         uint_fast16_t z80_a = 0xFFFF;
         uint_fast16_t z80_c = 0xFFFF;
         bool contendedBank = false;
-        bool cpuClock = false;
+        bool cpuClock = true;
         bool ulaReset = true;
         bool contention = false;
         bool snow = false;
