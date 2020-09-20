@@ -69,6 +69,8 @@ class PSG
         bool lchan = false;
         bool rchan = false;
 
+        bool psgIsAY = true;
+
         PSG() :
             r{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
@@ -90,42 +92,41 @@ class PSG
             periodA(0), periodB(0), periodC(0), periodN(0), periodE(0),
             playSound(true) {}
 
-        void clock()
-        {
+        void clock() {
+
             ++count;
 
             a = latch_a;
             latch_do = r[a];
 
-            if (wr)
-            {
-                // Write registers (take only actual bits)
-                r[a] = latch_di & m[a];
+            if (wr) {
+                // Write registers (on AY, take only used bits)
+                r[a] = latch_di & (psgIsAY ? m[a] : 0xFF);
+
                 wr = false;
 
-                switch (a)
-                {
+                switch (a) {
                     case 000:
                     case 001:
                         // Update tone period for channel A.
-                        periodA = r[1] * 0x100 + r[0];
+                        periodA = (r[1] & 0x0F) * 0x100 + r[0];
                         break;
 
                     case 002:
                     case 003:
                         // Update tone period for channel B.
-                        periodB = r[3] * 0x100 + r[2];
+                        periodB = (r[3] & 0x0F) * 0x100 + r[2];
                         break;
 
                     case 004:
                     case 005:
                         // Update tone period for channel C.
-                        periodC = r[5] * 0x100 + r[4];
+                        periodC = (r[5] & 0x0F) * 0x100 + r[4];
                         break;
 
                     case 006:
                         // Update noise period.
-                        periodN = r[6];
+                        periodN = r[6] & 0x1F;
                         break;
 
                     case 010:
@@ -156,8 +157,7 @@ class PSG
                         // Start values depend on the attack bit.
                         // Attack = 0: Start at 1111, count down.
                         // Attack = 1: Start at 0000, count up.
-                        if (r[13] != 0xFF)
-                        {
+                        if (r[13] != 0xFF) {
                             envSlope = ((r[13] & 0x04) == 0x00) ? -1 : 1;
                             envLevel = ((r[13] & 0x04) == 0x00) ? 0x1F : 0x00;
                             restartEnvelope();
@@ -170,69 +170,58 @@ class PSG
             }
 
             // Because period means a complete wave cycle (high/low)
-            if (!(count & 0x07))
-            {
-                if (++counterA >= periodA)
-                {
+            if (!(count & 0x07)) {
+                if (++counterA >= periodA) {
                     waveA = 1 - waveA;
                     counterA = 0;
                 }
 
-                if (++counterB >= periodB)
-                {
+                if (++counterB >= periodB) {
                     waveB = 1 - waveB;
                     counterB = 0;
                 }
 
-                if (++counterC >= periodC)
-                {
+                if (++counterC >= periodC) {
                     waveC = 1 - waveC;
                     counterC = 0;
                 }
 
-                if (++counterN >= 2 * periodN)
-                {
+                if (++counterN >= 2 * periodN) {
                     noise = generateNoise();
                     counterN = 0;
                 }
 
-                if (++counterE >= periodE)
-                {
+                if (++counterE >= periodE) {
                     counterE = 0;
 
-                    if (!envHold)
-                    {
-                        if (++envStep >= 0x20)   // We've finished a cycle.
-                        {
+                    if (!envHold) {
+                        if (++envStep >= 0x20) { // We've finished a cycle.
                             envStep = 0x00;
 
                             // Continue = 1: Cycle pattern controlled by Hold.
-                            if (r[13] & 0x08)
-                            {
+                            if (r[13] & 0x08) {
                                 // Hold & Alternate
-                                if (r[13] & 0x01)
+                                if (r[13] & 0x01) {
                                     envHold = true;
+                                }
 
                                 // If Alternate != Hold, change slope. :)
-                                if (((r[13] & 0x02) >> 1) != (r[13] & 0x01))
+                                if (((r[13] & 0x02) >> 1) != (r[13] & 0x01)) {
                                     envSlope = -envSlope;
-                            }
-                            else
-                            {
+                                }
+                            } else {
                                 // Continue = 0: Just one cycle, return to 0000.
                                 //               Hold.
                                 envHold = true;
                                 envSlope = 1;
                             }
                         }
-
                         envLevel = (envSlope > 0) ? envStep : (0x1F - envStep);
                     }
                 }
             }
 
-            if (playSound)
-            {
+            if (playSound) {
                 signalA = (r[7] & 0x01) ? 1 : waveA;
                 signalB = (r[7] & 0x02) ? 1 : waveB;
                 signalC = (r[7] & 0x04) ? 1 : waveC;
@@ -250,16 +239,15 @@ class PSG
             index = (index + 1) % FILTER_PSG_SIZE;
         }
 
-        void sample()
-        {
+        void sample() {
+
             channelA = channelB = channelC = 0;
 
-            for (uint_fast16_t i = 0; i < FILTER_PSG_SIZE; ++i)
+            for (uint_fast16_t i = 0; i < FILTER_PSG_SIZE; ++i) {
                 channelA += filterA[i];
-            for (uint_fast16_t i = 0; i < FILTER_PSG_SIZE; ++i)
                 channelB += filterB[i];
-            for (uint_fast16_t i = 0; i < FILTER_PSG_SIZE; ++i)
                 channelC += filterC[i];
+            }
 
             channelA /= FILTER_PSG_SIZE;
             channelB /= FILTER_PSG_SIZE;
@@ -269,48 +257,51 @@ class PSG
 
         uint_fast8_t read() { return latch_do; }
 
-        void write(uint_fast8_t byte)
-        {
+        void write(uint_fast8_t byte) {
+
             latch_di = byte;
             wr = true;
         }
 
-        void addr(uint_fast8_t byte)
-        {
-            if ((byte & 0x0F) == byte)
+        void addr(uint_fast8_t byte) {
+
+            if ((byte & 0x0F) == byte) {
                 latch_a = byte;
+            }
         }
 
-        void setVolumeLevels(bool ay)
-        {
-            if (ay)    // AY-3-8912
-            {
+        void setVolumeLevels(bool ay) {
+
+            psgIsAY = ay;
+
+            if (ay) {  // AY-3-8912 (Quadratic values)
                 int arr[32] = {
                     0x000, 0x000, 0x013, 0x013, 0x049, 0x049, 0x0A4, 0x0A4,
                     0x124, 0x124, 0x1C7, 0x1C7, 0x290, 0x290, 0x37C, 0x37C,
                     0x48D, 0x48D, 0x5C3, 0x5C3, 0x71C, 0x71C, 0x89B, 0x89B,
                     0xA3D, 0xA3D, 0xC04, 0xC04, 0xDF0, 0xDF0, 0xFFF, 0xFFF};
 
-                for (uint_fast8_t i = 0; i < 32; ++i)
+                for (uint_fast8_t i = 0; i < 32; ++i) {
                     out[i] = arr[i];
-            }
-            else        // YM-2149
-            {
+                }
+            } else {      // YM-2149 (Values by Hacker KAY)
                 int arr[32] = {
-                    0x000, 0x005, 0x012, 0x027, 0x045, 0x06B, 0x09A, 0x0D1,
-                    0x111, 0x15A, 0x1AB, 0x204, 0x266, 0x2D1, 0x344, 0x3BF,
-                    0x443, 0x4D0, 0x565, 0x603, 0x6A9, 0x758, 0x80F, 0x8CF,
-                    0x997, 0xA68, 0xB41, 0xC23, 0xD0D, 0xE00, 0xEFC, 0xFFF};
+                    0x000, 0x000, 0x00F, 0x01C, 0x029, 0x033, 0x03F, 0x04D,
+                    0x060, 0x077, 0x090, 0x0A4, 0x0C3, 0x0EC, 0x113, 0x13A,
+                    0x174, 0x1BF, 0x20D, 0x259, 0x2C9, 0x357, 0x3E5, 0x476,
+                    0x54F, 0x661, 0x773, 0x883, 0xA1D, 0xC0F, 0xE08, 0xFFF};
 
-                for (uint_fast8_t i = 0; i < 32; ++i)
+                for (uint_fast8_t i = 0; i < 32; ++i) {
                     out[i] = arr[i];
+                }
             }
         }
 
-        void reset()
-        {
-            for (uint_fast8_t i = 0; i < 16; ++i)
+        void reset() {
+
+            for (uint_fast8_t i = 0; i < 16; ++i) {
                 r[i] = 0;
+            }
 
             periodA = periodB = periodC = 0;
             periodE = 0;
@@ -319,15 +310,15 @@ class PSG
             seed = 0xFFFF;
         }
 
-        void restartEnvelope()
-        {
+        void restartEnvelope() {
+
             envStep = 0;
             envHold = false;
             counterE = 0;
         }
 
-        int generateNoise()
-        {
+        int generateNoise() {
+
             // GenNoise (c) Hacker KAY & Sergey Bulba
             seed = (seed * 2 + 1) ^ (((seed >> 16) ^ (seed >> 13)) & 1);
             return ((seed >> 16) & 1);
