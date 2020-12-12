@@ -114,9 +114,7 @@ void ULA::generateVideoControlSignals() {
         ++scan;
         retrace = (scan >= vSyncStart) && (scan < vSyncEnd);
 
-        if (scan == vBorderStart) { // Poll keyboard before and closest to INT
-            keyPoll = true;
-        } else if (scan == vSyncEnd) {
+        if (scan == vSyncEnd) {
             vSync = true;
             frame = 1 - frame;
             yPos = 0;
@@ -154,6 +152,7 @@ void ULA::generateInterrupt() {
     }
 
     if (pixel == interruptStart) {
+        keyPoll = true;
         interrupt = true;
     } else if (pixel == interruptEnd) {
         interrupt = false;
