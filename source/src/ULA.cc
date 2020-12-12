@@ -114,23 +114,24 @@ void ULA::generateVideoControlSignals() {
         ++scan;
         retrace = (scan >= vSyncStart) && (scan < vSyncEnd);
 
-        if (scan == vBlankEnd) {
+        if (scan == vBorderStart) { // Poll keyboard before and closest to INT
             keyPoll = true;
-            flash += 0x08;
         } else if (scan == vSyncEnd) {
             vSync = true;
             frame = 1 - frame;
             yPos = 0;
+        } else if (scan == vBlankEnd) { // As long as vSyncEnd != vBlankEnd
+            flash += 0x08;
         } else if (scan == maxScan) {
             scan = 0;
         }
     } else if (pixel == hSyncEnd) {
         xPos = 0;
-        if (retrace == false) {
-            yPos += yInc;
-        }
     } else if (pixel == hBlankEnd) {
         blanking = (scan >= vBlankStart) && (scan <= vBlankEnd);
+        if (blanking == false) {
+            yPos += yInc;
+        }
     } else if (pixel == maxPixel) {
         pixel = 0;
         border = (scan >= vBorderStart);
@@ -438,6 +439,8 @@ void ULA::start() {
 
     pixel = 0;
     scan = 0;
+    xPos = 0;
+    yPos = 0;
     ulaReset = false;
     z80Clk = false;
     cpuClock = true;
@@ -515,11 +518,12 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             break;
         case 5: // Pentagon
             paintPixel = 0x02;
-            hSyncEnd = 0x160;
-            hBlankEnd = 0x1A0;
+            hSyncEnd = 0x158;
+            hBlankStart = 0x138;
+            hBlankEnd = 0x198;
             maxPixel = 0x1C0;
             vBlankStart = 0x0F0;
-            vBlankEnd = 0x100;
+            vBlankEnd = 0x107;
             vSyncStart = 0x0F0;
             maxScan = 0x140;
             cpuClock = true;
