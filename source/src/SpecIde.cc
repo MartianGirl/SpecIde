@@ -42,6 +42,7 @@ using namespace std;
 
 FileTypes guessFileType(string const& fileName);
 void displayLicense();
+void displayHelp();
 void readOptions(map<string, string>& options);
 size_t getScale(string const& scale);
 
@@ -56,50 +57,7 @@ int main(int argc, char* argv[]) {
 
     for (vector<string>::iterator it = params.begin(); it != params.end(); ++it) {
         if (*it == "--help" || *it == "-h") {
-            cout << "Usage: SpecIde [options] [tapefiles]" << endl;
-            cout << endl;
-            cout << "Supported formats are TAP and TZX." << endl;
-            cout << endl;
-            cout << "Options:" << endl;
-            cout << endl;
-            cout << "Model selection options:" << endl;
-            cout << "--issue2               Spectrum 48K, issue 2." << endl;
-            cout << "--issue3 | --48        Spectrum 48K, issue 3. (Default)" << endl;
-            cout << "--48sp                 Spectrum + 48K. (Spanish ROM)" << endl;
-            cout << "--128                  Spectrum 128K." << endl;
-            cout << "--128sp                Spectrum 128K. (Spanish ROM)" << endl;
-            cout << "--plus2                Spectrum +2." << endl;
-            cout << "--plus2sp              Spectrum +2. (Spanish ROM)" << endl;
-            cout << "--plus2a               Spectrum +2A." << endl;
-            cout << "--plus2asp             Spectrum +2A. (Spanish ROM)" << endl;
-            cout << "--plus3                Spectrum +3." << endl;
-            cout << "--plus3sp              Spectrum +3. (Spanish ROM)" << endl;
-            cout << endl;
-            cout << "Hardware options:" << endl;
-            cout << "--kempston             Map joystick to Kempston interface." << endl;
-            cout << "--sinclair             Map joystick to Sinclair interface. (Default)" << endl;
-            cout << "--pad|--nopad          Map pad extra buttons to keys." << endl;
-            cout << "--psg|--nopsg          Emulate AY chip in 48K Spectrum." << endl;
-            cout << "--abc|--acb|--mono     Select stereo mode." << endl;
-            cout << "--ay|--ym              Select PSG: AY-3-8912/YM-2149." << endl;
-            cout << "--sd1                  Emulate Dinamic SD1 dongle." << endl;
-            cout << "--cmos                 Z80 is CMOS - OUT(C),0 outputs FFh." << endl;
-            cout << endl;
-            cout << "Video options:" << endl;
-            cout << "--fullscreen           Start SpecIde in full screen mode." << endl;
-            cout << "--window               Start SpecIde in windowed mode." << endl;
-            cout << "--scanlines            Render PAL double scan mode." << endl;
-            cout << "--average              Render PAL double scan mode, averaging scanlines." << endl;
-            cout << "--nodoublescan         Single scan mode. (Default)" << endl;
-            cout << "--sync                 Sync emulation to PC video refresh rate." << endl;
-            cout << endl;
-            cout << "Sound options (add prefix 'no' to disable. Eg. --nosound):" << endl;
-            cout << "--sound                Enable beeper/PSG sound. (Default)" << endl;
-            cout << "--tapesound            Enable tape sound." << endl;
-            cout << endl;
-            cout << "Emulation options (add prefix 'no' to disable. Eg. --noflashtap):" << endl;
-            cout << "--flashtap         Enable ROM traps for LOAD and SAVE." << endl;
-            cout << endl;
+            displayHelp();
             exit(0);
         }
     }
@@ -462,6 +420,7 @@ FileTypes guessFileType(string const& fileName) {
 }
 
 void displayLicense() {
+
     cout << "SpecIde Version ";
     cout << SPECIDE_VERSION_MAJOR << ".";
     cout << SPECIDE_VERSION_MINOR << ".";
@@ -482,6 +441,54 @@ void displayLicense() {
     cout << "ZX Spectrum ROMs are (c) Amstrad PLC. Amstrad PLC has kindly given" << endl;
     cout << "permission for the redistribution of the ZX Spectrum ROMs for their" << endl;
     cout << "use with emulators, but retains the copyright for them." << endl;
+    cout << endl;
+}
+
+void displayHelp() {
+
+    cout << "Usage: SpecIde [options] [tapefiles]" << endl;
+    cout << endl;
+    cout << "Supported formats are TAP and TZX." << endl;
+    cout << endl;
+    cout << "Options:" << endl;
+    cout << endl;
+    cout << "Model selection options:" << endl;
+    cout << "--issue2               Spectrum 48K, issue 2." << endl;
+    cout << "--issue3 | --48        Spectrum 48K, issue 3. (Default)" << endl;
+    cout << "--48sp                 Spectrum + 48K. (Spanish ROM)" << endl;
+    cout << "--128                  Spectrum 128K." << endl;
+    cout << "--128sp                Spectrum 128K. (Spanish ROM)" << endl;
+    cout << "--plus2                Spectrum +2." << endl;
+    cout << "--plus2sp              Spectrum +2. (Spanish ROM)" << endl;
+    cout << "--plus2a               Spectrum +2A." << endl;
+    cout << "--plus2asp             Spectrum +2A. (Spanish ROM)" << endl;
+    cout << "--plus3                Spectrum +3." << endl;
+    cout << "--plus3sp              Spectrum +3. (Spanish ROM)" << endl;
+    cout << endl;
+    cout << "Hardware options:" << endl;
+    cout << "--kempston             Map joystick to Kempston interface." << endl;
+    cout << "--sinclair             Map joystick to Sinclair interface. (Default)" << endl;
+    cout << "--pad|--nopad          Map pad extra buttons to keys." << endl;
+    cout << "--psg|--nopsg          Emulate AY chip in 48K Spectrum." << endl;
+    cout << "--abc|--acb|--mono     Select stereo mode." << endl;
+    cout << "--ay|--ym              Select PSG: AY-3-8912/YM-2149." << endl;
+    cout << "--sd1                  Emulate Dinamic SD1 dongle." << endl;
+    cout << "--cmos                 Z80 is CMOS - OUT(C),0 outputs FFh." << endl;
+    cout << endl;
+    cout << "Video options:" << endl;
+    cout << "--fullscreen           Start SpecIde in full screen mode." << endl;
+    cout << "--window               Start SpecIde in windowed mode." << endl;
+    cout << "--scanlines            Render PAL double scan mode." << endl;
+    cout << "--average              Render PAL double scan mode, averaging scanlines." << endl;
+    cout << "--nodoublescan         Single scan mode. (Default)" << endl;
+    cout << "--sync                 Sync emulation to PC video refresh rate." << endl;
+    cout << endl;
+    cout << "Sound options (add prefix 'no' to disable. Eg. --nosound):" << endl;
+    cout << "--sound                Enable beeper/PSG sound. (Default)" << endl;
+    cout << "--tapesound            Enable tape sound." << endl;
+    cout << endl;
+    cout << "Emulation options (add prefix 'no' to disable. Eg. --noflashtap):" << endl;
+    cout << "--flashtap         Enable ROM traps for LOAD and SAVE." << endl;
     cout << endl;
 }
 
