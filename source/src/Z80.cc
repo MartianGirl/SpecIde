@@ -35,22 +35,22 @@ uint16_t Z80::daaTable[65536];
 bool Z80::flagsReady = false;
 
 
-void Z80::reset()
-{
+void Z80::reset() {
+
     c &= ~SIGNAL_RESET_;
 }
 
-void Z80::clock()
-{
+void Z80::clock() {
+
     // Process RESET signal
-    if (!(c & SIGNAL_RESET_))
+    if (!(c & SIGNAL_RESET_)) {
         state = Z80State::ST_RESET;
+    }
 
     // NMI is edge-triggered.
     // If a falling edge in NMI is detected, accept the NMI and clear
     // the IFF1 flag.
-    if ((~c & c_d & SIGNAL_NMI_))
-    {
+    if ((~c & c_d & SIGNAL_NMI_)) {
         nmiAccept = true;
         iff &= ~(IFF1);
     }
@@ -61,11 +61,13 @@ void Z80::clock()
     iff_d = iff;
 
     // Process BUSRQ/BUSAK
-    if ((c & SIGNAL_BUSRQ_) == SIGNAL_BUSRQ_)
+#ifdef SPECIDE_SUPPORT_BUSRQ_BUSAK
+    if ((c & SIGNAL_BUSRQ_) == SIGNAL_BUSRQ_) {
         c |= SIGNAL_BUSAK_;
+    }
+#endif
 
-    switch (state)
-    {
+    switch (state) {
         case Z80State::ST_RESET:
             start();
             state = Z80State::ST_OCF_T1H_ADDRWR;
@@ -74,10 +76,10 @@ void Z80::clock()
             // Machine cycle
         case Z80State::ST_OCF_T1H_ADDRWR:
             a = pc.w;
-            if (!intProcess && !nmiProcess && !(iff_d & HALT))
+            if (!intProcess && !nmiProcess && !(iff_d & HALT)) {
                 ++pc.w;
+            }
             c &= ~SIGNAL_M1_;
-            // c |= SIGNAL_RFSH_;
             state = Z80State::ST_OCF_T1L_ADDRWR;
             return;
 
@@ -93,24 +95,25 @@ void Z80::clock()
             return;
 
         case Z80State::ST_OCF_T2L_DATARD:
-            if (!nmiProcess && !(c & SIGNAL_WAIT_))
+            if (!nmiProcess && !(c & SIGNAL_WAIT_)) {
                 state = Z80State::ST_OCF_T2H_DATARD;
-            else
+            } else {
                 state = Z80State::ST_OCF_T3H_RFSH1;
+            }
             return;
 
         case Z80State::ST_OCF_T3H_RFSH1:
             c |= (SIGNAL_IORQ_ | SIGNAL_RD_ | SIGNAL_M1_);
             a = ir.w;
             ir.b.l = (ir.b.l & 0x80) | ((ir.b.l + 1) & 0x7F);
-            if (!(iff_d & HALT))
+            if (!(iff_d & HALT)) {
                 decode(d);
+            }
             startInstruction();
             state = Z80State::ST_OCF_T3L_RFSH1;
             return;
 
         case Z80State::ST_OCF_T3L_RFSH1:
-            // c &= ~(SIGNAL_MREQ_ | SIGNAL_RFSH_);
             c &= ~SIGNAL_MREQ_;
             state = Z80State::ST_OCF_T4H_RFSH2;
             return;
@@ -131,7 +134,6 @@ void Z80::clock()
             // This state could be done in ST_OCF_T1_ADDRWR by incrementing
             // PC only if NMI is false...
             a = pc.w;
-            // c |= SIGNAL_RFSH_;
             c &= ~SIGNAL_M1_;
             state = Z80State::ST_NMI_T1L_ADDRWR;
             return;
@@ -153,7 +155,6 @@ void Z80::clock()
         case Z80State::ST_INT_T1H_ADDRWR:
             a = pc.w;
             c &= ~SIGNAL_M1_;
-            // c |= SIGNAL_RFSH_;
             state = Z80State::ST_INT_T1L_ADDRWR;
             return;
 
@@ -183,18 +184,19 @@ void Z80::clock()
             return;
 
         case Z80State::ST_INT_T4L_WAIT2:
-            if (!(c & SIGNAL_WAIT_))
+            if (!(c & SIGNAL_WAIT_)) {
                 state = Z80State::ST_INT_T4H_WAIT2;
-            else
+            } else {
                 state = Z80State::ST_OCF_T3H_RFSH1;
+            }
             return;
 
             // Memory read cycle
         case Z80State::ST_MEMRD_T1H_ADDRWR:
             // INT mode 0 places bytes directly on the bus.
-            // c |= SIGNAL_RFSH_;
-            if (!intProcess || im == 2)
+            if (!intProcess || im == 2) {
                 a = getAddress();
+            }
             state = Z80State::ST_MEMRD_T1L_ADDRWR;
             return;
 
@@ -210,10 +212,11 @@ void Z80::clock()
             return;
 
         case Z80State::ST_MEMRD_T2L_WAITST:
-            if (!(c & SIGNAL_WAIT_))
+            if (!(c & SIGNAL_WAIT_)) {
                 state = Z80State::ST_MEMRD_T2H_WAITST;
-            else
+            } else {
                 state = Z80State::ST_MEMRD_T3H_DATARD;
+            }
             return;
 
         case Z80State::ST_MEMRD_T3H_DATARD:
@@ -228,7 +231,6 @@ void Z80::clock()
             // Memory write cycle
         case Z80State::ST_MEMWR_T1H_ADDRWR:
             a = getAddress();
-            // c |= SIGNAL_RFSH_;
             state = Z80State::ST_MEMWR_T1L_ADDRWR;
             return;
 
@@ -245,10 +247,11 @@ void Z80::clock()
         case Z80State::ST_MEMWR_T2L_WAITST:
             c &= ~(SIGNAL_WR_);
 
-            if (!(c & SIGNAL_WAIT_))
+            if (!(c & SIGNAL_WAIT_)) {
                 state = Z80State::ST_MEMWR_T2H_WAITST;
-            else
+            } else {
                 state = Z80State::ST_MEMWR_T3H_DATAWR;
+            }
             return;
 
         case Z80State::ST_MEMWR_T3H_DATAWR:
@@ -263,7 +266,6 @@ void Z80::clock()
 
             // I/O read cycle
         case Z80State::ST_IORD_T1H_ADDRWR:
-            // c |= SIGNAL_RFSH_;
             a = getAddress();
             state = Z80State::ST_IORD_T1L_ADDRWR;
             return;
@@ -286,10 +288,11 @@ void Z80::clock()
             return;
 
         case Z80State::ST_IORD_TWL_WAITST:
-            if (!(c & SIGNAL_WAIT_))
+            if (!(c & SIGNAL_WAIT_)) {
                 state = Z80State::ST_IORD_TWH_WAITST;
-            else
+            } else {
                 state = Z80State::ST_IORD_T3H_DATARD;
+            }
             return;
 
         case Z80State::ST_IORD_T3H_DATARD:
@@ -306,7 +309,6 @@ void Z80::clock()
             // I/O write cycle
         case Z80State::ST_IOWR_T1H_ADDRWR:
             a = getAddress();
-            // c |= SIGNAL_RFSH_;
             state = Z80State::ST_IOWR_T1L_ADDRWR;
             return;
 
@@ -332,10 +334,11 @@ void Z80::clock()
             return;
 
         case Z80State::ST_IOWR_TWL_WAITST:
-            if (!(c & SIGNAL_WAIT_))
+            if (!(c & SIGNAL_WAIT_)) {
                 state = Z80State::ST_IOWR_TWH_WAITST;
-            else
+            } else {
                 state = Z80State::ST_IOWR_T3H_DATAWR;
+            }
             return;
 
         case Z80State::ST_IOWR_T3H_DATAWR:
@@ -352,7 +355,6 @@ void Z80::clock()
             // The CPU internal cycle begins here, and it is extended by using
             // WAITSTates.
         case Z80State::ST_CPU_T0H_CPUPROC:
-            // c |= SIGNAL_RFSH_;
             state = Z80State::ST_CPU_T0L_CPUPROC;
             return;
 
@@ -362,7 +364,6 @@ void Z80::clock()
 
             // Wait state
         case Z80State::ST_CPU_T0H_WAITST:
-            // c |= SIGNAL_RFSH_;
             state = Z80State::ST_CPU_T0L_WAITST;
             return;
 
@@ -378,55 +379,48 @@ void Z80::clock()
     bool endOfCycle = false;
 
     // If we are in a BUSRQ cycle, we just insert wait states.
-    if (c & SIGNAL_BUSAK_)
-    {
-        if (nmiProcess)
-        {
+#ifdef SPECIDE_SUPPORT_BUSRQ_BUSAK
+    if (c & SIGNAL_BUSAK_) {
+#endif
+        if (nmiProcess) {
             endOfCycle = executeNmi();
             if (endOfCycle
-                    && !memRdCycles
-                    && !memWrCycles
-                    && !ioRdCycles
-                    && !ioWrCycles
-                    && !cpuProcCycles
-                    && prefix == PREFIX_NO)
+                    && !memRdCycles && !memWrCycles
+                    && !ioRdCycles && !ioWrCycles
+                    && !cpuProcCycles && prefix == PREFIX_NO) {
                 nmiProcess = false;
-        }
-        else if (intProcess)
-        {
+            }
+        } else if (intProcess) {
             endOfCycle = executeInt();
             if (endOfCycle
-                    && !memRdCycles
-                    && !memWrCycles
-                    && !ioRdCycles
-                    && !ioWrCycles
-                    && !cpuProcCycles
-                    && prefix == PREFIX_NO)
+                    && !memRdCycles && !memWrCycles
+                    && !ioRdCycles && !ioWrCycles
+                    && !cpuProcCycles && prefix == PREFIX_NO) {
                 intProcess = false;
-        }
-        else
-        {
+            }
+        } else {
             endOfCycle = execute();
         }
+#ifdef SPECIDE_SUPPORT_BUSRQ_BUSAK
     }
+#endif
 
-    if (!endOfCycle)    // Machine cycle not finished, insert a state.
+    if (!endOfCycle) {  // Machine cycle not finished, insert a state.
         state = Z80State::ST_CPU_T0H_WAITST;
-    // BUSRQ goes here, after a complete machine cycle.
-    else if ((c & SIGNAL_BUSRQ_) == 0x0000)
-    {
+#ifdef SPECIDE_SUPPORT_BUSRQ_BUSAK
+    } else if ((c & SIGNAL_BUSRQ_) == 0x0000) { // BUSRQ goes here, after a complete machine cycle.
         c &= ~SIGNAL_BUSAK_;
         state = Z80State::ST_CPU_T0H_WAITST;
-    }
-    else if (memRdCycles)      // Perform memory read cycles.
+#endif
+    } else if (memRdCycles) {    // Perform memory read cycles.
         state = Z80State::ST_MEMRD_T1H_ADDRWR;
-    else if (ioRdCycles)       // Perform I/O read cycles.
+    } else if (ioRdCycles) {     // Perform I/O read cycles.
         state = Z80State::ST_IORD_T1H_ADDRWR;
-    else if (cpuProcCycles)    // Perform internal CPU cycles.
+    } else if (cpuProcCycles) {  // Perform internal CPU cycles.
         state = Z80State::ST_CPU_T0H_CPUPROC;
-    else if (memWrCycles)      // Perform memory write cycles.
+    } else if (memWrCycles) {    // Perform memory write cycles.
         state = Z80State::ST_MEMWR_T1H_ADDRWR;
-    else if (ioWrCycles)       // Perform I/O write cycles.
+    } else if (ioWrCycles) {     // Perform I/O write cycles.
         state = Z80State::ST_IOWR_T1H_ADDRWR;
     // At this point we have completed a instruction. NMI and INT can
     // happen here.
@@ -434,42 +428,34 @@ void Z80::clock()
     // set above, when a falling edge is detected in the NMI signal.
     // Since prefixes are handled as one-cycle instructions, we have
     // to check we're not in the middle of a instruction.
-    else if (nmiAccept
-            && prefix == PREFIX_NO)
-    {
+    } else if (nmiAccept && prefix == PREFIX_NO) {
         nmiAccept = false;
         nmiProcess = true;
         iff &= ~HALT;
         c |= SIGNAL_HALT_;
         state = Z80State::ST_NMI_T1H_ADDRWR;
-    }
-    // INT only happens if there is no NMI.
-    else if (intAccept
+    } else if (intAccept
             && !intNotReady
             && ((iff_d & IFF1) == IFF1)
             && ((iff & IFF1) == IFF1)
-            && prefix == PREFIX_NO)
-    {
+            && prefix == PREFIX_NO) {
+        // INT only happens if there is no NMI.
         iff &= ~(IFF1 | IFF2);
         intAccept = false;
         intProcess = true;
         iff &= ~HALT;
         c |= SIGNAL_HALT_;
         state = Z80State::ST_INT_T1H_ADDRWR;
-    }
-    else if (iff & HALT)
-    {
+    } else if (iff & HALT) {
         c &= ~SIGNAL_HALT_;
         state = Z80State::ST_OCF_T1H_ADDRWR;
-    }
-    else
-    {
+    } else {
         state = Z80State::ST_OCF_T1H_ADDRWR;
     }
 }
 
-void Z80::start()
-{
+void Z80::start() {
+
     // Clear buses
     a = 0xFFFF;
     c = 0xFFFF;
@@ -504,8 +490,8 @@ void Z80::start()
     prefix = PREFIX_NO;
 }
 
-void Z80::decode(uint_fast8_t byte)
-{
+void Z80::decode(uint_fast8_t byte) {
+
     opcode = byte;
     x = (opcode & 0xC0) >> 6;   // xx......
     y = (opcode & 0x38) >> 3;   // ..yyy...
@@ -514,8 +500,8 @@ void Z80::decode(uint_fast8_t byte)
     q = y & 0x01;               // ....q...
 }
 
-void Z80::startInstruction()
-{
+void Z80::startInstruction() {
+
     executionStep = 0;
     skipCycles = 0;
 
@@ -528,10 +514,9 @@ void Z80::startInstruction()
     intNotReady >>= 1;
 }
 
-uint_fast16_t Z80::getAddress()
-{
-    switch (memAddrMode & 0x0F)
-    {
+uint_fast16_t Z80::getAddress() {
+
+    switch (memAddrMode & 0x0F) {
         case 0x00:  // Direct Implicit:     LD A, B
             break;
         case 0x01:  // Direct Immediate:    LD A, n
@@ -580,49 +565,47 @@ uint_fast16_t Z80::getAddress()
     return addr.w;
 }
 
-void Z80::readMem(uint_fast8_t byte)
-{
+void Z80::readMem(uint_fast8_t byte) {
+
     iReg.b.l = iReg.b.h;
     iReg.b.h = byte;
     --memRdCycles;
 }
 
-uint_fast8_t Z80::writeMem()
-{
+uint_fast8_t Z80::writeMem() {
+
     uint_fast8_t byte = oReg.b.l;
     oReg.b.l = oReg.b.h;
     --memWrCycles;
     return byte;
 }
 
-void Z80::readIo(uint_fast8_t byte)
-{
+void Z80::readIo(uint_fast8_t byte) {
+
     iReg.b.l = iReg.b.h;
     iReg.b.h = byte;
     --ioRdCycles;
 }
 
-uint_fast8_t Z80::writeIo()
-{
+uint_fast8_t Z80::writeIo() {
+
     uint_fast8_t byte = oReg.b.l;
     oReg.b.l = oReg.b.h;
     --ioWrCycles;
     return byte;
 }
 
-void Z80::cpuProcCycle()
-{
+void Z80::cpuProcCycle() {
+
     --cpuProcCycles;
 }
 
-bool Z80::execute()
-{
+bool Z80::execute() {
+
     bool finished = false;
 
-    if (!skipCycles)
-    {
-        switch (prefix)
-        {
+    if (!skipCycles) {
+        switch (prefix) {
             case PREFIX_ED:
                 finished = (this->*(edprefixed[opcode]))();
                 break;
@@ -646,9 +629,7 @@ bool Z80::execute()
                 assert(false);
                 break;
         }
-    }
-    else
-    {
+    } else {
         --skipCycles;
     }
 
@@ -656,19 +637,18 @@ bool Z80::execute()
     return finished;
 }
 
-bool Z80::executeNmi()
-{
+bool Z80::executeNmi() {
+
     bool finished = z80Nmi();
     ++executionStep;
     return finished;
 }
 
-bool Z80::executeInt()
-{
+bool Z80::executeInt() {
+
     bool finished = true;
 
-    switch (im)
-    {
+    switch (im) {
         case 0:             // Mode 0: Execute the instruction in the data bus.
             finished = execute();
             break;
@@ -691,14 +671,11 @@ bool Z80::executeInt()
     return finished;
 }
 
-void Z80::loadAddFlags()
-{
-    for (uint16_t cc = 0; cc < 2; ++cc)
-    {
-        for (uint16_t aa = 0; aa < 0x100; ++aa)
-        {
-            for (uint16_t bb = 0; bb < 0x100; ++bb)
-            {
+void Z80::loadAddFlags() {
+
+    for (uint16_t cc = 0; cc < 2; ++cc) {
+        for (uint16_t aa = 0; aa < 0x100; ++aa) {
+            for (uint16_t bb = 0; bb < 0x100; ++bb) {
                 uint16_t s = aa + bb + cc;
                 uint8_t sh = (s >> 8) & 0x00FF;
                 uint8_t sl = s & 0x00FF;
@@ -714,14 +691,11 @@ void Z80::loadAddFlags()
     }
 }
 
-void Z80::loadSubFlags()
-{
-    for (uint16_t cc = 0; cc < 2; ++cc)
-    {
-        for (uint16_t aa = 0; aa < 0x100; ++aa)
-        {
-            for (uint16_t bb = 0; bb < 0x100; ++bb)
-            {
+void Z80::loadSubFlags() {
+
+    for (uint16_t cc = 0; cc < 2; ++cc) {
+        for (uint16_t aa = 0; aa < 0x100; ++aa) {
+            for (uint16_t bb = 0; bb < 0x100; ++bb) {
                 uint16_t s = aa - bb - cc;
                 uint8_t sh = (s >> 8) & 0x00FF;
                 uint8_t sl = s & 0x00FF;
@@ -738,12 +712,10 @@ void Z80::loadSubFlags()
     }
 }
 
-void Z80::loadAndFlags()
-{
-    for (uint16_t aa = 0; aa < 0x100; ++aa)
-    {
-        for (uint16_t bb = 0; bb < 0x100; ++bb)
-        {
+void Z80::loadAndFlags() {
+
+    for (uint16_t aa = 0; aa < 0x100; ++aa) {
+        for (uint16_t bb = 0; bb < 0x100; ++bb) {
             uint8_t sh = static_cast<uint8_t>(aa & bb);
             uint8_t sl = static_cast<uint8_t>(aa & bb);
             uint8_t f;
@@ -759,12 +731,10 @@ void Z80::loadAndFlags()
     }
 }
 
-void Z80::loadOrFlags()
-{
-    for (uint16_t aa = 0; aa < 0x100; ++aa)
-    {
-        for (uint16_t bb = 0; bb < 0x100; ++bb)
-        {
+void Z80::loadOrFlags() {
+
+    for (uint16_t aa = 0; aa < 0x100; ++aa) {
+        for (uint16_t bb = 0; bb < 0x100; ++bb) {
             uint8_t sh = static_cast<uint8_t>(aa | bb);
             uint8_t sl = static_cast<uint8_t>(aa | bb);
             uint8_t f;
@@ -780,12 +750,10 @@ void Z80::loadOrFlags()
     }
 }
 
-void Z80::loadXorFlags()
-{
-    for (uint16_t aa = 0; aa < 0x100; ++aa)
-    {
-        for (uint16_t bb = 0; bb < 0x100; ++bb)
-        {
+void Z80::loadXorFlags() {
+
+    for (uint16_t aa = 0; aa < 0x100; ++aa) {
+        for (uint16_t bb = 0; bb < 0x100; ++bb) {
             uint8_t sh = static_cast<uint8_t>(aa ^ bb);
             uint8_t sl = static_cast<uint8_t>(aa ^ bb);
             uint8_t f;
@@ -801,12 +769,10 @@ void Z80::loadXorFlags()
     }
 }
 
-void Z80::loadCpFlags()
-{
-    for (uint16_t aa = 0; aa < 0x100; ++aa)
-    {
-        for (uint16_t bb = 0; bb < 0x100; ++bb)
-        {
+void Z80::loadCpFlags() {
+
+    for (uint16_t aa = 0; aa < 0x100; ++aa) {
+        for (uint16_t bb = 0; bb < 0x100; ++bb) {
             uint16_t s = aa - bb;
             uint8_t sh = (s >> 8) & 0x00FF;
             uint8_t sl = s & 0x00FF;
@@ -823,10 +789,9 @@ void Z80::loadCpFlags()
     }
 }
 
-void Z80::loadIncFlags()
-{
-    for (uint16_t aa = 0; aa < 0x100; ++aa)
-    {
+void Z80::loadIncFlags() {
+
+    for (uint16_t aa = 0; aa < 0x100; ++aa) {
         uint16_t s = aa + 1;
         uint8_t sh = (s >> 8) & 0x00FF;
         uint8_t sl = s & 0x00FF;
@@ -839,10 +804,9 @@ void Z80::loadIncFlags()
     }
 }
 
-void Z80::loadDecFlags()
-{
-    for (uint16_t aa = 0; aa < 0x100; ++aa)
-    {
+void Z80::loadDecFlags() {
+
+    for (uint16_t aa = 0; aa < 0x100; ++aa) {
         uint16_t s = aa - 1;
         uint8_t sh = (s >> 8) & 0x00FF;
         uint8_t sl = s & 0x00FF;
@@ -856,12 +820,10 @@ void Z80::loadDecFlags()
     }
 }
 
-void Z80::loadRlFlags()
-{
-    for (uint16_t cc = 0; cc < 2; ++cc)
-    {
-        for (uint16_t aa = 0; aa < 0x100; ++aa)
-        {
+void Z80::loadRlFlags() {
+
+    for (uint16_t cc = 0; cc < 2; ++cc) {
+        for (uint16_t aa = 0; aa < 0x100; ++aa) {
             Z80Register r;
             r.w = (aa << 1) | cc;
             uint8_t f = r.b.h;
@@ -877,12 +839,10 @@ void Z80::loadRlFlags()
     }
 }
 
-void Z80::loadRrFlags()
-{
-    for (uint16_t cc = 0; cc < 2; ++cc)
-    {
-        for (uint16_t aa = 0; aa < 0x100; ++aa)
-        {
+void Z80::loadRrFlags() {
+
+    for (uint16_t cc = 0; cc < 2; ++cc) {
+        for (uint16_t aa = 0; aa < 0x100; ++aa) {
             Z80Register r;
             r.b.l = static_cast<uint8_t>(aa);
             r.b.h = static_cast<uint8_t>(cc);
@@ -900,10 +860,9 @@ void Z80::loadRrFlags()
     }
 }
 
-void Z80::loadRlcFlags()
-{
-    for (uint16_t aa = 0; aa < 0x100; ++aa)
-    {
+void Z80::loadRlcFlags() {
+
+    for (uint16_t aa = 0; aa < 0x100; ++aa) {
         Z80Register r;
         r.w = aa << 1;
         r.b.l |= r.b.h;
@@ -918,10 +877,9 @@ void Z80::loadRlcFlags()
     }
 }
 
-void Z80::loadRrcFlags()
-{
-    for (uint16_t aa = 0; aa < 0x100; ++aa)
-    {
+void Z80::loadRrcFlags() {
+
+    for (uint16_t aa = 0; aa < 0x100; ++aa) {
         Z80Register r;
         r.b.l = static_cast<uint8_t>(aa);
         r.b.h = aa & FLAG_C;
@@ -938,10 +896,9 @@ void Z80::loadRrcFlags()
     }
 }
 
-void Z80::loadSlaFlags()
-{
-    for (uint16_t aa = 0; aa < 0x100; ++aa)
-    {
+void Z80::loadSlaFlags() {
+
+    for (uint16_t aa = 0; aa < 0x100; ++aa) {
         Z80Register r;
         r.w = aa << 1;
         uint8_t f = r.b.h & FLAG_C;
@@ -956,10 +913,9 @@ void Z80::loadSlaFlags()
     }
 }
 
-void Z80::loadSllFlags()
-{
-    for (uint16_t aa = 0; aa < 0x100; ++aa)
-    {
+void Z80::loadSllFlags() {
+
+    for (uint16_t aa = 0; aa < 0x100; ++aa) {
         Z80Register r;
         r.w = aa << 1 | 0x01;
         uint8_t f = r.b.h & FLAG_C;
@@ -974,10 +930,9 @@ void Z80::loadSllFlags()
     }
 }
 
-void Z80::loadSraFlags()
-{
-    for (uint16_t aa = 0; aa < 0x100; ++aa)
-    {
+void Z80::loadSraFlags() {
+
+    for (uint16_t aa = 0; aa < 0x100; ++aa) {
         Z80Register r;
         r.b.l = static_cast<uint8_t>(aa);
         r.b.h = (r.b.l & 0x80) ? 0x01 : 0x00;
@@ -994,10 +949,9 @@ void Z80::loadSraFlags()
     }
 }
 
-void Z80::loadSrlFlags()
-{
-    for (uint16_t aa = 0; aa < 0x100; ++aa)
-    {
+void Z80::loadSrlFlags() {
+
+    for (uint16_t aa = 0; aa < 0x100; ++aa) {
         Z80Register r;
         r.w = aa >> 1;
         uint8_t f = aa & FLAG_C;
@@ -1012,10 +966,9 @@ void Z80::loadSrlFlags()
     }
 }
 
-void Z80::loadDaaTable()
-{
-    for (uint32_t aa = 0; aa < 0x10000; ++aa)
-    {
+void Z80::loadDaaTable() {
+
+    for (uint32_t aa = 0; aa < 0x10000; ++aa) {
         Z80Register r;
         Z80Register t;
         r.w = static_cast<uint16_t>(aa);
@@ -1024,15 +977,11 @@ void Z80::loadDaaTable()
         uint8_t f = r.b.l & (FLAG_H | FLAG_N | FLAG_C);  // ...b.H..NC
         // Adjust the lower nybble first.
         t.w = r.b.h & 0x0F;
-        if ((t.w > 0x09) || ((f & FLAG_H) == FLAG_H))
-        {
-            if ((f & FLAG_N) == FLAG_N)   // Subtraction
-            {
+        if ((t.w > 0x09) || ((f & FLAG_H) == FLAG_H)) {
+            if ((f & FLAG_N) == FLAG_N) {   // Subtraction
                 f &= (t.w > 0x05) ? ~FLAG_H : 0xFF;
                 t.w -= 0x06;
-            }
-            else    // Addition
-            {
+            } else {                        // Addition
                 f &= ~FLAG_H;
                 f |= (t.w > 0x09) ? FLAG_H : 0x00;
                 t.w += 0x06;
@@ -1041,12 +990,12 @@ void Z80::loadDaaTable()
 
         // Adjust the upper nybble then.
         t.w += (r.b.h & 0xF0);
-        if ((r.b.h > 0x99) || ((f & FLAG_C) == FLAG_C))
-        {
-            if ((f & FLAG_N) == FLAG_N)   // Subtraction
+        if ((r.b.h > 0x99) || ((f & FLAG_C) == FLAG_C)) {
+            if ((f & FLAG_N) == FLAG_N) {   // Subtraction
                 t.w -= 0x60;
-            else    // Addition
+            } else {                        // Addition
                 t.w += 0x60;
+            }
 
             f |= FLAG_C;
         }

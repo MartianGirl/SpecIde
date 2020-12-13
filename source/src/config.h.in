@@ -8,3 +8,6 @@
 #define SPECIDE_HOME_ENV "@SpecIde_HOME_ENV@"
 #define SPECIDE_CONF_DIR "@SpecIde_CONF_DIR@"
 #define SPECIDE_ON_UNIX @SpecIde_ON_UNIX@
+
+// Enable BUSRQ/BUSAK support by default.
+#define SPECIDE_SUPPORT_BUSRQ_BUSAK

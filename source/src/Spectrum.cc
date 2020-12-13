@@ -537,10 +537,8 @@ void Spectrum::psgChip(bool aychip) {
 
 void Spectrum::sample() {
 
-    ula.sample();
+    l = r = ula.sample();
     psgSample();
-
-    l = r = ula.sound;
 
     switch (stereo) {
         case StereoMode::STEREO_ACB: // ACB

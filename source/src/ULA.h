@@ -51,7 +51,7 @@ class ULA
         uint_fast8_t ioRead();
         void ioWrite(uint_fast8_t byte);
         void beeper();
-        void sample();
+        int sample();
         void start();
         void updateAttributes();
 
@@ -116,11 +116,8 @@ class ULA
         uint_fast8_t latch;
 
         uint_fast32_t ear = 0;
-        uint_fast32_t chargeDelay = 0;
-        uint_fast32_t capacitor = 0;
 
         // Audio and tape signals
-        int sound = 0;
         int filter[FILTER_BZZ_SIZE];
         size_t index = 0;
         bool playSound = true;
@@ -136,7 +133,6 @@ class ULA
         bool contendedBank = false;
         bool cpuClock = true;
         bool ulaReset = true;
-        bool contention = false;
         bool snow = false;
 
         // Video signals
@@ -149,7 +145,6 @@ class ULA
         // Useful video signals
         bool vSync = false;
         bool blanking = false;
-        bool retrace = false;
         bool keyPoll = false;
 
         // Port 0xFE
@@ -163,7 +158,6 @@ class ULA
 
         // ULA interrupt
         uint_fast16_t c;
-        bool interrupt = false;
         uint_fast16_t interruptStart;
         uint_fast16_t interruptEnd;
 

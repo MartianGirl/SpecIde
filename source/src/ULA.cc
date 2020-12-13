@@ -112,7 +112,6 @@ void ULA::generateVideoControlSignals() {
     } else if (pixel == hBlankStart) {
         blanking = true;
         ++scan;
-        retrace = (scan >= vSyncStart) && (scan < vSyncEnd);
 
         if (scan == vSyncEnd) {
             vSync = true;
@@ -145,17 +144,11 @@ void ULA::generateVideoControlSignals() {
 
 void ULA::generateInterrupt() {
 
-    if (interrupt) {
-        z80_c &= ~SIGNAL_INT_;
-    } else {
-        z80_c |= SIGNAL_INT_;
-    }
-
-    if (pixel == interruptStart) {
+    if (pixel == interruptStart && scan == vSyncStart) {
         keyPoll = true;
-        interrupt = true;
-    } else if (pixel == interruptEnd) {
-        interrupt = false;
+        z80_c &= ~SIGNAL_INT_;
+    } else if (pixel == interruptEnd && scan == vSyncStart) {
+        z80_c |= SIGNAL_INT_;
     }
 }
 
@@ -201,7 +194,7 @@ void ULA::generateVideoDataUla() {
     //    like a contended memory address. In this case, no I/O
     //    contention happens, but MREQ never goes low, so every cycle is
     //    contended.
-    contention = (memContention && !ioContention && !memContentionOff)
+    bool contention = (memContention && !ioContention && !memContentionOff)
         || (ioContention && !ioContentionOff);
 
     // Resolve contention and generate CPU clock.
@@ -229,7 +222,7 @@ void ULA::generateVideoDataGa() {
 
     // Memory Contention
     // +2A/+3 only apply contention if MREQ is low.
-    contention = contendedBank && !(z80_c & SIGNAL_MREQ_);
+    bool contention = contendedBank && !(z80_c & SIGNAL_MREQ_);
 
     if (contention && delayTable[pixel & 0x0F]) {
         z80_c &= ~SIGNAL_WAIT_;
@@ -312,6 +305,9 @@ void ULA::tapeEarMic() {
 
     // First attempt at MIC/EAR feedback loop.
     // Let's keep this here for the moment.
+    static uint_fast32_t capacitor = 0;
+    static uint_fast32_t chargeDelay = 0;
+
     if (ulaVersion < 2) {
         uint_fast32_t v = voltage[soundBits];
 
@@ -381,22 +377,20 @@ void ULA::beeper() {
     index = (index + 1) % FILTER_BZZ_SIZE;
 }
 
-void ULA::sample() {
+int ULA::sample() {
 
-    sound = 0;
+    int sound = 0;
     for (size_t i = 0; i < FILTER_BZZ_SIZE; ++i) {
         sound += filter[i];
     }
     sound /= FILTER_BZZ_SIZE;
+    return sound;
 }
 
 void ULA::clock() {
 
     generateVideoControlSignals();
-
-    if (scan == vSyncStart) {
-        generateInterrupt();
-    }
+    generateInterrupt();
 
     if (!border) {
         switch (ulaVersion) {
@@ -539,6 +533,12 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             maxScan = 0x138;
             break;
     }
+
+    // Delay interrupt by one ULA clock cycle. In real hardware, this would
+    // happen normally, because Z80 is running in parallel with the ULA,
+    // but here the ULA is emulated first, and then the Z80.
+    ++interruptStart;
+    ++interruptEnd;
 
     // Cycle states for ULA-based Spectrums (48K/128K/+2)
     bool delayUla[16] = {
