@@ -522,7 +522,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             hBlankEnd = 0x198;
             maxPixel = 0x1C0;
             vBlankStart = 0x0F0;
-            vBlankEnd = 0x107;
+            vBlankEnd = 0x100;
             vSyncStart = 0x0F0;
             maxScan = 0x140;
             cpuClock = true;
