@@ -20,11 +20,12 @@ actually, it is *very* accurate. Some of the supported features are:
 - Works in GNU/Linux, Windows, and MacOS.
 
 ## How to get it?
-These are SpecIde binaries for Windows:
+From time to time, (when I remember to do it), I update these:
 
-- [SpecIde for Windows 10 (32-bit)](https://drive.google.com/open?id=1C5zRcY8itrvP9hKJsIniFWSGP1Zs-3NC)
-- [SpecIde for Windows 10 (64-bit)](https://drive.google.com/open?id=1X-eZrQ7BfX1SP4DVdLrDT94rwOLgmoQX)
-- [SpecIde for older Windows (XP/Vista/7) (32-bit)](https://drive.google.com/open?id=1jta-_Wdl9C7p0AbkiEEBOUJsI95JPsbc)
+- [SpecIde for Windows 8/10 (32-bit)](https://drive.google.com/file/d/1C5zRcY8itrvP9hKJsIniFWSGP1Zs-3NC/view?usp=sharing)
+- [SpecIde for Windows 8/10 (64-bit)](https://drive.google.com/file/d/1X-eZrQ7BfX1SP4DVdLrDT94rwOLgmoQX/view?usp=sharing)
+- [SpecIde for older Windows (XP/Vista/7) (32-bit)](https://drive.google.com/file/d/1jta-_Wdl9C7p0AbkiEEBOUJsI95JPsbc/view?usp=sharing)
+- [SpecIde for older Windows (XP/Vista/7) (64-bit)](https://drive.google.com/file/d/1x0hd8CP3DUEAUI0stAzojeQLIJrlylPd/view?usp=sharing)
 
 For GNU/Linux and MacOS I'm not providing binaries, but SpecIde can be compiled quite easily.
 
