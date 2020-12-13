@@ -144,11 +144,13 @@ void ULA::generateVideoControlSignals() {
 
 void ULA::generateInterrupt() {
 
-    if (pixel == interruptStart && scan == vSyncStart) {
-        keyPoll = true;
-        z80_c &= ~SIGNAL_INT_;
-    } else if (pixel == interruptEnd && scan == vSyncStart) {
-        z80_c |= SIGNAL_INT_;
+    if (scan == vSyncStart) {
+        if (pixel == interruptStart && scan == vSyncStart) {
+            keyPoll = true;
+            z80_c &= ~SIGNAL_INT_;
+        } else if (pixel == interruptEnd && scan == vSyncStart) {
+            z80_c |= SIGNAL_INT_;
+        }
     }
 }
 
