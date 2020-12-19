@@ -269,10 +269,12 @@ void ULA::generateVideoDataPentagon() {
 
 void ULA::updateAttributes() {
 
-    data = video ? dataReg : 0xFF;
-    attr = video ? attrReg : borderAttr;
-    colour[0] = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-    colour[1] = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+    if ((pixel++ & 0x07) == paintPixel) {
+        data = video ? dataReg : 0xFF;
+        attr = video ? attrReg : borderAttr;
+        colour[0] = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+        colour[1] = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+    }
 }
 
 void ULA::paint() {
@@ -395,17 +397,7 @@ void ULA::clock() {
     generateInterrupt();
 
     if (!border) {
-        switch (ulaVersion) {
-            case 4:
-                generateVideoDataGa();
-                break;
-            case 5:
-                generateVideoDataPentagon();
-                break;
-            default:
-                generateVideoDataUla();
-                break;
-        }
+        (this->*generateVideoData)();
     }
 
     tapeEarMic();
@@ -418,12 +410,8 @@ void ULA::clock() {
         z80Clk = !z80Clk;
     }
 
-    if ((pixel & 0x07) == paintPixel) {
-        updateAttributes();
-    }
+    updateAttributes();
     paint();
-
-    ++pixel;
 
     if (ulaReset) {
         start();
@@ -468,6 +456,8 @@ void ULA::setUlaVersion(uint_fast8_t version) {
     vSyncStart = 0x0F8;
     vSyncEnd = 0x0FC;
 
+    generateVideoData = &ULA::generateVideoDataUla;
+
     switch (ulaVersion) {
         case 0: // 48K, Issue 2
             hSyncEnd = 0x170;
@@ -510,6 +500,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             cpuClock = true;
             micMask = 0x01;
             snow = false;
+            generateVideoData = &ULA::generateVideoDataGa;
             break;
         case 5: // Pentagon
             paintPixel = 0x02;
@@ -525,6 +516,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             interruptStart = 0x140;
             interruptEnd = 0x180;
             snow = false;
+            generateVideoData = &ULA::generateVideoDataPentagon;
             break;
         default:
             hBorderStart = 0x101;

@@ -44,9 +44,6 @@ class ULA
 
         void generateVideoControlSignals();
         void generateInterrupt();
-        void generateVideoDataUla();
-        void generateVideoDataGa();
-        void generateVideoDataPentagon();
         void tapeEarMic();
         uint_fast8_t ioRead();
         void ioWrite(uint_fast8_t byte);
@@ -54,6 +51,10 @@ class ULA
         int sample();
         void start();
         void updateAttributes();
+
+        void generateVideoDataUla();
+        void generateVideoDataGa();
+        void generateVideoDataPentagon();
 
         void setUlaVersion(uint_fast8_t version);
 
@@ -96,6 +97,7 @@ class ULA
 
         // These values depend on the model
         uint_fast8_t ulaVersion = 1;
+        void (ULA::*generateVideoData)() = &ULA::generateVideoDataUla;
 
         // ULA internals
         uint_fast16_t pixel = 0;
@@ -164,4 +166,5 @@ class ULA
         // Scanline modes.
         uint_fast32_t scanlines = 0;
 };
+
 // vim: et:sw=4:ts=4
