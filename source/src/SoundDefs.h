@@ -19,6 +19,9 @@ constexpr size_t FILTER_BZZ_SIZE = 96;
 constexpr size_t FILTER_PSG_SIZE = 96;
 constexpr size_t ULA_CLOCK_48 = 7000000;
 constexpr size_t ULA_CLOCK_128 = 7093800;
+constexpr int FRAME_TIME_48 = 19968;
+constexpr int FRAME_TIME_128 = 19992;
+constexpr int FRAME_TIME_PENTAGON = 20480;
 
 constexpr size_t SAMPLE_RATE = 44100;
 

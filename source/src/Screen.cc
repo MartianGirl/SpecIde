@@ -47,7 +47,7 @@ Screen::Screen(size_t scale) :
     syncToVideo(false),
     scale(scale),
     xSize(360), ySize(625),
-    delay(19968),
+    delay(FRAME_TIME_48),
     pad(false),
     flashTap(false) {
 
@@ -139,8 +139,7 @@ void Screen::run() {
 #ifndef DO_NOT_SLEEP
                     sleep_until(wakeup);
 #endif
-                    while (steady_clock::now() < frame);
-                    tick = steady_clock::now();
+                    while ((tick = steady_clock::now()) < frame);
                 }
 
                 if (done || menu) break;
@@ -809,15 +808,15 @@ void Screen::setSoundRate(SoundRate rate) {
     switch (rate) {
         case SoundRate::SOUNDRATE_128K:
             value = static_cast<double>(ULA_CLOCK_128) / static_cast<double>(SAMPLE_RATE);
-            delay = 19992;
+            delay = FRAME_TIME_128;
             break;
         case SoundRate::SOUNDRATE_PENTAGON:
             value = static_cast<double>(ULA_CLOCK_48) / static_cast<double>(SAMPLE_RATE);
-            delay = 20480;
+            delay = FRAME_TIME_PENTAGON;
             break;
         default:
             value = static_cast<double>(ULA_CLOCK_48) / static_cast<double>(SAMPLE_RATE);
-            delay = 19968;
+            delay = FRAME_TIME_48;
             break;
     }
     skip = static_cast<uint32_t>(value);
