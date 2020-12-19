@@ -207,8 +207,6 @@ void Spectrum::clock() {
     // LOW. Contention intervals work this way.
     bool as_ = z80.c & SIGNAL_MREQ_;
     bool io_ = z80.c & SIGNAL_IORQ_;
-    bool rd = z80.access && !(z80.c & SIGNAL_RD_);
-    bool wr = z80.access && !(z80.c & SIGNAL_WR_);
 
     size_t memArea = z80.a >> 14;
 
@@ -261,114 +259,115 @@ void Spectrum::clock() {
     // We clock the Z80 if the ULA allows.
     if (ula.cpuClock) {
         // Z80 gets data from the ULA or memory, only when reading.
-        if (!io_) {
-            // 48K/128K/Plus2 floating bus. Return idle status by default,
-            // or screen data, if the ULA is working.
-            if (rd) {
-                z80.d = (ula.idle) ? idle : bus & idle;
-            }
-
-            // 128K only ports (paging, disk)
-            if (spectrum128K) {
-                if (!(z80.a & 0x8002)) {
-                    if (wr || rd)
-                        updatePage(0);
+        if (z80.access) {
+            if (!io_) {
+                // 48K/128K/Plus2 floating bus. Return idle status by default,
+                // or screen data, if the ULA is working.
+                if (z80.rd) {
+                    z80.d = (ula.idle) ? idle : bus & idle;
                 }
-            } else if (spectrumPlus2A) {
-                switch (z80.a & 0xF002) {
-                    case 0x0000:    // In +2A/+3 this is the floating bus port.
-                        if (rd) {
-                            if (!(paging & 0x0020)) {
-                                z80.d = (bus_1 & idle) | 0x01;
-                            }
-                        }
-                        break;
-                    case 0x1000:    // 0x1FFD (+3 Paging High)
-                        if (wr)
-                            updatePage(1);
-                        break;
-                    case 0x2000:    // 0x2FFD (+3 FDC Main Status)
-                        if (spectrumPlus3) {
-                            if (rd) {
-                                z80.d = fdc.status();
-                            }
-                        }
-                        break;
-                    case 0x3000:    // 0x3FFD (+3 FDC Data)
-                        if (spectrumPlus3) {
-                            if (wr) {
-                                fdc.write(z80.d);
-                            } else if (rd) {
-                                z80.d = fdc.read();
-                            }
-                        }
-                        break;
-                    case 0x4000: // fall-through
-                    case 0x5000: // fall-through
-                    case 0x6000: // fall-through
-                    case 0x7000: // 0x7FFD (128K Paging / +3 Paging Low)
-                        if (wr)
+
+                // 128K only ports (paging, disk)
+                if (spectrum128K) {
+                    if (!(z80.a & 0x8002)) {
+                        if (z80.wr || z80.rd)
                             updatePage(0);
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-
-            // AY-3-8912 ports.
-            if (psgPresent[0]) {    // If there are PSGs, there is a PSG 0
-                switch (z80.a & 0xC002) {
-                    case 0x8000:    // 0xBFFD
-                        if (wr)
-                            psgWrite();
-                        else if (rd && spectrumPlus2A)
-                            psgRead();
-                        break;
-
-                    case 0xC000:    // 0xFFFD
-                        if (wr) {
-                            if ((z80.d & 0x98) == 0x98) {
-                                psgSelect();
-                            } else {
-                                psgAddr();
+                    }
+                } else if (spectrumPlus2A) {
+                    switch (z80.a & 0xF002) {
+                        case 0x0000:    // In +2A/+3 this is the floating bus port.
+                            if (z80.rd) {
+                                if (!(paging & 0x0020)) {
+                                    z80.d = (bus_1 & idle) | 0x01;
+                                }
                             }
-                        } else if (rd) {
-                            psgRead();
-                        }
-                        break;
+                            break;
+                        case 0x1000:    // 0x1FFD (+3 Paging High)
+                            if (z80.wr)
+                                updatePage(1);
+                            break;
+                        case 0x2000:    // 0x2FFD (+3 FDC Main Status)
+                            if (spectrumPlus3) {
+                                if (z80.rd) {
+                                    z80.d = fdc.status();
+                                }
+                            }
+                            break;
+                        case 0x3000:    // 0x3FFD (+3 FDC Data)
+                            if (spectrumPlus3) {
+                                if (z80.wr) {
+                                    fdc.write(z80.d);
+                                } else if (z80.rd) {
+                                    z80.d = fdc.read();
+                                }
+                            }
+                            break;
+                        case 0x4000: // fall-through
+                        case 0x5000: // fall-through
+                        case 0x6000: // fall-through
+                        case 0x7000: // 0x7FFD (128K Paging / +3 Paging Low)
+                            if (z80.wr)
+                                updatePage(0);
+                            break;
 
-                    default:
-                        break;
+                        default:
+                            break;
+                    }
                 }
-            }
 
-            // Common ports.
-            if (kempston && !(z80.a & 0x0020)) {    // Kempston joystick.
-                if (rd) {
-                    z80.d = joystick;
+                // AY-3-8912 ports.
+                if (psgPresent[0]) {    // If there are PSGs, there is a PSG 0
+                    switch (z80.a & 0xC002) {
+                        case 0x8000:    // 0xBFFD
+                            if (z80.wr)
+                                psgWrite();
+                            else if (z80.rd && spectrumPlus2A)
+                                psgRead();
+                            break;
+
+                        case 0xC000:    // 0xFFFD
+                            if (z80.wr) {
+                                if ((z80.d & 0x98) == 0x98) {
+                                    psgSelect();
+                                } else {
+                                    psgAddr();
+                                }
+                            } else if (z80.rd) {
+                                psgRead();
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
                 }
-            } else if (!(z80.a & 0x0001)) {         // ULA port
-                if (wr) {
-                    ula.ioWrite(z80.d);
-                } else if (rd) {
-                    z80.d = ula.ioRead();
+
+                // Common ports.
+                if (kempston && !(z80.a & 0x0020)) {    // Kempston joystick.
+                    if (z80.rd) {
+                        z80.d = joystick;
+                    }
+                } else if (!(z80.a & 0x0001)) {         // ULA port
+                    if (z80.wr) {
+                        ula.ioWrite(z80.d);
+                    } else if (z80.rd) {
+                        z80.d = ula.ioRead();
+                    }
+                }
+            } else if (!as_) {
+                // Bank 0: 0000h - ROM
+                // Bank 1: 4000h - Contended memory
+                // Bank 2: 8000h - Extended memory
+                // Bank 3: C000h - Extended memory (can be contended)
+                if (z80.rd) {
+                    z80.d = map[memArea][z80.a & 0x3FFF];
+                } else if (!romPage[memArea] && z80.wr) {
+                    map[memArea][z80.a & 0x3FFF] = z80.d;
                 }
             }
-        } else if (!as_) {
-            // Bank 0: 0000h - ROM
-            // Bank 1: 4000h - Contended memory
-            // Bank 2: 8000h - Extended memory
-            // Bank 3: C000h - Extended memory (can be contended)
-            if (rd) {
-                z80.d = map[memArea][z80.a & 0x3FFF];
-            } else if (!romPage[memArea] && wr) {
-                map[memArea][z80.a & 0x3FFF] = z80.d;
-            }
-        } else {
+        } else if (as_ && io_) {
             z80.d = 0xFF;
         }
-
         z80.clock();
     }
 }
