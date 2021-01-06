@@ -15,7 +15,7 @@
 
 #pragma once
 
-/** FDC
+/** FDC765
  *
  * FDC765 implementation.
  *
@@ -25,40 +25,40 @@
 
 #include <cstdint>
 
-#include "DiskDrive.h"
+#include "Plus3Disk.h"
 
-enum class FDCState
+enum class FDC765State
 {
-    FDC_STATE_IDLE,
-    FDC_STATE_COMMAND,
-    FDC_STATE_EXECUTION,
-    FDC_STATE_RECEIVE,
-    FDC_STATE_TRANSMIT,
-    FDC_STATE_RESULT
+    FDC765_STATE_IDLE,
+    FDC765_STATE_COMMAND,
+    FDC765_STATE_EXECUTION,
+    FDC765_STATE_RECEIVE,
+    FDC765_STATE_TRANSMIT,
+    FDC765_STATE_RESULT
 };
 
-enum class FDCMode
+enum class FDC765Mode
 {
-    FDC_MODE_NONE,
-    FDC_MODE_READ,
-    FDC_MODE_WRITE
+    FDC765_MODE_NONE,
+    FDC765_MODE_READ,
+    FDC765_MODE_WRITE
 };
 
-enum class FDCAccess
+enum class FDC765Access
 {
-    FDC_ACCESS_LOAD,
-    FDC_ACCESS_SEEK,
-    FDC_ACCESS_DATA,
-    FDC_ACCESS_UNLOAD,
-    FDC_ACCESS_NONE
+    FDC765_ACCESS_LOAD,
+    FDC765_ACCESS_SEEK,
+    FDC765_ACCESS_DATA,
+    FDC765_ACCESS_UNLOAD,
+    FDC765_ACCESS_NONE
 };
 
-enum class FDCScan
+enum class FDC765Scan
 {
-    FDC_SCAN_EQUAL,
-    FDC_SCAN_LOW,
-    FDC_SCAN_HIGH,
-    FDC_SCAN_ERROR
+    FDC765_SCAN_EQUAL,
+    FDC765_SCAN_LOW,
+    FDC765_SCAN_HIGH,
+    FDC765_SCAN_ERROR
 };
 
 constexpr uint_fast8_t SREG_DB0 = 1 << 0;
@@ -75,7 +75,7 @@ constexpr size_t SERVICE_MFM = 46;
 constexpr size_t SERVICE_FM = 91;
 constexpr size_t BYTE_DELAY = 100;
 
-class FDC {
+class FDC765 {
 
     public:
         uint_fast8_t statusReg = 0x00;
@@ -113,11 +113,11 @@ class FDC {
         size_t byteTimer = 0;
         size_t sectorCopy = 0;
 
-        FDCState state;
-        FDCMode mode;
-        FDCAccess stage;
+        FDC765State state;
+        FDC765Mode mode;
+        FDC765Access stage;
 
-        DiskDrive drive[2];
+        Plus3Disk drive[2];
         uint_fast8_t presCylNum[2];
         uint_fast8_t sReg[4];
 
@@ -136,8 +136,8 @@ class FDC {
         size_t headLoadTime;
         bool useDma;
 
-        FDC() :
-            drive{DiskDrive(true), DiskDrive(false)},
+        FDC765() :
+            drive{Plus3Disk(true), Plus3Disk(false)},
             presCylNum{0, 0}
         {}
 

@@ -21,11 +21,6 @@
 Spectrum::Spectrum() :
     bus(0xFF),
     joystick(0),
-    kempston(false),
-    spectrum128K(false),
-    spectrumPlus2(false),
-    spectrumPlus2A(false),
-    spectrumPlus3(false),
     psgPresent{false, false, false, false},
     currentPsg(0),
     idle(0xFF),
@@ -117,6 +112,12 @@ void Spectrum::loadRoms(RomVariant model) {
             romNames.push_back("plus3-spanish-3.rom");
             break;
 
+        case RomVariant::ROM_PENTAGON:
+            romNames.push_back("pentagon-0.rom");
+            romNames.push_back("pentagon-1.rom");
+            romNames.push_back("trdos.rom");
+            break;
+
         default:
             romNames.push_back("48.rom");
             break;
@@ -150,9 +151,9 @@ void Spectrum::loadRoms(RomVariant model) {
 void Spectrum::set128K() {
 
     spectrum128K = true;
-    spectrumPlus2 = false;
     spectrumPlus2A = false;
-    spectrumPlus3 = false;
+    plus3Disk = false;
+    betaDisk128 = false;
     psgPresent[0] = true;
     mask = 0x0001;
     reset();
@@ -161,9 +162,9 @@ void Spectrum::set128K() {
 void Spectrum::setPlus2() {
 
     spectrum128K = true;
-    spectrumPlus2 = true;
     spectrumPlus2A = false;
-    spectrumPlus3 = false;
+    plus3Disk = false;
+    betaDisk128 = false;
     psgPresent[0] = true;
     mask = 0x0001;
     reset();
@@ -172,9 +173,9 @@ void Spectrum::setPlus2() {
 void Spectrum::setPlus2A() {
 
     spectrum128K = false;
-    spectrumPlus2 = false;
     spectrumPlus2A = true;
-    spectrumPlus3 = false;
+    plus3Disk = false;
+    betaDisk128 = false;
     psgPresent[0] = true;
     mask = 0x0004;
     reset();
@@ -183,11 +184,22 @@ void Spectrum::setPlus2A() {
 void Spectrum::setPlus3() {
 
     spectrum128K = false;
-    spectrumPlus2 = false;
     spectrumPlus2A = true;
-    spectrumPlus3 = true;
+    plus3Disk = true;
+    betaDisk128 = false;
     psgPresent[0] = true;
     mask = 0x0004;
+    reset();
+}
+
+void Spectrum::setPentagon() {
+
+    spectrum128K = true;
+    spectrumPlus2A = false;
+    plus3Disk = false;
+    betaDisk128 = true;
+    psgPresent[0] = true;
+    mask = 0xFFFF;
     reset();
 }
 
@@ -252,8 +264,10 @@ void Spectrum::clock() {
         ula.beeper();
         psgClock();
 
-        if (spectrumPlus3 && !(count & 0x07))
-            fdc.clock();
+        if (!(count & 0x07)) {
+            if (plus3Disk) fdc765.clock();
+            //if (betaDisk128) fd1793.clock();
+        }
     }
 
     // We clock the Z80 if the ULA allows.
@@ -283,22 +297,23 @@ void Spectrum::clock() {
                             }
                             break;
                         case 0x1000:    // 0x1FFD (+3 Paging High)
-                            if (z80.wr)
+                            if (z80.wr) {
                                 updatePage(1);
+                            }
                             break;
-                        case 0x2000:    // 0x2FFD (+3 FDC Main Status)
-                            if (spectrumPlus3) {
+                        case 0x2000:    // 0x2FFD (+3 FDC765 Main Status)
+                            if (plus3Disk) {
                                 if (z80.rd) {
-                                    z80.d = fdc.status();
+                                    z80.d = fdc765.status();
                                 }
                             }
                             break;
-                        case 0x3000:    // 0x3FFD (+3 FDC Data)
-                            if (spectrumPlus3) {
+                        case 0x3000:    // 0x3FFD (+3 FDC765 Data)
+                            if (plus3Disk) {
                                 if (z80.wr) {
-                                    fdc.write(z80.d);
+                                    fdc765.write(z80.d);
                                 } else if (z80.rd) {
-                                    z80.d = fdc.read();
+                                    z80.d = fdc765.read();
                                 }
                             }
                             break;
@@ -306,8 +321,9 @@ void Spectrum::clock() {
                         case 0x5000: // fall-through
                         case 0x6000: // fall-through
                         case 0x7000: // 0x7FFD (128K Paging / +3 Paging Low)
-                            if (z80.wr)
+                            if (z80.wr) {
                                 updatePage(0);
+                            }
                             break;
 
                         default:
@@ -319,10 +335,11 @@ void Spectrum::clock() {
                 if (psgPresent[0]) {    // If there are PSGs, there is a PSG 0
                     switch (z80.a & 0xC002) {
                         case 0x8000:    // 0xBFFD
-                            if (z80.wr)
+                            if (z80.wr) {
                                 psgWrite();
-                            else if (z80.rd && spectrumPlus2A)
+                            } else if (z80.rd && spectrumPlus2A) {
                                 psgRead();
+                            }
                             break;
 
                         case 0xC000:    // 0xFFFD
@@ -343,11 +360,26 @@ void Spectrum::clock() {
                 }
 
                 // Common ports.
-                if (kempston && !(z80.a & 0x0020)) {    // Kempston joystick.
-                    if (z80.rd) {
-                        z80.d = joystick;
+                // Ports in the form XXXXXXXX 0XX11111 are blocked when TR-DOS
+                // is active. This affects kempston joystick, for instance.
+                if (betaDisk128 && (romBank == 0x0002)) {
+                    if ((z80.a & 0x0003) == 0x0003) {
+                        // uint_fast8_t fdAddr = (z80.a & 0xE0) >> 5;
+                        // if (z80.rd) {
+                            // z80.d = fd1793.read(fdAddr);
+                        // } else if (z80.wr) {
+                            // fd1793.write(fdAddr, z80.d);
+                        // }
                     }
-                } else if (!(z80.a & 0x0001)) {         // ULA port
+                } else {
+                    if (kempston && !(z80.a & 0x0020)) {    // Kempston joystick.
+                        if (z80.rd) {
+                            z80.d = joystick;
+                        }
+                    }
+                }
+
+                if (!(z80.a & 0x0001)) {         // ULA port
                     if (z80.wr) {
                         ula.ioWrite(z80.d);
                     } else if (z80.rd) {
@@ -355,10 +387,18 @@ void Spectrum::clock() {
                     }
                 }
             } else if (!as_) {
-                // Bank 0: 0000h - ROM
-                // Bank 1: 4000h - Contended memory
-                // Bank 2: 8000h - Extended memory
-                // Bank 3: C000h - Extended memory (can be contended)
+                // BetaDisk128 pages TR-DOS ROM when the PC is in the range
+                // 0x3D00-0x3DFF and the 48K BASIC ROM is paged in.
+                // Note that we're not considering romBank != (0, 1) because
+                // BetaDisk128 is not allowed in Plus2A/Plus3 models.
+                if (betaDisk128 && z80.fetch) {
+                    if ((romBank == 0x0001) && ((z80.a & 0xFF00) == 0x3D00)) {
+                        setPage(0, 2, true, false);
+                    } else if (memArea) {
+                        setPage(0, romBank, true, false);
+                    }
+                }
+
                 if (z80.rd) {
                     z80.d = map[memArea][z80.a & 0x3FFF];
                 } else if (!romPage[memArea] && z80.wr) {
@@ -381,7 +421,7 @@ void Spectrum::updatePage(uint_fast8_t reg) {
             paging = z80.d | (paging & 0xFF00);
 
         // Update +3 disk drive(s) motor status.
-        fdc.motor(spectrumPlus3 && (paging & 0x0800));
+        fdc765.motor(plus3Disk && (paging & 0x0800));
 
         // Select screen to display.
         setScreenPage(((paging & 0x0008) >> 2) | 0x05);
@@ -418,14 +458,14 @@ void Spectrum::updatePage(uint_fast8_t reg) {
                     assert(false);
             }
         } else {                    // Normal paging mode.
-            uint_fast8_t ramBank = paging & 0x0007;
-            uint_fast8_t romBank =
+            ramBank = paging & 0x0007;
+            romBank =
                 ((paging & 0x0010) >> 4) | ((paging & 0x0400) >> 9);
 
             setPage(0, romBank, true, false);
             setPage(1, 5, false, true);
             setPage(2, 2, false, false);
-            setPage(3, ramBank, false, ((paging & mask) == mask));
+            setPage(3, ramBank, false, ((ramBank & mask) == mask));
 
             rom48 = ((spectrumPlus2A && romBank == 3)
                     || (spectrum128K && romBank == 1));
@@ -439,8 +479,10 @@ void Spectrum::reset() {
     ula.reset();    // Synchronize clock level.
     z80.reset();
     psgReset();
-    fdc.reset();
+    fdc765.reset();
 
+    romBank = 0;
+    ramBank = 0;
     setPage(0, 0, true, false);
     setPage(1, 5, false, true);
     setPage(2, 2, false, false);

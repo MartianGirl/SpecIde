@@ -25,7 +25,8 @@
 #include "Z80.h"
 #include "Z80Defs.h"
 #include "PSG.h"
-#include "FDC.h"
+#include "FDC765.h"
+//#include "FD1793.h"
 #include "config.h"
 
 #include <fstream>
@@ -52,7 +53,8 @@ enum class RomVariant {
     ROM_PLUS2_EN,
     ROM_PLUS2_ES,
     ROM_PLUS3_EN,
-    ROM_PLUS3_ES
+    ROM_PLUS3_ES,
+    ROM_PENTAGON
 };
 
 class Spectrum {
@@ -63,23 +65,26 @@ class Spectrum {
         Z80 z80;
         ULA ula;
         PSG psg[4];
-        FDC fdc;
+        FDC765 fdc765;
+        //FD1793 fd1793;
 
         uint_fast8_t bus;
         uint_fast8_t bus_1;
 
         // Kempston Joystick.
         uint_fast8_t joystick;
-        bool kempston;
-        bool spectrum128K;
-        bool spectrumPlus2;
-        bool spectrumPlus2A;
-        bool spectrumPlus3;
+        bool kempston = false;
+        bool spectrum128K = false;
+        bool spectrumPlus2A = false;
+        bool plus3Disk = false;
+        bool betaDisk128 = false;
         bool psgPresent[8];
         size_t currentPsg;
         uint_fast8_t idle;
         uint_fast16_t paging;
         uint_fast16_t mask;
+        uint_fast8_t ramBank = 0x00;
+        uint_fast8_t romBank = 0x00;
 
         int l = 0;
         int r = 0;
@@ -114,6 +119,7 @@ class Spectrum {
         void setPlus2();
         void setPlus2A();
         void setPlus3();
+        void setPentagon();
         void updatePage(uint_fast8_t reg);
         void setPage(uint_fast8_t page,
                 uint_fast8_t bank, bool isRom, bool isContended);

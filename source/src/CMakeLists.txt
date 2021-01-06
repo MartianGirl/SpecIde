@@ -20,7 +20,7 @@ include_directories(${Boost_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR})
 
 add_executable(SpecIde SpecIde.cc Screen.cc Console.cc
         Z80.cc ULA.cc
-        FDC.cc
+        FDC765.cc
         Spectrum.cc
         Tape.cc TAPFile.cc TZXFile.cc
         DSKFile.cc)
@@ -30,7 +30,7 @@ target_link_libraries(SpecIde ${Boost_LIBRARIES} ${ZLIB_LIBRARIES}
 # Set version information in a config.h file.
 set(SpecIde_VERSION_MAJOR 0)
 set(SpecIde_VERSION_MINOR 5)
-set(SpecIde_VERSION_TWEAK 8)
+set(SpecIde_VERSION_TWEAK 9)
 
 # Set endianness in config.h.
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)

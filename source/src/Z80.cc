@@ -85,12 +85,12 @@ void Z80::clock() {
 
         case Z80State::ST_OCF_T1L_ADDRWR:
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_);
-            access = rd = true;
+            access = rd = fetch = true;
             state = Z80State::ST_OCF_T2H_DATARD;
             return;
 
         case Z80State::ST_OCF_T2H_DATARD:
-            access = rd = false;
+            access = rd = fetch = false;
             state = Z80State::ST_OCF_T2L_DATARD;
             return;
 

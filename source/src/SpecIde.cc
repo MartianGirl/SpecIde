@@ -234,8 +234,8 @@ int main(int argc, char* argv[]) {
         screen.spectrum.ula.setUlaVersion(4);
     } else if (options["model"] == "pentagon") {
         screen.setSoundRate(SoundRate::SOUNDRATE_PENTAGON);
-        screen.spectrum.loadRoms(RomVariant::ROM_128_EN);
-        screen.spectrum.set128K();
+        screen.spectrum.loadRoms(RomVariant::ROM_PENTAGON);
+        screen.spectrum.setPentagon();
         screen.spectrum.ula.setUlaVersion(5);
     } else {
         options["model"] = "default";
@@ -368,9 +368,9 @@ int main(int argc, char* argv[]) {
                     dsk.load(*it);
 
                     if (dsk.validFile) {
-                        screen.spectrum.fdc.drive[0].images.push_back(dsk);
-                        screen.spectrum.fdc.drive[0].imageNames.push_back(*it);
-                        screen.spectrum.fdc.drive[0].disk = true;
+                        screen.spectrum.fdc765.drive[0].images.push_back(dsk);
+                        screen.spectrum.fdc765.drive[0].imageNames.push_back(*it);
+                        screen.spectrum.fdc765.drive[0].disk = true;
                     }
                 }
                 break;

@@ -173,6 +173,7 @@ class Z80
         bool intAccept = false;
         bool intProcess = false;
         bool access = false;
+        bool fetch = false;
         bool rd = false;
         bool wr = false;
 

@@ -15,9 +15,9 @@
 
 #pragma once
 
-/** DiskDrive
+/** Plus3Disk
  *
- * Disk drive emulation.
+ * Plus3 Disk drive emulation.
  *
  */
 
@@ -30,10 +30,10 @@
 
 using namespace std;
 
-class DiskDrive {
+class Plus3Disk {
 
     public:
-        DiskDrive(bool ready = false) :
+        Plus3Disk(bool ready = false) :
             ready(ready) {}
 
         bool track0 = true;     // Head is at track 0 (center of the disk)

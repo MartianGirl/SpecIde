@@ -405,16 +405,16 @@ void Screen::pollEvents() {
                         break;
                     case Keyboard::F3:  // Save DSK to disk
                         if (event.key.shift) {
-                            spectrum.fdc.drive[0].emptyDisk();
+                            spectrum.fdc765.drive[0].emptyDisk();
                         } else {
-                            spectrum.fdc.drive[0].saveDisk();
+                            spectrum.fdc765.drive[0].saveDisk();
                         }
                         break;
                     case Keyboard::F4:  // Select DSK from list
                         if (event.key.shift) {
-                            spectrum.fdc.drive[0].prevDisk();
+                            spectrum.fdc765.drive[0].prevDisk();
                         } else {
-                            spectrum.fdc.drive[0].nextDisk();
+                            spectrum.fdc765.drive[0].nextDisk();
                         }
                         break;
                     case Keyboard::F5:  // Reset Spectrum
