@@ -78,6 +78,11 @@ pad=yes
 # Values: yes, no
 fullscreen=no
 
+# Option: antialias
+# Enables antialiasing
+# Values: yes, no
+antialias=no
+
 # Option: scale
 # Selects scale factor for windowed mode.
 # Default is 1.

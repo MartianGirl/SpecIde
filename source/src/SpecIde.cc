@@ -159,6 +159,8 @@ int main(int argc, char* argv[]) {
             options["fullscreen"] = "no";
         if (*it == "--fullscreen")
             options["fullscreen"] = "yes";
+        if (*it == "--antialias")
+            options["antialias"] = "yes";
 
         if (*it == "--sync")
             options["sync"] = "yes";
@@ -330,6 +332,9 @@ int main(int argc, char* argv[]) {
     screen.fullscreen = (options["fullscreen"] == "yes");
     cout << "Full screen mode: " << options["fullscreen"] << endl;
 
+    screen.smooth = (options["antialias"] == "yes");
+    cout << "Antialiasing: " << options["antialias"] << endl;
+
     screen.flashTap = (options["flashtap"] == "yes");
     cout << "FlashTAP: " << options["flashtap"] << endl;
 
@@ -383,6 +388,7 @@ int main(int argc, char* argv[]) {
 
     screen.reopenWindow(screen.fullscreen);
     screen.setFullScreen(screen.fullscreen);
+    screen.setSmooth(screen.smooth);
     screen.spectrum.ula.playSound = screen.playSound;
     screen.spectrum.psgPlaySound(screen.psgSound && screen.playSound);
     screen.run();
@@ -482,6 +488,7 @@ void displayHelp() {
     cout << "--average              Render PAL double scan mode, averaging scanlines." << endl;
     cout << "--nodoublescan         Single scan mode. (Default)" << endl;
     cout << "--sync                 Sync emulation to PC video refresh rate." << endl;
+    cout << "--antialias            Set antialiasing." << endl;
     cout << endl;
     cout << "Sound options (add prefix 'no' to disable. Eg. --nosound):" << endl;
     cout << "--sound                Enable beeper/PSG sound. (Default)" << endl;
@@ -504,6 +511,7 @@ void readOptions(map<string, string>& options) {
     options["psgtype"] = "ay";
     options["scanmode"] = "normal";
     options["fullscreen"] = "no";
+    options["antialias"] = "no";
     options["flashtap"] = "no";
     options["sync"] = "no";
     options["sd1"] = "no";
