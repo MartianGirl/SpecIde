@@ -250,7 +250,6 @@ void ULA::generateVideoDataGa() {
 void ULA::generateVideoDataPentagon() {
 
     // Check for contended memory or I/O accesses.
-    idle = idleTable[pixel & 0x0F];
     mem = memTable[pixel & 0x0F];
 
     // Read from memory.
@@ -516,6 +515,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             interruptStart = 0x140;
             interruptEnd = 0x180;
             snow = false;
+            idle = true;
             generateVideoData = &ULA::generateVideoDataPentagon;
             break;
         default:
@@ -571,8 +571,9 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             idleTable[ii] = true;       // +2A/+3 has no floating bus
             memTable[ii] = memGa[ii];
         } else if (ulaVersion == 5) {
-            delayTable[ii] = false;     // Pentagon has No contention
-            idleTable[ii] = true;       // Pentagon has no floating bus
+            // Pentagon has no floating bus.
+            // idleTable is not necessary for Pentagon; idle = true always.
+            delayTable[ii] = false;     // Pentagon has no contention
             memTable[ii] = memPent[ii];
         } else {
             delayTable[ii] = delayUla[ii];
