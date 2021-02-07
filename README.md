@@ -7,7 +7,7 @@ actually, it is *very* accurate. Some of the supported features are:
 - Emulation of ZX Spectrum 48K (Issue 2/3), 128K, +2, +2A and +3.
 - +3 disk drive emulation. (Scan commands are missing yet)
 - Emulation of Spanish 128K, +2, +2A and +3.
-- Emulation of Pentagon timings (with 128K ROMs and no BetaDisk yet! Sorry for that!)
+- Emulation of Pentagon timings (but no BetaDisk yet! Sorry for that!)
 - PSG (AY-3-8912/YM-2149) sound emulation.
 - Turbosound emulation. Supports two and four PSG modes.
 - Loading of tapes via .tap and .tzx tape images, and .csw files.
@@ -96,7 +96,7 @@ Model selection options:
 --plus2asp             Spectrum +2A. (Spanish ROM)
 --plus3                Spectrum +3.
 --plus3sp              Spectrum +3. (Spanish ROM)
---pentagon             Spectrum 128K, Pentagon timings.
+--pentagon             Pentagon 128.
 
 Joystick options:
 --kempston             Map joystick to Kempston interface.
@@ -121,6 +121,7 @@ Video options:
 --average              Render PAL double scan mode, averaging scanlines.
 --nodoublescan         Single scan mode. (Default)
 --sync                 Sync emulation to PC video refresh rate.
+--antialias            Turn antialiasing on.
 
 Sound options (add prefix 'no' to disable. Eg. --nosound):
 --sound                Enable buzzer/PSG sound. (Default)
@@ -191,6 +192,9 @@ The following ROMs are included in the binary packages:
 | plus3-spanish-1.rom | Spanish Spectrum +2A/+3 (ROM 1) |
 | plus3-spanish-2.rom | Spanish Spectrum +2A/+3 (ROM 2) |
 | plus3-spanish-3.rom | Spanish Spectrum +2A/+3 (ROM 3) |
+| pentagon-0.rom | Pentagon 128 (ROM 0 - 128K + TR-DOS support) |
+| pentagon-1.rom | Pentagon 128 (ROM 1 - 48K BASIC) |
+| trdos.rom | TR-DOS ROM for BetaDisk 128 |
 
 Also, the font can be placed in here:
 - On GNU/Linux: $HOME/.SpecIde/font
