@@ -75,14 +75,21 @@ constexpr size_t SERVICE_MFM = 46;
 constexpr size_t SERVICE_FM = 91;
 constexpr size_t BYTE_DELAY = 100;
 
+constexpr size_t DATABUFFER_SIZE = 65536;
+constexpr size_t RESBUFFER_SIZE = 16;
+constexpr size_t CMDBUFFER_SIZE = 16;
+
+constexpr size_t MAX_DRIVES = 2;
+constexpr size_t NUM_REGS = 4;
+
 class FDC765 {
 
     public:
         uint_fast8_t statusReg = 0x00;
 
-        uint_fast8_t cmdBuffer[16];
-        uint_fast8_t resBuffer[16];
-        uint_fast8_t dataBuffer[65536];
+        uint8_t cmdBuffer[CMDBUFFER_SIZE];
+        uint8_t resBuffer[RESBUFFER_SIZE];
+        uint8_t dataBuffer[DATABUFFER_SIZE];
 
         unsigned int cmdIndex;
         unsigned int resIndex;
@@ -117,9 +124,9 @@ class FDC765 {
         FDC765Mode mode;
         FDC765Access stage;
 
-        Plus3Disk drive[2];
-        uint_fast8_t presCylNum[2];
-        uint_fast8_t sReg[4];
+        Plus3Disk drive[MAX_DRIVES];
+        uint_fast8_t presCylNum[MAX_DRIVES];
+        uint_fast8_t sReg[NUM_REGS];
 
         size_t lastDrive;
         size_t firstSector = 0x00;
@@ -175,6 +182,7 @@ class FDC765 {
         void checkDrive();
         void motor(bool status);
         void randomizeSector(std::vector<uint8_t>& buf);
+        void appendToDataBuffer(std::vector<uint8_t>& buf);
 };
 
 // vim: et:sw=4:ts=4

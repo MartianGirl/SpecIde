@@ -587,8 +587,7 @@ bool FDC765::readRegularDataOp() {
     }
 
     // If we reach here, it is a normal data read. Dump and continue.
-    copy(buf.begin(), buf.end(), &dataBuffer[dataBytes]);
-    dataBytes += outlen;
+    appendToDataBuffer(buf);
 
     // We must signal the CM.
     sReg[2] &= 0xBF;
@@ -628,8 +627,7 @@ bool FDC765::readDeletedDataOp() {
         sReg[0] |= 0x40;    // 01000HUU - AT
     }
 
-    copy(buf.begin(), buf.end(), &dataBuffer[dataBytes]);
-    dataBytes += outlen;
+    appendToDataBuffer(buf);
 
     // We must signal the CM.
     sReg[2] |= 0x40;
@@ -874,8 +872,7 @@ bool FDC765::readTrackOp() {
     }
 
     // If we reach here, it is a normal data read. Dump and continue.
-    copy(buf.begin(), buf.end(), &dataBuffer[dataBytes]);
-    dataBytes += outlen;
+    appendToDataBuffer(buf);
 
     setResultBytesOp();
 
@@ -959,7 +956,16 @@ void FDC765::writeCmd() {
             {
                 vector<uint8_t> buffer = drive[cmdDrive()].buffer;
                 buffer.resize(dataBytes, 0);
-                copy(&dataBuffer[0], &dataBuffer[dataIndex], &buffer[0]);
+
+                // If we're doing a multisector transfer, we copy this sector
+                // and remove the copied part from the dataBuffer.
+                if (dataIndex >= dataBytes) {
+                    copy(&dataBuffer[0], &dataBuffer[dataBytes], &buffer[0]);
+                    copy(&dataBuffer[dataBytes], &dataBuffer[dataIndex], &dataBuffer[0]);
+                    dataIndex -= dataBytes;
+                } else {
+                    copy(&dataBuffer[0], &dataBuffer[dataIndex], &buffer[0]);
+                }
 
                 drive[cmdDrive()].buffer = buffer;
                 drive[cmdDrive()].statusReg1 = 0x00;
@@ -1028,8 +1034,10 @@ uint_fast8_t FDC765::read() {
     if (!byte) {
         if (mode == FDC765Mode::FDC765_MODE_READ) {
             retval = dataBuffer[dataIndex++];
+            dataIndex %= DATABUFFER_SIZE;
         } else {
             retval = resBuffer[resIndex++];
+            resIndex %= RESBUFFER_SIZE;
         }
         byte = true;
     }
@@ -1041,8 +1049,10 @@ void FDC765::write(uint_fast8_t value) {
     if (!byte) {
         if (mode == FDC765Mode::FDC765_MODE_WRITE) {
             dataBuffer[dataIndex++] = value;
+            dataIndex %= DATABUFFER_SIZE;
         } else {
             cmdBuffer[cmdIndex++] = value;
+            cmdIndex %= CMDBUFFER_SIZE;
         }
         byte = true;
     }
@@ -1067,5 +1077,15 @@ void FDC765::randomizeSector(vector<uint8_t>& buf) {
 
     // Theoretically, there is a pattern here. However, this seems to work.
     buf.back() |= rand() & 0xFF;
+}
+
+void FDC765::appendToDataBuffer(vector<uint8_t>& buf) {
+
+    size_t available = DATABUFFER_SIZE - dataBytes;
+    if (available < buf.size()) {
+        buf.resize(available, 0x00);
+    }
+    copy(buf.begin(), buf.end(), &dataBuffer[dataBytes]);
+    dataBytes += buf.size();
 }
 // vim: et:sw=4:ts=4

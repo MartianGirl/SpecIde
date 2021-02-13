@@ -37,8 +37,8 @@ bool ULA::idleTable[16] = {
 };
 
 bool ULA::memTable[16] = {
-    true, true, true, true, true, true, true, true,
-    false, true, false, true, false, true, false, true
+    true, true, true, true, true, true, true, false,
+    false, false, false, false, false, false, false, true
 };
 
 bool ULA::snowTable[16] = {
@@ -545,7 +545,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
     };
     bool memUla[16] = {
         true, true, true, true, true, true, true, true,
-        false, true, false, true, false, true, false, true
+        false, false, false, true, false, false, false, true
     };
 
     // Cycle states for Gate Array based Spectrums (+2A/+3)
@@ -555,13 +555,13 @@ void ULA::setUlaVersion(uint_fast8_t version) {
     };
     bool memGa[16] = {
         true, true, true, true, true, true, true, true,
-        false, true, false, true, false, true, false, true
+        false, false, false, true, false, false, false, true
     };
 
     // Cycle states for Pentagon
     bool memPent[16] = {
-        true, true, true, true, true, true, false, true,
-        false, true, false, true, false, true, true, true
+        true, true, true, true, true, true, false, false,
+        false, true, false, false, false, true, true, true
     };
 
 
