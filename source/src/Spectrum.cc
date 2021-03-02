@@ -263,6 +263,8 @@ void Spectrum::clock() {
     if (!(count & 0x03)) {
         ula.beeper();
         psgClock();
+        filter[index] = covox;
+        index = (index + 1) % FILTER_BZZ_SIZE;
 
         if (!(count & 0x07)) {
             if (plus3Disk) fdc765.clock();
@@ -379,6 +381,12 @@ void Spectrum::clock() {
                     }
                 }
 
+                if (!(z80.a & 0x0004)) {
+                    if (z80.wr) {
+                        covox = z80.d * 0x40;
+                    }
+                }
+
                 if (!(z80.a & 0x0001)) {         // ULA port
                     if (z80.wr) {
                         ula.ioWrite(z80.d);
@@ -481,6 +489,7 @@ void Spectrum::reset() {
     psgReset();
     fdc765.reset();
 
+    covox = 0;
     romBank = 0;
     ramBank = 0;
     setPage(0, 0, true, false);
@@ -578,7 +587,7 @@ void Spectrum::psgChip(bool aychip) {
 
 void Spectrum::sample() {
 
-    l = r = ula.sample();
+    l = r = ula.sample() + dac();
     psgSample();
 
     switch (stereo) {
@@ -660,6 +669,16 @@ void Spectrum::sample() {
             r += psg[0].channelC;
             break;
     }
+}
+
+int Spectrum::dac() {
+
+    int sound = 0;
+    for (size_t i = 0; i < FILTER_BZZ_SIZE; ++i) {
+        sound += filter[i];
+    }
+    sound /= FILTER_BZZ_SIZE;
+    return sound;
 }
 
 void Spectrum::setPage(uint_fast8_t page,

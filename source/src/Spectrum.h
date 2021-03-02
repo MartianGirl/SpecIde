@@ -88,6 +88,9 @@ class Spectrum {
 
         int l = 0;
         int r = 0;
+        int covox = 0;
+        int filter[FILTER_BZZ_SIZE];
+        size_t index = 0;
 
         bool contendedPage[4];
         bool romPage[4];
@@ -137,6 +140,7 @@ class Spectrum {
         void psgPlaySound(bool play);
 
         void sample();
+        int dac();
 };
 
 // vim: et:sw=4:ts=4
