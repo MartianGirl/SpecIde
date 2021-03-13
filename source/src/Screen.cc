@@ -56,6 +56,7 @@ Screen::Screen(size_t scale) :
     adjust();
 
     // Create a texture.
+    // For Amstrad CPC and Timex computers, the texture should be at least 720px wide.
     texture(xSize, ySize);
 
     // Load the ZX font, for the menu.
@@ -98,6 +99,7 @@ Screen::Screen(size_t scale) :
         assert(false);
     }
 
+    // ULA parameters should go in an ZX Spectrum specific init function.
     spectrum.ula.xSize = xSize;
     spectrum.ula.ySize = ySize;
 
@@ -241,13 +243,15 @@ void Screen::updateMenu() {
     rectangle.setFillColor(Color::White - Color(0, 0, 0, 64));
     rectangle.setOutlineThickness(2);
     rectangle.setOutlineColor(Color::Black);
-    rectangle.setSize(Vector2f(296, 232));
+    rectangle.setSize(Vector2f(324, 232));
     if (fullscreen) {
-        rectangle.setPosition(xOffset + 24, yOffset + 24);
+        rectangle.setPosition(xOffset + 6 * sScale, yOffset + 6 * sScale);
         rectangle.setScale(Vector2f(sScale, sScale));
     } else {
-        rectangle.setPosition(24, 24);
-        rectangle.setScale(Vector2f(static_cast<float>(scale), static_cast<float>(scale)));
+        // Windowed mode already applies a x2 scale factor, so single scan windows are the same size
+        // as double scan ones.
+        rectangle.setPosition(12 * scale, 12 * scale);
+        rectangle.setScale(Vector2f(2 * static_cast<float>(scale), 2 * static_cast<float>(scale)));
     }
 
     Text text;
@@ -260,6 +264,7 @@ void Screen::updateMenu() {
     ss << "F2:    Fullscreen." << endl;
     ss << "S-F2:  Antialiasing." << endl;
     ss << "F3:    Save DSK file to disk." << endl;
+    ss << "S-F3:  Create empty DSK image." << endl;
     ss << "F4:    Select next disk image." << endl;
     ss << "S-F4:  Select previous disk image." << endl;
     ss << "F5:    Reset." << endl;
@@ -280,10 +285,10 @@ void Screen::updateMenu() {
 
     if (fullscreen) {
         text.setPosition(xOffset + 36, yOffset + 36);
-        text.setCharacterSize(static_cast<uint32_t>(4 * sScale));
+        text.setCharacterSize(static_cast<uint32_t>(8 * sScale));
     } else {
         text.setPosition(36, 36);
-        text.setCharacterSize(static_cast<uint32_t>(8 * scale));
+        text.setCharacterSize(static_cast<uint32_t>(16 * scale));
     }
 
     window.clear(Color::Black);
@@ -352,13 +357,15 @@ void Screen::setFullScreen(bool fs) {
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(xModifier * sScale, sScale));
     } else {
+        // In this case we want to have the same windows size for double scan modes and
+        // single scan modes. 588 displayable lines are assumed.
         scrSprite.setTexture(scrTexture);
-        scrSprite.setTextureRect(sf::IntRect(8, 16 / yModifier, 352, 588 / yModifier));
+        scrSprite.setTextureRect(sf::IntRect(8, 16 / yModifier,
+                    static_cast<uint_fast32_t>(xSize - 8), 588 / yModifier));
         scrSprite.setPosition(0, 0);
         scrSprite.setScale(Vector2f(2 * static_cast<float>(scale), yModifier * static_cast<float>(scale)));
     }
 
-    // window.setFramerateLimit(50);
     window.setVerticalSyncEnabled(syncToVideo);
     window.setKeyRepeatEnabled(false);
     window.setMouseCursorVisible(false);
