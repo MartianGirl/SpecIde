@@ -300,8 +300,14 @@ void Screen::updateMenu() {
     Event event;
     while (window.pollEvent(event)) {
         if (event.type == Event::KeyPressed) {
-            if (event.key.code == Keyboard::F1) {
-                menu = false;
+            switch (event.key.code) {
+                case Keyboard::Menu:    // fall-through
+                case Keyboard::F1:
+                    menu = false;
+                    break;
+
+                default:
+                    break;
             }
         }
     }
@@ -397,7 +403,8 @@ void Screen::pollEvents() {
 
             case Event::KeyPressed:
                 switch (event.key.code) {
-                    case Keyboard::F1:  // Show menu
+                    case Keyboard::Menu:    // fall-through
+                    case Keyboard::F1:      // Show menu
                         menu = true;
                         break;
                     case Keyboard::F2:  // Window/Fullscreen
