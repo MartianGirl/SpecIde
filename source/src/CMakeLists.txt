@@ -22,7 +22,7 @@ add_executable(SpecIde SpecIde.cc Screen.cc Console.cc
         Z80.cc ULA.cc
         FDC765.cc
         Spectrum.cc
-        Tape.cc TAPFile.cc TZXFile.cc
+        Tape.cc TAPFile.cc TZXFile.cc CSWFile.cc
         DSKFile.cc)
 target_link_libraries(SpecIde ${Boost_LIBRARIES} ${ZLIB_LIBRARIES}
         sfml-audio sfml-graphics sfml-window sfml-system)

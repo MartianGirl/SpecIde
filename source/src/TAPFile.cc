@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2018.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,32 +15,31 @@
 
 #include "TAPFile.h"
 
-void TAPFile::load(string const& fileName)
-{
+void TAPFile::load(string const& fileName) {
     char c;
 
     ifstream ifs(fileName.c_str(), ifstream::binary);
-    if (ifs.good())
-    {
+    if (ifs.good()) {
         fileData.clear();
-        while (ifs.get(c))
+        while (ifs.get(c)) {
             fileData.push_back(c);
+        }
     }
 }
 
 void TAPFile::parse(
-        vector<size_t> &pulseData,
+        vector<uint32_t> &pulseData,
         set<size_t> &indexData,
-        set<size_t> &stopData)
-{
-    static constexpr size_t PILOT_PULSE = 2168;
-    static constexpr size_t SYNC_PULSE_1 = 667;
-    static constexpr size_t SYNC_PULSE_2 = 735;
-    static constexpr size_t DATA_PULSE_0 = 855;
-    static constexpr size_t DATA_PULSE_1 = 1710;
-    static constexpr size_t PILOT_HEAD_LENGTH = 8064;
-    static constexpr size_t PILOT_DATA_LENGTH = 3224;
-    static constexpr size_t MILLISECOND_PAUSE = 3500;
+        set<size_t> &stopData) {
+
+    static constexpr uint32_t PILOT_PULSE = 2168;
+    static constexpr uint32_t SYNC_PULSE_1 = 667;
+    static constexpr uint32_t SYNC_PULSE_2 = 735;
+    static constexpr uint32_t DATA_PULSE_0 = 855;
+    static constexpr uint32_t DATA_PULSE_1 = 1710;
+    static constexpr uint32_t PILOT_HEAD_LENGTH = 8064;
+    static constexpr uint32_t PILOT_DATA_LENGTH = 3224;
+    static constexpr uint32_t MILLISECOND_PAUSE = 3500;
 
     size_t dataLength;
     uint8_t flagByte;
@@ -49,14 +48,12 @@ void TAPFile::parse(
     // Parse data from the beginning. Do not erase previous pulseData, so
     // multiple tapes can be concatenated.
     pointer = 0;
-    if (pulseData.size())
-    {
+    if (pulseData.size()) {
         indexData.insert(pulseData.size());
         stopData.insert(pulseData.size());
     }
 
-    while (pointer < fileData.size())
-    {
+    while (pointer < fileData.size()) {
         // Each block in the ROM loader has:
         // 1. A pilot tone.
         // 2. Two sync pulses.
@@ -79,11 +76,9 @@ void TAPFile::parse(
         pulseData.push_back(SYNC_PULSE_2);
 
         // Insert the data.
-        for (size_t ii = 0; ii < dataLength; ++ii)
-        {
+        for (size_t ii = 0; ii < dataLength; ++ii) {
             byte = fileData[pointer + 2 + ii];
-            for (size_t jj = 0; jj < 8; ++jj)
-            {
+            for (size_t jj = 0; jj < 8; ++jj) {
                 pulseData.insert(pulseData.end(),
                         2, (byte & 0x80) ? DATA_PULSE_1 : DATA_PULSE_0);
                 byte <<= 1;
@@ -100,3 +95,5 @@ void TAPFile::parse(
 
     cout << "Got " << pulseData.size() << " pulses." << endl;
 }
+
+// vim: et:sw=4:ts=4

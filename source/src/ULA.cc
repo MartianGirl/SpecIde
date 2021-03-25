@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2018.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
  */
 
 #include "ULA.h"
+#include "KeyBinding.h"
 
 #include <cmath>
 
@@ -146,7 +147,7 @@ void ULA::generateInterrupt() {
 
     if (scan == vSyncStart) {
         if (pixel == interruptStart && scan == vSyncStart) {
-            keyPoll = true;
+            scanKeys();
             z80_c &= ~SIGNAL_INT_;
         } else if (pixel == interruptEnd && scan == vSyncStart) {
             z80_c |= SIGNAL_INT_;
@@ -333,6 +334,41 @@ void ULA::tapeEarMic() {
     // Tape input forces values on EAR pin.
     if ((tapeIn & 0xC0) == 0x80) ear = 342;
     if ((tapeIn & 0xC0) == 0xC0) ear = 3790;
+}
+
+void ULA::scanKeys() {
+
+    if (!pollKeys) return;
+
+    for (size_t ii = 0; ii < 8; ++ii) {
+        keys[ii] = 0xFF;
+    }
+
+    for (size_t ii = 0; ii < sizeof(singleKeys) / sizeof(KeyBinding); ++ii) {
+        if (Keyboard::isKeyPressed(singleKeys[ii].keyName)) {
+            keys[singleKeys[ii].row] &= ~singleKeys[ii].key;
+        }
+    }
+
+    for (size_t ii = 0; ii < sizeof(capsKeys) / sizeof(KeyBinding); ++ii) {
+        if (Keyboard::isKeyPressed(capsKeys[ii].keyName)) {
+            keys[capsKeys[ii].row] &= ~capsKeys[ii].key;
+            keys[7] &= 0xFE;    // Press Caps Shift
+        }
+    }
+
+    for (size_t ii = 0; ii < sizeof(symbolKeys) / sizeof(KeyBinding); ++ii) {
+        if (Keyboard::isKeyPressed(symbolKeys[ii].keyName)) {
+            keys[symbolKeys[ii].row] &= ~symbolKeys[ii].key;
+            keys[0] &= 0xFD;    // Press Symbol Shift
+        }
+    }
+
+    // Activate Caps Lock (Caps Shift + 2) when both Shifts are presseda.
+    if (Keyboard::isKeyPressed(Keyboard::LShift) && Keyboard::isKeyPressed(Keyboard::RShift)) {
+        keys[7] &= 0xFE;    // Press Caps Shift
+        keys[4] &= 0xFD;    // Press 2
+    }
 }
 
 uint_fast8_t ULA::ioRead() {

@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2018.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,8 +99,6 @@ class Screen
         bool pad;
         bool flashTap;
 
-        uint_fast8_t keyboardMask[8];
-
         bool cpuInRefresh();
         void checkTapeTraps();
         void writeMemory(uint_fast16_t a, uint_fast8_t d);
@@ -120,7 +118,6 @@ class Screen
 
         void pollEvents();
         void pollCommands();
-        void scanKeys(sf::Event const& event);
 
         void updateMenu();
         

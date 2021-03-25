@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2018.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,31 +29,29 @@
  * Spectrum EAR port.
  */
 
-class TZXFile
-{
+class TZXFile {
+
     public:
         TZXFile() :
-            magic { 'Z', 'X', 'T', 'a', 'p', 'e', '!', 0x1A },
-                  magicIsOk(false),
-                  majorVersion(0), minorVersion(0),
-                  pointer(0), loopStart(0), loopCounter(0) {}
+            magic { 'Z', 'X', 'T', 'a', 'p', 'e', '!', 0x1A } {}
 
         uint8_t magic[8];
-        bool magicIsOk;
-        uint8_t majorVersion, minorVersion;
+        bool magicIsOk = false;
+        uint8_t majorVersion = 0;
+        uint8_t minorVersion = 0;
 
         std::vector<uint8_t> fileData;
         std::vector<uint8_t> romData;
 
-        size_t pointer;
-        size_t loopStart;
-        size_t loopCounter;
+        size_t pointer = 0;
+        size_t loopStart = 0;
+        size_t loopCounter = 0;
 
         std::stringstream ss;   // For reporting.
 
         void load(std::string const& fileName);
         void parse(
-                std::vector<size_t> &pulseData,
+                std::vector<uint32_t> &pulseData,
                 std::set<size_t> &indexData,
                 std::set<size_t> &stopData,
                 std::set<size_t> &stopIf48K);
@@ -63,17 +61,16 @@ class TZXFile
         size_t dumpMessage();
 
         void loadSymbolData(size_t base,
-                size_t& numSym, size_t& maxLen, size_t& alphaSize);
-        size_t loadSymbolAlphabet(size_t base, size_t numSym, size_t maxLen,
-                std::vector<size_t>& alphabet);
-        size_t dumpPilotStream(size_t base, size_t numSym,
-                std::vector<size_t> const& alphabet, std::vector<size_t>& data);
-        size_t dumpDataStream(size_t base, size_t numSym, size_t bps,
-                std::vector<size_t> const& alphabet, std::vector<size_t>& data);
-        void pushSymbol(size_t rep, size_t sym,
-                std::vector<size_t> const& alphabet, std::vector<size_t>& data);
-        void addPause(size_t pause, std::vector<size_t>& data);
-
+                uint32_t& numSym, uint32_t& maxLen, uint32_t& alphaSize);
+        size_t loadSymbolAlphabet(size_t base, uint32_t numSym, uint32_t maxLen,
+                std::vector<uint32_t>& alphabet);
+        size_t dumpPilotStream(size_t base, uint32_t numSym,
+                std::vector<uint32_t> const& alphabet, std::vector<uint32_t>& data);
+        size_t dumpDataStream(size_t base, uint32_t numSym, uint32_t bps,
+                std::vector<uint32_t> const& alphabet, std::vector<uint32_t>& data);
+        void pushSymbol(uint32_t rep, uint32_t sym,
+                std::vector<uint32_t> const& alphabet, std::vector<uint32_t>& data);
+        void addPause(uint32_t pause, std::vector<uint32_t>& data);
 };
 
 // vim: et:sw=4:ts=4:

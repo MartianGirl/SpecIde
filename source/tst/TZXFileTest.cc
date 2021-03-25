@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(constructors_test)
 
 BOOST_AUTO_TEST_CASE(block_parsing_test)
 {
-    vector<size_t> pulseData;
+    vector<uint32_t> pulseData;
     set<size_t> indexData;
     set<size_t> stopData;
     set<size_t> stopIf48K;

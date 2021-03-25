@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2018.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,16 +33,17 @@ using namespace std;
 class TAPFile
 {
     public:
-    vector<uint8_t> fileData;
+        vector<uint8_t> fileData;
 
-    TAPFile() : pointer(0) {}
+        TAPFile() {}
 
-    void load(string const& fileName);
-    void parse(
-            vector<size_t> &pulseData,
-            set<size_t> &indexData,
-            set<size_t> &stopData);
+        void load(string const& fileName);
+        void parse(
+                vector<uint32_t> &pulseData,
+                set<size_t> &indexData,
+                set<size_t> &stopData);
 
-    size_t pointer;
+        size_t pointer = 0;
 };
+
 // vim: et:sw=4:ts=4:

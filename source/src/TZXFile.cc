@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2018.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,18 +26,18 @@ using namespace std;
 
 // This one opens a TZX file, loads its contents, tries to put nextBlock
 // to the beginning of the first block.
-void TZXFile::load(string const& fileName)
-{
+void TZXFile::load(string const& fileName) {
+
     char c;
 
     magicIsOk = false;
 
     ifstream ifs(fileName.c_str(), ifstream::binary);
-    if (ifs.good())
-    {
+    if (ifs.good()) {
         fileData.clear();
-        while (ifs.get(c))
+        while (ifs.get(c)) {
             fileData.push_back(c);
+        }
 
         // TZX header is:
         // 0-6 - ZXTape!
@@ -46,8 +46,7 @@ void TZXFile::load(string const& fileName)
         // 9   - Minor version number
         //
         // If the magic checks, store the version numbers.
-        if (equal(&magic[0x00], &magic[0x08], fileData.begin()))
-        {
+        if (equal(&magic[0x00], &magic[0x08], fileData.begin())) {
             majorVersion = fileData[0x08];
             minorVersion = fileData[0x09];
             magicIsOk = true;
@@ -56,45 +55,43 @@ void TZXFile::load(string const& fileName)
 }
 
 void TZXFile::parse(
-        vector<size_t> &pulseData,
+        vector<uint32_t> &pulseData,
         set<size_t> &indexData,
         set<size_t> &stopData,
-        set<size_t> &stopIf48K)
-{
+        set<size_t> &stopIf48K) {
 
     size_t dataLength;
     uint8_t flagByte;
     uint8_t byte;
     uint8_t blockId;
 
-    size_t pilotPulse;
-    size_t syncPulse1;
-    size_t syncPulse2;
-    size_t dataPulse0;
-    size_t dataPulse1;
-    size_t pilotLength;
-    size_t pause;
-    size_t bitsInLastByte;
-    size_t bitsInByte;
+    uint32_t pilotPulse;
+    uint32_t syncPulse1;
+    uint32_t syncPulse2;
+    uint32_t dataPulse0;
+    uint32_t dataPulse1;
+    uint32_t pilotLength;
+    uint32_t pause;
+    uint32_t bitsInLastByte;
+    uint32_t bitsInByte;
 
-    size_t symbolsInPilot;
-    size_t maxPilotSymLen;
-    size_t pilotAlphabetSize;
-    size_t symbolsInData;
-    size_t bitsPerDataSymbol;
-    size_t maxDataSymLen;
-    size_t dataAlphabetSize;
+    uint32_t symbolsInPilot;
+    uint32_t maxPilotSymLen;
+    uint32_t pilotAlphabetSize;
+    uint32_t symbolsInData;
+    uint32_t bitsPerDataSymbol;
+    uint32_t maxDataSymLen;
+    uint32_t dataAlphabetSize;
 
-    vector<size_t> pilotAlphabet;
-    vector<size_t> dataAlphabet;
+    vector<uint32_t> pilotAlphabet;
+    vector<uint32_t> dataAlphabet;
 
     size_t tableIndex;
 
     string blockName;
     ss.str("");
 
-    if (magicIsOk)
-    {
+    if (magicIsOk) {
         // Do not erase previous pulseData, so multiple tapes can be
         // concatenated.
         pointer = 0x0A;
@@ -104,23 +101,20 @@ void TZXFile::parse(
             stopData.insert(pulseData.size());
         }
 
-        if (fileData[fileData.size() - 3] != 0x20)
-        {
+        if (fileData[fileData.size() - 3] != 0x20) {
             // If there is no pause...
             // We'll add a "Pause 1000ms" block, just in case.
             fileData.push_back(0x20);
             fileData.push_back(0xE8);
             fileData.push_back(0x03);
         }
-    }
-    else
+    } else {
         return;
+    }
 
-    while (pointer < fileData.size())
-    {
+    while (pointer < fileData.size()) {
         blockId = fileData[pointer];
-        switch (blockId)
-        {
+        switch (blockId) {
             case 0x10:
                 blockName = "Standard Speed Data";
                 pilotPulse = 2168;
@@ -146,13 +140,11 @@ void TZXFile::parse(
                 romData.push_back((dataLength & 0xFF00) >> 8);
 
                 // Data
-                for (size_t ii = 0; ii < dataLength; ++ii)
-                {
+                for (size_t ii = 0; ii < dataLength; ++ii) {
                     byte = fileData[pointer + 5 + ii];
                     romData.push_back(byte);
 
-                    for (size_t jj = 0; jj < 8; ++jj)
-                    {
+                    for (size_t jj = 0; jj < 8; ++jj) {
                         pulseData.insert(pulseData.end(),
                                 2, (byte & 0x80) ? dataPulse1 : dataPulse0);
                         byte <<= 1;
@@ -160,8 +152,9 @@ void TZXFile::parse(
                 }
 
                 indexData.insert(pulseData.size());
-                if (pause)
+                if (pause) {
                     addPause(pause, pulseData);
+                }
 
                 pointer += dataLength + 5;
                 break;
@@ -200,14 +193,12 @@ void TZXFile::parse(
                 romData.push_back((dataLength & 0xFF00) >> 8);
 
                 // Data
-                for (size_t ii = 0; ii < dataLength; ++ii)
-                {
+                for (size_t ii = 0; ii < dataLength; ++ii) {
                     byte = fileData[pointer + 19 + ii];
                     romData.push_back(byte);
 
                     bitsInByte = (ii == (dataLength - 1)) ? bitsInLastByte : 8;
-                    for (size_t jj = 0; jj < bitsInByte; ++jj)
-                    {
+                    for (size_t jj = 0; jj < bitsInByte; ++jj) {
                         pulseData.insert(pulseData.end(),
                                 2, (byte & 0x80) ? dataPulse1 : dataPulse0);
                         byte <<= 1;
@@ -215,8 +206,9 @@ void TZXFile::parse(
                 }
 
                 indexData.insert(pulseData.size());
-                if (pause)
+                if (pause) {
                     addPause(pause, pulseData);
+                }
 
                 pointer += dataLength + 19;
                 break;
@@ -240,9 +232,8 @@ void TZXFile::parse(
             case 0x13:
                 blockName = "Sequence Of Pulses";
                 dataLength = fileData[pointer + 1];
-                for (size_t ii = 0; ii < dataLength; ++ii)
-                {
-                    size_t pulse =
+                for (size_t ii = 0; ii < dataLength; ++ii) {
+                    uint32_t pulse =
                         fileData[pointer + (2 * ii) + 3] * 0x100 +
                         fileData[pointer + (2 * ii) + 2];
                     pulseData.push_back(pulse);
@@ -265,13 +256,11 @@ void TZXFile::parse(
                 flagByte = fileData[pointer + 11];
 
                 // Data
-                for (size_t ii = 0; ii < dataLength; ++ii)
-                {
+                for (size_t ii = 0; ii < dataLength; ++ii) {
                     byte = fileData[pointer + 11 + ii];
 
                     bitsInByte = (ii == (dataLength - 1)) ? bitsInLastByte : 8;
-                    for (size_t jj = 0; jj < bitsInByte; ++jj)
-                    {
+                    for (size_t jj = 0; jj < bitsInByte; ++jj) {
                         pulseData.insert(pulseData.end(),
                                 2, (byte & 0x80) ? dataPulse1 : dataPulse0);
                         byte <<= 1;
@@ -281,8 +270,7 @@ void TZXFile::parse(
                 // Pause. Add index only if there is a pause.
                 // (You usually don't want to start in the middle of
                 // a SpeedLock block...)
-                if (pause)
-                {
+                if (pause) {
                     indexData.insert(pulseData.size());
                     addPause(pause, pulseData);
                 }
@@ -343,8 +331,7 @@ void TZXFile::parse(
                 bitsPerDataSymbol = ceil(log10(dataAlphabetSize) / log10(10));
 
                 tableIndex = pointer + 19;
-                if (symbolsInPilot > 0)
-                {
+                if (symbolsInPilot > 0) {
                     tableIndex += loadSymbolAlphabet(tableIndex,
                             pilotAlphabetSize, maxPilotSymLen,
                             pilotAlphabet);
@@ -353,8 +340,7 @@ void TZXFile::parse(
                             symbolsInPilot, pilotAlphabet, pulseData);
                 }
 
-                if (symbolsInData > 0)
-                {
+                if (symbolsInData > 0) {
                     tableIndex += loadSymbolAlphabet(tableIndex,
                             dataAlphabetSize, maxDataSymLen, dataAlphabet);
                     tableIndex += dumpDataStream(tableIndex,
@@ -365,8 +351,7 @@ void TZXFile::parse(
                 // Pause. Add index only if there is a pause.
                 // (You usually don't want to start in the middle of
                 // a SpeedLock block...)
-                if (pause)
-                {
+                if (pause) {
                     indexData.insert(pulseData.size());
                     addPause(pause, pulseData);
                 }
@@ -382,17 +367,16 @@ void TZXFile::parse(
                 // Pause = 0 means Stop The Tape. However, we'll insert
                 // one second pause to properly end the block.
                 indexData.insert(pulseData.size());
-                if (pause == 0)
-                {
+                if (pause == 0) {
                     // This pause will consist of one or two pulses, ensuring
                     // that the level is low at the end. Stop Data will also
                     // force a low level, so it must happen at the last pulse
                     // so far.
                     addPause(1000, pulseData);
                     stopData.insert(pulseData.size() - 1);
-                }
-                else
+                } else {
                     addPause(pause, pulseData);
+                }
 
                 pointer += 3;
                 break;
@@ -425,16 +409,17 @@ void TZXFile::parse(
             case 0x25:
                 blockName = "Loop End";
                 --loopCounter;
-                if (loopCounter)
+                if (loopCounter) {
                     pointer = loopStart;
-                else
+                } else {
                     pointer += 1;
+                }
                 break;
 
             case 0x26:
                 blockName = "Call Sequence (Not implemented yet)";
                 pointer += 2 * (fileData[pointer + 2] * 0x100
-                    + fileData[pointer + 1]) + 3;
+                        + fileData[pointer + 1]) + 3;
                 break;
 
             case 0x27:
@@ -508,21 +493,19 @@ void TZXFile::parse(
     cout << "Got " << pulseData.size() << " pulses." << endl;
 }
 
-size_t TZXFile::dumpArchiveInfo()
-{
+size_t TZXFile::dumpArchiveInfo() {
+
     string tag;
     string text;
-    size_t len;
+    uint32_t len;
 
     size_t length = fileData[pointer + 2] * 0x100 + fileData[pointer + 1];
-    size_t numStrings = fileData[pointer + 3];
-    size_t index = 4;
+    uint32_t numStrings = fileData[pointer + 3];
+    uint32_t index = 4;
 
     ss << "--- Archive info block ---" << endl;
-    for (size_t ii = 0; ii < numStrings; ++ii)
-    {
-        switch (fileData[pointer + index])
-        {
+    for (size_t ii = 0; ii < numStrings; ++ii) {
+        switch (fileData[pointer + index]) {
             case 0x00: tag = "Full Title: "; break;
             case 0x01: tag = "Software house/publisher: "; break;
             case 0x02: tag = "Author(s): "; break;
@@ -549,22 +532,24 @@ size_t TZXFile::dumpArchiveInfo()
     return length;
 }
 
-size_t TZXFile::dumpComment()
-{
+size_t TZXFile::dumpComment() {
+
     string text;
     size_t length = fileData[pointer + 1];
 
     for (size_t ii = 0; ii < length; ++ii) {
         text.push_back(static_cast<char>(fileData[pointer + 2 + ii]));
-        if (fileData[pointer + 3 + ii] == 0x0D) text.push_back(0x0A);
+        if (fileData[pointer + 3 + ii] == 0x0D) {
+            text.push_back(0x0A);
+        }
     }
     ss << "--- Comment block ---" << endl << text << endl;
     ss << "---------------------" << endl;
     return length;
 }
 
-size_t TZXFile::dumpMessage()
-{
+size_t TZXFile::dumpMessage() {
+
     string text;
     // size_t time = fileData[pointer + 1];
     size_t length = fileData[pointer + 2];
@@ -580,8 +565,8 @@ size_t TZXFile::dumpMessage()
 }
 
 void TZXFile::loadSymbolData(size_t base,
-        size_t& numSym, size_t& maxLen, size_t& alphaSize)
-{
+        uint32_t& numSym, uint32_t& maxLen, uint32_t& alphaSize) {
+
     numSym = fileData[base + 3] * 0x1000000
         + fileData[base + 2] * 0x10000
         + fileData[base + 1] * 0x100
@@ -590,21 +575,19 @@ void TZXFile::loadSymbolData(size_t base,
     alphaSize = fileData[base + 5];
 }
 
-size_t TZXFile::loadSymbolAlphabet(size_t base, size_t numSym, size_t maxLen,
-        vector<size_t>& alphabet)
-{
+size_t TZXFile::loadSymbolAlphabet(size_t base, uint32_t numSym, uint32_t maxLen,
+        vector<uint32_t>& alphabet) {
+
     size_t index = base;
-    size_t size = maxLen + 1;
+    uint32_t size = maxLen + 1;
     alphabet.assign(numSym * size + 1, 0);   // Symbol Size, n * (Symbol type, pulses)
     alphabet[0] = size;
-    for (size_t i = 0; i < numSym; ++i)
-    {
+    for (size_t i = 0; i < numSym; ++i) {
         ss << "Symbol: " << i << "  ";
         alphabet[i * size + 1] = fileData[index];
         ++index;
         ss << "Type: " << alphabet[i * size + 1] << "  Values:";
-        for (size_t j = 0; j < maxLen; ++j)
-        {
+        for (size_t j = 0; j < maxLen; ++j) {
             alphabet[i * size + j + 2] =
                 fileData[index + 2 * j + 1] * 0x100 + fileData[index + 2 * j];
             ss << " " << alphabet[i * size + j + 2];
@@ -616,16 +599,15 @@ size_t TZXFile::loadSymbolAlphabet(size_t base, size_t numSym, size_t maxLen,
     return index - base;
 }
 
-size_t TZXFile::dumpPilotStream(size_t base, size_t numSym,
-        vector<size_t> const& alphabet, vector<size_t>& data)
-{
-    size_t rep;
-    size_t sym;
+size_t TZXFile::dumpPilotStream(size_t base, uint32_t numSym,
+        vector<uint32_t> const& alphabet, vector<uint32_t>& data) {
+
+    uint32_t rep;
+    uint32_t sym;
     size_t index = base;
 
     ss << "Pilot:";
-    for (size_t i = 0; i < numSym; ++i)
-    {
+    for (size_t i = 0; i < numSym; ++i) {
         sym = fileData[index];
         rep = fileData[index + 2] * 0x100 + fileData[index + 1];
         index += 3;
@@ -638,17 +620,16 @@ size_t TZXFile::dumpPilotStream(size_t base, size_t numSym,
     return index - base;
 }
 
-size_t TZXFile::dumpDataStream(size_t base, size_t numSym, size_t bps,
-        vector<size_t> const& alphabet, vector<size_t>& data)
-{
-    size_t bit = 0;
-    size_t mask = (1 << bps) - 1;
+size_t TZXFile::dumpDataStream(size_t base, uint32_t numSym, uint32_t bps,
+        vector<uint32_t> const& alphabet, vector<uint32_t>& data) {
+
+    uint32_t bit = 0;
+    uint32_t mask = (1 << bps) - 1;
+    uint32_t sym;
     size_t index = base;
-    size_t sym;
 
     ss << "Data: " << numSym << " " << bps << "-bit symbols ";
-    for (size_t i = 0; i < numSym; ++i)
-    {
+    for (size_t i = 0; i < numSym; ++i) {
         index = base + (bit >> 3);
         sym = (fileData[index] >> (7 - (bit % 8))) & mask;
         bit += bps;
@@ -660,37 +641,33 @@ size_t TZXFile::dumpDataStream(size_t base, size_t numSym, size_t bps,
     return index - base;
 }
 
-void TZXFile::pushSymbol(size_t rep, size_t sym,
-        vector<size_t> const& alphabet, vector<size_t>& data)
-{
-    size_t size = alphabet[0];
-    size_t type = alphabet[sym * size + 1];
-    size_t const* first = &alphabet[sym * size + 2];
-    size_t const* last = &alphabet[(sym + 1) * size + 1];
+void TZXFile::pushSymbol(uint32_t rep, uint32_t sym,
+        vector<uint32_t> const& alphabet, vector<uint32_t>& data) {
+
+    uint32_t size = alphabet[0];
+    uint32_t type = alphabet[sym * size + 1];
+    uint32_t const* first = &alphabet[sym * size + 2];
+    uint32_t const* last = &alphabet[(sym + 1) * size + 1];
     last = find(first, last, 0);
 
-    switch (type)
-    {
+    switch (type) {
         case 0x00:  // Edge
-            for (size_t i = 0; i < rep; ++i)
+            for (size_t i = 0; i < rep; ++i) {
                 data.insert(data.end(), first, last);
+            }
             break;
 
         case 0x01:  // Continue
-            for (size_t i = 0; i < rep; ++i)
-            {
+            for (size_t i = 0; i < rep; ++i) {
                 data.back() += *first;
                 data.insert(data.end(), first + 1, last);
             }
             break;
-        case 0x02:  // Force low
+        case 0x02:  // Force low -- fallthrough
         case 0x03:  // Force high
-            if ((data.size() % 2) == (type % 2))
-            {
+            if ((data.size() % 2) == (type % 2)) {
                 data.insert(data.end(), first, last);
-            }
-            else
-            {
+            } else {
                 data.back() += *first;
                 data.insert(data.end(), first + 1, last);
             }
@@ -700,8 +677,8 @@ void TZXFile::pushSymbol(size_t rep, size_t sym,
     }
 }
 
-void TZXFile::addPause(size_t pause, vector<size_t>& data)
-{
+void TZXFile::addPause(uint32_t pause, vector<uint32_t>& data) {
+
     data.push_back(3500 * pause);
     data.push_back(100);  // Keep number of pulses even
 }

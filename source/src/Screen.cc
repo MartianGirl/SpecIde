@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2018.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -145,7 +145,7 @@ void Screen::run() {
                 }
 
                 if (done || menu) break;
-            } else if (spectrum.ula.keyPoll) {
+
                 pollEvents();
                 pollCommands();
             }
@@ -330,6 +330,7 @@ void Screen::reopenWindow(bool fs) {
                 sf::VideoMode(static_cast<sf::Uint32>(w), static_cast<sf::Uint32>(h)),
                 str, sf::Style::Close | sf::Style::Titlebar);
     }
+    spectrum.ula.pollKeys = window.hasFocus();
 }
 
 void Screen::setFullScreen(bool fs) {
@@ -391,14 +392,17 @@ void Screen::setTapeSound(bool value) {
 
 void Screen::pollEvents() {
 
-    spectrum.ula.keyPoll = false;
-
     Event event;
     while (window.pollEvent(event)) {
         switch (event.type) {
             case Event::Closed:
                 channel.stop();
                 done = true;
+                break;
+
+            case Event::GainedFocus:
+            case Event::LostFocus:
+                spectrum.ula.pollKeys = window.hasFocus();
                 break;
 
             case Event::KeyPressed:
@@ -481,20 +485,8 @@ void Screen::pollEvents() {
                         }
                         break;
 
-                        // Scan Spectrum keyboard
                     default:
-                        scanKeys(event);
-                        for (size_t ii = 0; ii < 8; ++ii) {
-                            spectrum.ula.keys[ii] &= keyboardMask[ii];
-                        }
                         break;
-                }
-                break;
-
-            case Event::KeyReleased:
-                scanKeys(event);
-                for (size_t ii = 0; ii < 8; ++ii) {
-                    spectrum.ula.keys[ii] |= ~keyboardMask[ii];
                 }
                 break;
 
@@ -616,173 +608,6 @@ void Screen::pollEvents() {
             default:
                 break;
         }
-    }
-}
-
-void Screen::scanKeys(Event const& event) {
-
-    static bool lshift = false;
-    static bool rshift = false;
-
-    for (size_t ii = 0; ii < 8; ++ii) {
-        keyboardMask[ii] = 0xFF;
-    }
-
-    switch (event.key.code) {
-        case Keyboard::B:
-            keyboardMask[0] = 0xEF; break;
-        case Keyboard::N:
-            keyboardMask[0] = 0xF7; break;
-        case Keyboard::M:
-            keyboardMask[0] = 0xFB; break;
-        case Keyboard::LControl:    // Symbol Shift
-        case Keyboard::RControl:
-            keyboardMask[0] = 0xFD; break;
-        case Keyboard::Space:
-            keyboardMask[0] = 0xFE; break;
-
-        case Keyboard::Comma:       // Symbol Shift + N
-            keyboardMask[0] = 0xF5; break;
-        case Keyboard::Period:      // Symbol Shift + M
-            keyboardMask[0] = 0xF9; break;
-        case Keyboard::Tab:         // Extend Mode = Caps Shift + Symbol Shift
-            keyboardMask[0] = 0xFD;
-            keyboardMask[7] = 0xFE; break;
-        case Keyboard::Escape:      // Break = Caps Shift + Space
-            keyboardMask[0] = 0xFE;
-            keyboardMask[7] = 0xFE; break;
-
-        case Keyboard::H:
-            keyboardMask[1] = 0xEF; break;
-        case Keyboard::J:
-            keyboardMask[1] = 0xF7; break;
-        case Keyboard::K:
-            keyboardMask[1] = 0xFB; break;
-        case Keyboard::L:
-            keyboardMask[1] = 0xFD; break;
-        case Keyboard::Return:
-            keyboardMask[1] = 0xFE; break;
-
-        case Keyboard::Y:
-            keyboardMask[2] = 0xEF; break;
-        case Keyboard::U:
-            keyboardMask[2] = 0xF7; break;
-        case Keyboard::I:
-            keyboardMask[2] = 0xFB; break;
-        case Keyboard::O:
-            keyboardMask[2] = 0xFD; break;
-        case Keyboard::P:
-            keyboardMask[2] = 0xFE; break;
-
-        case Keyboard::Quote:       // Symbol Shift + P
-            keyboardMask[0] = 0xFD;
-            keyboardMask[2] = 0xFE; break;
-
-        case Keyboard::Num6:
-            keyboardMask[3] = 0xEF; break;
-        case Keyboard::Num7:
-            keyboardMask[3] = 0xF7; break;
-        case Keyboard::Num8:
-            keyboardMask[3] = 0xFB; break;
-        case Keyboard::Num9:
-            keyboardMask[3] = 0xFD; break;
-        case Keyboard::Num0:
-            keyboardMask[3] = 0xFE; break;
-
-        case Keyboard::Down:        // Caps Shift + 6
-            keyboardMask[3] = 0xEF;
-            keyboardMask[7] = 0xFE; break;
-        case Keyboard::Up:          // Caps Shift + 7
-            keyboardMask[3] = 0xF7;
-            keyboardMask[7] = 0xFE; break;
-        case Keyboard::Right:       // Caps Shift + 8
-            keyboardMask[3] = 0xFB;
-            keyboardMask[7] = 0xFE; break;
-        case Keyboard::Insert:      // Graph Mode: Caps Shift + 9
-            keyboardMask[3] = 0xFD;
-            keyboardMask[7] = 0xFE; break;
-        case Keyboard::BackSpace:   // Delete: Caps Shift + 0
-            keyboardMask[3] = 0xFE;
-            keyboardMask[7] = 0xFE; break;
-
-        case Keyboard::Num5:
-            keyboardMask[4] = 0xEF; break;
-        case Keyboard::Num4:
-            keyboardMask[4] = 0xF7; break;
-        case Keyboard::Num3:
-            keyboardMask[4] = 0xFB; break;
-        case Keyboard::Num2:
-            keyboardMask[4] = 0xFD; break;
-        case Keyboard::Num1:
-            keyboardMask[4] = 0xFE; break;
-
-        case Keyboard::Left:        // Caps Shift + 5
-            keyboardMask[4] = 0xEF;
-            keyboardMask[7] = 0xFE; break;
-        case Keyboard::Home:        // Inv Video: Caps Shift + 4
-            keyboardMask[4] = 0xF7;
-            keyboardMask[7] = 0xFE; break;
-        case Keyboard::End:         // True Video: Caps Shift + 3
-            keyboardMask[4] = 0xFB;
-            keyboardMask[7] = 0xFE; break;
-        case Keyboard::Delete:   // Edit: Caps Shift + 1
-            keyboardMask[4] = 0xFE;
-            keyboardMask[7] = 0xFE; break;
-
-        case Keyboard::T:
-            keyboardMask[5] = 0xEF; break;
-        case Keyboard::R:
-            keyboardMask[5] = 0xF7; break;
-        case Keyboard::E:
-            keyboardMask[5] = 0xFB; break;
-        case Keyboard::W:
-            keyboardMask[5] = 0xFD; break;
-        case Keyboard::Q:
-            keyboardMask[5] = 0xFE; break;
-
-        case Keyboard::G:
-            keyboardMask[6] = 0xEF; break;
-        case Keyboard::F:
-            keyboardMask[6] = 0xF7; break;
-        case Keyboard::D:
-            keyboardMask[6] = 0xFB; break;
-        case Keyboard::S:
-            keyboardMask[6] = 0xFD; break;
-        case Keyboard::A:
-            keyboardMask[6] = 0xFE; break;
-
-        case Keyboard::V:
-            keyboardMask[7] = 0xEF; break;
-        case Keyboard::C:
-            keyboardMask[7] = 0xF7; break;
-        case Keyboard::X:
-            keyboardMask[7] = 0xFB; break;
-        case Keyboard::Z:
-            keyboardMask[7] = 0xFD; break;
-        case Keyboard::LShift:      // Handle Caps Lock (Caps Shift + 2) when
-                                    // both Shifts are pressed
-            keyboardMask[7] = 0xFE;
-            if (event.type == Event::KeyPressed) {
-                lshift = true;
-                if (rshift) keyboardMask[4] = 0xFD;
-            } else if (event.type == Event::KeyReleased) {
-                lshift = false;
-                if (rshift) keyboardMask[4] = 0xFD;
-            }
-            break;
-        case Keyboard::RShift:
-            keyboardMask[7] = 0xFE;
-            if (event.type == Event::KeyPressed) {
-                rshift = true;
-                if (lshift) keyboardMask[4] = 0xFD;
-            } else if (event.type == Event::KeyReleased) {
-                rshift = false;
-                if (lshift) keyboardMask[4] = 0xFD;
-            }
-            break;
-
-        default:
-            break;
     }
 }
 

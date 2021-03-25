@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2018.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,8 @@
 
 #include "Tape.h"
 
-void Tape::loadTzx(string const& fileName)
-{
+void Tape::loadTzx(string const& fileName) {
+
     counter = pulseData.size();
 
     // Create a .tzx object, load its contents in pulseData.
@@ -28,8 +28,8 @@ void Tape::loadTzx(string const& fileName)
     updateFlashTap();
 }
 
-void Tape::loadTap(string const& fileName)
-{
+void Tape::loadTap(string const& fileName) {
+
     counter = pulseData.size();
 
     // Create a .tap object, load its contents in pulseData.
@@ -41,8 +41,8 @@ void Tape::loadTap(string const& fileName)
     updateFlashTap();
 }
 
-void Tape::loadCsw(string const& fileName)
-{
+void Tape::loadCsw(string const& fileName) {
+
     counter = pulseData.size();
 
     // Create a .csw object, load its contents in pulseData.
@@ -51,33 +51,54 @@ void Tape::loadCsw(string const& fileName)
     csw.parse(pulseData, indexData, stopData);
 }
 
-void Tape::updateFlashTap()
-{
+void Tape::updateFlashTap() {
+
     cout << "FlashTAP: " << loadData.size() << " bytes." << endl;
     cout << "FlashTAP is load tape." << endl;
     tapData.assign(loadData.begin(), loadData.end());
 }
 
-uint_fast8_t Tape::advance()
-{
-    if (pointer < pulseData.size())
-    {
+void Tape::play() {
+
+    playing = !playing;
+    cout << (playing ? "Playing." : "Stopped.") << endl;
+}
+
+void Tape::rewind(size_t position) {
+
+    playing = false;
+    sample = 0;
+    level = 0x7F;
+    pointer = position;
+
+    if (position == 0) {
+        tapPointer = 0;
+    }
+    cout << "Rewind to " << position << "..." << endl;
+}
+
+void Tape::resetCounter() {
+
+    counter = pointer + 1;
+    cout << "Set counter at " << pointer << "..." << endl;
+}
+
+uint_fast8_t Tape::advance() {
+
+    if (pointer < pulseData.size()) {
         // If we reach an index, we mark it.
-        if (indexData.find(pointer) != indexData.end())
-        {
+        if (indexData.find(pointer) != indexData.end()) {
             cout << "Reached index: " << pointer << endl;
             index = pointer;
         }
 
         // If we find a stop point, stop and reset level.
-        if (stopData.find(pointer) != stopData.end())
-        {
+        if (stopData.find(pointer) != stopData.end()) {
             cout << "Stopped." << endl;
             playing = false;
         }
 
-        if (is48K && stopIf48K.find(pointer) != stopIf48K.end())
-        {
+        if (is48K && stopIf48K.find(pointer) != stopIf48K.end()) {
             cout << "Stopped in 48K mode." << endl;
             playing = false;
         }
@@ -85,9 +106,7 @@ uint_fast8_t Tape::advance()
         level ^= 0x7F;
         sample = 2 * pulseData[pointer];
         ++pointer;
-    }
-    else
-    {
+    } else {
         // If we reach the end of the tape, stop, rewind and reset level.
         cout << "End of tape." << endl;
         pointer = 0;
@@ -97,3 +116,92 @@ uint_fast8_t Tape::advance()
 
     return level;
 }
+
+void Tape::next() {
+
+    pointer = *(indexData.upper_bound(pointer + 1));
+}
+
+void Tape::prev() {
+
+    pointer = *(indexData.lower_bound(pointer - 1));
+}
+
+uint_fast8_t Tape::getBlockByte(size_t offset) {
+
+    return tapData[tapPointer + offset];
+}
+
+bool Tape::foundTapBlock(uint_fast8_t flag) {
+
+    bool res;
+    if (getBlockByte(2) == flag) {
+        cout << "Loading - ";
+        res = true;
+    } else {
+        cout << "Found   - ";
+        res = false;
+    }
+
+    cout << "Flag: " << setw(3) << static_cast<size_t>(getBlockByte(2))
+        << "  Length: " << setw(5) << getBlockLength() << endl;
+    return res;
+}
+
+uint16_t Tape::getBlockLength() {
+
+    return getBlockByte(1) * 0x100 + getBlockByte(0);
+}
+
+void Tape::nextTapBlock() {
+
+    tapPointer += 2 + getBlockLength();
+
+    if (tapPointer >= tapData.size()) {
+        tapPointer = 0;
+    }
+
+    next();
+}
+
+void Tape::selectTapData() {
+
+    if (useSaveData) {
+        cout << "FlashTAP is save tape." << endl;
+        tapData.assign(saveData.begin(), saveData.end());
+    } else {
+        cout << "FlashTAP is load tape." << endl;
+        tapData.assign(loadData.begin(), loadData.end());
+    }
+
+    tapPointer = 0;
+}
+
+void Tape::writeSaveData() {
+
+    char name[256];
+    snprintf(name, 256, "savetape%02u.tap", tapes);
+    cout << "Saving to " << name << endl;
+
+    char *data = reinterpret_cast<char*>(&saveData[0]);
+    size_t size = saveData.size();
+    ofstream ofs(name, std::ofstream::binary);
+    ofs.write(data, size);
+    ofs.close();
+
+    tapes = (tapes + 1) % 100;
+}
+
+void Tape::clearSaveData() {
+
+    cout << "Clearing save buffer." << endl;
+    saveData.clear();
+}
+
+void Tape::appendLoadData() {
+
+    cout << "Dumping FlashTAP to save buffer." << endl;
+    saveData.insert(saveData.end(), tapData.begin(), tapData.end());
+}
+
+// vim: et:sw=4:ts=4:

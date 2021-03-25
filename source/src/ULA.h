@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2018.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,8 @@ constexpr int SOUND_VOLUME = 0x17FF;
 constexpr int SAVE_VOLUME = 0x03FF;
 constexpr int LOAD_VOLUME = 0x01FF;
 
-class ULA
-{
+class ULA {
+
     public:
         ULA();
 
@@ -51,6 +51,7 @@ class ULA
         int sample();
         void start();
         void updateAttributes();
+        void scanKeys();
 
         void generateVideoDataUla();
         void generateVideoDataGa();
@@ -147,7 +148,6 @@ class ULA
         // Useful video signals
         bool vSync = false;
         bool blanking = false;
-        bool keyPoll = false;
 
         // Port 0xFE
         uint_fast8_t soundBits = 0x00;
@@ -155,8 +155,9 @@ class ULA
         uint_fast8_t borderAttr = 0x00;
         uint_fast8_t tapeIn = 0x00;
 
-        // Keyboard half rows
+        // Keyboard polling
         uint_fast8_t keys[8];
+        bool pollKeys = true;
 
         // ULA interrupt
         uint_fast16_t c;
