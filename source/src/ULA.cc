@@ -56,35 +56,36 @@ ULA::ULA() :
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF) {
 
-    for (uint_fast32_t i = 0; i < 0x100; ++i) {
-        // Generate colour table.
-        // dhpppiii
+        for (uint_fast32_t i = 0; i < 0x100; ++i) {
+            // Generate colour table.
+            // dhpppiii
 #if SPECIDE_BYTE_ORDER == 1
-        uint32_t colour = (i & 0x80) ?
-            ((i & 0x02) << 23) | ((i & 0x04) << 14) | ((i & 0x01) << 8) :
-            ((i & 0x10) << 20) | ((i & 0x20) << 11) | ((i & 0x08) << 5);
+            uint32_t colour = (i & 0x80) ?
+                ((i & 0x02) << 23) | ((i & 0x04) << 14) | ((i & 0x01) << 8) :
+                ((i & 0x10) << 20) | ((i & 0x20) << 11) | ((i & 0x08) << 5);
 #else
-        uint32_t colour = (i & 0x80) ?
-            ((i & 0x02) >> 1) | ((i & 0x04) << 6) | ((i & 0x01) << 16) :
-            ((i & 0x10) >> 4) | ((i & 0x20) << 3) | ((i & 0x08) << 13);
+            uint32_t colour = (i & 0x80) ?
+                ((i & 0x02) >> 1) | ((i & 0x04) << 6) | ((i & 0x01) << 16) :
+                ((i & 0x10) >> 4) | ((i & 0x20) << 3) | ((i & 0x08) << 13);
 #endif
-        colour *= (i & 0x40) ? 0xF0 : 0xC0;
+            colour *= (i & 0x40) ? 0xF0 : 0xC0;
 #if SPECIDE_BYTE_ORDER == 1
-        colour |= 0xFF;
+            colour |= 0xFF;
 #else
-        colour |= (0xFF << 24);
+            colour |= (0xFF << 24);
 #endif
-        colourTable[i] = colour;
-    }
+            colourTable[i] = colour;
+        }
 
-    for (size_t i = 0x00; i < 0x100; ++i) {
-        for (size_t j = 0x00; j < 0x100; ++j) {
-            averageTable[i][j] = static_cast<uint8_t>(sqrt(((i * i) + (j * j)) / 2));
+        for (size_t i = 0x00; i < 0x100; ++i) {
+            for (size_t j = 0x00; j < 0x100; ++j) {
+                averageTable[i][j] = static_cast<uint8_t>(sqrt(((i * i) + (j * j)) / 2));
+            }
         }
     }
-}
 
-/** Average two colours in consecutive positions.
+/**
+ * Average two colours in consecutive positions.
  */
 uint32_t ULA::average(uint32_t *ptr) {
 
@@ -220,7 +221,6 @@ void ULA::generateVideoDataUla() {
 void ULA::generateVideoDataGa() {
 
     // Check for contended memory or I/O accesses.
-    idle = idleTable[pixel & 0x0F];
     mem = memTable[pixel & 0x0F];
 
     // Memory Contention
@@ -535,6 +535,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             cpuClock = true;
             micMask = 0x01;
             snow = false;
+            idle = true;
             generateVideoData = &ULA::generateVideoDataGa;
             break;
         case 5: // Pentagon
@@ -575,10 +576,6 @@ void ULA::setUlaVersion(uint_fast8_t version) {
         false, false, false, true, true, true, true, true,
         true, true, true, true, true, true, true, false
     };
-    bool idleUla[16] = {
-        true, true, true, true, true, true, true, true,
-        false, false, false, false, false, false, false, false
-    };
     bool memUla[16] = {
         true, true, true, true, true, true, true, true,
         false, false, false, true, false, false, false, true
@@ -603,17 +600,18 @@ void ULA::setUlaVersion(uint_fast8_t version) {
 
     for (uint_fast8_t ii = 0; ii < 16; ++ii) {
         if (ulaVersion == 4) {
+            // +2A/+3 has no floating bus.
+            // idleTable is not necessary for +2A/+3; idle = true always.
             delayTable[ii] = delayGa[ii];
-            idleTable[ii] = true;       // +2A/+3 has no floating bus
             memTable[ii] = memGa[ii];
         } else if (ulaVersion == 5) {
-            // Pentagon has no floating bus.
-            // idleTable is not necessary for Pentagon; idle = true always.
-            delayTable[ii] = false;     // Pentagon has no contention
+            // Pentagon has neither floating bus, nor contention.
+            // idleTable is not necessary for Pentagon; idle = true always,
+            // and delay is irrelevant.
+            delayTable[ii] = false;
             memTable[ii] = memPent[ii];
         } else {
             delayTable[ii] = delayUla[ii];
-            idleTable[ii] = idleUla[ii];
             memTable[ii] = memUla[ii];
         }
     }
