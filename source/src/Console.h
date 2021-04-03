@@ -33,13 +33,12 @@ class Console {
 
     public:
 #ifdef USE_BOOST_THREADS
-        boost::mutex &consoleMutex;
+        boost::mutex consoleMutex;
 #else
-        std::mutex &consoleMutex;
+        std::mutex consoleMutex;
 #endif
         std::list<std::string> cmdList;
 
-        Console();
         void operator()();
         std::string get();
 };

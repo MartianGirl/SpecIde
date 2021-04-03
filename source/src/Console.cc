@@ -17,12 +17,6 @@
 
 #include <iostream>
 
-#ifdef USE_BOOST_THREADS
-boost::mutex theMutex;
-#else
-std::mutex theMutex;
-#endif
-
 using namespace std;
 
 ConsoleThread::ConsoleThread() :
@@ -35,10 +29,6 @@ ConsoleThread::~ConsoleThread() {
     consoleThread.detach();
 }
 
-Console::Console() :
-    consoleMutex(theMutex) {
-}
-
 void Console::operator()() {
 
     string cmd;
@@ -46,9 +36,8 @@ void Console::operator()() {
     for (;;) {
         getline(cin, cmd);
         if (!cmd.empty()) {
-            consoleMutex.lock();
+            lock_guard<mutex> lock(consoleMutex);
             cmdList.push_back(cmd);
-            consoleMutex.unlock();
         }
     }
 }
@@ -57,12 +46,11 @@ string Console::get() {
 
     string cmd;
 
-    consoleMutex.lock();
+    lock_guard<mutex> lock(consoleMutex);
     if (!cmdList.empty()) {
         cmd = cmdList.front();
         cmdList.pop_front();
     }
-    consoleMutex.unlock();
     return cmd;
 }
 
