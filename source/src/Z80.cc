@@ -52,7 +52,7 @@ void Z80::clock() {
     // the IFF1 flag.
     if ((~c & c_d & SIGNAL_NMI_)) {
         nmiAccept = true;
-        iff &= ~(IFF1);
+        iff &= ~IFF1;
     }
 
     intAccept = !(c_d & SIGNAL_INT_);
@@ -123,7 +123,7 @@ void Z80::clock() {
             return;
 
         case Z80State::ST_OCF_T4L_RFSH2:
-            c |= (SIGNAL_MREQ_);
+            c |= SIGNAL_MREQ_;
             break;
 
             // NMI. Machine cycle after NMI.

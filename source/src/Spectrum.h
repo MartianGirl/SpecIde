@@ -139,6 +139,8 @@ class Spectrum {
         void psgChip(bool play);
         void psgPlaySound(bool play);
 
+        bool allowTapeTraps();
+
         void sample();
         int dac();
 };

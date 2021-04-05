@@ -178,7 +178,7 @@ void Screen::clock() {
 
     static double remaining = 0;
 
-    if (flashTap) {
+    if (flashTap && spectrum.allowTapeTraps()) {
         checkTapeTraps();
     }
 
@@ -663,24 +663,17 @@ void Screen::setSoundRate(SoundRate rate) {
     sample = skip;
 }
 
-bool Screen::cpuInRefresh() {
-
-    return (spectrum.z80.state == Z80State::ST_OCF_T4L_RFSH2);
-}
-
 void Screen::checkTapeTraps() {
 
     switch (spectrum.z80.pc.w) {
         case 0x056D:    // LD_START
-            if (spectrum.rom48 && cpuInRefresh() && tape.tapData.size()) {
+            if (tape.tapData.size()) {
                 trapLdStart();
             }
             break;
 
         case 0x04D1:    // SA_FLAG
-            if (spectrum.rom48 && cpuInRefresh()) {
-                trapSaBytes();
-            }
+            trapSaBytes();
             break;
 
         default:

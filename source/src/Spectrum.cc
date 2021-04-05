@@ -423,10 +423,11 @@ void Spectrum::clock() {
 void Spectrum::updatePage(uint_fast8_t reg) {
 
     if (!(paging & 0x0020)) {
-        if (reg == 1)
+        if (reg == 1) {
             paging = (z80.d << 8) | (paging & 0x00FF);
-        else
+        } else {
             paging = z80.d | (paging & 0xFF00);
+        }
 
         // Update +3 disk drive(s) motor status.
         fdc765.motor(plus3Disk && (paging & 0x0800));
@@ -461,7 +462,6 @@ void Spectrum::updatePage(uint_fast8_t reg) {
                     setPage(2, 6, false, true);
                     setPage(3, 3, false, false);
                     break;
-
                 default:
                     assert(false);
             }
@@ -699,5 +699,11 @@ void Spectrum::setSnowPage(uint_fast8_t page) {
 
     sno = &ram[page * (2 << 14)];
 }
+
+bool Spectrum::allowTapeTraps() {
+
+    return rom48 && (z80.state == Z80State::ST_OCF_T4L_RFSH2);
+}
+
 
 // vim: et:sw=4:ts=4
