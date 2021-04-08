@@ -565,7 +565,7 @@ void Spectrum::psgSample() {
 void Spectrum::psgChip(bool aychip) {
 
     for (size_t ii = 0; ii < psgChips; ++ii) {
-        psg[0].setVolumeLevels(aychip);
+        psg[ii].setVolumeLevels(aychip);
     }
 }
 

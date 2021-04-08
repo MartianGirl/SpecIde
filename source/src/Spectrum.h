@@ -247,19 +247,66 @@ class Spectrum {
          */
         void setSnowPage(uint_fast8_t page);
 
+        /**
+         * Select current PSG from Z80 port written byte.
+         */
         void psgSelect();
+
+        /**
+         * Read PSG selected register from current PSG.
+         */
         void psgRead();
+
+        /**
+         * Write to PSG selected register from current PSG.
+         */
         void psgWrite();
+
+        /**
+         * Select PSG register from current PSG.
+         */
         void psgAddr();
+
+        /**
+         * Reset all PSGs.
+         */
         void psgReset();
+
+        /**
+         * Clock all PSGs.
+         */
         void psgClock();
+
+        /**
+         * Obtain sound samples from all PSGs.
+         */
         void psgSample();
-        void psgChip(bool play);
+
+        /**
+         * Select PSG type.
+         *
+         * @param aychip PSG type. (false = AY-8912-3, true = YM-2149)
+         */
+        void psgChip(bool aychip);
+
+        /**
+         * Mute or unmute all PSGs.
+         */
         void psgPlaySound(bool play);
 
+        /**
+         * Check the Z80 status and paged ROM to check tape traps safely.
+         */
         bool allowTapeTraps();
 
+        /**
+         * Mix and sample sound from all sources (Beeper, tape, PSG, Covox).
+         */
         void sample();
+
+        /**
+         * Sample the Covox.
+         */
         int dac();
 };
 
