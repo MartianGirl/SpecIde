@@ -965,6 +965,7 @@ void FDC765::writeCmd() {
                     dataIndex -= dataBytes;
                 } else {
                     copy(&dataBuffer[0], &dataBuffer[dataIndex], &buffer[0]);
+                    dataIndex = 0;
                 }
 
                 drive[cmdDrive()].buffer = buffer;

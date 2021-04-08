@@ -19,16 +19,8 @@
 #include <ctime>
 
 Spectrum::Spectrum() :
-    bus(0xFF),
-    joystick(0),
-    psgPresent{false, false, false, false},
-    currentPsg(0),
-    idle(0xFF),
-    paging(0x0020), mask(0x0001),
     contendedPage{false, true, false, false},
-    romPage{true, false, false, false},
-    set48(true), rom48(true),
-    stereo(StereoMode::STEREO_MONO) {
+    romPage{true, false, false, false} {
 
     // This is just for the laughs. We initialize the whole RAM to the
     // values that appeared in the Spectrum at boot time.
@@ -45,6 +37,7 @@ Spectrum::Spectrum() :
 }
 
 void Spectrum::loadRoms(RomVariant model) {
+
     ifstream ifs;
     vector<string> romNames;
     vector<string> romPaths;
@@ -154,7 +147,7 @@ void Spectrum::set128K() {
     spectrumPlus2A = false;
     plus3Disk = false;
     betaDisk128 = false;
-    psgPresent[0] = true;
+    psgChips = 1;
     mask = 0x0001;
     reset();
 }
@@ -165,7 +158,7 @@ void Spectrum::setPlus2() {
     spectrumPlus2A = false;
     plus3Disk = false;
     betaDisk128 = false;
-    psgPresent[0] = true;
+    psgChips = 1;
     mask = 0x0001;
     reset();
 }
@@ -176,7 +169,7 @@ void Spectrum::setPlus2A() {
     spectrumPlus2A = true;
     plus3Disk = false;
     betaDisk128 = false;
-    psgPresent[0] = true;
+    psgChips = 1;
     mask = 0x0004;
     reset();
 }
@@ -187,7 +180,7 @@ void Spectrum::setPlus3() {
     spectrumPlus2A = true;
     plus3Disk = true;
     betaDisk128 = false;
-    psgPresent[0] = true;
+    psgChips = 1;
     mask = 0x0004;
     reset();
 }
@@ -198,7 +191,7 @@ void Spectrum::setPentagon() {
     spectrumPlus2A = false;
     plus3Disk = false;
     betaDisk128 = true;
-    psgPresent[0] = true;
+    psgChips = 1;
     mask = 0xFFFF;
     reset();
 }
@@ -283,7 +276,7 @@ void Spectrum::clock() {
                     z80.d = (ula.idle) ? idle : bus & idle;
                 }
 
-                // 128K only ports (paging, disk)
+                // 128K only ports (pagination, disk)
                 if (spectrum128K) {
                     if (!(z80.a & 0x8002)) {
                         if (z80.wr || z80.rd)
@@ -293,12 +286,12 @@ void Spectrum::clock() {
                     switch (z80.a & 0xF002) {
                         case 0x0000:    // In +2A/+3 this is the floating bus port.
                             if (z80.rd) {
-                                if (!(paging & 0x0020)) {
+                                if (!(pageRegs & 0x0020)) {
                                     z80.d = (bus_1 & idle) | 0x01;
                                 }
                             }
                             break;
-                        case 0x1000:    // 0x1FFD (+3 Paging High)
+                        case 0x1000:    // 0x1FFD (+3 High Page Register)
                             if (z80.wr) {
                                 updatePage(1);
                             }
@@ -322,7 +315,7 @@ void Spectrum::clock() {
                         case 0x4000: // fall-through
                         case 0x5000: // fall-through
                         case 0x6000: // fall-through
-                        case 0x7000: // 0x7FFD (128K Paging / +3 Paging Low)
+                        case 0x7000: // 0x7FFD (128K Page Register / +3 Low Page Register)
                             if (z80.wr) {
                                 updatePage(0);
                             }
@@ -334,7 +327,7 @@ void Spectrum::clock() {
                 }
 
                 // AY-3-8912 ports.
-                if (psgPresent[0]) {    // If there are PSGs, there is a PSG 0
+                if (psgChips) {
                     switch (z80.a & 0xC002) {
                         case 0x8000:    // 0xBFFD
                             if (z80.wr) {
@@ -422,22 +415,22 @@ void Spectrum::clock() {
 
 void Spectrum::updatePage(uint_fast8_t reg) {
 
-    if (!(paging & 0x0020)) {
+    if (!(pageRegs & 0x0020)) {
         if (reg == 1) {
-            paging = (z80.d << 8) | (paging & 0x00FF);
+            pageRegs = (z80.d << 8) | (pageRegs & 0x00FF);
         } else {
-            paging = z80.d | (paging & 0xFF00);
+            pageRegs = z80.d | (pageRegs & 0xFF00);
         }
 
         // Update +3 disk drive(s) motor status.
-        fdc765.motor(plus3Disk && (paging & 0x0800));
+        fdc765.motor(plus3Disk && (pageRegs & 0x0800));
 
         // Select screen to display.
-        setScreenPage(((paging & 0x0008) >> 2) | 0x05);
-        setSnowPage(paging & 0x0005);
+        setScreenPage(((pageRegs & 0x0008) >> 2) | 0x05);
+        setSnowPage(pageRegs & 0x0005);
 
-        if (paging & 0x0100) {      // Special paging mode.
-            switch (paging & 0x0600) {
+        if (pageRegs & 0x0100) {      // Special pagination mode.
+            switch (pageRegs & 0x0600) {
                 case 0x0000:
                     setPage(0, 0, false, false);
                     setPage(1, 1, false, false);
@@ -465,10 +458,10 @@ void Spectrum::updatePage(uint_fast8_t reg) {
                 default:
                     assert(false);
             }
-        } else {                    // Normal paging mode.
-            ramBank = paging & 0x0007;
+        } else {                    // Normal pagination mode.
+            ramBank = pageRegs & 0x0007;
             romBank =
-                ((paging & 0x0010) >> 4) | ((paging & 0x0400) >> 9);
+                ((pageRegs & 0x0010) >> 4) | ((pageRegs & 0x0400) >> 9);
 
             setPage(0, romBank, true, false);
             setPage(1, 5, false, true);
@@ -477,7 +470,7 @@ void Spectrum::updatePage(uint_fast8_t reg) {
 
             rom48 = ((spectrumPlus2A && romBank == 3)
                     || (spectrum128K && romBank == 1));
-            set48 = (paging & 0x0020);
+            set48 = (pageRegs & 0x0020);
         }
     }
 }
@@ -499,11 +492,11 @@ void Spectrum::reset() {
     setScreenPage(5);
 
     if (spectrum128K || spectrumPlus2A) {
-        paging = 0x0000;
+        pageRegs = 0x0000;
         set48 = false;
         rom48 = false;
     } else {
-        paging = 0x0020;
+        pageRegs = 0x0020;
         set48 = true;
         rom48 = true;
     }
@@ -512,7 +505,7 @@ void Spectrum::reset() {
 void Spectrum::psgSelect() {
 
     size_t newPsg = (~z80.d) & 0x03;
-    if (psgPresent[newPsg]) {
+    if (newPsg < psgChips) {
         currentPsg = newPsg;
         psg[currentPsg].lchan = (z80.d & 0x40);
         psg[currentPsg].rchan = (z80.d & 0x20);
@@ -521,25 +514,28 @@ void Spectrum::psgSelect() {
 
 void Spectrum::psgRead() {
 
-    if (psgPresent[currentPsg])
+    if (currentPsg < psgChips) {
         z80.d = psg[currentPsg].read();
+    }
 }
 
 void Spectrum::psgWrite() {
 
-    if (psgPresent[currentPsg])
+    if (currentPsg < psgChips) {
         psg[currentPsg].write(z80.d);
+    }
 }
 
 void Spectrum::psgAddr() {
 
-    if (psgPresent[currentPsg])
+    if (currentPsg < psgChips) {
         psg[currentPsg].addr(z80.d);
+    }
 }
 
 void Spectrum::psgReset() {
 
-    for (size_t ii = 0; ii < 4; ++ii) {
+    for (size_t ii = 0; ii < psgChips; ++ii) {
         psg[ii].reset();
         psg[ii].seed = 0xFFFF - (ii * 0x1111);
     }
@@ -547,42 +543,30 @@ void Spectrum::psgReset() {
 
 void Spectrum::psgClock() {
 
-    if (psgPresent[0]) {
-        psg[0].clock();
-        if (psgPresent[1]) {
-            psg[1].clock();
-            if (psgPresent[2]) psg[2].clock();
-            if (psgPresent[3]) psg[3].clock();
-        }
+    for (size_t ii = 0; ii < psgChips; ++ii) {
+        psg[ii].clock();
     }
 }
 
 void Spectrum::psgPlaySound(bool play) {
 
-    psg[0].playSound = play;
-    psg[1].playSound = play;
-    psg[2].playSound = play;
-    psg[3].playSound = play;
+    for (size_t ii = 0; ii < psgChips; ++ii) {
+        psg[ii].playSound = play;
+    }
 }
 
 void Spectrum::psgSample() {
 
-    if (psgPresent[0]) {
-        psg[0].sample();
-        if (psgPresent[1]) {
-            psg[1].sample();
-            if (psgPresent[2]) psg[2].sample();
-            if (psgPresent[3]) psg[3].sample();
-        }
+    for (size_t ii = 0; ii < psgChips; ++ii) {
+        psg[ii].sample();
     }
 }
 
 void Spectrum::psgChip(bool aychip) {
 
-    psg[0].setVolumeLevels(aychip);
-    psg[1].setVolumeLevels(aychip);
-    psg[2].setVolumeLevels(aychip);
-    psg[3].setVolumeLevels(aychip);
+    for (size_t ii = 0; ii < psgChips; ++ii) {
+        psg[0].setVolumeLevels(aychip);
+    }
 }
 
 void Spectrum::sample() {

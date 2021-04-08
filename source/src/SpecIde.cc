@@ -263,7 +263,7 @@ int main(int argc, char* argv[]) {
 
     if (options["forcepsg"] == "yes") {
         screen.psgSound = true;
-        screen.spectrum.psgPresent[0] = true;
+        screen.spectrum.psgChips = 1;
         cout << "Enable AY interface on 128K ports: " << options["forcepsg"] << endl;
     }
 
@@ -271,17 +271,13 @@ int main(int argc, char* argv[]) {
             || options["stereo"] == "turboacb"
             || options["stereo"] == "turboabc") {
         screen.psgSound = true;
-        screen.spectrum.psgPresent[0] = true;
-        screen.spectrum.psgPresent[1] = true;
+        screen.spectrum.psgChips = 2;
         cout << "TurboSound (2 PSGs) active." << endl;
     }
 
     if (options["stereo"] == "turbonext") {
         screen.psgSound = true;
-        screen.spectrum.psgPresent[0] = true;
-        screen.spectrum.psgPresent[1] = true;
-        screen.spectrum.psgPresent[2] = true;
-        screen.spectrum.psgPresent[3] = true;
+        screen.spectrum.psgChips = 4;
         cout << "Generalized NEXT sound (4 PSGs) active." << endl;
     }
 
