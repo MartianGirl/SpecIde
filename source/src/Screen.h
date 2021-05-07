@@ -15,114 +15,198 @@
 
 #pragma once
 
-/** Screen
+/**
+ * Screen
  *
- * Default Screen implementation.
+ * Base Screen implementation.
  *
  * This class emulates a CRT. It draws an image by scanning the pixels
- * in a zig-zag way, just like a TV screen does.
+ * in a zig-zag way, just like a TV screen does. It handles the frame
+ * time and synchronization.
  *
- * At the moment, it also reads the keyboard and processes the window
- * events.
- *
- * Maybe it should be called Console instead of Screen.
- *
+ * Depending on which computer is selected, different sets of options
+ * will be considered.
  */
-
-#include "Spectrum.h"
-#include "Tape.h"
-
-#include "SoundDefs.h"
-#include "SoundChannel.h"
 
 #include "Console.h"
 
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 
+#include <cctype>
 #include <cstddef>
 #include <cstdint>
 #include <cassert>
-#include <queue>
+#include <map>
 #include <vector>
 
-class Screen
-{
-    public:
-        Screen(size_t scale);
-        ~Screen() { window.close(); }
-
-        size_t w;
-        size_t h;
-        sf::RenderWindow window;
-        std::vector<sf::VideoMode> modes;
-        sf::VideoMode bestMode;
-        size_t suggestedScansSingle;
-        size_t suggestedScansDouble;
-
-        Spectrum spectrum;
-        Tape tape;
-        SoundChannel channel;
-        ConsoleThread console;
-
-        bool playSound = true;
-        bool tapeSound = true;
-        bool psgSound = true;
-        bool streaming = false;
-        int samples[2];
-        uint32_t skip;
-        double tail;
-        size_t pulse = 0;
-        size_t sample = 0;
-
-        bool done = false;
-        bool menu = false;
-        bool fullscreen;
-        bool doubleScanMode;
-        bool smooth;
-        bool aychip;
-        bool syncToVideo;
-
-        size_t scale;
-        size_t xSize, ySize;
-        float xOffset, yOffset;
-        float xScale, yScale, sScale;
-
-        int delay;
-
-        sf::Texture scrTexture;
-        sf::Sprite scrSprite;
-        sf::Uint8* pixbuf;
-
-        sf::Font zxFont;
-
-        bool pad;
-        bool flashTap;
-
-        bool cpuInRefresh();
-        void checkTapeTraps();
-        void writeMemory(uint_fast16_t a, uint_fast8_t d);
-        uint_fast8_t readMemory(uint_fast16_t a);
-        void trapLdStart();
-        void trapSaBytes();
-
-        void run();
-
-        void clock();
-        void update();
-        void reopenWindow(bool fs);
-        void setFullScreen(bool fs);
-        void setSmooth(bool sm);
-        void setSoundRate(SoundRate rate);
-        void setTapeSound(bool tape);
-
-        void pollEvents();
-        void pollCommands();
-
-        void updateMenu();
-        
-        void texture(size_t x, size_t y);
-        void adjust();
+enum class FileTypes {
+    FILETYPE_TAP,
+    FILETYPE_TZX,
+    FILETYPE_PZX,
+    FILETYPE_DSK,
+    FILETYPE_TRD,
+    FILETYPE_Z80,
+    FILETYPE_SNA,
+    FILETYPE_CSW,
+    FILETYPE_ERR
 };
 
+class Screen {
+
+    public:
+        /**
+         * Constructor.
+         *
+         * This constructor takes a map of options and values. The configuration
+         * of the emulation will be based on these parameters.
+         *
+         * @param opt A map<string, string> of name-value pairs.
+         */
+        Screen(std::map<std::string, std::string> o,
+                std::vector<std::string> f);
+
+        /**
+         * Destructor. Closes the window.
+         */
+        virtual ~Screen();
+
+        /** Map of options as name-value pairs. */
+        std::map<std::string, std::string> options;
+        /** Vector of file names as strings. */
+        std::vector<std::string> files;
+
+        /** SFML Window object. */
+        sf::RenderWindow window;
+        /** Window width. */
+        uint32_t w = 688;
+        /** Window height. */
+        uint32_t h = 576;
+        /** Window scale factor. */
+        uint32_t scale;
+
+        /** Vector of available video modes. */
+        std::vector<sf::VideoMode> modes;
+        /** Best video mode. It uses the resolution of the desktop. */
+        sf::VideoMode bestMode;
+        /** Suggested drawable scans for better fit on single scan modes. */
+        uint32_t suggestedScansSingle;
+        /** Suggested drawable scans for better fit on double scan modes. */
+        uint32_t suggestedScansDouble;
+
+        /** Full screen mode active. */
+        bool fullscreen = false;
+        /** Antialiasing mode active. */
+        bool smooth = false;
+        /** Sync to video mode active. */
+        bool syncToVideo = false;
+
+        /** Sound flag. */
+        bool playSound = true;
+        /** Tape sound flag. */
+        bool tapeSound = true;
+        /** PSG sound flag. */
+        bool psgSound = true;
+        /** Exit emulation flag. */
+        bool done = false;
+        /** Menu mode flag. */
+        bool menu = false;
+
+        /** Use interlaced two-pass mode. */
+        bool doubleScanMode = false;
+        /** Texture horizontal size. */
+        uint32_t xSize = 360;
+        /** Texture vertical size. */
+        uint32_t ySize = 625;
+        /** Horizontal offset of the texture in full screen mode. */
+        float xOffset;
+        /** Vertical offset of the texture in full screen mode. */
+        float yOffset;
+        /** Horizontal stretch of the texture. */
+        float xScale;
+        /** Vertical stretch of the texture. */
+        float yScale;
+
+        /** Texture. */
+        sf::Texture scrTexture;
+        /** Sprite. Contains the texture to be drawn. */
+        sf::Sprite scrSprite;
+        /** ZX Spectrum font for drawing the menus. */
+        sf::Font zxFont;    
+
+        /** Thread for a text console. */
+        ConsoleThread console;
+
+        /**
+         * Initialise the Screen object with the parameters received on construction.
+         *
+         * This function initialises only the common part, and then it calls the
+         * appropriate function for the selected machine.
+         */
+        virtual void setup();
+
+        /**
+         * Convert the "scale" option into an integer.
+         */
+        uint32_t getScale();
+        
+        /**
+         * Select the native video mode and find its resolution.
+         */
+        void chooseVideoMode();
+
+        /**
+         * Decide how many lines are going to be drawn, based on the resolution.
+         */
+        void adjustViewPort();
+
+        /**
+         * Load fonts for the menu.
+         */
+        void loadFont();
+        
+        /**
+         * Create texture for drawing.
+         *
+         * @param x Texture width.
+         * @param y Texture height.
+         */
+        void texture(uint_fast32_t x, uint_fast32_t y);
+
+        /**
+         * Execute the emulation loop.
+         */
+        virtual void run() = 0;
+
+        /**
+         * Guess file type based on the extension.
+         */
+        FileTypes guessFileType(std::string const& filename);
+
+        /**
+         * Recreate the emulator window after toggling full screen mode.
+         *
+         * @param fs Reopen the window in full screen or windowed mode.
+         */
+        void reopenWindow(bool fs);
+
+        /**
+         * Change texture parameters for either full screen mode or windowed.
+         *
+         * @param fs Set parameters for full screen or windowed mode.
+         */
+        void setFullScreen(bool fs);
+
+        /**
+         * Toggle GL interpolation.
+         *
+         * @param sm New smoothing setting.
+         */
+        void setSmooth(bool sm);
+
+        /**
+         * Read commands from the text console.
+         */
+        void pollCommands();
+};
 // vim: et:sw=4:ts=4

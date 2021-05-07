@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2018.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,39 +22,142 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "Screen.h"
+#include "SpeccyScreen.h"
 
 #include "config.h"
 
-enum class FileTypes {
-    FILETYPE_TAP,
-    FILETYPE_TZX,
-    FILETYPE_PZX,
-    FILETYPE_DSK,
-    FILETYPE_TRD,
-    FILETYPE_Z80,
-    FILETYPE_SNA,
-    FILETYPE_CSW,
-    FILETYPE_ERR
-};
-
 using namespace std;
 
-FileTypes guessFileType(string const& fileName);
+/**
+ * Display Emulator's License text.
+ */
 void displayLicense();
+
+/**
+ * Display command line help text.
+ */
 void displayHelp();
+
+/**
+ * Check if a ZX Spectrum is emulated.
+ *
+ * @return true if the selected model is a ZX Spectrum.
+ */
+bool isSpectrum(string const& model);
+
+/**
+ * Check if an Amstrad CPC is emulated.
+ *
+ * @return true if the selected model is an Amstrad CPC.
+ */
+bool isCpc(string const& model);
+
+/**
+ * Read the options from the config file.
+ *
+ * options map<string, string> of name-value pairs where the options
+ *         will be stored.
+ */
 void readOptions(map<string, string>& options);
-size_t getScale(string const& scale);
+
+/**
+ * Option name-value pair structure.
+ */
+struct Option {
+
+    /** Option name. */
+    string name;
+    /** Option value. */
+    string value;
+
+    /**
+     * Constructor
+     *
+     * @param n Option name.
+     * @param v Option value.
+     */
+    Option(string n = "", string v = "") : name(n), value(v) {}
+};
+
+/** Map of arguments to option name-value pairs. */
+map<string, Option> arguments = {
+    // Model selection
+    {"--issue2",        {"model", "issue2"}},
+    {"--issue3",        {"model", "issue3"}},
+    {"--48",            {"model", "issue3"}},
+    {"--48sp",          {"model", "48sp"}},
+    {"--128",           {"model", "128"}},
+    {"--128sp",         {"model", "128sp"}},
+    {"--plus2",         {"model", "plus2"}},
+    {"--plus2sp",       {"model", "plus2sp"}},
+    {"--plus2a",        {"model", "plus2a"}},
+    {"--plus2asp",      {"model", "plus2asp"}},
+    {"--plus3",         {"model", "plus3"}},
+    {"--plus3sp",       {"model", "plus3sp"}},
+    {"--pentagon",      {"model", "pentagon"}},
+    {"--cpc464",        {"model", "cpc464"}},
+    {"--cpc464sp",      {"model", "cpc464sp"}},
+    {"--cpc664",        {"model", "cpc664"}},
+    {"--cpc664sp",      {"model", "cpc664sp"}},
+    {"--cpc6128",       {"model", "cpc6128"}},
+    {"--cpc6128sp",     {"model", "cpc6128sp"}},
+
+    // Joystick options
+    {"--kempston",      {"joystick", "kempston"}},
+    {"--sinclair",      {"joystick", "sinclair"}},
+    {"--pad",           {"pad", "yes"}},
+    {"--nopad",         {"pad", "no"}},
+
+    // Sound options
+    {"--tapesound",     {"tapesound", "yes"}},
+    {"--notapesound",   {"tapesound", "no"}},
+    {"--sound",         {"sound", "yes"}},
+    {"--nosound",       {"sound", "no"}},
+    {"--psg",           {"forcepsg", "yes"}},
+    {"--nopsg",         {"forcepsg", "no"}},
+    {"--abc",           {"stereo", "abc"}},
+    {"--acb",           {"stereo", "acb"}},
+    {"--turbo",         {"stereo", "turbo"}},
+    {"--turboabc",      {"stereo", "turboabc"}},
+    {"--turboacb",      {"stereo", "turboacb"}},
+    {"--turbonext",     {"stereo", "turbonext"}},
+    {"--mono",          {"stereo", "mono"}},
+    {"--ay",            {"psgtype", "ay"}},
+    {"--ym",            {"psgtype", "ym"}},
+
+    // Screen options
+    {"--average",       {"scanmode", "average"}},
+    {"--scanlines",     {"scanmode", "scanlines"}},
+    {"--nodoublescan",  {"scanmode", "normal"}},
+    {"--window",        {"fullscreen", "no"}},
+    {"--fullscreen",    {"fullscreen", "yes"}},
+    {"--antialias",     {"antialias", "yes"}},
+    {"--sync",          {"sync", "yes"}},
+    {"--nosync",        {"sync", "no"}},
+    {"--cmos",          {"z80type", "cmos"}},
+    {"--nmos",          {"z80type", "nmos"}},
+
+    // Switches
+    {"--flashtap",      {"flashtap", "yes"}},
+    {"--noflashtap",    {"flashtap", "no"}},
+
+    // SD1 was a protection device used in Camelot Warriors.
+    {"--sd1",           {"sd1", "yes"}},
+    {"--nosd1",         {"sd1", "no"}}
+};
 
 int main(int argc, char* argv[]) {
 
-    vector<string> params(argv + 1, argv + argc);
-    vector<string> files;
-    map<string, string> options;
-
     displayLicense();
+
+    // Read options from the config file.
+    map<string, string> options;
     readOptions(options);
 
+    // Read options from the command line. These options modify the ones from
+    // the config file.
+    vector<string> params(argv + 1, argv + argc);
+    vector<string> files;
     for (vector<string>::iterator it = params.begin(); it != params.end(); ++it) {
         if (*it == "--help" || *it == "-h") {
             displayHelp();
@@ -62,362 +165,25 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // The Screen class is now actually more of a "console".
-    // We create the instance, and load the given tape (if any).
-    Screen screen(getScale(options["scale"]));
-
     for (vector<string>::iterator it = params.begin(); it != params.end(); ++it) {
-        // Model selection
-        if (*it == "--issue2")
-            options["model"] = "issue2";
-        if (*it == "--issue3" || *it == "--48")
-            options["model"] = "issue3";
-        if (*it == "--48sp")
-            options["model"] = "48sp";
-        if (*it == "--128")
-            options["model"] = "128";
-        if (*it == "--128sp")
-            options["model"] = "128sp";
-        if (*it == "--plus2")
-            options["model"] = "plus2";
-        if (*it == "--plus2sp")
-            options["model"] = "plus2sp";
-        if (*it == "--plus2a")
-            options["model"] = "plus2a";
-        if (*it == "--plus2asp")
-            options["model"] = "plus2asp";
-        if (*it == "--plus3")
-            options["model"] = "plus3";
-        if (*it == "--plus3sp")
-            options["model"] = "plus3sp";
-        if (*it == "--pentagon")
-            options["model"] = "pentagon";
-
-        // Joystick options
-        if (*it == "--kempston")
-            options["joystick"] = "kempston";
-        if (*it == "--sinclair")
-            options["joystick"] = "sinclair";
-
-        if (*it == "--pad")
-            options["pad"] = "yes";
-        if (*it == "--nopad")
-            options["pad"] = "no";
-
-        // Sound options
-        if (*it == "--notapesound")
-            options["tapesound"] = "no";
-        if (*it == "--tapesound")
-            options["tapesound"] = "yes";
-
-        if (*it == "--nosound")
-            options["sound"] = "no";
-        if (*it == "--sound")
-            options["sound"] = "yes";
-
-        // PSG options
-        if (*it == "--nopsg")
-            options["forcepsg"] = "no";
-        if (*it == "--psg")
-            options["forcepsg"] = "yes";
-
-        if (*it == "--abc")
-            options["stereo"] = "abc";
-        if (*it == "--acb")
-            options["stereo"] = "acb";
-        if (*it == "--turbo")
-            options["stereo"] = "turbo";
-        if (*it == "--turboacb")
-            options["stereo"] = "turboacb";
-        if (*it == "--turboabc")
-            options["stereo"] = "turboabc";
-        if (*it == "--turbonext")
-            options["stereo"] = "turbonext";
-        if (*it == "--mono")
-            options["stereo"] = "mono";
-
-        if (*it == "--ay")
-            options["psgtype"] = "ay";
-        if (*it == "--ym")
-            options["psgtype"] = "ym";
-
-        // FlashTAP
-        if (*it == "--noflashtap")
-            options["flashtap"] = "no";
-        if (*it == "--flashtap")
-            options["flashtap"] = "yes";
-
-        // Screen options
-        if (*it == "--average")
-            options["scanmode"] = "average";
-        if (*it == "--scanlines")
-            options["scanmode"] = "scanlines";
-        if (*it == "--nodoublescan")
-            options["scanmode"] = "normal";
-
-        if (*it == "--window")
-            options["fullscreen"] = "no";
-        if (*it == "--fullscreen")
-            options["fullscreen"] = "yes";
-        if (*it == "--antialias")
-            options["antialias"] = "yes";
-
-        if (*it == "--sync")
-            options["sync"] = "yes";
-        if (*it == "--nosync")
-            options["sync"] = "no";
-
-        // SD1 was a protection device used in Camelot Warriors. It simply
-        // forced bit 5 low for any port read, if the device didn't force
-        // this bit high.
-        if (*it == "--sd1")
-            options["sd1"] = "yes";
-        if (*it == "--nosd1")
-            options["sd1"] = "no";
-        if (*it == "--cmos")
-            options["z80type"] = "cmos";
-
-        if (it->find('.') != string::npos)
+        map<string, Option>::iterator argument = arguments.find(*it);
+        if (argument != arguments.end()) {
+            options[argument->second.name] = argument->second.value;
+        } else if (it->find('.') != string::npos) {
             files.push_back(*it);
-    }
-
-    // Model selection
-    if (options["model"] == "issue2") {
-        screen.setSoundRate(SoundRate::SOUNDRATE_48K);
-        screen.spectrum.loadRoms(RomVariant::ROM_48_EN);
-        screen.spectrum.ula.setUlaVersion(0);
-    } else if (options["model"] == "issue3") {
-        screen.setSoundRate(SoundRate::SOUNDRATE_48K);
-        screen.spectrum.loadRoms(RomVariant::ROM_48_EN);
-        screen.spectrum.ula.setUlaVersion(1);
-    } else if (options["model"] == "48sp") {
-        screen.setSoundRate(SoundRate::SOUNDRATE_48K);
-        screen.spectrum.loadRoms(RomVariant::ROM_48_ES);
-        screen.spectrum.ula.setUlaVersion(1);
-    } else if (options["model"] == "128") {
-        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
-        screen.spectrum.loadRoms(RomVariant::ROM_128_EN);
-        screen.spectrum.set128K();
-        screen.spectrum.ula.setUlaVersion(2);
-    } else if (options["model"] == "128sp") {
-        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
-        screen.spectrum.loadRoms(RomVariant::ROM_128_ES);
-        screen.spectrum.set128K();
-        screen.spectrum.ula.setUlaVersion(2);
-    } else if (options["model"] == "plus2") {
-        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
-        screen.spectrum.loadRoms(RomVariant::ROM_PLUS2_EN);
-        screen.spectrum.setPlus2();
-        screen.spectrum.ula.setUlaVersion(3);
-    } else if (options["model"] == "plus2sp") {
-        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
-        screen.spectrum.loadRoms(RomVariant::ROM_PLUS2_ES);
-        screen.spectrum.setPlus2();
-        screen.spectrum.ula.setUlaVersion(3);
-    } else if (options["model"] == "plus2a") {
-        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
-        screen.spectrum.loadRoms(RomVariant::ROM_PLUS3_EN);
-        screen.spectrum.setPlus2A();
-        screen.spectrum.ula.setUlaVersion(4);
-    } else if (options["model"] == "plus2asp") {
-        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
-        screen.spectrum.loadRoms(RomVariant::ROM_PLUS3_ES);
-        screen.spectrum.setPlus2A();
-        screen.spectrum.ula.setUlaVersion(4);
-    } else if (options["model"] == "plus3") {
-        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
-        screen.spectrum.loadRoms(RomVariant::ROM_PLUS3_EN);
-        screen.spectrum.setPlus3();
-        screen.spectrum.ula.setUlaVersion(4);
-    } else if (options["model"] == "plus3sp") {
-        screen.setSoundRate(SoundRate::SOUNDRATE_128K);
-        screen.spectrum.loadRoms(RomVariant::ROM_PLUS3_ES);
-        screen.spectrum.setPlus3();
-        screen.spectrum.ula.setUlaVersion(4);
-    } else if (options["model"] == "pentagon") {
-        screen.setSoundRate(SoundRate::SOUNDRATE_PENTAGON);
-        screen.spectrum.loadRoms(RomVariant::ROM_PENTAGON);
-        screen.spectrum.setPentagon();
-        screen.spectrum.ula.setUlaVersion(5);
-    } else {
-        options["model"] = "default";
-        screen.setSoundRate(SoundRate::SOUNDRATE_48K);
-        screen.spectrum.loadRoms(RomVariant::ROM_48_EN);
-        screen.spectrum.ula.setUlaVersion(1);
-    }
-    cout << "Model: " << options["model"] << endl;
-
-    // Joystick and pad settings.
-    screen.spectrum.kempston = (options["joystick"] == "kempston");
-    cout << "Joystick type: " << options["joystick"] << endl;
-
-    screen.pad = (options["pad"] == "yes");
-    cout << "Map game pad extra buttons to keys: " << options["pad"] << endl;
-
-    // Sound settings.
-    screen.setTapeSound(options["tapesound"] != "no");
-    cout << "Play tape sound: " << options["tapesound"] << endl;
-
-    screen.playSound = (options["sound"] != "no");
-    cout << "Play sound: " << options["sound"] << endl;
-
-    if (options["forcepsg"] == "yes") {
-        screen.psgSound = true;
-        screen.spectrum.psgChips = 1;
-        cout << "Enable AY interface on 128K ports: " << options["forcepsg"] << endl;
-    }
-
-    if (options["stereo"] == "turbo"
-            || options["stereo"] == "turboacb"
-            || options["stereo"] == "turboabc") {
-        screen.psgSound = true;
-        screen.spectrum.psgChips = 2;
-        cout << "TurboSound (2 PSGs) active." << endl;
-    }
-
-    if (options["stereo"] == "turbonext") {
-        screen.psgSound = true;
-        screen.spectrum.psgChips = 4;
-        cout << "Generalized NEXT sound (4 PSGs) active." << endl;
-    }
-
-    // Set ACB stereo as default for Pentagon
-    if (options["model"] == "pentagon" && options["stereo"] == "none") {
-        options["stereo"] = "acb";
-    }
-
-    if (options["stereo"] == "acb") {
-        screen.spectrum.stereo = StereoMode::STEREO_ACB;
-    } else if (options["stereo"] == "abc") {
-        screen.spectrum.stereo = StereoMode::STEREO_ABC;
-    } else if (options["stereo"] == "turbo") {
-        screen.spectrum.stereo = StereoMode::STEREO_TURBO_MONO;
-    } else if (options["stereo"] == "turboabc") {
-        screen.spectrum.stereo = StereoMode::STEREO_TURBO_ABC;
-    } else if (options["stereo"] == "turboacb") {
-        screen.spectrum.stereo = StereoMode::STEREO_TURBO_ACB;
-    } else if (options["stereo"] == "turbonext") {
-        screen.spectrum.stereo = StereoMode::STEREO_NEXT;
-    } else if (options["stereo"] == "mono") {
-        screen.spectrum.stereo = StereoMode::STEREO_MONO;
-    } else {
-        screen.spectrum.stereo = StereoMode::STEREO_MONO;
-    }
-    cout << "Stereo type: " << options["stereo"] << endl;
-
-    screen.aychip = (options["psgtype"] != "ym");
-    screen.spectrum.psgChip(screen.aychip);
-    cout << "PSG chip: " << options["psgtype"] << endl;
-
-    // Screen settings.
-    if (options["scanmode"] == "scanlines") {
-        screen.doubleScanMode = true;
-        screen.spectrum.ula.scanlines = 1;
-        screen.spectrum.ula.yInc = 2;
-    } else if (options["scanmode"] == "average") {
-        screen.doubleScanMode = false;
-        screen.spectrum.ula.scanlines = 2;
-        screen.spectrum.ula.yInc = 1;
-    } else {
-        screen.doubleScanMode = false;
-        screen.spectrum.ula.scanlines = 0;
-        screen.spectrum.ula.yInc = 1;
-    }
-    cout << "Scan mode: " << options["scanmode"] << endl;
-
-    screen.fullscreen = (options["fullscreen"] == "yes");
-    cout << "Full screen mode: " << options["fullscreen"] << endl;
-
-    screen.smooth = (options["antialias"] == "yes");
-    cout << "Antialiasing: " << options["antialias"] << endl;
-
-    screen.flashTap = (options["flashtap"] == "yes");
-    cout << "FlashTAP: " << options["flashtap"] << endl;
-
-    if (options["sync"] == "yes") {
-        screen.syncToVideo = true;
-        screen.window.setVerticalSyncEnabled(true);
-        cout << "Sync to video: " << options["sync"] << endl;
-    }
-
-    if (options["sd1"] == "yes") {
-        screen.spectrum.idle = 0xDF;
-        screen.spectrum.ula.inMask = 0x9F;
-        cout << "SD1 dongle: " << options["sd1"] << endl;
-    }
-
-    screen.spectrum.z80.zeroByte = options["z80type"] == "cmos" ? 0xFF : 0x00;
-    cout << "Z80 type: " << options["z80type"] << endl;
-
-    for (vector<string>::iterator it = files.begin(); it != files.end(); ++it) {
-        switch (guessFileType(*it)) {
-            case FileTypes::FILETYPE_TZX:
-                screen.tape.loadTzx(*it);
-                break;
-
-            case FileTypes::FILETYPE_TAP:
-                screen.tape.loadTap(*it);
-                break;
-
-            case FileTypes::FILETYPE_CSW:
-                screen.tape.loadCsw(*it);
-                break;
-
-            case FileTypes::FILETYPE_DSK:
-                {
-                    DSKFile dsk;
-                    dsk.load(*it);
-
-                    if (dsk.validFile) {
-                        screen.spectrum.fdc765.drive[0].images.push_back(dsk);
-                        screen.spectrum.fdc765.drive[0].imageNames.push_back(*it);
-                        screen.spectrum.fdc765.drive[0].disk = true;
-                    }
-                }
-                break;
-
-            default:
-                cout << "Unknown file type: " << *it << endl;
-                break;
         }
     }
 
-    screen.reopenWindow(screen.fullscreen);
-    screen.setFullScreen(screen.fullscreen);
-    screen.setSmooth(screen.smooth);
-    screen.spectrum.ula.playSound = screen.playSound;
-    screen.spectrum.psgPlaySound(screen.psgSound && screen.playSound);
-    screen.run();
-}
-
-FileTypes guessFileType(string const& fileName) {
-
-    // Parse the file name, find the extension. We'll decide what to do
-    // based on this.
-    size_t dot = fileName.find_last_of('.');
-    string extension;
-    if (dot != string::npos) {
-        // Get the extension in lowercase characters.
-        extension = fileName.substr(dot);
-        for (size_t ii = 0; ii < extension.size(); ++ii) {
-            if (extension[ii] >= 'A' && extension[ii] <= 'Z') {
-                extension[ii] += ('a' - 'A');
-            }
-        }
-    }
-
-    if (extension == ".tzx") {
-        return FileTypes::FILETYPE_TZX;
-    } else if (extension == ".cdt") {
-        return FileTypes::FILETYPE_TZX;
-    } else if (extension == ".tap") {
-        return FileTypes::FILETYPE_TAP;
-    } else if (extension == ".dsk") {
-        return FileTypes::FILETYPE_DSK;
-    } else if (extension == ".csw") {
-        return FileTypes::FILETYPE_CSW;
-    } else {
-        return FileTypes::FILETYPE_ERR;
+    // Create the correct Screen class, depending on the selected computer.
+    string model = options["model"];
+    if (isSpectrum(model)) {
+        SpeccyScreen speccy(options, files);
+        speccy.setup();
+        speccy.run();
+    //} else if (isCpc(model)) {
+        //CpcScreen cpc(options, files);
+        //cpc.setup();
+        //cpc.run();
     }
 }
 
@@ -496,6 +262,7 @@ void displayHelp() {
 }
 
 void readOptions(map<string, string>& options) {
+
     // Set default values first
     options["model"] = "default";
     options["joystick"] = "sinclair";
@@ -554,8 +321,9 @@ void readOptions(map<string, string>& options) {
 
         // Remove comments with #
         pos = entry.find("#");
-        if (pos != string::npos)
+        if (pos != string::npos) {
             entry = entry.substr(0, pos);
+        }
 
         // Find if there is a key and value. Otherwise, skip.
         pos = entry.find("=");
@@ -571,20 +339,18 @@ void readOptions(map<string, string>& options) {
     }
 }
 
-size_t getScale(string const& scale) {
-    size_t s = 1;
-    try {
-        s = stoi(scale);
-    } catch (invalid_argument &ia) {
-        cout << "Invalid scale value: '" << scale << "' - " << ia.what() << endl;
-    }
+bool isSpectrum(string const& model) {
 
-    if (s < 1)
-        s = 1;
-    else if (s > 10)
-        s = 10;
+    set<string> models = {"issue2", "issue3", "128", "plus2", "plus2a", "plus3",
+        "48sp", "128sp", "plus2sp", "plus2asp", "plus3sp", "pentagon"};
 
-    cout << "Selected Scale Factor: " << s << endl;
-    return s;
+    return (models.find(model) != models.end());
+}
+
+bool isCpc(string const& model) {
+
+    set<string> models = {"cpc464", "cpc664", "cpc6128", "cpc464es", "cpc664es", "cpc6128es"};
+
+    return (models.find(model) != models.end());
 }
 // vim: et:sw=4:ts=4

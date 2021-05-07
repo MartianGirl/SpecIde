@@ -15,20 +15,21 @@
 
 #pragma once
 
-constexpr size_t FILTER_BZZ_SIZE = 96;
-constexpr size_t FILTER_PSG_SIZE = 96;
-constexpr size_t ULA_CLOCK_48 = 7000000;
-constexpr size_t ULA_CLOCK_128 = 7093800;
-constexpr int FRAME_TIME_48 = 19968;
-constexpr int FRAME_TIME_128 = 19992;
-constexpr int FRAME_TIME_PENTAGON = 20480;
+size_t constexpr FILTER_BZZ_SIZE = 96;
+size_t constexpr FILTER_PSG_SIZE = 96;
+uint32_t constexpr BASE_CLOCK_48 = 7000000;
+uint32_t constexpr BASE_CLOCK_128 = 7093800;
+uint32_t constexpr BASE_CLOCK_CPC = 8000000;
+int constexpr FRAME_TIME_48 = 19968;
+int constexpr FRAME_TIME_128 = 19992;
+int constexpr FRAME_TIME_PENTAGON = 20480;
 
-constexpr size_t SAMPLE_RATE = 44100;
+uint32_t constexpr SAMPLE_RATE = 44100;
 
 enum class SoundRate {
     SOUNDRATE_48K,
     SOUNDRATE_128K,
-    SOUNDRATE_PENTAGON
+    SOUNDRATE_PENTAGON,
+    SOUNDRATE_CPC
 };
-
 // vim: et:sw=4:ts=4

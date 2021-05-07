@@ -14,7 +14,6 @@
  */
 
 #include "Screen.h"
-#include "SoundDefs.h"
 #include "config.h"
 
 #ifdef USE_BOOST_THREADS
@@ -31,35 +30,61 @@ using namespace std::chrono;
 
 #include <cfenv>
 #include <cmath>
+#include <iomanip>
+#include <iostream>
 
 using namespace std;
 using namespace sf;
 
-Screen::Screen(size_t scale) :
-    w(688 * scale), h(576 * scale),
-    window(),
-    modes(sf::VideoMode::getFullscreenModes()),
-    bestMode(sf::VideoMode::getDesktopMode()),
-    skip(ULA_CLOCK_48 / SAMPLE_RATE),
-    pulse(0), sample(skip),
-    fullscreen(false), doubleScanMode(false), smooth(false),
-    aychip(true),
-    syncToVideo(false),
-    scale(scale),
-    xSize(360), ySize(625),
-    delay(FRAME_TIME_48),
-    pad(false),
-    flashTap(false) {
+Screen::Screen(map<string, string> o, vector<string> f) :
+    options(o),
+    files(f),
+    window() {}
 
-    cout << "Selected Full Screen Mode: " << bestMode.width
-        << "x" << bestMode.height << "-" << bestMode.bitsPerPixel << endl;
-    adjust();
+Screen::~Screen() {
 
-    // Create a texture.
-    // For Amstrad CPC and Timex computers, the texture should be at least 720px wide.
-    texture(xSize, ySize);
+    window.close();
+}
 
-    // Load the ZX font, for the menu.
+void Screen::setup() {
+
+    scale = getScale();
+    w *= scale;
+    h *= scale;
+
+    loadFont(); // Probably can be put in the base class.
+    chooseVideoMode();
+
+    fullscreen = (options["fullscreen"] == "yes");
+    cout << "Full screen mode: " << options["fullscreen"] << endl;
+
+    smooth = (options["antialias"] == "yes");
+    cout << "Antialiasing: " << options["antialias"] << endl;
+
+    syncToVideo = (options["sync"] == "yes");
+    cout << "Sync to video: " << options["sync"] << endl;
+}
+
+uint32_t Screen::getScale() {
+
+    uint32_t s = 1;
+    try {
+        s = stoi(options["scale"]);
+    } catch (invalid_argument &ia) {
+        cout << "Invalid scale value: '" << options["scale"] << "' - " << ia.what() << endl;
+    }
+
+    if (s < 1) {
+        s = 1;
+    } else if (s > 10) {
+        s = 10;
+    }
+    cout << "Selected scale factor: " << s << endl;
+    return s;
+}
+
+void Screen::loadFont() {
+
     vector<string> fontPaths;
     string fontName("ZXSpectrum.ttf");
     char* pHome = getenv(SPECIDE_HOME_ENV);
@@ -98,219 +123,33 @@ Screen::Screen(size_t scale) :
         cout << "Could not load menu font." << endl;
         assert(false);
     }
-
-    // ULA parameters should go in an ZX Spectrum specific init function.
-    spectrum.ula.xSize = xSize;
-    spectrum.ula.ySize = ySize;
-
-    channel.open(2, SAMPLE_RATE);
 }
 
-void Screen::run() {
+void Screen::chooseVideoMode() {
 
-    steady_clock::time_point tick = steady_clock::now();
-    steady_clock::time_point frame;
-    steady_clock::time_point wakeup;
+    modes = sf::VideoMode::getFullscreenModes();
+    bestMode = sf::VideoMode::getDesktopMode();
 
-    for (;;) {
-        for (;;) {
-            // Update Spectrum hardware
-            clock();
-
-            if (spectrum.ula.vSync) {
-                // Update the screen
-                update();
-
-                // Delay starting playing sound (if disabled) until first frame
-                // is complete
-                if (!streaming) {
-                    streaming = true;
-                    channel.play();
-                }
-
-                if (!syncToVideo) {
-                    // By not sleeping until the next frame is due, we get some
-                    // better adjustment
-#ifdef USE_BOOST_THREADS
-                    frame = tick + boost::chrono::microseconds(delay);
-                    wakeup = tick + boost::chrono::microseconds(18000);
-#else
-                    frame = tick + std::chrono::microseconds(delay);
-                    wakeup = tick + std::chrono::microseconds(18000);
-#endif
-#ifndef DO_NOT_SLEEP
-                    sleep_until(wakeup);
-#endif
-                    while ((tick = steady_clock::now()) < frame);
-                }
-
-                if (done || menu) break;
-
-                pollEvents();
-                pollCommands();
-            }
-        }
-
-        // Disable sound for menus
-        channel.stop();
-        streaming = false;
-        if (done) return;
-
-        for (;;) {
-            // Menu thingy
-            updateMenu();
-
-            if (!syncToVideo) {
-#ifdef USE_BOOST_THREADS
-                sleep_until(tick + boost::chrono::microseconds(delay));
-#else
-                sleep_until(tick + std::chrono::microseconds(delay));
-#endif
-                tick = steady_clock::now();
-            }
-            if (done) return;
-            if (!menu) break;
-        }
-    }
+    cout << "Selected Full Screen Mode: ";
+    cout << bestMode.width << "x" << bestMode.height << "-" << bestMode.bitsPerPixel << endl;
+    adjustViewPort();
 }
 
-void Screen::clock() {
+void Screen::adjustViewPort() {
 
-    static double remaining = 0;
+    uint32_t divider = 0;
+    do {
+        ++divider;
+        suggestedScansSingle = bestMode.height / divider;
+    } while (suggestedScansSingle > 304); // 312 - 8 VBlank lines.
+    cout << "Selected " << suggestedScansSingle << " scans for single scan mode." << endl;
 
-    if (flashTap && spectrum.allowTapeTraps()) {
-        checkTapeTraps();
-    }
-
-    spectrum.clock();
-
-    if (tape.playing) {
-        if (!pulse--) {
-            spectrum.ula.tapeIn = tape.advance() | 0x80;
-            pulse = tape.sample;
-        }
-    } else {
-        spectrum.ula.tapeIn &= 0x7F;
-    }
-
-    // Generate sound
-    if (!(--sample)) {
-        sample = skip;
-        remaining += tail;
-        if (remaining >= 1.0) {
-            ++sample;
-            remaining -= 1.0;
-        }
-
-        spectrum.sample();
-        channel.push(spectrum.l, spectrum.r);
-    }
-}
-
-void Screen::update() {
-
-    // These conditions cannot happen at the same time:
-    // - HSYNC and VSYNC only happen during the blanking interval.
-    // - VSYNC happens at the end of blanking interval. (0x140)
-    // - HSYNC happens at the beginning of HSYNC interval. (0x170-0x178)
-    // If not blanking, draw.
-
-    spectrum.ula.vSync = false;
-
-    scrTexture.update(reinterpret_cast<Uint8*>(doubleScanMode ?
-                spectrum.ula.pixelsX2 : spectrum.ula.pixelsX1));
-    window.clear(Color::Black);
-    window.draw(scrSprite);
-    window.display();
-
-    if (tape.pulseData.size()) {
-        char str[64];
-        unsigned int percent = 100 * tape.pointer / tape.pulseData.size();
-        snprintf(str, 64, "SpecIde %d.%d.%d [%03u%%]",
-                SPECIDE_VERSION_MAJOR,
-                SPECIDE_VERSION_MINOR,
-                SPECIDE_VERSION_TWEAK,
-                percent);
-        window.setTitle(str);
-    }
-
-    tape.is48K = spectrum.set48;
-}
-
-void Screen::updateMenu() {
-
-    RectangleShape rectangle(sf::Vector2f(100, 100));
-    rectangle.setFillColor(Color::White - Color(0, 0, 0, 64));
-    rectangle.setOutlineThickness(2);
-    rectangle.setOutlineColor(Color::Black);
-    rectangle.setSize(Vector2f(324, 232));
-    if (fullscreen) {
-        rectangle.setPosition(xOffset + 6 * sScale, yOffset + 6 * sScale);
-        rectangle.setScale(Vector2f(sScale, sScale));
-    } else {
-        // Windowed mode already applies a x2 scale factor, so single scan windows are the same size
-        // as double scan ones.
-        rectangle.setPosition(12 * scale, 12 * scale);
-        rectangle.setScale(Vector2f(2 * static_cast<float>(scale), 2 * static_cast<float>(scale)));
-    }
-
-    Text text;
-    text.setFont(zxFont);
-    text.setFillColor(Color::Black);
-
-    stringstream ss;
-    ss << "Function keys:" << endl;
-    ss << "F1:    This help." << endl;
-    ss << "F2:    Fullscreen." << endl;
-    ss << "S-F2:  Antialiasing." << endl;
-    ss << "F3:    Save DSK file to disk." << endl;
-    ss << "S-F3:  Create empty DSK image." << endl;
-    ss << "F4:    Select next disk image." << endl;
-    ss << "S-F4:  Select previous disk image." << endl;
-    ss << "F5:    Reset." << endl;
-    ss << "F6:    Clear SAVE buffer." << endl;
-    ss << "S-F6:  Add FlashTAP to SAVE buffer." << endl;
-    ss << "F7:    Write SAVE buffer to disk." << endl;
-    ss << "S-F7:  Use SAVE buffer as FlashTAP." << endl;
-    ss << "F8:    Toggle PSG: AY-3-8912/YM-2149." << endl;
-    ss << "F9:    Sound on / off." << endl;
-    ss << "S-F9:  Tape sound on / off." << endl;
-    ss << "F10:   Exit emulator." << endl;
-    ss << "F11:   Play / stop tape." << endl;
-    ss << "S-F11: Set mark in tape." << endl;
-    ss << "F12:   Rewind tape to start." << endl;
-    ss << "S-F12: Rewind tape to mark." << endl;
-    ss << endl;
-    text.setString(ss.str());
-
-    if (fullscreen) {
-        text.setPosition(xOffset + 36, yOffset + 36);
-        text.setCharacterSize(static_cast<uint32_t>(8 * sScale));
-    } else {
-        text.setPosition(36, 36);
-        text.setCharacterSize(static_cast<uint32_t>(16 * scale));
-    }
-
-    window.clear(Color::Black);
-    window.draw(scrSprite);
-    window.draw(rectangle);
-    window.draw(text);
-    window.display();
-
-    Event event;
-    while (window.pollEvent(event)) {
-        if (event.type == Event::KeyPressed) {
-            switch (event.key.code) {
-                case Keyboard::Menu:    // fall-through
-                case Keyboard::F1:
-                    menu = false;
-                    break;
-
-                default:
-                    break;
-            }
-        }
-    }
+    divider = 0;
+    do {
+        ++divider;
+        suggestedScansDouble = bestMode.height / divider;
+    } while (suggestedScansDouble > 608); // 624 - 16 VBlank lines.
+    cout << "Selected " << suggestedScansDouble << " scans for double scan mode." << endl;
 }
 
 void Screen::reopenWindow(bool fs) {
@@ -330,15 +169,16 @@ void Screen::reopenWindow(bool fs) {
                 sf::VideoMode(static_cast<sf::Uint32>(w), static_cast<sf::Uint32>(h)),
                 str, sf::Style::Close | sf::Style::Titlebar);
     }
-    spectrum.ula.pollKeys = window.hasFocus();
 }
 
 void Screen::setFullScreen(bool fs) {
 
-    size_t suggestedScans = doubleScanMode ? suggestedScansDouble : suggestedScansSingle;
-    size_t xModifier = doubleScanMode ? 2 : 1;
-    size_t yModifier = doubleScanMode ? 1 : 2;
-    size_t totalScans = doubleScanMode ? 625 : 312;
+    fullscreen = fs;
+
+    uint_fast32_t suggestedScans = doubleScanMode ? suggestedScansDouble : suggestedScansSingle;
+    uint_fast32_t xModifier = doubleScanMode ? 2 : 1;
+    uint_fast32_t yModifier = doubleScanMode ? 1 : 2;
+    uint_fast32_t totalScans = doubleScanMode ? 625 : 312;
 
     if (fs) {
         // Use best mode available.
@@ -347,22 +187,21 @@ void Screen::setFullScreen(bool fs) {
         yScale = nearbyintf(bestMode.height / static_cast<float>(suggestedScans));
 
         // Adjust depending on the vertical scale.
-        sScale = yScale;
-        xOffset = (bestMode.width - (xModifier * xSize * sScale)) / 2;
+        xOffset = (bestMode.width - (xModifier * xSize * yScale)) / 2;
         yOffset = 0;
 
         cout << "XScale: " << fixed << setprecision(3) << xScale << " ";
         cout << "YScale: " << fixed << setprecision(3) << yScale << endl;
-        cout << "Using scale " << fixed << setprecision(3) << sScale << endl;
+        cout << "Using scale " << fixed << setprecision(3) << yScale << endl;
 
-        size_t start = (totalScans - suggestedScans) / 2;
-        size_t lines = bestMode.height;
+        uint_fast32_t start = (totalScans - suggestedScans) / 2;
+        uint_fast32_t lines = bestMode.height;
 
         scrSprite.setTexture(scrTexture);
         scrSprite.setTextureRect(sf::IntRect(8, static_cast<uint_fast32_t>(start),
                     static_cast<uint_fast32_t>(xSize - 8), static_cast<uint_fast32_t>(lines)));
         scrSprite.setPosition(xOffset, yOffset);
-        scrSprite.setScale(Vector2f(xModifier * sScale, sScale));
+        scrSprite.setScale(Vector2f(xModifier * yScale, yScale));
     } else {
         // In this case we want to have the same windows size for double scan modes and
         // single scan modes. 588 displayable lines are assumed.
@@ -384,234 +223,7 @@ void Screen::setSmooth(bool sm) {
     scrTexture.setSmooth(sm);
 }
 
-void Screen::setTapeSound(bool value) {
-
-    tapeSound = value;
-    spectrum.ula.tapeSound = !tape.playing || tapeSound;
-}
-
-void Screen::pollEvents() {
-
-    Event event;
-    while (window.pollEvent(event)) {
-        switch (event.type) {
-            case Event::Closed:
-                channel.stop();
-                done = true;
-                break;
-
-            case Event::GainedFocus:
-            case Event::LostFocus:
-                spectrum.ula.pollKeys = window.hasFocus();
-                break;
-
-            case Event::KeyPressed:
-                switch (event.key.code) {
-                    case Keyboard::Menu:    // fall-through
-                    case Keyboard::F1:      // Show menu
-                        menu = true;
-                        break;
-                    case Keyboard::F2:  // Window/Fullscreen
-                        if (event.key.shift) {
-                            smooth = !smooth;
-                            setSmooth(smooth);
-                        } else {
-                            fullscreen = !fullscreen;
-                            reopenWindow(fullscreen);
-                            setFullScreen(fullscreen);
-                        }
-                        break;
-                    case Keyboard::F3:  // Save DSK to disk
-                        if (event.key.shift) {
-                            spectrum.fdc765.drive[0].emptyDisk();
-                        } else {
-                            spectrum.fdc765.drive[0].saveDisk();
-                        }
-                        break;
-                    case Keyboard::F4:  // Select DSK from list
-                        if (event.key.shift) {
-                            spectrum.fdc765.drive[0].prevDisk();
-                        } else {
-                            spectrum.fdc765.drive[0].nextDisk();
-                        }
-                        break;
-                    case Keyboard::F5:  // Reset Spectrum
-                        spectrum.reset();
-                        break;
-                    case Keyboard::F6:  // Clear save data
-                        if (event.key.shift) {
-                            tape.appendLoadData();
-                        } else {
-                            tape.clearSaveData();
-                        }
-                        break;
-                    case Keyboard::F7:  // Write save data
-                        if (event.key.shift) {
-                            tape.useSaveData = !tape.useSaveData;
-                            tape.selectTapData();
-                        } else {
-                            tape.writeSaveData();
-                        }
-                        break;
-                    case Keyboard::F8:  // PSG chip type
-                        aychip = !aychip;
-                        spectrum.psgChip(aychip);
-                        break;
-                    case Keyboard::F9:  // Toggle sound ON/OFF
-                        if (event.key.shift) {
-                            setTapeSound(!tapeSound);
-                        } else {
-                            playSound = !playSound;
-                            spectrum.ula.playSound = playSound;
-                            spectrum.psgPlaySound(psgSound && playSound);
-                        }
-                        break;
-                    case Keyboard::F10: // Quit
-                        done = true;
-                        break;
-                    case Keyboard::F11: // Play/Stop tape
-                        if (event.key.shift) {
-                            tape.resetCounter();
-                        } else {
-                            tape.play();
-                            setTapeSound(tapeSound);
-                        }
-                        break;
-                    case Keyboard::F12:
-                        if (event.key.shift) {
-                            tape.rewind(tape.counter);
-                        } else {
-                            tape.rewind();
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
-                break;
-
-            case Event::JoystickMoved:
-                switch (event.joystickMove.axis) {
-                    case Joystick::X:
-                    case Joystick::U:
-                    case Joystick::PovX:
-                        if (spectrum.kempston) {
-                            spectrum.joystick &= 0xFC;
-                            if (event.joystickMove.position < -34.0) {
-                                spectrum.joystick |= 0x02;
-                            } else if (event.joystickMove.position > 34.0) {
-                                spectrum.joystick |= 0x01;
-                            }
-                        } else {
-                            spectrum.ula.keys[3] |= 0x018;
-                            if (event.joystickMove.position < -34.0) {
-                                spectrum.ula.keys[3] &= 0xEF;
-                            } else if (event.joystickMove.position > 34.0) {
-                                spectrum.ula.keys[3] &= 0xF7;
-                            }
-                        }
-                        break;
-
-                    case Joystick::Y:
-                    case Joystick::V:
-                    case Joystick::PovY:
-                        if (spectrum.kempston) {
-                            spectrum.joystick &= 0xF3;
-                            if (event.joystickMove.position < -34.0) {
-                                spectrum.joystick |= 0x08;
-                            } else if (event.joystickMove.position > 34.0) {
-                                spectrum.joystick |= 0x04;
-                            }
-                        } else {
-                            spectrum.ula.keys[3] |= 0x06;
-                            if (event.joystickMove.position < -34.0) {
-                                spectrum.ula.keys[3] &= 0xFD;
-                            } else if (event.joystickMove.position > 34.0) {
-                                spectrum.ula.keys[3] &= 0xFB;
-                            }
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
-                break;
-
-            case Event::JoystickButtonPressed:
-                if (pad) {
-                    switch (event.joystickButton.button) {
-                        case 1: // Emulate press 'B'
-                            spectrum.ula.keys[0] &= 0xEF; break;
-                        case 2: // Emulate press 'N'
-                            spectrum.ula.keys[0] &= 0xF7; break;
-                        case 3: // Emulate press 'V'
-                            spectrum.ula.keys[7] &= 0xEF; break;
-                        case 4: // Emulate press 'C'
-                            spectrum.ula.keys[7] &= 0xF7; break;
-                        case 5: // Emulate press 'X'
-                            spectrum.ula.keys[7] &= 0xFB; break;
-                        case 6: // Emulate press 'G'
-                            spectrum.ula.keys[6] &= 0xEF; break;
-                        case 7: // Emulate press 'H'
-                            spectrum.ula.keys[1] &= 0xEF; break;
-                        default:    // Other buttons map to the joystick.
-                            if (spectrum.kempston) {
-                                spectrum.joystick |= 0x10;
-                            } else {
-                                spectrum.ula.keys[3] &= 0xFE;   // '0'
-                            }
-                            break;
-                    }
-                } else {
-                    if (spectrum.kempston) {
-                        spectrum.joystick |= 0x10;
-                    } else {
-                        spectrum.ula.keys[3] &= 0xFE;
-                    }
-                }
-                break;
-
-            case Event::JoystickButtonReleased:
-                if (pad) {
-                    switch (event.joystickButton.button) {
-                        case 1: // Emulate release 'B'
-                            spectrum.ula.keys[0] |= 0x10; break;
-                        case 2: // Emulate release 'N'
-                            spectrum.ula.keys[0] |= 0x08; break;
-                        case 3: // Emulate release 'V'
-                            spectrum.ula.keys[7] |= 0x10; break;
-                        case 4: // Emulate release 'C'
-                            spectrum.ula.keys[7] |= 0x08; break;
-                        case 5: // Emulate release 'X'
-                            spectrum.ula.keys[7] |= 0x04; break;
-                        case 6: // Emulate release 'G'
-                            spectrum.ula.keys[6] |= 0x10; break;
-                        case 7: // Emulate release 'H'
-                            spectrum.ula.keys[1] |= 0x10; break;
-                        default:    // Other buttons map to the joystick.
-                            if (spectrum.kempston) {
-                                spectrum.joystick &= 0xEF;
-                            } else {
-                                spectrum.ula.keys[3] |= 0x01;
-                            }
-                            break;
-                    }
-                } else {
-                    if (spectrum.kempston) {
-                        spectrum.joystick &= 0xEF;
-                    } else {
-                        spectrum.ula.keys[3] |= 0x01;
-                    }
-                }
-                break;
-
-            default:
-                break;
-        }
-    }
-}
-
-void Screen::texture(size_t x, size_t y) {
+void Screen::texture(uint_fast32_t x, uint_fast32_t y) {
 
     cout << "Allocating texture..." << endl;
     if (!scrTexture.create(static_cast<Uint32>(x), static_cast<Uint32>(y))) {
@@ -621,145 +233,33 @@ void Screen::texture(size_t x, size_t y) {
     scrTexture.setSmooth(false);
 }
 
-void Screen::adjust() {
+FileTypes Screen::guessFileType(string const& fileName) {
 
-    size_t divider = 0;
-
-    do {
-        ++divider;
-        suggestedScansSingle = bestMode.height / divider;
-    } while (suggestedScansSingle > 304); // 312 - 8 VBlank lines.
-    cout << "Selected " << suggestedScansSingle
-        << " scans for single scan mode." << endl;
-
-    divider = 0;
-    do {
-        ++divider;
-        suggestedScansDouble = bestMode.height / divider;
-    } while (suggestedScansDouble > 608); // 624 - 16 VBlank lines.
-    cout << "Selected " << suggestedScansDouble
-        << " scans for double scan mode." << endl;
-}
-
-void Screen::setSoundRate(SoundRate rate) {
-
-    double value = 0;
-    switch (rate) {
-        case SoundRate::SOUNDRATE_128K:
-            value = static_cast<double>(ULA_CLOCK_128) / static_cast<double>(SAMPLE_RATE);
-            delay = FRAME_TIME_128;
-            break;
-        case SoundRate::SOUNDRATE_PENTAGON:
-            value = static_cast<double>(ULA_CLOCK_48) / static_cast<double>(SAMPLE_RATE);
-            delay = FRAME_TIME_PENTAGON;
-            break;
-        default:
-            value = static_cast<double>(ULA_CLOCK_48) / static_cast<double>(SAMPLE_RATE);
-            delay = FRAME_TIME_48;
-            break;
-    }
-    skip = static_cast<uint32_t>(value);
-    tail = value - skip;
-    sample = skip;
-}
-
-void Screen::checkTapeTraps() {
-
-    switch (spectrum.z80.pc.w) {
-        case 0x056D:    // LD_START
-            if (tape.tapData.size()) {
-                trapLdStart();
-            }
-            break;
-
-        case 0x04D1:    // SA_FLAG
-            trapSaBytes();
-            break;
-
-        default:
-            break;
-    }
-}
-
-void Screen::writeMemory(uint_fast16_t a, uint_fast8_t d) {
-
-    a &= 0xFFFF;
-    if (a > 0x3FFF) { // Don't write ROM.
-        spectrum.map[a >> 14][a & 0x3FFF] = d;
-    }
-}
-
-uint_fast8_t Screen::readMemory(uint_fast16_t a) {
-
-    a &= 0xFFFF;
-    return spectrum.map[a >> 14][a & 0x3FFF];
-}
-
-void Screen::trapLdStart() {
-
-    // Find first block that matches flag byte (Flag is in AF')
-    while (tape.foundTapBlock(spectrum.z80.af_.b.h) == false) {
-        tape.nextTapBlock();
+    // Parse the file name, find the extension. We'll decide what to do
+    // based on this.
+    size_t dot = fileName.find_last_of('.');
+    string extension;
+    if (dot != string::npos) {
+        // Get the extension in lowercase characters.
+        extension = fileName.substr(dot);
+        for (size_t ii = 0; ii < extension.size(); ++ii) {
+            extension[ii] = tolower(extension[ii]);
+        }
     }
 
-    // Get parameters from CPU registers
-    uint16_t start = spectrum.z80.ix.w;
-    uint16_t bytes = spectrum.z80.de.w;
-    uint16_t block = tape.getBlockLength();
-
-    if (block < bytes) {
-        // Load error if not enough bytes.
-        spectrum.z80.af.b.l &= 0xFE;
+    if (extension == ".tzx") {
+        return FileTypes::FILETYPE_TZX;
+    } else if (extension == ".cdt") {
+        return FileTypes::FILETYPE_TZX;
+    } else if (extension == ".tap") {
+        return FileTypes::FILETYPE_TAP;
+    } else if (extension == ".dsk") {
+        return FileTypes::FILETYPE_DSK;
+    } else if (extension == ".csw") {
+        return FileTypes::FILETYPE_CSW;
     } else {
-        block = bytes;
-        spectrum.z80.af.b.l |= 0x01;
+        return FileTypes::FILETYPE_ERR;
     }
-    spectrum.z80.ix.w = (spectrum.z80.ix.w + block) & 0xFFFF;
-    spectrum.z80.de.w -= block;
-
-    // Dump block to memory.
-    for (uint_fast16_t ii = 0; ii < block; ++ii) {
-        writeMemory(start + ii, tape.getBlockByte(ii + 3));
-    }
-
-    // Advance tape
-    tape.nextTapBlock();
-
-    // Force RET
-    spectrum.z80.decode(0xC9);
-    spectrum.z80.startInstruction();
-
-    if (tape.tapPointer == 0) {
-        tape.rewind();
-    }
-}
-
-void Screen::trapSaBytes() {
-
-    uint16_t start = spectrum.z80.ix.w;
-    uint16_t bytes = spectrum.z80.de.w + 2;
-    uint8_t checksum;
-
-    tape.saveData.push_back(bytes & 0x00FF);
-    tape.saveData.push_back((bytes & 0xFF00) >> 8);
-    tape.saveData.push_back(spectrum.z80.af.b.h);
-    bytes -= 2;
-
-    spectrum.z80.ix.w = (spectrum.z80.ix.w + bytes) & 0xFFFF;
-    spectrum.z80.de.w -= bytes;
-
-    checksum = spectrum.z80.af.b.h;
-    for (uint_fast16_t ii = 0; ii < bytes; ++ii) {
-        uint_fast8_t byte = readMemory(start + ii);
-        tape.saveData.push_back(byte);
-        checksum ^= byte;
-    }
-    
-    tape.saveData.push_back(checksum);
-
-    // Force RET
-    spectrum.z80.decode(0xC9);
-    spectrum.z80.startInstruction();
 }
 
 void Screen::pollCommands() {
@@ -773,5 +273,4 @@ void Screen::pollCommands() {
         }
     }
 }
-
 // vim: et:sw=4:ts=4

@@ -90,7 +90,8 @@ class ULA {
         static uint8_t averageTable[0x100][0x100];
         static uint32_t pixelsX1[0x38000];
         static uint32_t pixelsX2[0x38000];
-        uint_fast32_t xSize, ySize;
+        static uint_fast32_t constexpr X_SIZE = 360;
+        static uint_fast32_t constexpr Y_SIZE = 625;
         uint_fast32_t xPos = 0;
         uint_fast32_t yPos = 0;
         uint_fast32_t yInc = 1;

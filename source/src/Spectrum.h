@@ -21,6 +21,11 @@
 #include "PSG.h"
 #include "FDC765.h"
 //#include "FD1793.h"
+#include "Tape.h"
+
+#include "SoundDefs.h"
+#include "SoundChannel.h"
+
 #include "config.h"
 
 #include <fstream>
@@ -88,6 +93,11 @@ class Spectrum {
         FDC765 fdc765;
         /** BetaDisk 128 floppy disk controller. (WD1793 or compatible.) */
         //FD1793 fd1793;
+        /** Tape player. */
+        Tape tape;
+
+        /** Sound channel object. */
+        SoundChannel channel;
 
         /** Byte in bus. Used in floating bus effects. */
         uint_fast8_t bus = 0xFF;
@@ -106,6 +116,8 @@ class Spectrum {
         bool plus3Disk = false;
         /** Emulate BetaDisk128 disk interface. */
         bool betaDisk128 = false;
+        /** Trap ROM tape routine. */
+        bool flashTap = false;
         /** Emulate so many PSGs. */
         size_t psgChips = 0;
         /** Currently selected PSG. */
@@ -121,10 +133,12 @@ class Spectrum {
         /** Currently selected ROM page on $0000-$3FFF. */
         uint_fast8_t romBank = 0x00;
 
-        /** Sound byte in left sound channel. (Beeper + AY + Covox) */
-        int l = 0;
-        /** Sound byte in right sound channel. (Beeper + AY + Covox) */
-        int r = 0;
+        /** Number of cycles before next sound sample. */
+        uint32_t skip;
+        /** Tail of cycles before next sound sample. */
+        double tail;
+        /** Counter of cycles before next sound sample. */
+        uint32_t skipCycles = 0;
         /** Sound byte in Covox port. */
         int covox = 0;
         /** Array of samples sent to the Covox. */
@@ -166,6 +180,14 @@ class Spectrum {
         /** Stereo mode: ABC, ACB, Turbosound modes. */
         StereoMode stereo = StereoMode::STEREO_MONO;
 
+        /** Frame time in milliseconds. */
+        int frame;
+
+        /**
+         * Run the emulation for a complete frame.
+         */
+        void run();
+
         /**
          * Clock the Spectrum. This happens at 7MHz.
          *
@@ -185,6 +207,13 @@ class Spectrum {
         void reset();
 
         /**
+         * Start or stop the sound channel.
+         *
+         * @param play New status of the sound channel, on/off.
+         */
+        void playSound(bool play);
+
+        /**
          * Load the correct ROMs for the selected model.
          *
          * @param RomVariant The model whose ROMs will be loaded.
@@ -192,29 +221,60 @@ class Spectrum {
         void loadRoms(RomVariant model);
 
         /**
-         * Select ZX Spectrum 128K "toastrack" timings and settings.
+         * Select issue 2 ZX Spectrum 48K timings and settings.
+         *
+         * @param variant ROM variant.
          */
-        void set128K();
+        void setIssue2(RomVariant variant);
+
+        /**
+         * Select issue 3 ZX Spectrum 48K timings and settings.
+         *
+         * @param variant ROM variant.
+         */
+        void setIssue3(RomVariant variant);
+
+        /**
+         * Select ZX Spectrum 128K "toastrack" timings and settings.
+         *
+         * @param variant ROM variant.
+         */
+        void set128K(RomVariant variant);
 
         /**
          * Select ZX Spectrum +2 (grey case) timings and settings.
+         *
+         * @param variant ROM variant.
          */
-        void setPlus2();
+        void setPlus2(RomVariant variant);
 
         /**
          * Select ZX Spectrum +2A (black case) timings and settings.
+         *
+         * @param variant ROM variant.
          */
-        void setPlus2A();
+        void setPlus2A(RomVariant variant);
 
         /**
          * Select ZX Spectrum +3 timings and settings.
+         *
+         * @param variant ROM variant.
          */
-        void setPlus3();
+        void setPlus3(RomVariant variant);
 
         /**
          * Select ZX Pentagon 128 timings and settings.
+         *
+         * @param variant ROM variant.
          */
-        void setPentagon();
+        void setPentagon(RomVariant variant);
+
+        /**
+         * Adjust sample rate to CPU clock rate.
+         *
+         * @rate The selected sound rate.
+         */
+        void setSoundRate(SoundRate rate);
 
         /**
          * Update pagination registers, and update the memory map.
@@ -295,11 +355,6 @@ class Spectrum {
         void psgPlaySound(bool play);
 
         /**
-         * Check the Z80 status and paged ROM to check tape traps safely.
-         */
-        bool allowTapeTraps();
-
-        /**
          * Mix and sample sound from all sources (Beeper, tape, PSG, Covox).
          */
         void sample();
@@ -308,6 +363,36 @@ class Spectrum {
          * Sample the Covox.
          */
         int dac();
-};
 
+        /**
+         * Check if ZX Spectrum is about to execute ROM tape routines.
+         */
+        void checkTapeTraps();
+
+        /**
+         * Write a memory byte using the 64KB map.
+         *
+         * @param a Memory address to write.
+         * @param d Value to write.
+         */
+        void writeMemory(uint_fast16_t a, uint_fast8_t d);
+
+        /**
+         * Read a memory byte from the 64KB map.
+         *
+         * @param a Memory address to read.
+         * @return Read byte.
+         */
+        uint_fast8_t readMemory(uint_fast16_t a);
+
+        /**
+         * Trap LD-START routine and dump block from tape to memory.
+         */
+        void trapLdStart();
+
+        /**
+         * Trap SA-FLAG routine and write block from memory to tape.
+         */
+        void trapSaBytes();
+};
 // vim: et:sw=4:ts=4

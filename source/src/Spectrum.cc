@@ -34,6 +34,8 @@ Spectrum::Spectrum() :
     setPage(2, 2, false, false);
     setPage(3, 0, false, false);
     setScreenPage(5);
+
+    channel.open(2, SAMPLE_RATE);
 }
 
 void Spectrum::loadRoms(RomVariant model) {
@@ -141,7 +143,39 @@ void Spectrum::loadRoms(RomVariant model) {
     } while (fail && j < romPaths.size());
 }
 
-void Spectrum::set128K() {
+void Spectrum::setIssue2(RomVariant variant) {
+
+    spectrum128K = false;
+    spectrumPlus2A = false;
+    plus3Disk = false;
+    betaDisk128 = false;
+    psgChips = 0;
+    mask = 0x0001;
+    ula.setUlaVersion(0);
+
+    loadRoms(variant);
+    setSoundRate(SoundRate::SOUNDRATE_48K);
+
+    reset();
+}
+
+void Spectrum::setIssue3(RomVariant variant) {
+
+    spectrum128K = false;
+    spectrumPlus2A = false;
+    plus3Disk = false;
+    betaDisk128 = false;
+    psgChips = 0;
+    mask = 0x0001;
+    ula.setUlaVersion(1);
+
+    loadRoms(variant);
+    setSoundRate(SoundRate::SOUNDRATE_48K);
+
+    reset();
+}
+
+void Spectrum::set128K(RomVariant variant) {
 
     spectrum128K = true;
     spectrumPlus2A = false;
@@ -149,10 +183,15 @@ void Spectrum::set128K() {
     betaDisk128 = false;
     psgChips = 1;
     mask = 0x0001;
+    ula.setUlaVersion(2);
+
+    loadRoms(variant);
+    setSoundRate(SoundRate::SOUNDRATE_128K);
+
     reset();
 }
 
-void Spectrum::setPlus2() {
+void Spectrum::setPlus2(RomVariant variant) {
 
     spectrum128K = true;
     spectrumPlus2A = false;
@@ -160,10 +199,15 @@ void Spectrum::setPlus2() {
     betaDisk128 = false;
     psgChips = 1;
     mask = 0x0001;
+    ula.setUlaVersion(3);
+
+    loadRoms(variant);
+    setSoundRate(SoundRate::SOUNDRATE_128K);
+
     reset();
 }
 
-void Spectrum::setPlus2A() {
+void Spectrum::setPlus2A(RomVariant variant) {
 
     spectrum128K = false;
     spectrumPlus2A = true;
@@ -171,10 +215,15 @@ void Spectrum::setPlus2A() {
     betaDisk128 = false;
     psgChips = 1;
     mask = 0x0004;
+    ula.setUlaVersion(4);
+
+    loadRoms(variant);
+    setSoundRate(SoundRate::SOUNDRATE_128K);
+
     reset();
 }
 
-void Spectrum::setPlus3() {
+void Spectrum::setPlus3(RomVariant variant) {
 
     spectrum128K = false;
     spectrumPlus2A = true;
@@ -182,10 +231,15 @@ void Spectrum::setPlus3() {
     betaDisk128 = false;
     psgChips = 1;
     mask = 0x0004;
+    ula.setUlaVersion(4);
+
+    loadRoms(variant);
+    setSoundRate(SoundRate::SOUNDRATE_128K);
+
     reset();
 }
 
-void Spectrum::setPentagon() {
+void Spectrum::setPentagon(RomVariant variant) {
 
     spectrum128K = true;
     spectrumPlus2A = false;
@@ -193,7 +247,59 @@ void Spectrum::setPentagon() {
     betaDisk128 = true;
     psgChips = 1;
     mask = 0xFFFF;
+    ula.setUlaVersion(5);
+
+    loadRoms(variant);
+    setSoundRate(SoundRate::SOUNDRATE_PENTAGON);
+
     reset();
+}
+
+void Spectrum::playSound(bool play) {
+
+    static bool playing = false;
+    if (!playing && play) {
+        channel.play();
+        playing = true;
+    } else if (playing && !play) {
+        channel.stop();
+        playing = false;
+    }
+}
+
+void Spectrum::run() {
+
+    static double remaining = 0;
+
+    while (!ula.vSync) {
+        if (flashTap) {
+            checkTapeTraps();
+        }
+
+        clock();
+
+        if (tape.playing) {
+            if (!tape.sample--) {
+                ula.tapeIn = tape.advance() | 0x80;
+            }
+        } else {
+            ula.tapeIn &= 0x7F;
+        }
+
+        // Generate sound. This maybe can be done using the same counter?
+        if (!(--skipCycles)) {
+            skipCycles = skip;
+            remaining += tail;
+            if (remaining >= 1.0) {
+                ++skipCycles;
+                remaining -= 1.0;
+            }
+
+            sample();
+        }
+    }
+
+    ula.vSync = false;
 }
 
 void Spectrum::clock() {
@@ -460,8 +566,7 @@ void Spectrum::updatePage(uint_fast8_t reg) {
             }
         } else {                    // Normal pagination mode.
             ramBank = pageRegs & 0x0007;
-            romBank =
-                ((pageRegs & 0x0010) >> 4) | ((pageRegs & 0x0400) >> 9);
+            romBank = ((pageRegs & 0x0010) >> 4) | ((pageRegs & 0x0400) >> 9);
 
             setPage(0, romBank, true, false);
             setPage(1, 5, false, true);
@@ -470,7 +575,7 @@ void Spectrum::updatePage(uint_fast8_t reg) {
 
             rom48 = ((spectrumPlus2A && romBank == 3)
                     || (spectrum128K && romBank == 1));
-            set48 = (pageRegs & 0x0020);
+            tape.is48K = set48 = (pageRegs & 0x0020);
         }
     }
 }
@@ -493,11 +598,11 @@ void Spectrum::reset() {
 
     if (spectrum128K || spectrumPlus2A) {
         pageRegs = 0x0000;
-        set48 = false;
+        tape.is48K = set48 = false;
         rom48 = false;
     } else {
         pageRegs = 0x0020;
-        set48 = true;
+        tape.is48K = set48 = true;
         rom48 = true;
     }
 }
@@ -571,7 +676,8 @@ void Spectrum::psgChip(bool aychip) {
 
 void Spectrum::sample() {
 
-    l = r = ula.sample() + dac();
+    int l = ula.sample() + dac();
+    int r = l;
     psgSample();
 
     switch (stereo) {
@@ -653,6 +759,8 @@ void Spectrum::sample() {
             r += psg[0].channelC;
             break;
     }
+
+    channel.push(l, r);
 }
 
 int Spectrum::dac() {
@@ -684,10 +792,124 @@ void Spectrum::setSnowPage(uint_fast8_t page) {
     sno = &ram[page * (2 << 14)];
 }
 
-bool Spectrum::allowTapeTraps() {
+void Spectrum::checkTapeTraps() {
 
-    return rom48 && (z80.state == Z80State::ST_OCF_T4L_RFSH2);
+    if (rom48 && (z80.state == Z80State::ST_OCF_T4L_RFSH2)) {
+        switch (z80.pc.w) {
+            case 0x056D:    // LD_START
+                if (tape.tapData.size()) {
+                    trapLdStart();
+                }
+                break;
+            case 0x04D1:    // SA_FLAG
+                trapSaBytes();
+                break;
+            default:
+                break;
+        }
+    }
 }
 
+void Spectrum::writeMemory(uint_fast16_t a, uint_fast8_t d) {
 
+    a &= 0xFFFF;
+    if (a > 0x3FFF) { // Don't write ROM.
+        map[a >> 14][a & 0x3FFF] = d;
+    }
+}
+
+uint_fast8_t Spectrum::readMemory(uint_fast16_t a) {
+
+    a &= 0xFFFF;
+    return map[a >> 14][a & 0x3FFF];
+}
+
+void Spectrum::trapLdStart() {
+
+    // Find first block that matches flag byte (Flag is in AF')
+    while (tape.foundTapBlock(z80.af_.b.h) == false) {
+        tape.nextTapBlock();
+    }
+
+    // Get parameters from CPU registers
+    uint16_t start = z80.ix.w;
+    uint16_t bytes = z80.de.w;
+    uint16_t block = tape.getBlockLength();
+
+    if (block < bytes) {
+        // Load error if not enough bytes.
+        z80.af.b.l &= 0xFE;
+    } else {
+        block = bytes;
+        z80.af.b.l |= 0x01;
+    }
+    z80.ix.w = (z80.ix.w + block) & 0xFFFF;
+    z80.de.w -= block;
+
+    // Dump block to memory.
+    for (uint_fast16_t ii = 0; ii < block; ++ii) {
+        writeMemory(start + ii, tape.getBlockByte(ii + 3));
+    }
+
+    // Advance tape
+    tape.nextTapBlock();
+
+    // Force RET
+    z80.decode(0xC9);
+    z80.startInstruction();
+
+    if (tape.tapPointer == 0) {
+        tape.rewind();
+    }
+}
+
+void Spectrum::trapSaBytes() {
+
+    uint16_t start = z80.ix.w;
+    uint16_t bytes = z80.de.w + 2;
+    uint8_t checksum;
+
+    tape.saveData.push_back(bytes & 0x00FF);
+    tape.saveData.push_back((bytes & 0xFF00) >> 8);
+    tape.saveData.push_back(z80.af.b.h);
+    bytes -= 2;
+
+    z80.ix.w = (z80.ix.w + bytes) & 0xFFFF;
+    z80.de.w -= bytes;
+
+    checksum = z80.af.b.h;
+    for (uint_fast16_t ii = 0; ii < bytes; ++ii) {
+        uint_fast8_t byte = readMemory(start + ii);
+        tape.saveData.push_back(byte);
+        checksum ^= byte;
+    }
+
+    tape.saveData.push_back(checksum);
+
+    // Force RET
+    z80.decode(0xC9);
+    z80.startInstruction();
+}
+
+void Spectrum::setSoundRate(SoundRate rate) {
+
+    double value = 0;
+    switch (rate) {
+        case SoundRate::SOUNDRATE_128K:
+            value = static_cast<double>(BASE_CLOCK_128) / static_cast<double>(SAMPLE_RATE);
+            frame = FRAME_TIME_128;
+            break;
+        case SoundRate::SOUNDRATE_PENTAGON:
+            value = static_cast<double>(BASE_CLOCK_48) / static_cast<double>(SAMPLE_RATE);
+            frame = FRAME_TIME_PENTAGON;
+            break;
+        default:
+            value = static_cast<double>(BASE_CLOCK_48) / static_cast<double>(SAMPLE_RATE);
+            frame = FRAME_TIME_48;
+            break;
+    }
+    skip = static_cast<uint32_t>(value);
+    tail = value - skip;
+    skipCycles = skip;
+}
 // vim: et:sw=4:ts=4

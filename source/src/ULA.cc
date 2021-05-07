@@ -287,19 +287,19 @@ void ULA::paint() {
 
         switch (scanlines) {
             case 1:     // Scanlines
-                pixelsX2[(xSize * (yPos + frame)) + xPos] = col;
+                pixelsX2[(X_SIZE * (yPos + frame)) + xPos] = col;
                 break;
 
             case 2:     // Averaged scanlines
                 {
-                    uint32_t *ptr = pixelsX2 + (2 * (yPos * xSize + xPos));
+                    uint32_t *ptr = pixelsX2 + (2 * (yPos * X_SIZE + xPos));
                     ptr[frame] = col;
-                    pixelsX1[yPos * xSize + xPos] = average(ptr);
+                    pixelsX1[yPos * X_SIZE + xPos] = average(ptr);
                 }
                 break;
 
             default:    // No scanlines
-                pixelsX1[yPos * xSize + xPos] = col;
+                pixelsX1[yPos * X_SIZE + xPos] = col;
                 break;
         }
     }
