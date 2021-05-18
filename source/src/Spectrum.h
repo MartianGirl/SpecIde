@@ -23,6 +23,7 @@
 //#include "FD1793.h"
 #include "Tape.h"
 
+#include "CommonDefs.h"
 #include "SoundDefs.h"
 #include "SoundChannel.h"
 
@@ -33,28 +34,6 @@
 #include <string>
 
 using namespace std;
-
-enum class StereoMode {
-    STEREO_MONO,
-    STEREO_ABC,
-    STEREO_ACB,
-    STEREO_TURBO_MONO,
-    STEREO_TURBO_ABC,
-    STEREO_TURBO_ACB,
-    STEREO_NEXT
-};
-
-enum class RomVariant {
-    ROM_48_EN,
-    ROM_48_ES,
-    ROM_128_EN,
-    ROM_128_ES,
-    ROM_PLUS2_EN,
-    ROM_PLUS2_ES,
-    ROM_PLUS3_EN,
-    ROM_PLUS3_ES,
-    ROM_PENTAGON
-};
 
 /**
  * A ZX Spectrum computer.
@@ -152,6 +131,7 @@ class Spectrum {
          * configurations.
          */
         bool contendedPage[4];
+
         /**
          * Map of ROM memory areas. Typically, $0000-$3FFF is ROM, but in +2A/+3
          * there may be RAM instead.
@@ -286,7 +266,13 @@ class Spectrum {
         /**
          * Update page info in the memory map.
          *
-         * @param page Memory map page (0: $0000-$3FFF, 1: $4000-7FFF, 2: $8000-$BFFF, 3: $C000-$FFFF).
+         * @param page Memory map page:
+         *  <ul>
+         *      <li>0: $0000-$3FFF.</li>
+         *      <li>1: $4000-$7FFF.</li>
+         *      <li>2: $8000-$BFFF.</li>
+         *      <li>3: $C000-$FFFF.</li>
+         *  </ul>
          * @param bank Memory bank to use.
          * @param isRom Select a ROM page if true.
          * @param isContended Mark the page as contended.

@@ -130,12 +130,14 @@ void Spectrum::loadRoms(RomVariant model) {
 
             // If it fails, try the ROM in /usr/share/spectrum-roms
             fail = ifs.fail();
-            if (fail)
+            if (fail) {
                 break;
+            }
 
             char c;
-            while (ifs.get(c))
+            while (ifs.get(c)) {
                 rom[((2 << 14) * i) + pos++] = c;
+            }
 
             ifs.close();
         }
