@@ -32,4 +32,14 @@ enum class SoundRate {
     SOUNDRATE_PENTAGON,
     SOUNDRATE_CPC
 };
+
+enum class StereoMode {
+    STEREO_MONO,
+    STEREO_ABC,
+    STEREO_ACB,
+    STEREO_TURBO_MONO,
+    STEREO_TURBO_ABC,
+    STEREO_TURBO_ACB,
+    STEREO_NEXT
+};
 // vim: et:sw=4:ts=4
