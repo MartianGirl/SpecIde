@@ -171,12 +171,13 @@ void Screen::reopenWindow(bool fs) {
     }
 }
 
-void Screen::setFullScreen(bool fs) {
+void Screen::setFullScreen(bool fs, bool wide) {
 
     fullscreen = fs;
 
     uint_fast32_t suggestedScans = doubleScanMode ? suggestedScansDouble : suggestedScansSingle;
-    uint_fast32_t xModifier = doubleScanMode ? 2 : 1;
+    uint_fast32_t wModifier = wide ? 1 : 2;
+    uint_fast32_t xModifier = doubleScanMode ? wModifier : 1;
     uint_fast32_t yModifier = doubleScanMode ? 1 : 2;
     uint_fast32_t totalScans = doubleScanMode ? 625 : 312;
 
@@ -209,7 +210,7 @@ void Screen::setFullScreen(bool fs) {
         scrSprite.setTextureRect(sf::IntRect(8, 16 / yModifier,
                     static_cast<uint_fast32_t>(xSize - 8), 588 / yModifier));
         scrSprite.setPosition(0, 0);
-        scrSprite.setScale(Vector2f(2 * static_cast<float>(scale), yModifier * static_cast<float>(scale)));
+        scrSprite.setScale(Vector2f(wModifier * static_cast<float>(scale), yModifier * static_cast<float>(scale)));
     }
 
     window.setVerticalSyncEnabled(syncToVideo);

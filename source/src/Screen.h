@@ -28,6 +28,7 @@
  * will be considered.
  */
 
+#include "CommonDefs.h"
 #include "Console.h"
 
 #include <SFML/Graphics.hpp>
@@ -39,18 +40,6 @@
 #include <cassert>
 #include <map>
 #include <vector>
-
-enum class FileTypes {
-    FILETYPE_TAP,
-    FILETYPE_TZX,
-    FILETYPE_PZX,
-    FILETYPE_DSK,
-    FILETYPE_TRD,
-    FILETYPE_Z80,
-    FILETYPE_SNA,
-    FILETYPE_CSW,
-    FILETYPE_ERR
-};
 
 class Screen {
 
@@ -111,6 +100,11 @@ class Screen {
         bool done = false;
         /** Menu mode flag. */
         bool menu = false;
+
+        /** Type of PSG. */
+        bool aychip = true;
+        /** Map game pad extra buttons to keys. */
+        bool pad = false;
 
         /** Use interlaced two-pass mode. */
         bool doubleScanMode = false;
@@ -194,8 +188,9 @@ class Screen {
          * Change texture parameters for either full screen mode or windowed.
          *
          * @param fs Set parameters for full screen or windowed mode.
+         * @param wide True if the texture is for an 80-column display.
          */
-        void setFullScreen(bool fs);
+        void setFullScreen(bool fs, bool wide);
 
         /**
          * Toggle GL interpolation.
