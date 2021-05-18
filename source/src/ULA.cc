@@ -49,8 +49,8 @@ bool ULA::snowTable[16] = {
 
 uint32_t ULA::colourTable[0x100];
 uint8_t ULA::averageTable[0x100][0x100];
-uint32_t ULA::pixelsX1[0x38000];
-uint32_t ULA::pixelsX2[0x38000];
+uint32_t ULA::pixelsX1[X_SIZE * Y_SIZE / 2];
+uint32_t ULA::pixelsX2[X_SIZE * Y_SIZE];
 
 ULA::ULA() :
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},

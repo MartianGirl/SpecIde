@@ -88,10 +88,10 @@ class ULA {
         static uint32_t colourTable[0x100];
         uint32_t colour[2];
         static uint8_t averageTable[0x100][0x100];
-        static uint32_t pixelsX1[0x38000];
-        static uint32_t pixelsX2[0x38000];
         static uint_fast32_t constexpr X_SIZE = 360;
         static uint_fast32_t constexpr Y_SIZE = 625;
+        static uint32_t pixelsX1[X_SIZE * Y_SIZE / 2];
+        static uint32_t pixelsX2[X_SIZE * Y_SIZE];
         uint_fast32_t xPos = 0;
         uint_fast32_t yPos = 0;
         uint_fast32_t yInc = 1;
