@@ -56,8 +56,9 @@ void CRTC::wrAddress(uint_fast8_t byte) {
 
 void CRTC::wrRegister(uint_fast8_t byte) {
 
-    if (dirs[address] == CRTC_WO || dirs[address] == CRTC_RW)
+    if (dirs[address] == CRTC_WO || dirs[address] == CRTC_RW) {
         regs[address] = byte;
+    }
 
     if (address == 0x03) {
         hswMax = byte & 0x0F;
@@ -76,14 +77,15 @@ void CRTC::wrRegister(uint_fast8_t byte) {
 }
 
 uint_fast8_t CRTC::rdStatus() {
+
+    if (type == 1) {
+    }
 }
 
 uint_fast8_t CRTC::rdRegister() {
 
-    if (dirs[address] == CRTC_RO || dirs[address] == CRTC_RW)
-        return regs[address];
-
-    return 0x00;
+    return (dirs[address] == CRTC_RO || dirs[address] == CRTC_RW)
+        ? regs[address] : 0x00;
 }
 
 void CRTC::clock() {
@@ -176,5 +178,4 @@ void updateScanAddress() {
     scanAddress = regs[13] * 0x100 + regs[12]               // Video base address
         + (vCounter * (regs[9] + 1) + rCounter) * regs[1];  // Scan offset
 }
-
 // vim: et:sw=4:ts=4

@@ -31,19 +31,46 @@ class GateArray
         bool interrupt;
         uint_fast8_t ram;
 
-        size_t counter;
+        size_t counter = 0;
 
-        bool cClk = false;
-        bool cClkEdge = false;
-        bool gatedMREQ_ = false;
+        bool cpuClock() const { return cpuTable[counter]; }
+        bool cClk() const { return cClkTable[counter]; }
+        bool cClkEdge() const { return counter == 0x0B; }
+        bool muxVideo() const { return muxTable[counter]; }
 
         void selectPen(uint_fast8_t byte);
         void selectColour(uint_fast8_t byte);
 
         static uint_fast32_t colours[32];
 
-        static uint_fast32_t pixelsX1[0x70000];
-        static uint_fast32_t pixelsX2[0x70000];
+        static uint_fast32_t constexpr X_SIZE = 896;
+        static uint_fast32_t constexpr Y_SIZE = 625;
+
+        static uint_fast32_t pixelsX1[X_SIZE * Y_SIZE / 2];
+        static uint_fast32_t pixelsX2[X_SIZE * Y_SIZE];
+
+#if SPECIDE_BYTE_ORDER == 1
+        static uint32_t constexpr colours[32] = {
+            0x7F7F7FFF, 0x7F7F7FFF, 0x00FF7FFF, 0xFFFF7FFF,
+            0x00007FFF, 0xFF007FFF, 0x007F7FFF, 0xFF7F7FFF,
+            0xFF007FFF, 0xFFFF7FFF, 0xFFFF00FF, 0xFFFFFFFF,
+            0xFF0000FF, 0xFF00FFFF, 0xFF7F00FF, 0xFF7FFFFF,
+            0x00007FFF, 0x00FF7FFF, 0x00FF00FF, 0x00FFFFFF,
+            0x000000FF, 0x0000FFFF, 0x007F00FF, 0x007FFFFF,
+            0x7F007FFF, 0x7FFF7FFF, 0x7FFF00FF, 0x7FFFFFFF,
+            0x7F0000FF, 0x7F00FFFF, 0x7F7F00FF, 0x7F7FFFFF};
+#else
+        static uint32_t constexpr colours[32] = {
+            0xFF7F7F7F, 0xFF7F7F7F, 0xFF7FFF00, 0xFF7FFFFF,
+            0xFF7F0000, 0xFF7F00FF, 0xFF7F7F00, 0xFF7F7FFF,
+            0xFF7F00FF, 0xFF7FFFFF, 0xFF00FFFF, 0xFFFFFFFF,
+            0xFF0000FF, 0xFFFF00FF, 0xFF007FFF, 0xFFFF7FFF,
+            0xFF7F0000, 0xFF7FFF00, 0xFF00FF00, 0xFFFFFF00,
+            0xFF000000, 0xFFFF0000, 0xFF007F00, 0xFFFF7F00,
+            0xFF7F007F, 0xFF7FFF7F, 0xFF00FF7F, 0xFFFFFF7F,
+            0xFF00007F, 0xFFFF007F, 0xFF007F7F, 0xFFFF7F7F};
+#endif
+        uint32_t averagedColours[1024];
 
         /**
          * Gate array sequence.
@@ -70,6 +97,16 @@ class GateArray
         };
 
         /**
+         * 4MHz CPU clock edge.
+         *
+         * Here the CPU clock changes phase. This is useful for clocking Z80::clock()
+         */
+        static bool constexpr cpuTable[16] = {
+            false, true, false, true, false, true, false, true,
+            false, true, false, true, false, true, false, true
+        };
+
+        /**
          * 1MHz clock.
          *
          * The equation is !(S2 | S5), so it's true from 0xC0 to 0x03.
@@ -87,6 +124,16 @@ class GateArray
         static bool constexpr readyTable[16] = {
             true, false, false, false, false, false, false, false,
             false, false, false, false, true, true, true, true
+        };
+
+        /**
+         * Address MUX setting table.
+         *
+         * Select Video address (true) or CPU address (false) to read data.
+         */
+        static bool constexpr muxTable[16] = {
+            true, true, true, true, true, true, true, true,
+            true, true, false, false, false, false, false, false
         };
 };
 

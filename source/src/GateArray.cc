@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2018.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,30 +15,8 @@
 
 #include "GateArray.h"
 
-#if SPECIDE_BYTE_ORDER == 1
-uint32_t GateArray::colours[32] = {
-    0x7F7F7FFF, 0x7F7F7FFF, 0x00FF7FFF, 0xFFFF7FFF,
-    0x00007FFF, 0xFF007FFF, 0x007F7FFF, 0xFF7F7FFF,
-    0xFF007FFF, 0xFFFF7FFF, 0xFFFF00FF, 0xFFFFFFFF,
-    0xFF0000FF, 0xFF00FFFF, 0xFF7F00FF, 0xFF7FFFFF,
-    0x00007FFF, 0x00FF7FFF, 0x00FF00FF, 0x00FFFFFF,
-    0x000000FF, 0x0000FFFF, 0x007F00FF, 0x007FFFFF,
-    0x7F007FFF, 0x7FFF7FFF, 0x7FFF00FF, 0x7FFFFFFF,
-    0x7F0000FF, 0x7F00FFFF, 0x7F7F00FF, 0x7F7FFFFF};
-#else
-uint32_t GateArray::colours[32] = {
-    0xFF7F7F7F, 0xFF7F7F7F, 0xFF7FFF00, 0xFF7FFFFF,
-    0xFF7F0000, 0xFF7F00FF, 0xFF7F7F00, 0xFF7F7FFF,
-    0xFF7F00FF, 0xFF7FFFFF, 0xFF00FFFF, 0xFFFFFFFF,
-    0xFF0000FF, 0xFFFF00FF, 0xFF007FFF, 0xFFFF7FFF,
-    0xFF7F0000, 0xFF7FFF00, 0xFF00FF00, 0xFFFFFF00,
-    0xFF000000, 0xFFFF0000, 0xFF007F00, 0xFFFF7F00,
-    0xFF7F007F, 0xFF7FFF7F, 0xFF00FF7F, 0xFFFFFF7F,
-    0xFF00007F, 0xFFFF007F, 0xFF007F7F, 0xFFFF7F7F};
-#endif
-
-static uint_fast32_t GateArray::pixelsX1[0x70000];
-static uint_fast32_t GateArray::pixelsX2[0x70000];
+static uint_fast32_t GateArray::pixelsX1[X_SIZE * Y_SIZE / 2];
+static uint_fast32_t GateArray::pixelsX2[X_SIZE * Y_SIZE];
 
 
 void GateArray::write(uint_fast8_t byte) {
@@ -67,18 +45,21 @@ uint_fast8_t GateArray::read() {
 
 void GateArray::selectPen(uint_fast8_t byte) {
 
-    if (byte & 0x10)    // Select border
+    // Pen 0x10 and higher is for border.
+    if (byte & 0x10) {
         pen = 0xFF;
-    else                // Select pen
+    } else {
         pen = byte & 0x0F;
+    }
 }
 
 void GateArray::selectColour(uint_fast8_t byte) {
 
-    if (pen == 0xFF)
+    if (pen == 0xFF) {
         border = byte & 0x1F;
-    else
+    } else {
         pens[pen] = byte & 0x1F;
+    }
 }
 
 void GateArray::selectScreenAndRom(uint_fast8_t byte) {
@@ -92,19 +73,6 @@ void GateArray::selectScreenAndRom(uint_fast8_t byte) {
 void GateArray::clock() {
 
     counter = (counter + 1) & 0x0F;
-
-    // CRTC clock, edge and level
-    // Edge is used to trigger the CRTC. Level is used to generate addresses.
-    // Actually, cClk = !(sequence[counter] & 0x24) but this happens from 0x06
-    // to 0x0A.
-    cClkEdge = (counter == 0x0B);
-    cClk = cClkTable[counter];
-
-    z80_rise = z80_c & ~z80_c_d;
-
-    if (z80_rise & SIGNAL_MREQ_) {
-        gated_mreq_ = (z80_rise & SIGNAL_M1_);
-    }
 
     // 1. Sequencer works using a 8-bit shift register to generate the
     // following sequence:
@@ -247,6 +215,16 @@ void GateArray::clock() {
     // d: nothng
     // e: cpu col address latched
     // f-0: get data
+    switch (counter) {
+        case 1:
+            z80_c &= ~SIGNAL_WAIT_; break;
+        case 5:
+        case 9:
+            videoByte = d; break;
+        case c:
+            z80_c |= SIGNAL_WAIT_; break;
+        default:
+            break;
+    }
 }
-
 // vim: et:sw=4:ts=4
