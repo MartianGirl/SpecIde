@@ -20,7 +20,9 @@
  *
  * ZX Spectrum Screen implementation.
  *
- * This class emulates a CRT connected to a ZX Spectrum computer.
+ * This class emulates a CRT connected to a ZX Spectrum computer. This class
+ * is responsible for the settings that are specific to ZX Spectrum machines,
+ * and for the menu interface for those.
  */
 
 #include "Screen.h"
@@ -57,10 +59,6 @@ class SpeccyScreen : public Screen {
 
         /** Emulated ZX Spectrum. */
         Spectrum spectrum;
-        /** Type of PSG. */
-        bool aychip = true;
-        /** Map game pad extra buttons to keys. */
-        bool pad = false;
 
         /**
          * Initialise the Screen object with the parameters received on construction.
@@ -90,7 +88,7 @@ class SpeccyScreen : public Screen {
         void updateMenu();
 
         /**
-         * Poll window events. This function only deals with interface events.
+         * Poll window interface events.
          */
         void pollEvents();
 };

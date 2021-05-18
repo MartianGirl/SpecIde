@@ -45,7 +45,6 @@ void SpeccyScreen::setup() {
     Screen::setup();
 
     cout << "Initialising ZX Spectrum..." << endl;
-
     // Select ROMs and ULA variant.
     if (options["model"] == "issue2") {
         spectrum.setIssue2(RomVariant::ROM_48_EN);
@@ -165,13 +164,13 @@ void SpeccyScreen::setup() {
     cout << "Scan mode: " << options["scanmode"] << endl;
 
     xSize = ULA::X_SIZE;
-    ySize = ULA::Y_SIZE;
+    ySize = ULA::Y_SIZE / (doubleScanMode ? 1 : 2);
     texture(xSize, ySize);
 
     loadFiles();
 
     reopenWindow(fullscreen);
-    setFullScreen(fullscreen);
+    setFullScreen(fullscreen, false);
     setSmooth(smooth);
     spectrum.ula.tapeSound = tapeSound;
     spectrum.ula.playSound = playSound;
@@ -208,7 +207,7 @@ void SpeccyScreen::loadFiles() {
                 break;
 
             default:
-                cout << "Unknown file type: " << *it << endl;
+                cout << "ZX Spectrum does not support this file type: " << *it << endl;
                 break;
         }
     }
@@ -220,8 +219,8 @@ void SpeccyScreen::run() {
     steady_clock::time_point frame;
     steady_clock::time_point wakeup;
 
-    for (;;) {
-        for (;;) {
+    while (!done) {
+        while (!done && !menu) {
             // Run a complete frame.
             spectrum.run();
 
@@ -229,7 +228,12 @@ void SpeccyScreen::run() {
             // is complete
             spectrum.playSound(true);
 
-            // Update the screen
+            // Update the screen.
+            // These conditions cannot happen at the same time:
+            // - HSYNC and VSYNC only happen during the blanking interval.
+            // - VSYNC happens at the end of blanking interval. (0x140)
+            // - HSYNC happens at the beginning of HSYNC interval. (0x170-0x178)
+            // If not blanking, draw.
             update();
 
             if (!syncToVideo) {
@@ -248,17 +252,14 @@ void SpeccyScreen::run() {
                 while ((tick = steady_clock::now()) < frame);
             }
 
-            if (done || menu) break;
-
             pollEvents();
             pollCommands();
         }
 
         // Disable sound for menus
         spectrum.playSound(false);
-        if (done) return;
 
-        for (;;) {
+        while (!done && menu) {
             // Menu thingy
             updateMenu();
 
@@ -270,19 +271,11 @@ void SpeccyScreen::run() {
 #endif
                 tick = steady_clock::now();
             }
-            if (done) return;
-            if (!menu) break;
         }
     }
 }
 
 void SpeccyScreen::update() {
-
-    // These conditions cannot happen at the same time:
-    // - HSYNC and VSYNC only happen during the blanking interval.
-    // - VSYNC happens at the end of blanking interval. (0x140)
-    // - HSYNC happens at the beginning of HSYNC interval. (0x170-0x178)
-    // If not blanking, draw.
 
     scrTexture.update(reinterpret_cast<Uint8*>(doubleScanMode ?
                 spectrum.ula.pixelsX2 : spectrum.ula.pixelsX1));
@@ -408,7 +401,7 @@ void SpeccyScreen::pollEvents() {
                         } else {
                             fullscreen = !fullscreen;
                             reopenWindow(fullscreen);
-                            setFullScreen(fullscreen);
+                            setFullScreen(fullscreen, false);
                         }
                         break;
                     case Keyboard::F3:  // Save DSK to disk
