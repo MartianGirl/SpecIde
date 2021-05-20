@@ -14,11 +14,12 @@
  */
 
 #include "CPC.h"
+#include "SpecIde.h"
 
 #include <cstdlib>
 #include <ctime>
 
-CPC::CPC() : romPage{true, false, false, true} {
+CPC::CPC() {
 
     // This is just for the laughs. We initialize the whole RAM to the
     // values that appeared in the Spectrum at boot time.
@@ -27,88 +28,69 @@ CPC::CPC() : romPage{true, false, false, true} {
         *(reinterpret_cast<uint32_t*>(ram) + ii + 1) = 0xFFFFFFFF;
     }
 
-    setPage(0, 0, true);
-    setPage(1, 1, false);
-    setPage(2, 2, false);
-    setPage(3, 1, true);
+    setPage(0, 0);
+    setPage(1, 1);
+    setPage(2, 2);
+    setPage(3, 1);
 
     channel.open(2, SAMPLE_RATE);
 }
 
 void CPC::loadRoms(RomVariant model) {
 
-    ifstream ifs;
-    vector<string> romNames;
-    vector<string> romPaths;
     string romName;
-
-    char* pHome = getenv(SPECIDE_HOME_ENV);
-
-    romPaths.push_back("");
-    if (pHome != nullptr) {
-#if (SPECIDE_ON_UNIX==1)
-        string home(pHome);
-        home += string("/") + string(SPECIDE_CONF_DIR) + string("/roms/");
-        romPaths.push_back(home);
-#else
-        string home(pHome);
-        home += string("\\") + string(SPECIDE_CONF_DIR) + string("\\roms\\");
-        romPaths.push_back(home);
-#endif
-    }
-#if (SPECIDE_ON_UNIX==1)
-    romPaths.push_back("/usr/local/share/spectrum-roms/");
-    romPaths.push_back("/usr/share/spectrum-roms/");
-#endif
-
     switch (model) {
         case RomVariant::ROM_CPC464:
-        romNames.push_back("cpc464-0.rom");
-        romNames.push_back("cpc464-1.rom");
+        romName = "cpc464.rom";
         break;
 
         case RomVariant::ROM_CPC664:
-        romNames.push_back("cpc664-0.rom");
-        romNames.push_back("cpc664-1.rom");
-        romNames.push_back("amsdos.rom");
+        romName = "cpc664.rom";
         break;
 
         case RomVariant::ROM_CPC6128:
-        romNames.push_back("cpc6128-0.rom");
-        romNames.push_back("cpc6128-1.rom");
-        romNames.push_back("amsdos.rom");
+        romName = "cpc6128.rom";
         break;
 
         default:
-        romNames.push_back("cpc464-0.rom");
-        romNames.push_back("cpc464-1.rom");
+        romName = "cpc464.rom";
         break;
     }
 
+    vector<string> romDirs = getRomDirs();
     size_t j = 0;
     bool fail = true;
-
     do {
-        for (size_t i = 0; i < romNames.size(); ++i) {
-            romName = romPaths[j] + romNames[i];
-            cout << "Trying ROM: " << romName << endl;
-            ifs.open(romName, ifstream::binary);
+        string romPath = romDirs[j] + romName;
+        cout << "Trying ROM: " << romPath << "... ";
 
-            // If it fails, try the ROM in /usr/share/spectrum-roms
-            fail = ifs.fail();
-            if (fail) {
-                break;
-            }
-
-            char c;
-            while (ifs.get(c)) {
-                rom[((2 << 14) * i) + pos++] = c;
-            }
-
-            ifs.close();
-        }
+        ifstream ifs(romPath, ifstream::binary);
+        // Logical || is a short-circuit operator.
+        fail = ifs.fail() || ifs.read(reinterpret_cast<char*>(introm), 0x8000);
+        cout << string(fail ? "FAIL" : "OK") << endl;
         ++j;
-    } while (fail && j < romPaths.size());
+    } while (fail && j < romDirs.size());
+}
+
+void CPC::loadExtensionRoms() {
+
+    vector<string> romDirs = getRomDirs();
+    char buf[0x4000];
+    for (size_t romSlot = 0; romSlot < 16; romSlot++) {
+        size_t j = 0;
+        bool fail = true;
+        if (romNames[romSlot].empty()) {
+            continue;
+        } else do {
+            string romPath = romDirs[j] + romNames[romSlot];
+            cout << "Trying ROM in Slot #"
+                << static_cast<uint32_t>(romSlot) << ": " << romPath << "... ";
+            ifstream ifs(romPath, ifstream::binary);
+            fail = ifs.fail() || ifs.read(ext[romSlot], 0x4000);
+            cout << string(fail ? "FAIL" : "OK") << endl;
+            ++j;
+        } while (fail && j < romDirs.size());
+    }
 }
 
 void CPC::set464() {
@@ -117,6 +99,7 @@ void CPC::set464() {
     cpcDisk = false;
 
     loadRoms(RomVariant::ROM_CPC464);
+    loadExtensionRoms();
     reset();
 }
 
@@ -125,7 +108,10 @@ void CPC::set664() {
     cpc128K = false;
     cpcDisk = true;
 
+    romNames[0x07] = "amsdos.rom";
+
     loadRoms(RomVariant::ROM_CPC664);
+    loadExtensionRoms();
     reset();
 }
 
@@ -134,24 +120,59 @@ void CPC::set6128() {
     cpc128K = true;
     cpcDisk = true;
 
+    romNames[0x07] = "amsdos.rom";
+
     loadRoms(RomVariant::ROM_CPC6128);
+    loadExtensionRoms();
     reset();
 }
 
 void CPC::run() {
+
+    static double remaining = 0;
+
+    while (!ula.vSync) {
+
+        clock();
+
+        if (tape.playing) {
+            if (!tape.sample--) {
+                ula.tapeIn = tape.advance() | 0x80;
+            }
+        } else {
+            ula.tapeIn &= 0x7F;
+        }
+
+        // Generate sound. This maybe can be done using the same counter?
+        if (!(--skipCycles)) {
+            skipCycles = skip;
+            remaining += tail;
+            if (remaining >= 1.0) {
+                ++skipCycles;
+                remaining -= 1.0;
+            }
+
+            sample();
+        }
+    }
+
+    ula.vSync = false;
 }
 
 void CPC::clock() {
 
+    bool m1_ = z80.c & SIGNAL_M1_;
     bool as_ = z80.c & SIGNAL_MREQ_;
-    bool io_ = z80.c & SIGNAL_IORQ_;
+    bool io_ = !m1_ && (z80.c & SIGNAL_IORQ_);
 
     size_t memArea = z80.a >> 14;
 
     // First we clock the Gate Array. Further clocks will be generated here.
     ga.clock();
 
-    if (ga.cClkEdge) {
+    // From the Gate Array:
+    // 1. Clock the CRTC if necessary.
+    if (ga.cClkFall()) {
         ctrc.clock();
     }
 
@@ -164,14 +185,11 @@ void CPC::clock() {
 
     // Z80 gets data from the ULA or memory, only when reading.
     if (!io_) {
-        // RAM pagination
-        if ((z80.a & 0x8000) == 0x0000) {
-
-        }
-
-        // Gate Array
+        // Gate Array. This is accessible by both I/O reads and I/O writes.
         if ((z80.a & 0xC000) == 0x4000) {
-            if (wr) {
+            if ((z80.d & 0xC0) == 0xC0) {
+                selectRam(z80.d);
+            } else {
                 ga.write(z80.d);
             }
         }
@@ -266,8 +284,19 @@ void CPC::clock() {
         }
     } else if (!as_) {
         if (rd) {
-            z80.d = map[memArea][z80.a & 0x3FFF];
-        } else if (!romPage[memArea] && wr) {
+            switch (memArea) {
+                case 0:
+                   z80.d = ga.lowerRom ? rom[0][z80.a & 0x3FFF] : map[memArea][z80.a & 0x3FFF];
+                   break;
+                case 1: // fall-through
+                case 2:
+                   z80.d = map[memArea][z80.a & 0x3FFF];
+                   break;
+                case 3:
+                   z80.d = ga.upperRom ? rom[z80.a & 0x3FFF] : map[memArea][z80.a & 0x3FFF];
+                   break;
+            }
+        } else if (wr) {
             map[memArea][z80.a & 0x3FFF] = z80.d;
         }
     }
@@ -370,10 +399,55 @@ void CPC::sample(int& l, int& r) {
     }
 }
 
-void CPC::setPage(uint_fast8_t page, uint_fast8_t bank, bool isRom) {
+void CPC::selectRam(uint_fast8_t byte) {
+
+    switch (byte & 0x7) {
+        case 0: // Bank 0, first screen buffer (0-1-2-3)
+            setPage(0, 0);
+            setPage(1, 1);
+            setPage(2, 2);
+            setPage(3, 3);
+            break;
+
+        case 1: // Bank 0, second screen buffer (0-1-2-7)
+            setPage(0, 0);
+            setPage(1, 1);
+            setPage(2, 2);
+            setPage(3, 7);
+            break;
+
+        case 2: // Bank 1
+            setPage(0, 4);
+            setPage(1, 5);
+            setPage(2, 6);
+            setPage(3, 7);
+            break;
+
+        case 3: // Bank 0, screen 1 at $4000-$7fff, screen 2 at $c000-$ffff
+            setPage(0, 0);
+            setPage(1, 3);
+            setPage(2, 2);
+            setPage(3, 7);
+            break;
+
+        case 4: // fall-through
+        case 5: // fall-through
+        case 6: // fall-through
+        case 7: // Bank 0, Bank 1 page N at $4000-$7fff
+            setPage(0, 0);
+            setPage(1, byte & 0x7);
+            setPage(2, 2);
+            setPage(3, 3);
+            break;
+
+        default:
+            break;
+    }
+}
+
+void CPC::setPage(uint_fast8_t page, uint_fast8_t bank) {
 
     size_t addr = bank * (2 << 14);
-    map[page] = (isRom) ? &rom[addr] : &ram[addr];
-    romPage[page] = isRom;
+    map[page] = &ram[addr];
 }
 // vim: et:sw=4:ts=4

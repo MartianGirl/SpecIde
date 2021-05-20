@@ -22,25 +22,24 @@ static uint_fast32_t GateArray::pixelsX2[X_SIZE * Y_SIZE];
 void GateArray::write(uint_fast8_t byte) {
 
     // 11xx xxxx: RAM memory management (performed externally)
-    switch (byte & 0xC0) {
-        case 0x00:  // 00xx xxxx : Select pen
-            selectPen(byte);
-            break;
+    if (counter == 0x00) {  // Register updates only on S0 = 1, S7 = 1
+        switch (byte & 0xC0) {
+            case 0x00:  // 00xx xxxx : Select pen
+                selectPen(byte);
+                break;
 
-        case 0x40:  // 01xx xxxx : Select colour
-            selectColour(byte);
-            break;
+            case 0x40:  // 01xx xxxx : Select colour for selected pen
+                selectColour(byte);
+                break;
 
-        case 0x80:  // 10xx xxxx : Select screen mode and ROM configuration
-            selectScreenAndRom(byte);
-            break;
+            case 0x80:  // 10xx xxxx : Select screen mode and ROM configuration
+                selectScreenAndRom(byte);
+                break;
 
-        default:
-            break;
+            default:
+                break;
+        }
     }
-}
-
-uint_fast8_t GateArray::read() {
 }
 
 void GateArray::selectPen(uint_fast8_t byte) {
@@ -65,14 +64,17 @@ void GateArray::selectColour(uint_fast8_t byte) {
 void GateArray::selectScreenAndRom(uint_fast8_t byte) {
 
     newMode = byte & 0x03;
-    lowerRom = byte & 0x04;
-    upperRom = byte & 0x08;
-    interrupt = byte & 0x10;
+    lowerRom = ((byte & 0x04) == 0);
+    upperRom = ((byte & 0x08) == 0);
+
+    // Delay interrupt.
+    if (byte & 0x10) {
+        z80_c |= SIGNAL_INT_;
+        intCounter = 0;
+    }
 }
 
 void GateArray::clock() {
-
-    counter = (counter + 1) & 0x0F;
 
     // 1. Sequencer works using a 8-bit shift register to generate the
     // following sequence:
@@ -129,10 +131,10 @@ void GateArray::clock() {
     // !RD_, true, true, true, true, true, true, true
     // true, true, true, true, true, true, !RD, !RD
     //
-    // 244E_
+    // 244E
     // not (S2 and S3 and not IORQ_)
-    // false, false, false, true, true, true, true, true
-    // true, true, true, true, false, false, false, false
+    // IORQ_, IORQ_, IORQ_, true, true, true, true, true,
+    // true, true, true, true, IORQ_, IORQ_, IORQ_, IORQ_
     //
     // INKEN (Gate Array enable)
     // (S0 and S7)
@@ -208,23 +210,127 @@ void GateArray::clock() {
     // 2: video row address latched - wait
     // 3: nothing - wait
     // 4: video col address latched - wait
-    // 5-6-7: get data - wait
+    // 5: wait
+    // 6: read video byte - wait
+    // 7: wait
     // 8: video col address latched - wait
-    // 9-a-b: get data - wait
+    // 9: wait
+    // a: wait
+    // b: read video byte - wait
     // c: cpu row address latched - go
     // d: nothng
     // e: cpu col address latched
     // f-0: get data
+
+    static uint_fast32_t hCounter = 0;
+    static bool hSync_d = false;
+    static bool vSync_d = false;
+
+    // Increment state counter
+    counter = (counter + 1) & 0x0F;
+
     switch (counter) {
-        case 1:
-            z80_c &= ~SIGNAL_WAIT_; break;
-        case 5:
-        case 9:
-            videoByte = d; break;
-        case c:
+        case 0x0:   // Right after CPU state change.
+            intAcknowledge();
+            break;
+        case 0x1:   // READY falling edge. CPU clock rising edge.
+            z80_c &= ~SIGNAL_WAIT_;
+            break;
+        case 0x2:   // Right after CPU state change.
+            intAcknowledge();
+            break;
+        case 0x4:   // Right after CPU state change.
+            intAcknowledge();
+            break;
+        case 0x6:   // CAS_ and S3 rising edge. CCLK rising edge.
+            intAcknowledge();
+            dispen = crtc.dispen;
+            videoByte = d;
+            break;
+        case 0x7:
+            inksel = dispen;
+            break;
+        case 0x8:   // Right after CPU state change.
+            intAcknowledge();
+            break;
+        case 0xa:   // Right after CPU state change.
+            intAcknowledge();
+            break;
+        case 0xb:   // CAS_ and S3 rising edge. CCLK falling edge.
+            dispen = crtc.dispen;
+            videoByte = d;
+
+            // This cClk falling edge counter is reset when HSYNC is low,
+            // and it counts up to 8. When it reaches 8, it stops and keeps
+            // its value until HSYNC falls.
+            // If cClkEdge is 0-3, the mode selection clock is high.
+            if (crtc.hSync) {
+                if (cClkCounter < 8) {
+                    ++cClkCounter;
+
+                    // Mode is updated on the falling edge of bit 4 of this counter.
+                    if (cClkCounter == 8) {
+                        actMode = newMode;
+                    }
+                }
+            } else {
+                cClkCounter = 0;
+            }
+
+            // CRTC is clocked. Some values have updated.
+            hSync_d = crtc.hSync;
+            vSync_d = crtc.vSync;
+            crtc.clock();
+
+            // In HSYNC falling edges, intCounter and hCounter are increased.
+            // If intCounter reaches 52, an INT is generated and the counter
+            // is reset.
+            if (!crtc.hSync && hSync_d) {
+                if (++intCounter == 52) {
+                    z80_c &= ~SIGNAL_INT_;
+                    intCounter = 0;
+                }
+
+                if (hCounter < 28) {
+                    ++hCounter;
+                }
+
+            }
+
+            if (crtc.vSync && !vSync_d) {
+                hCounter = 0;
+            }
+            break;
+        case 0xc:   // READY rising edge.
+            intAcknowledge();
             z80_c |= SIGNAL_WAIT_; break;
+        case 0xe:   // Right after CPU state change.
+            intAcknowledge();
+            break;
+        case 0xf:
+            inksel = dispen;
+            break;
         default:
             break;
     }
+}
+
+void GateArray::intAcknowledge() {
+
+    static bool clearInt = false;
+
+    if ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_ | SIGNAL_INT_)) == 0) {
+        clearInt = true;
+    } else if ((z80_c & SIGNAL_M1_) == SIGNAL_M1_) {
+        clearInt = false;
+    }
+
+    if (clearInt) {
+        intCounter = 0;
+        z80_c |= SIGNAL_INT_;
+    }
+}
+
+void GateArray::paint() {
 }
 // vim: et:sw=4:ts=4

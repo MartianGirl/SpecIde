@@ -101,7 +101,7 @@ void CpcScreen::setup() {
     loadFiles();
 
     reopenWindow(fullscreen);
-    setFullScreen(fullscreen);
+    setFullScreen(fullscreen, true);
     setSmooth(smooth);
     cpc.tapeSound = tapeSound;
     cpc.playSound = playSound;

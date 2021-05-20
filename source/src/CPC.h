@@ -43,8 +43,6 @@ class CPC {
     public:
         /** Z80 CPU instance. */
         Z80 z80;
-        /** CRTC instance. */
-        CRTC crtc;
         /** Gate Array instance. */
         GateArray ga;
         /** 8255 PPI instance. */
@@ -66,17 +64,18 @@ class CPC {
         /** Currently selected PSG. */
         size_t currentPsg = 0;
 
-        /**
-         * Map of ROM pages. In the CPC family, ROM can be paged in the
-         * $0000-$3FFF and $C000-$FFFF ranges.
-         */
-        bool romPage[4];
+        /** Array of strings with the extension ROM names. */
+        std::string romNames[16];
         /** RAM array. RAM pages are defined as pointers in this array. */
-        uint_fast8_t ram[2 << 17];
-        /** ROM array. ROM pages are defined as pointers in this array. */
-        uint_fast8_t rom[2 << 16];
-        /** Currently selected pages (RAM or ROM). */
-        uint_fast8_t* map[4];
+        uint8_t ram[1 << 17];
+        /** Internal ROM array. */
+        uint8_t rom[1 << 15];
+        /** External ROM array. ROM pages are defined as pointers in this array. */
+        uint8_t ext[16][1 << 14];
+        /** Currently selected expansion ROM page. */
+        uint_fast8_t romBank;
+        /** Currently selected RAM pages. */
+        uint8_t* mem[4];
 
         size_t counter = 0;
 
@@ -88,27 +87,53 @@ class CPC {
         void clock();
         void reset();
 
-        void loadRoms(size_t model);
-        void initMems(size_t model);
-        void set464();
-        void set664();
-        void set6128();
-        void updatePage(uint_fast8_t reg);
+        /**
+         * Load internal ROM for each Amstrad CPC model.
+         *
+         * @param model The Amstrad CPC model.
+         */
+        void loadRoms(RomVariant model);
 
         /**
-         * Update page info in the memory map.
+         * Load extension ROMs.
+         */
+        void loadExtensionRoms();
+
+        /**
+         * Configure an Amstrad CPC 464 computer.
+         */
+        void set464();
+
+        /**
+         * Configure an Amstrad CPC 664 computer.
+         */
+        void set664();
+
+        /**
+         * Configure an Amstrad CPC 6128 computer.
+         */
+        void set6128();
+
+        /**
+         * Update RAM mapping.
          *
-         * @param page Memory map page:
+         * @param byte Z80 byte written to selection hardware (PAL 40030)
+         */
+        void selectRam(uint_fast8_t reg);
+
+        /**
+         * Update RAM page entry in the memory map.
+         *
+         * @param page Memory map RAM page:
          *  <ul>
          *      <li>0: $0000-$3FFF.</li>
          *      <li>1: $4000-$7FFF.</li>
          *      <li>2: $8000-$BFFF.</li>
          *      <li>3: $C000-$FFFF.</li>
          *  </ul>
-         * @param bank Memory bank to use.
-         * @param isRom Use a ROM page if true.
+         * @param bank RAM bank to use.
          */
-        void setPage(uint_fast8_t page, uint_fast8_t bank, bool isRom);
+        void setPage(uint_fast8_t page, uint_fast8_t bank);
 
         void psgRead();
         void psgWrite();

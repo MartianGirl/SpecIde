@@ -13,35 +13,76 @@
  * along with SpecIde.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-class GateArray
-{
+#pragma once
+
+#include "CRTC.h"
+
+class GateArray {
+
     public:
-        void write(uint_fast8_t byte);
-        uint_fast8_t read();
+        /** CRTC instance. */
+        CRTC crtc;
 
+        /** Selected pen. */
         uint_fast8_t pen;
+        /** Pen colour references. */
         uint_fast8_t pens[16];
+        /** Border colour reference. */
         uint_fast8_t border;
-
+        /** New video mode. */
         uint_fast8_t newMode;
+        /** Actual video mode. */
         uint_fast8_t actMode;
-
+        /** Lower ROM readable at $0000-$3FFF. */
         bool lowerRom;
+        /** Upper ROM readable at $C000-$FFFF. */
         bool upperRom;
-        bool interrupt;
-        uint_fast8_t ram;
 
-        size_t counter = 0;
+        /** Cycle counter. */
+        uint_fast32_t counter = 0;
+        /** HSYNC counter for INT generation. */
+        uint_fast32_t intCounter = 0;
+        /** CCLK rising edges happen at step 6. */
+        static uint_fast32_t constexpr CCLK_RISE = 0x06;
+        /** CCLK falling edges happen at step 11. */
+        static uint_fast32_t constexpr CCLK_FALL = 0x0b;
 
         bool cpuClock() const { return cpuTable[counter]; }
+        bool cpuReady() const { return readyTable[counter]; }
         bool cClk() const { return cClkTable[counter]; }
-        bool cClkEdge() const { return counter == 0x0B; }
+        bool cClkRise() const { return counter == CCLK_RISE; }
+        bool cClkFall() const { return counter == CCLK_FALL; }
         bool muxVideo() const { return muxTable[counter]; }
 
+        /**
+         * Write a byte to the Gate Array.
+         *
+         * This function invokes the appropriate action.
+         *
+         * @param byte The byte from data bus.
+         */
+        void write(uint_fast8_t byte);
+
+        /**
+         * Select a pen on which to operate.
+         *
+         * @param byte Byte from Z80.
+         */
         void selectPen(uint_fast8_t byte);
+
+        /**
+         * Select colour for currently selected pen.
+         *
+         * @param byte Byte from Z80.
+         */
         void selectColour(uint_fast8_t byte);
 
-        static uint_fast32_t colours[32];
+        /**
+         * Select screen mode, ROM visibility, and delay interrupts.
+         *
+         * @param byte Byte from Z80.
+         */
+        void selectScreenAndRom(uint_fast8_t byte);
 
         static uint_fast32_t constexpr X_SIZE = 896;
         static uint_fast32_t constexpr Y_SIZE = 625;
@@ -49,6 +90,9 @@ class GateArray
         static uint_fast32_t pixelsX1[X_SIZE * Y_SIZE / 2];
         static uint_fast32_t pixelsX2[X_SIZE * Y_SIZE];
 
+        /** Averaged colours between two scans. */
+        uint32_t averagedColours[1024];
+        /** Colour definitions. */
 #if SPECIDE_BYTE_ORDER == 1
         static uint32_t constexpr colours[32] = {
             0x7F7F7FFF, 0x7F7F7FFF, 0x00FF7FFF, 0xFFFF7FFF,
@@ -70,7 +114,6 @@ class GateArray
             0xFF7F007F, 0xFF7FFF7F, 0xFF00FF7F, 0xFFFFFF7F,
             0xFF00007F, 0xFFFF007F, 0xFF007F7F, 0xFFFF7F7F};
 #endif
-        uint32_t averagedColours[1024];
 
         /**
          * Gate array sequence.
@@ -135,6 +178,26 @@ class GateArray
             true, true, true, true, true, true, true, true,
             true, true, false, false, false, false, false, false
         };
-};
 
+        static bool constexpr mode0Table[16] = {
+            COLOUR_KEEP, COLOUR_KEEP, COLOUR_KEEP, COLOUR_MOVE,
+            COLOUR_KEEP, COLOUR_KEEP, COLOUR_KEEP, COLOUR_LOAD,
+            COLOUR_KEEP, COLOUR_KEEP, COLOUR_KEEP, COLOUR_MOVE,
+            COLOUR_KEEP, COLOUR_KEEP, COLOUR_KEEP, COLOUR_LOAD
+        };
+
+        static bool constexpr mode1Table[16] = {
+            COLOUR_KEEP, COLOUR_MOVE, COLOUR_KEEP, COLOUR_MOVE,
+            COLOUR_KEEP, COLOUR_MOVE, COLOUR_KEEP, COLOUR_LOAD,
+            COLOUR_KEEP, COLOUR_MOVE, COLOUR_KEEP, COLOUR_MOVE,
+            COLOUR_KEEP, COLOUR_MOVE, COLOUR_KEEP, COLOUR_LOAD
+        };
+
+        static bool constexpr mode2Table[16] = {
+            COLOUR_MOVE, COLOUR_MOVE, COLOUR_MOVE, COLOUR_MOVE,
+            COLOUR_MOVE, COLOUR_MOVE, COLOUR_MOVE, COLOUR_LOAD,
+            COLOUR_MOVE, COLOUR_MOVE, COLOUR_MOVE, COLOUR_MOVE,
+            COLOUR_MOVE, COLOUR_MOVE, COLOUR_MOVE, COLOUR_LOAD
+        };
+};
 // vim: et:sw=4:ts=4
