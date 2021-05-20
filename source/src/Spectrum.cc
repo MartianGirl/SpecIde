@@ -13,6 +13,7 @@
  * along with SpecIde.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "SpecIde.h"
 #include "Spectrum.h"
 
 #include <cstdlib>
@@ -24,7 +25,7 @@ Spectrum::Spectrum() :
 
     // This is just for the laughs. We initialize the whole RAM to the
     // values that appeared in the Spectrum at boot time.
-    for (size_t ii = 0; ii < (1 << 16); ii += 2) {
+    for (size_t ii = 0; ii < (1 << 15); ii += 2) {
         *(reinterpret_cast<uint32_t*>(ram) + ii) = 0x00000000;
         *(reinterpret_cast<uint32_t*>(ram) + ii + 1) = 0xFFFFFFFF;
     }
@@ -40,29 +41,8 @@ Spectrum::Spectrum() :
 
 void Spectrum::loadRoms(RomVariant model) {
 
-    ifstream ifs;
     vector<string> romNames;
-    vector<string> romPaths;
-    string romName;
-
-    char* pHome = getenv(SPECIDE_HOME_ENV);
-
-    romPaths.push_back("");
-    if (pHome != nullptr) {
-#if (SPECIDE_ON_UNIX==1)
-        string home(pHome);
-        home += string("/") + string(SPECIDE_CONF_DIR) + string("/roms/");
-        romPaths.push_back(home);
-#else
-        string home(pHome);
-        home += string("\\") + string(SPECIDE_CONF_DIR) + string("\\roms\\");
-        romPaths.push_back(home);
-#endif
-    }
-#if (SPECIDE_ON_UNIX==1)
-    romPaths.push_back("/usr/local/share/spectrum-roms/");
-    romPaths.push_back("/usr/share/spectrum-roms/");
-#endif
+    vector<string> romDirs = getRomDirs();
 
     switch (model) {
         case RomVariant::ROM_48_EN:
@@ -120,29 +100,19 @@ void Spectrum::loadRoms(RomVariant model) {
 
     size_t j = 0;
     bool fail = true;
-
     do {
         for (size_t i = 0; i < romNames.size(); ++i) {
-            size_t pos = 0;
-            romName = romPaths[j] + romNames[i];
-            cout << "Trying ROM: " << romName << endl;
-            ifs.open(romName, ifstream::binary);
+            string romName = romDirs[j] + romNames[i];
+            cout << "Trying ROM: " << romName << "... ";
 
-            // If it fails, try the ROM in /usr/share/spectrum-roms
-            fail = ifs.fail();
-            if (fail) {
-                break;
-            }
-
-            char c;
-            while (ifs.get(c)) {
-                rom[((2 << 14) * i) + pos++] = c;
-            }
-
-            ifs.close();
+            ifstream ifs(romName, ifstream::binary);
+            char* bufaddr = reinterpret_cast<char*>(&rom[(1 << 14) * i]);
+            // Logical || is a short circuit operator.
+            fail = ifs.fail() || ifs.read(bufaddr, 0x4000).fail();
+            cout << string(fail ? "FAIL" : "OK") << endl;
         }
         ++j;
-    } while (fail && j < romPaths.size());
+    } while (fail && j < romDirs.size());
 }
 
 void Spectrum::setIssue2(RomVariant variant) {
@@ -509,9 +479,9 @@ void Spectrum::clock() {
                 }
 
                 if (z80.rd) {
-                    z80.d = map[memArea][z80.a & 0x3FFF];
+                    z80.d = mem[memArea][z80.a & 0x3FFF];
                 } else if (!romPage[memArea] && z80.wr) {
-                    map[memArea][z80.a & 0x3FFF] = z80.d;
+                    mem[memArea][z80.a & 0x3FFF] = z80.d;
                 }
             }
         } else if (as_ && io_) {
@@ -778,20 +748,20 @@ int Spectrum::dac() {
 void Spectrum::setPage(uint_fast8_t page,
         uint_fast8_t bank, bool isRom, bool isContended) {
 
-    size_t addr = bank * (2 << 14);
-    map[page] = (isRom) ? &rom[addr] : &ram[addr];
+    size_t addr = bank * (1 << 14);
+    mem[page] = (isRom) ? &rom[addr] : &ram[addr];
     romPage[page] = isRom;
     contendedPage[page] = isContended;
 }
 
 void Spectrum::setScreenPage(uint_fast8_t page) {
 
-    scr = &ram[page * (2 << 14)];
+    scr = &ram[page * (1 << 14)];
 }
 
 void Spectrum::setSnowPage(uint_fast8_t page) {
 
-    sno = &ram[page * (2 << 14)];
+    sno = &ram[page * (1 << 14)];
 }
 
 void Spectrum::checkTapeTraps() {
@@ -816,14 +786,14 @@ void Spectrum::writeMemory(uint_fast16_t a, uint_fast8_t d) {
 
     a &= 0xFFFF;
     if (a > 0x3FFF) { // Don't write ROM.
-        map[a >> 14][a & 0x3FFF] = d;
+        mem[a >> 14][a & 0x3FFF] = d;
     }
 }
 
 uint_fast8_t Spectrum::readMemory(uint_fast16_t a) {
 
     a &= 0xFFFF;
-    return map[a >> 14][a & 0x3FFF];
+    return mem[a >> 14][a & 0x3FFF];
 }
 
 void Spectrum::trapLdStart() {

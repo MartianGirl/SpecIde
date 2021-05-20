@@ -52,7 +52,7 @@ void Screen::setup() {
     w *= scale;
     h *= scale;
 
-    loadFont(); // Probably can be put in the base class.
+    loadFont();
     chooseVideoMode();
 
     fullscreen = (options["fullscreen"] == "yes");

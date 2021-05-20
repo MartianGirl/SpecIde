@@ -15,69 +15,16 @@
 
 #include <algorithm>
 #include <fstream>
-#include <map>
 #include <memory>
-#include <string>
-#include <vector>
 
 #include <SFML/Graphics.hpp>
 
+#include "SpecIde.h"
 #include "SpeccyScreen.h"
 
 #include "config.h"
 
 using namespace std;
-
-/**
- * Display Emulator's License text.
- */
-void displayLicense();
-
-/**
- * Display command line help text.
- */
-void displayHelp();
-
-/**
- * Check if a ZX Spectrum is emulated.
- *
- * @return true if the selected model is a ZX Spectrum.
- */
-bool isSpectrum(string const& model);
-
-/**
- * Check if an Amstrad CPC is emulated.
- *
- * @return true if the selected model is an Amstrad CPC.
- */
-bool isCpc(string const& model);
-
-/**
- * Read the options from the config file.
- *
- * options map<string, string> of name-value pairs where the options
- *         will be stored.
- */
-void readOptions(map<string, string>& options);
-
-/**
- * Option name-value pair structure.
- */
-struct Option {
-
-    /** Option name. */
-    string name;
-    /** Option value. */
-    string value;
-
-    /**
-     * Constructor
-     *
-     * @param n Option name.
-     * @param v Option value.
-     */
-    Option(string n = "", string v = "") : name(n), value(v) {}
-};
 
 /** Map of arguments to option name-value pairs. */
 map<string, Option> arguments = {
@@ -302,9 +249,10 @@ void readOptions(map<string, string>& options) {
     bool fail = true;
     do {
         string cfg = cfgPaths[j] + cfgName;
-        cout << "Trying config file: " << cfg << endl;
+        cout << "Trying config file: " << cfg << "... ";
         ifs.open(cfg);
         fail = ifs.fail();
+        cout << string(fail ? "FAIL" : "OK") << endl;
         ++j;
     } while (fail && j < cfgPaths.size());
 
@@ -352,5 +300,30 @@ bool isCpc(string const& model) {
     set<string> models = {"cpc464", "cpc664", "cpc6128", "cpc464es", "cpc664es", "cpc6128es"};
 
     return (models.find(model) != models.end());
+}
+
+vector<string> getRomDirs() {
+
+    vector<string> romDirs;
+    romDirs.push_back("");
+
+    char* pHome = getenv(SPECIDE_HOME_ENV);
+    if (pHome != nullptr) {
+#if (SPECIDE_ON_UNIX==1)
+        string home(pHome);
+        home += string("/") + string(SPECIDE_CONF_DIR) + string("/roms/");
+        romDirs.push_back(home);
+#else
+        string home(pHome);
+        home += string("\\") + string(SPECIDE_CONF_DIR) + string("\\roms\\");
+        romDirs.push_back(home);
+#endif
+    }
+#if (SPECIDE_ON_UNIX==1)
+    romDirs.push_back("/usr/local/share/spectrum-roms/");
+    romDirs.push_back("/usr/share/spectrum-roms/");
+#endif
+
+    return romDirs;
 }
 // vim: et:sw=4:ts=4

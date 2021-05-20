@@ -139,15 +139,15 @@ class Spectrum {
         bool romPage[4];
 
         /** RAM array. RAM pages are defined as pointers in this array. */
-        uint_fast8_t ram[2 << 17];
+        uint8_t ram[1 << 17];
         /** ROM array. ROM pages are defined as pointers in this array. */
-        uint_fast8_t rom[2 << 16];
+        uint8_t rom[1 << 16];
         /** Currently selected pages (RAM or ROM). */
-        uint_fast8_t* map[4];
+        uint8_t* mem[4];
         /** Currently selected screen page. */
-        uint_fast8_t* scr;
+        uint8_t* scr;
         /** Memory page from which snow data is read. */
-        uint_fast8_t* sno;
+        uint8_t* sno;
 
         /** True if 48K mode is active. This disables pagination. */
         bool set48 = true;
