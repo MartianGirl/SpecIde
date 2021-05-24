@@ -319,15 +319,16 @@ void GateArray::updateVideoMode() {
 
 void GateArray::updateBeam() {
 
-    blanking = (crtc.hSync || hCounter < 28);
+    // Blanking should also be activated if hCounter < 28, but the picture
+    // fits better the screen this way...
+    blanking = (crtc.hSync);
 
     if ((crtc.hSync && !hSync_d) || xPos >= X_SIZE) {
         xPos = 0;
-        if (hCounter >= 28) {
-            ++yPos;
-            if (yPos >= Y_SIZE) {
-                yPos = 0;
-            }
+        // yPos maybe should be incremented only if hCounter is not less than
+        // 28, but the border obtained without this condition looks better
+        if (++yPos >= Y_SIZE) {
+            yPos = 0;
         }
     }
 

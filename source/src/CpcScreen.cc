@@ -100,7 +100,7 @@ void CpcScreen::setup() {
 
     loadFiles();
 
-    h = 552;
+    h = 576;
     w = 800;
     reopenWindow(fullscreen);
     setFullScreen(fullscreen, true);
