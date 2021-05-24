@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2018.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,8 +62,6 @@ class CRTC {
         bool hSync = false;
         bool vSync = false;
         bool dispEn = false;
-        bool hSyncFall = false;
-        bool vSyncRise = false;
 
         void wrAddress(uint_fast8_t byte);
         void wrRegister(uint_fast8_t byte);

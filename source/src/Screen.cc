@@ -141,14 +141,14 @@ void Screen::adjustViewPort() {
     do {
         ++divider;
         suggestedScansSingle = bestMode.height / divider;
-    } while (suggestedScansSingle > 304); // 312 - 8 VBlank lines.
+    } while (suggestedScansSingle > 288); // 312 - 24 VBlank lines.
     cout << "Selected " << suggestedScansSingle << " scans for single scan mode." << endl;
 
     divider = 0;
     do {
         ++divider;
         suggestedScansDouble = bestMode.height / divider;
-    } while (suggestedScansDouble > 608); // 624 - 16 VBlank lines.
+    } while (suggestedScansDouble > 576); // 624 - 48 VBlank lines.
     cout << "Selected " << suggestedScansDouble << " scans for double scan mode." << endl;
 }
 
@@ -188,7 +188,7 @@ void Screen::setFullScreen(bool fs, bool wide) {
         yScale = nearbyintf(bestMode.height / static_cast<float>(suggestedScans));
 
         // Adjust depending on the vertical scale.
-        xOffset = (bestMode.width - (xModifier * xSize * yScale)) / 2;
+        xOffset = (bestMode.width - (xModifier * xSize * yScale * wModifier / 2)) / 2;
         yOffset = 0;
 
         cout << "XScale: " << fixed << setprecision(3) << xScale << " ";
@@ -202,7 +202,7 @@ void Screen::setFullScreen(bool fs, bool wide) {
         scrSprite.setTextureRect(sf::IntRect(8, static_cast<uint_fast32_t>(start),
                     static_cast<uint_fast32_t>(xSize - 8), static_cast<uint_fast32_t>(lines)));
         scrSprite.setPosition(xOffset, yOffset);
-        scrSprite.setScale(Vector2f(xModifier * yScale, yScale));
+        scrSprite.setScale(Vector2f(xModifier * wModifier * yScale / 2, yScale));
     } else {
         // In this case we want to have the same windows size for double scan modes and
         // single scan modes. 588 displayable lines are assumed.
