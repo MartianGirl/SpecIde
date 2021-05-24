@@ -15,52 +15,68 @@
 
 #include "CRTC.h"
 
+#include <iostream>
+using namespace std;
+
 CRTC::CRTC(uint_fast8_t type) :
     type(type),
-    address(0),
+    index(0),
     regs{
+        //0x3F, 0x28, 0x2E, 0x8E, 0x26, 0x00, 0x19, 0x1A,
+        //0x00, 0x07, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, ((type == 1) ? 0xFF : 0x00)},
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, static_cast<uint_fast8_t>((type == 1) ? 0xFF : 0x00)},
     dirs{
-        CRTC_WO,    // Horizontal Total (WO)
-        CRTC_WO,    // Horizontal Displayed (WO)
-        CRTC_WO,    // Horizontal Sync Position (WO)
-        CRTC_WO,    // Horizontal & Vertical Sync Width (WO)
-        CRTC_WO,    // Vertical Total (WO)
-        CRTC_WO,    // Vertical Total Adjust (WO)
-        CRTC_WO,    // Vertical Displayed (WO)
-        CRTC_WO,    // Vertical Sync Position (WO)
-        CRTC_WO,    // Interlace & Skey (WO)
-        CRTC_WO,    // Maximum Raster Address (WO)
-        CRTC_RW,    // Cursor Start Raster (RW)
-        CRTC_RW,    // Cursor End Raster (RW)
+        AccessType::CRTC_WO,    // Horizontal Total (WO)
+        AccessType::CRTC_WO,    // Horizontal Displayed (WO)
+        AccessType::CRTC_WO,    // Horizontal Sync Position (WO)
+        AccessType::CRTC_WO,    // Horizontal & Vertical Sync Width (WO)
+        AccessType::CRTC_WO,    // Vertical Total (WO)
+        AccessType::CRTC_WO,    // Vertical Total Adjust (WO)
+        AccessType::CRTC_WO,    // Vertical Displayed (WO)
+        AccessType::CRTC_WO,    // Vertical Sync Position (WO)
+        AccessType::CRTC_WO,    // Interlace & Skey (WO)
+        AccessType::CRTC_WO,    // Maximum Raster Address (WO)
+        AccessType::CRTC_RW,    // Cursor Start Raster (RW)
+        AccessType::CRTC_RW,    // Cursor End Raster (RW)
         (type == 0 || type == 3 || type == 4)
-            ? CRTC_RW : CRTC_WO,    // Display Start Address (High byte)
+            ? AccessType::CRTC_RW : AccessType::CRTC_WO,    // Display Start Address (High byte)
         (type == 0 || type == 3 || type == 4)
-            ? CRTC_RW : CRTC_WO,    // Display Start Address (Low byte)
-        CRTC_RW,    // Cursor Address (High byte)
-        CRTC_RW,    // Cursor Address (Low byte)
-        CRTC_RO,    // Light Pen Address (High byte)
-        CRTC_RO,    // Light Pen Address (Low byte)
-        CRTC_RO, CRTC_RO,   // All the remaining addresses are unused.
-        CRTC_RO, CRTC_RO, CRTC_RO, CRTC_RO,
-        CRTC_RO, CRTC_RO, CRTC_RO, CRTC_RO,
-        CRTC_RO, CRTC_RO, CRTC_RO, CRTC_RO} {}
+            ? AccessType::CRTC_RW : AccessType::CRTC_WO,    // Display Start Address (Low byte)
+        AccessType::CRTC_RW,    // Cursor Address (High byte)
+        AccessType::CRTC_RW,    // Cursor Address (Low byte)
+        AccessType::CRTC_RO,    // Light Pen Address (High byte)
+        AccessType::CRTC_RO,    // Light Pen Address (Low byte)
+        AccessType::CRTC_RO,    // All the remaining addresses are unused.
+        AccessType::CRTC_RO,
+        AccessType::CRTC_RO,
+        AccessType::CRTC_RO,
+        AccessType::CRTC_RO,
+        AccessType::CRTC_RO,
+        AccessType::CRTC_RO,
+        AccessType::CRTC_RO,
+        AccessType::CRTC_RO,
+        AccessType::CRTC_RO,
+        AccessType::CRTC_RO,
+        AccessType::CRTC_RO,
+        AccessType::CRTC_RO,
+        AccessType::CRTC_RO} {}
 
 void CRTC::wrAddress(uint_fast8_t byte) {
 
-    address = byte & 0x1F;
+    index = byte & 0x1F;
 }
 
 void CRTC::wrRegister(uint_fast8_t byte) {
 
-    if (dirs[address] == CRTC_WO || dirs[address] == CRTC_RW) {
-        regs[address] = byte;
+    if (dirs[index] == AccessType::CRTC_WO
+            || dirs[index] == AccessType::CRTC_RW) {
+        regs[index] = byte;
     }
 
-    if (address == 0x03) {
+    if (index == 3) {
         hswMax = byte & 0x0F;
         switch (type) {
             case 0:
@@ -80,12 +96,15 @@ uint_fast8_t CRTC::rdStatus() {
 
     if (type == 1) {
     }
+
+    return 0xFF;
 }
 
 uint_fast8_t CRTC::rdRegister() {
 
-    return (dirs[address] == CRTC_RO || dirs[address] == CRTC_RW)
-        ? regs[address] : 0x00;
+    return (dirs[index] == AccessType::CRTC_RO
+            || dirs[index] == AccessType::CRTC_RW)
+        ? regs[index] : 0x00;
 }
 
 void CRTC::clock() {
@@ -122,6 +141,7 @@ void CRTC::clock() {
 
         // Increment raster counter and check
         rCounter = (rCounter + 1) & 0x1F;
+
         if (rCounter > regs[9]) {   // Maximum Raster Address
             rCounter = 0;               // Reset Raster Counter
 
@@ -134,6 +154,8 @@ void CRTC::clock() {
                 vDisplay = true;
             }
 
+            lineAddress = ((regs[12] & 0x3F) * 0x100 + regs[13]) + (regs[1] * vCounter);
+
             if (vCounter == regs[6]) {  // Vertical Displayed
                 vDisplay = false;
             }
@@ -141,9 +163,10 @@ void CRTC::clock() {
             if (vCounter == regs[7]) {  // Vertical Sync Position
                 vSync = true;
             }
-
-            updateLineAddress();
         }
+
+        scanAddress = ((rCounter & 7) << 11) | ((lineAddress & 0x3FF) << 1);
+        pageAddress = lineAddress >> 12;
 
         if (vSync) {
             ++vswCounter;
@@ -164,18 +187,13 @@ void CRTC::clock() {
 
     if (hSync) {    // Horizontal Sync Width is incremented during HSYNC pulse
         ++hswCounter;
-        if (hswCounter == regs[3]) {    // Horizontal Sync Width
+        if (hswCounter == hswMax) {    // Horizontal Sync Width
             hSync = false;
             hswCounter = 0;
         }
     }
 
-    byteAddress = scanAddress + hCounter;
-}
-
-void updateScanAddress() {
-
-    scanAddress = regs[13] * 0x100 + regs[12]               // Video base address
-        + (vCounter * (regs[9] + 1) + rCounter) * regs[1];  // Scan offset
+    byteAddress = scanAddress + hCounter * 2;
+    dispEn = hDisplay && vDisplay;
 }
 // vim: et:sw=4:ts=4

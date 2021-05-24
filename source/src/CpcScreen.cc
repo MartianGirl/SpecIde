@@ -47,11 +47,11 @@ void CpcScreen::setup() {
     cout << "Initialising Amstrad CPC..." << endl;
     // Select model and ROMs.
     if (options["model"] == "cpc464") {
-        cpc.set464(RomVariant::ROM_CPC464);
+        cpc.set464();
     } else if (options["model"] == "cpc664") {
-        cpc.set664(RomVariant::ROM_CPC664);
+        cpc.set664();
     } else if (options["model"] == "cpc6128") {
-        cpc.set6128(RomVariant::ROM_CPC6128);
+        cpc.set6128();
     } // Default model is ZX Spectrum 48K Issue 3...
 
     // Select joystick options.
@@ -100,6 +100,8 @@ void CpcScreen::setup() {
 
     loadFiles();
 
+    h = 600;
+    w = 888;
     reopenWindow(fullscreen);
     setFullScreen(fullscreen, true);
     setSmooth(smooth);
@@ -150,7 +152,7 @@ void CpcScreen::run() {
             // Run a complete frame.
             cpc.run();
 
-            cpc.playSound(true);
+            // cpc.playSound(true);
 
             update();
 
@@ -158,10 +160,10 @@ void CpcScreen::run() {
                 // By not sleeping until the next frame is due, we get some
                 // better adjustment
 #ifdef USE_BOOST_THREADS
-                frame = tick + boost::chrono::microseconds(cpc.frame);
+                frame = tick + boost::chrono::microseconds(19960);
                 wakeup = tick + boost::chrono::microseconds(18000);
 #else
-                frame = tick + std::chrono::microseconds(cpc.frame);
+                frame = tick + std::chrono::microseconds(19960);
                 wakeup = tick + std::chrono::microseconds(18000);
 #endif
 #ifndef DO_NOT_SLEEP
@@ -174,7 +176,7 @@ void CpcScreen::run() {
             pollCommands();
         }
 
-        cpc.playSound(false);
+        // cpc.playSound(false);
     }
 }
 

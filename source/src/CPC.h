@@ -15,15 +15,18 @@
 
 #pragma once
 
-#include "Memory.h"
-#include "CRTC.h"
 #include "GateArray.h"
-#include "PPI.h"
+// #include "PPI.h"
 #include "Z80.h"
 #include "Z80Defs.h"
 #include "PSG.h"
 #include "FDC765.h"
+#include "Tape.h"
 #include "config.h"
+
+#include "CommonDefs.h"
+#include "SoundDefs.h"
+#include "SoundChannel.h"
 
 #include <fstream>
 #include <iostream>
@@ -41,16 +44,26 @@ using namespace std;
 class CPC {
 
     public:
+        /**
+         * Constructor.
+         */
+        CPC();
+
         /** Z80 CPU instance. */
         Z80 z80;
         /** Gate Array instance. */
         GateArray ga;
         /** 8255 PPI instance. */
-        PPI ppi;
+        //PPI ppi;
         /** PSG instances. */
         PSG psg[4];
         /** FDC 765 instance. */
-        FDC fdc;
+        FDC765 fdc765;
+        /** Tape drive. */
+        Tape tape;
+
+        /** Sound channel object. */
+        SoundChannel channel;
 
         uint_fast8_t bus = 0xFF;
 
@@ -59,10 +72,17 @@ class CPC {
 
         bool cpc128K = true;
         bool cpcDisk = true;
+
+        bool tapeSound = false;
+        bool playSound = false;
+        StereoMode stereo = StereoMode::STEREO_MONO;
+
         /** Emulate so many PSGs. */
         size_t psgChips = 0;
         /** Currently selected PSG. */
         size_t currentPsg = 0;
+
+
 
         /** Array of strings with the extension ROM names. */
         std::string romNames[16];
@@ -78,6 +98,8 @@ class CPC {
         uint8_t* mem[4];
 
         size_t counter = 0;
+
+        void run();
 
         // This one is going to be called at 8MHz, and is going to:
         // 1. Clock the GA. This starts the GA counters.

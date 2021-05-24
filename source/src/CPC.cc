@@ -31,7 +31,7 @@ CPC::CPC() {
     setPage(0, 0);
     setPage(1, 1);
     setPage(2, 2);
-    setPage(3, 1);
+    setPage(3, 3);
 
     channel.open(2, SAMPLE_RATE);
 }
@@ -66,7 +66,7 @@ void CPC::loadRoms(RomVariant model) {
 
         ifstream ifs(romPath, ifstream::binary);
         // Logical || is a short-circuit operator.
-        fail = ifs.fail() || ifs.read(reinterpret_cast<char*>(introm), 0x8000);
+        fail = ifs.fail() || ifs.read(reinterpret_cast<char*>(rom), 0x8000).fail();
         cout << string(fail ? "FAIL" : "OK") << endl;
         ++j;
     } while (fail && j < romDirs.size());
@@ -75,7 +75,7 @@ void CPC::loadRoms(RomVariant model) {
 void CPC::loadExtensionRoms() {
 
     vector<string> romDirs = getRomDirs();
-    char buf[0x4000];
+
     for (size_t romSlot = 0; romSlot < 16; romSlot++) {
         size_t j = 0;
         bool fail = true;
@@ -86,7 +86,7 @@ void CPC::loadExtensionRoms() {
             cout << "Trying ROM in Slot #"
                 << static_cast<uint32_t>(romSlot) << ": " << romPath << "... ";
             ifstream ifs(romPath, ifstream::binary);
-            fail = ifs.fail() || ifs.read(ext[romSlot], 0x4000);
+            fail = ifs.fail() || ifs.read(reinterpret_cast<char*>(ext[romSlot]), 0x4000).fail();
             cout << string(fail ? "FAIL" : "OK") << endl;
             ++j;
         } while (fail && j < romDirs.size());
@@ -129,13 +129,12 @@ void CPC::set6128() {
 
 void CPC::run() {
 
-    static double remaining = 0;
+    //static double remaining = 0;
 
-    while (!ula.vSync) {
-
+    while (!ga.sync) {
         clock();
 
-        if (tape.playing) {
+        /*if (tape.playing) {
             if (!tape.sample--) {
                 ula.tapeIn = tape.advance() | 0x80;
             }
@@ -154,160 +153,169 @@ void CPC::run() {
 
             sample();
         }
+        */
     }
-
-    ula.vSync = false;
+    ga.sync = false;
 }
 
 void CPC::clock() {
 
     bool m1_ = z80.c & SIGNAL_M1_;
     bool as_ = z80.c & SIGNAL_MREQ_;
-    bool io_ = !m1_ && (z80.c & SIGNAL_IORQ_);
-
+    bool io_ = z80.c & SIGNAL_IORQ_;
+    bool rd_ = z80.c & SIGNAL_RD_;
+    bool wr_ = z80.c & SIGNAL_WR_;
     size_t memArea = z80.a >> 14;
+
+    ga.d = mem[ga.crtc.pageAddress][ga.crtc.byteAddress | ga.cClkOffset()];
 
     // First we clock the Gate Array. Further clocks will be generated here.
     ga.clock();
 
-    // From the Gate Array:
-    // 1. Clock the CRTC if necessary.
-    if (ga.cClkFall()) {
-        ctrc.clock();
-    }
-
-    ++count;
-    if (!(count & 0x03)) {
-        psgClock();
-        if (cpcDisk && !(count & 0x07))
-            fdc.clock();
-    }
+    /*
+       ++count;
+       if (!(count & 0x03)) {
+       psgClock();
+       if (cpcDisk && !(count & 0x07))
+       fdc.clock();
+       }
+   */
 
     // Z80 gets data from the ULA or memory, only when reading.
     if (!io_) {
         // Gate Array. This is accessible by both I/O reads and I/O writes.
-        if ((z80.a & 0xC000) == 0x4000) {
+        if (m1_ && (z80.a & 0xC000) == 0x4000) {
             if ((z80.d & 0xC0) == 0xC0) {
                 selectRam(z80.d);
             } else {
                 ga.write(z80.d);
             }
         }
+    }
 
-        // CRTC
-        if ((z80.a & 0x4000) == 0x0000) {
-            switch (z80.a & 0x0300) {
-                case 0x0000:    // CRTC Register Select (WO) at &BC00
-                    crtc.wrAddress(z80.d);
-                    break;
-                case 0x0100:    // CRTC Register Write (WO) at &BD00
-                    crtc.wrRegister(z80.d);
-                    break;
-                case 0x0200:    // CRTC Status Register Read (only type 1)
-                    z80.d = crtc.rdStatus();
-                    break;
-                case 0x0300:    // CRTC Register Read (RO)
-                    z80.d = crtc.rdRegister();
-                    break;
-                default:
-                    break;
-            }
-        }
+    if (ga.cpuClock()) {
 
-        // PPI
-        if ((z80.a & 0x0800) == 0x0000) {
-            switch (z80.a & 0x0300) {
-                case 0x0000:    // Port A
-                    break;
-                case 0x0100:    // Port B
-                    break;
-                case 0x0200:    // Port C
-                    break;
-                case 0x0300:    // Control register
-                    break;
-                default:
-                    break;
-            }
-        }
+        z80.c = ga.z80_c;
 
-        // Peripherals
-        if ((z80.a & 0x0400) == 0x0000) {
-            // FDC
-            if ((z80.a & 0x0080) == 0x0000) {
-                switch (z80.a & 0x0101) {
-                    case 0x0000:    // Drive A motor
+        if (!io_) {
+            // CRTC
+            if ((!rd_ || !wr_) && ((z80.a & 0x4000) == 0x0000)) {
+                switch (z80.a & 0x0300) {
+                    case 0x0000:    // CRTC Register Select (WO) at &BC00
+                        ga.crtc.wrAddress(z80.d);
                         break;
-                    case 0x0001:    // Drive B motor
+                    case 0x0100:    // CRTC Register Write (WO) at &BD00
+                        ga.crtc.wrRegister(z80.d);
                         break;
-                    case 0x0100:    // FDC main status register
+                    case 0x0200:    // CRTC Status Register Read (only type 1)
+                        z80.d = ga.crtc.rdStatus();
                         break;
-                    case 0x0101:    // FDC data register
+                    case 0x0300:    // CRTC Register Read (RO)
+                        z80.d = ga.crtc.rdRegister();
                         break;
                     default:
                         break;
                 }
             }
+
+            /*
+            // PPI
+            if ((z80.a & 0x0800) == 0x0000) {
+            switch (z80.a & 0x0300) {
+            case 0x0000:    // Port A
+            break;
+            case 0x0100:    // Port B
+            break;
+            case 0x0200:    // Port C
+            break;
+            case 0x0300:    // Control register
+            break;
+            default:
+            break;
+            }
+            }
+
+            // Peripherals
+            if ((z80.a & 0x0400) == 0x0000) {
+        // FDC
+        if ((z80.a & 0x0080) == 0x0000) {
+        switch (z80.a & 0x0101) {
+        case 0x0000:    // Drive A motor
+        break;
+        case 0x0001:    // Drive B motor
+        break;
+        case 0x0100:    // FDC main status register
+        break;
+        case 0x0101:    // FDC data register
+        break;
+        default:
+        break;
+        }
+        }
         }
 
-        // AY-3-8912 ports.
-        {
+            // AY-3-8912 ports.
+            {
             switch (z80.a & 0xC002)
             {
-                case 0x8000:    // 0xBFFD
-                    if (wr)
-                        psgWrite();
-                    else if (rd && spectrumPlus2A)
-                        psgRead();
-                    break;
+            case 0x8000:    // 0xBFFD
+            if (wr)
+            psgWrite();
+            else if (rd && spectrumPlus2A)
+            psgRead();
+            break;
 
-                case 0xC000:    // 0xFFFD
-                    if (wr)
-                    {
-                        if ((z80.d & 0x98) == 0x98)
-                        {
-                            currentPsg = (~z80.d) & 0x07;
-                            psg[currentPsg].lchan = (z80.d & 0x40);
-                            psg[currentPsg].rchan = (z80.d & 0x20);
-                        }
-                        else
-                            psgAddr();
-                    }
-                    else if (rd)
-                    {
-                        psgRead();
-                    }
-                    break;
+            case 0xC000:    // 0xFFFD
+            if (wr)
+            {
+            if ((z80.d & 0x98) == 0x98)
+            {
+            currentPsg = (~z80.d) & 0x07;
+            psg[currentPsg].lchan = (z80.d & 0x40);
+            psg[currentPsg].rchan = (z80.d & 0x20);
+            }
+            else
+            psgAddr();
+            }
+            else if (rd)
+            {
+            psgRead();
+            }
+            break;
 
-                default:
-                    break;
+            default:
+            break;
+            }
+            }
+            */
+        } else if (!as_) {
+            if (!rd_) {
+                switch (memArea) {
+                    case 0:
+                        z80.d = ga.lowerRom ? rom[z80.a & 0x3FFF] : mem[memArea][z80.a & 0x3FFF];
+                        break;
+                    case 3:
+                        z80.d = ga.upperRom ? rom[(z80.a & 0x3FFF) | 0x4000] : mem[memArea][z80.a & 0x3FFF];
+                        break;
+                    default:
+                        z80.d = mem[memArea][z80.a & 0x3FFF];
+                        break;
+                }
+            } else if (!wr_) {
+                mem[memArea][z80.a & 0x3FFF] = z80.d;
             }
         }
-    } else if (!as_) {
-        if (rd) {
-            switch (memArea) {
-                case 0:
-                   z80.d = ga.lowerRom ? rom[0][z80.a & 0x3FFF] : map[memArea][z80.a & 0x3FFF];
-                   break;
-                case 1: // fall-through
-                case 2:
-                   z80.d = map[memArea][z80.a & 0x3FFF];
-                   break;
-                case 3:
-                   z80.d = ga.upperRom ? rom[z80.a & 0x3FFF] : map[memArea][z80.a & 0x3FFF];
-                   break;
-            }
-        } else if (wr) {
-            map[memArea][z80.a & 0x3FFF] = z80.d;
-        }
+
+        z80.clock();
+        ga.z80_c = z80.c;
     }
-    z80.clock();
 }
 
 void CPC::reset() {
 
     z80.reset();
     psgReset();
-    fdc.reset();
+//    fdc.reset();
 }
 
 void CPC::psgRead() {
@@ -369,9 +377,10 @@ void CPC::psgChip(bool aychip) {
 
 void CPC::sample(int& l, int& r) {
 
-    buzzer.sample();
+    //buzzer.sample();
     psgSample();
-    l = r = buzzer.signal;
+    //l = r = buzzer.signal;
+    l = r = 0;
 
     switch (stereo) {
         case StereoMode::STEREO_ACB: // ACB
@@ -447,7 +456,7 @@ void CPC::selectRam(uint_fast8_t byte) {
 
 void CPC::setPage(uint_fast8_t page, uint_fast8_t bank) {
 
-    size_t addr = bank * (2 << 14);
-    map[page] = &ram[addr];
+    size_t addr = bank * (1 << 14);
+    mem[page] = &ram[addr];
 }
 // vim: et:sw=4:ts=4

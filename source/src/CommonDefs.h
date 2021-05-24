@@ -3,6 +3,7 @@
 enum class FileTypes {
     FILETYPE_TAP,
     FILETYPE_TZX,
+    FILETYPE_CDT,
     FILETYPE_PZX,
     FILETYPE_DSK,
     FILETYPE_TRD,

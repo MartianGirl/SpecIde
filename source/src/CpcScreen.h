@@ -49,7 +49,7 @@ class CpcScreen : public Screen {
          *
          * @param opt A map<string, string> of name-value pairs.
          */
-        CpcScreen(std::map<std::string, std::string> o
+        CpcScreen(std::map<std::string, std::string> o,
                 std::vector<std::string> f);
 
         /**

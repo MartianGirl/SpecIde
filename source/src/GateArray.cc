@@ -15,8 +15,12 @@
 
 #include "GateArray.h"
 
-static uint_fast32_t GateArray::pixelsX1[X_SIZE * Y_SIZE / 2];
-static uint_fast32_t GateArray::pixelsX2[X_SIZE * Y_SIZE];
+#include <iostream>
+
+using namespace std;
+
+uint32_t GateArray::pixelsX1[X_SIZE * Y_SIZE / 2];
+uint32_t GateArray::pixelsX2[X_SIZE * Y_SIZE];
 
 
 void GateArray::write(uint_fast8_t byte) {
@@ -222,93 +226,52 @@ void GateArray::clock() {
     // e: cpu col address latched
     // f-0: get data
 
-    static uint_fast32_t hCounter = 0;
-    static bool hSync_d = false;
-    static bool vSync_d = false;
-
     // Increment state counter
     counter = (counter + 1) & 0x0F;
 
     switch (counter) {
-        case 0x0:   // Right after CPU state change.
-            intAcknowledge();
-            break;
-        case 0x1:   // READY falling edge. CPU clock rising edge.
-            z80_c &= ~SIGNAL_WAIT_;
-            break;
-        case 0x2:   // Right after CPU state change.
-            intAcknowledge();
-            break;
-        case 0x4:   // Right after CPU state change.
-            intAcknowledge();
-            break;
-        case 0x6:   // CAS_ and S3 rising edge. CCLK rising edge.
-            intAcknowledge();
-            dispen = crtc.dispen;
-            videoByte = d;
-            break;
-        case 0x7:
-            inksel = dispen;
-            break;
-        case 0x8:   // Right after CPU state change.
-            intAcknowledge();
-            break;
-        case 0xa:   // Right after CPU state change.
-            intAcknowledge();
-            break;
-        case 0xb:   // CAS_ and S3 rising edge. CCLK falling edge.
-            dispen = crtc.dispen;
-            videoByte = d;
-
-            // This cClk falling edge counter is reset when HSYNC is low,
-            // and it counts up to 8. When it reaches 8, it stops and keeps
-            // its value until HSYNC falls.
-            // If cClkEdge is 0-3, the mode selection clock is high.
-            if (crtc.hSync) {
-                if (cClkCounter < 8) {
-                    ++cClkCounter;
-
-                    // Mode is updated on the falling edge of bit 4 of this counter.
-                    if (cClkCounter == 8) {
-                        actMode = newMode;
-                    }
-                }
-            } else {
-                cClkCounter = 0;
-            }
-
-            // CRTC is clocked. Some values have updated.
-            hSync_d = crtc.hSync;
-            vSync_d = crtc.vSync;
-            crtc.clock();
-
-            // In HSYNC falling edges, intCounter and hCounter are increased.
-            // If intCounter reaches 52, an INT is generated and the counter
-            // is reset.
-            if (!crtc.hSync && hSync_d) {
-                if (++intCounter == 52) {
-                    z80_c &= ~SIGNAL_INT_;
-                    intCounter = 0;
-                }
-
-                if (hCounter < 28) {
-                    ++hCounter;
-                }
-
-            }
-
-            if (crtc.vSync && !vSync_d) {
-                hCounter = 0;
-            }
-            break;
-        case 0xc:   // READY rising edge.
-            intAcknowledge();
-            z80_c |= SIGNAL_WAIT_; break;
+        case 0x0:   // fall-through
+        case 0x4:   // fall-through
+        case 0x8:   // fall-through
         case 0xe:   // Right after CPU state change.
             intAcknowledge();
             break;
-        case 0xf:
+
+        case 0x2:   // fall-through
+        case 0xa:   // Paint. Right after CPU state change.
+            paint();
+            intAcknowledge();
+            break;
+
+        case 0x1:   // READY falling edge. CPU clock rising edge.
+            z80_c &= ~SIGNAL_WAIT_;
+            break;
+        case 0xc:   // READY rising edge. Right after CPU state change.
+            intAcknowledge();
+            z80_c |= SIGNAL_WAIT_;
+            break;
+
+        case 0x7:   // fall-through
+        case 0xf:   // Latch video data
             inksel = dispen;
+            colour = videoByte;
+            break;
+
+        case 0x6:   // CAS_ and S3 rising edge. Right after CPU state change.
+            intAcknowledge();
+            dispen = crtc.dispEn;
+            videoByte = d;
+            break;
+        case 0xb:   // CAS_ and S3 rising edge. CRTC is clocked here.
+            dispen = crtc.dispEn;
+            videoByte = d;
+
+            // CRTC is clocked. Some values have updated.
+            crtc.clock();
+
+            updateBeam();
+            updateVideoMode();
+            generateInterrupts();
             break;
         default:
             break;
@@ -331,6 +294,85 @@ void GateArray::intAcknowledge() {
     }
 }
 
+void GateArray::updateVideoMode() {
+
+    // This cClk falling edge counter is reset when HSYNC is low,
+    // and it counts up to 8. When it reaches 8, it stops and keeps
+    // its value until HSYNC falls.
+    // If cClkEdge is 0-3, the mode selection clock is high.
+    static uint_fast32_t cClkCounter;
+
+    if (crtc.hSync) {
+        if (cClkCounter < 8) {
+            ++cClkCounter;
+
+            // Mode is updated on the falling edge of bit 4 of this counter.
+            // If cClkCounter was already 8, we don't enter the if above.
+            if (cClkCounter == 8) {
+                actMode = newMode;
+            }
+        }
+    } else {
+        cClkCounter = 0;
+    }
+}
+
+void GateArray::updateBeam() {
+
+    blanking = (crtc.hSync || hCounter < 28);
+
+    if ((crtc.hSync && !hSync_d) || xPos >= X_SIZE) {
+        xPos = 0;
+        if (hCounter >= 28) {
+            ++yPos;
+            if (yPos >= Y_SIZE) {
+                yPos = 0;
+            }
+        }
+    }
+
+    if (crtc.vSync && !vSync_d) {
+        yPos = 0;
+        sync = true;
+    }
+}
+
+void GateArray::generateInterrupts() {
+
+    // In HSYNC falling edges, intCounter and hCounter are increased.
+    // If intCounter reaches 52, an INT is generated and the counter
+    // is reset.
+    if (!crtc.hSync && hSync_d) {
+        if (++intCounter == 52) {
+            z80_c &= ~SIGNAL_INT_;
+            intCounter = 0;
+        }
+
+        if (hCounter < 28) {
+            ++hCounter;
+        }
+    }
+
+    if (crtc.vSync && !vSync_d) {
+        hCounter = 0;
+    }
+
+    hSync_d = crtc.hSync;
+    vSync_d = crtc.vSync;
+}
+
 void GateArray::paint() {
+
+    if (!blanking) {
+        uint_fast32_t index = pens[pixelTable[actMode][colour]];
+        for (size_t ii = 0; ii < 8; ++ii) {
+            pixelsX1[(yPos * X_SIZE) + xPos] = colours[inksel ? index : border];
+            if (modeTable[actMode][ii]) {
+                colour = (colour << 1) & 0xFF;
+                index = pens[pixelTable[actMode][colour]];
+            }
+            ++xPos;
+        }
+    }
 }
 // vim: et:sw=4:ts=4

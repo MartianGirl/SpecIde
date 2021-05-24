@@ -19,19 +19,19 @@ find_package(ZLIB REQUIRED)
 include_directories(${Boost_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR})
 
 add_executable(SpecIde SpecIde.cc Console.cc
-        Screen.cc SpeccyScreen.cc
-        Z80.cc ULA.cc
-        FDC765.cc
-        Spectrum.cc
-        Tape.cc TAPFile.cc TZXFile.cc CSWFile.cc
-        DSKFile.cc)
+    Screen.cc
+    SpeccyScreen.cc Spectrum.cc ULA.cc
+    CpcScreen.cc CPC.cc GateArray.cc CRTC.cc
+    Z80.cc FDC765.cc
+    Tape.cc TAPFile.cc TZXFile.cc CSWFile.cc
+    DSKFile.cc)
 target_link_libraries(SpecIde ${Boost_LIBRARIES} ${ZLIB_LIBRARIES}
-        sfml-audio sfml-graphics sfml-window sfml-system)
+    sfml-audio sfml-graphics sfml-window sfml-system)
 
 # Set version information in a config.h file.
 set(SpecIde_VERSION_MAJOR 0)
-set(SpecIde_VERSION_MINOR 5)
-set(SpecIde_VERSION_TWEAK 9)
+set(SpecIde_VERSION_MINOR 6)
+set(SpecIde_VERSION_TWEAK 0)
 
 # Set endianness in config.h.
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)

@@ -21,6 +21,7 @@
 
 #include "SpecIde.h"
 #include "SpeccyScreen.h"
+#include "CpcScreen.h"
 
 #include "config.h"
 
@@ -127,10 +128,10 @@ int main(int argc, char* argv[]) {
         SpeccyScreen speccy(options, files);
         speccy.setup();
         speccy.run();
-    //} else if (isCpc(model)) {
-        //CpcScreen cpc(options, files);
-        //cpc.setup();
-        //cpc.run();
+    } else if (isCpc(model)) {
+        CpcScreen cpc(options, files);
+        cpc.setup();
+        cpc.run();
     }
 }
 
