@@ -152,8 +152,6 @@ void CpcScreen::run() {
             // Run a complete frame.
             cpc.run();
 
-            // cpc.playSound(true);
-
             update();
 
             if (!syncToVideo) {
@@ -175,8 +173,6 @@ void CpcScreen::run() {
             pollEvents();
             pollCommands();
         }
-
-        // cpc.playSound(false);
     }
 }
 

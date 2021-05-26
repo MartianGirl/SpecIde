@@ -113,11 +113,11 @@ class Spectrum {
         uint_fast8_t romBank = 0x00;
 
         /** Number of cycles before next sound sample. */
-        uint32_t skip;
+        uint_fast32_t skip;
         /** Tail of cycles before next sound sample. */
         double tail;
         /** Counter of cycles before next sound sample. */
-        uint32_t skipCycles = 0;
+        uint_fast32_t skipCycles = 0;
         /** Sound byte in Covox port. */
         int covox = 0;
         /** Array of samples sent to the Covox. */

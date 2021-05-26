@@ -327,7 +327,7 @@ void GateArray::updateBeam() {
         xPos = 0;
         // yPos maybe should be incremented only if hCounter is not less than
         // 28, but the border obtained without this condition looks better
-        if (++yPos >= Y_SIZE) {
+        if (hCounter >= 16 && ++yPos >= Y_SIZE) {
             yPos = 0;
         }
     }

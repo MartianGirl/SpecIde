@@ -42,24 +42,35 @@ class PSG
 
         bool wr;
 
-        int signalA, signalB, signalC;
         int filterA[FILTER_PSG_SIZE];
         int filterB[FILTER_PSG_SIZE];
         int filterC[FILTER_PSG_SIZE];
-        int channelA, channelB, channelC;
-        int noise, seed;
-        int volumeA, volumeB, volumeC;
-        int waveA, waveB, waveC;
+        int channelA = 0;
+        int channelB = 0;
+        int channelC = 0;
+        int noise = 0;
+        int seed = 0xFFFF;
+        int volumeA;
+        int volumeB;
+        int volumeC;
+        int waveA;
+        int waveB;
+        int waveC;
 
         int out[32];
 
         int envSlope, envLevel;
         int envStep;
         bool envHold;
-        bool envA, envB, envC;
+        bool envA;
+        bool envB;
+        bool envC;
 
         uint_fast16_t counterA, counterB, counterC, counterN, counterE;
         uint_fast16_t periodA, periodB, periodC, periodN, periodE;
+
+        uint_fast8_t ioA = 0xFF;
+        uint_fast8_t ioB = 0xFF;
 
         size_t count = 0;
         size_t index = 0;
@@ -77,9 +88,6 @@ class PSG
             m{0xFF, 0x0F, 0xFF, 0x0F, 0xFF, 0x0F, 0x1F, 0xFF,
                 0x1F, 0x1F, 0x1F, 0xFF, 0xFF, 0x0F, 0xFF, 0xFF},
             wr(false),
-            signalA(0), signalB(0), signalC(0),
-            channelA(0), channelB(0), channelC(0),
-            noise(0), seed(0xFFFF),
             volumeA(0), volumeB(0), volumeC(0),
             waveA(1), waveB(1), waveC(1),
             out{0x000, 0x000, 0x013, 0x013, 0x049, 0x049, 0x0A4, 0x0A4,
@@ -93,6 +101,10 @@ class PSG
             playSound(true) {}
 
         void clock() {
+
+            int signalA = 1;
+            int signalB = 1;
+            int signalC = 1;
 
             ++count;
 
@@ -161,6 +173,20 @@ class PSG
                             envSlope = ((r[13] & 0x04) == 0x00) ? -1 : 1;
                             envLevel = ((r[13] & 0x04) == 0x00) ? 0x1F : 0x00;
                             restartEnvelope();
+                        }
+                        break;
+
+                    case 016:
+                        // I/O port A (as output).
+                        if ((r[7] & 0x40) == 0x40) {
+                            ioA = r[14];
+                        }
+                        break;
+
+                    case 017:
+                        // I/O port B (as output).
+                        if ((r[7] & 0x80) == 0x80) {
+                            ioB = r[15];
                         }
                         break;
 
@@ -322,6 +348,23 @@ class PSG
             // GenNoise (c) Hacker KAY & Sergey Bulba
             seed = (seed * 2 + 1) ^ (((seed >> 16) ^ (seed >> 13)) & 1);
             return ((seed >> 16) & 1);
+        }
+
+        void setPortA(uint_fast8_t byte) {
+
+            // Copy value in port A to R14 if it is set as Input
+            if ((r[7] & 0x40) == 0x00) {
+                r[14] = ioA = byte;
+            }
+
+        }
+
+        void setPortB(uint_fast8_t byte) {
+
+            // Copy value in port B to R15 if it is set as Input
+            if ((r[7] & 0x80) == 0x00) {
+                r[15] = ioB = byte;
+            }
         }
 };
 // vim: et:sw=4:ts=4

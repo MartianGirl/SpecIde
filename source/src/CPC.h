@@ -16,7 +16,7 @@
 #pragma once
 
 #include "GateArray.h"
-// #include "PPI.h"
+#include "PPI.h"
 #include "Z80.h"
 #include "Z80Defs.h"
 #include "PSG.h"
@@ -54,13 +54,15 @@ class CPC {
         /** Gate Array instance. */
         GateArray ga;
         /** 8255 PPI instance. */
-        //PPI ppi;
-        /** PSG instances. */
-        PSG psg[4];
+        PPI ppi;
+        /** PSG instance. */
+        PSG psg;
         /** FDC 765 instance. */
         FDC765 fdc765;
         /** Tape drive. */
         Tape tape;
+        /** Keyboard matrix. */
+        uint_fast8_t keys[16];
 
         /** Sound channel object. */
         SoundChannel channel;
@@ -77,11 +79,6 @@ class CPC {
         bool playSound = false;
         StereoMode stereo = StereoMode::STEREO_MONO;
 
-        /** Emulate so many PSGs. */
-        size_t psgChips = 0;
-        /** Currently selected PSG. */
-        size_t currentPsg = 0;
-
 
 
         /** Array of strings with the extension ROM names. */
@@ -94,8 +91,12 @@ class CPC {
         uint8_t ext[16][1 << 14];
         /** Currently selected expansion ROM page. */
         uint_fast8_t romBank;
+        bool extPresent[256];
         /** Currently selected RAM pages. */
         uint8_t* mem[4];
+        /** Pointer to lower ROM. */
+        uint8_t* loRom = &rom[0x0000];
+        uint8_t* hiRom = &rom[0x4000];
 
         size_t counter = 0;
 
@@ -109,6 +110,7 @@ class CPC {
         void clock();
         void reset();
 
+        void scanKeys();
         /**
          * Load internal ROM for each Amstrad CPC model.
          *
@@ -157,11 +159,7 @@ class CPC {
          */
         void setPage(uint_fast8_t page, uint_fast8_t bank);
 
-        void psgRead();
-        void psgWrite();
-        void psgAddr();
         void psgReset();
-        void psgClock();
         void psgSample();
         void psgChip(bool play);
         void psgPlaySound(bool play);

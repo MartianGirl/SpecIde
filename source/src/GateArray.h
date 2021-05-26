@@ -102,7 +102,9 @@ class GateArray {
          */
         void intAcknowledge();
 
-        bool cpuClock() const { return cpuTable[counter]; }
+        bool psgClock() const { return counter == 0; }
+        bool cpuClock() const { return (counter & 1) == 1; }
+        bool crtcClock() const { return counter == 0xb; }
         bool cpuReady() const { return readyTable[counter]; }
         uint_fast16_t cClkOffset() const { return cClkBit[counter]; }
         bool muxVideo() const { return muxTable[counter]; }
