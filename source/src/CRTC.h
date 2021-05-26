@@ -34,7 +34,7 @@ class CRTC {
         uint_fast8_t regs[32];
         AccessType dirs[32];
 
-        CRTC(uint_fast8_t type = 1);
+        CRTC(uint_fast8_t type = 0);
 
         uint_fast8_t hCounter = 0;
         uint_fast8_t hswCounter = 0;
@@ -47,6 +47,8 @@ class CRTC {
         uint_fast8_t rCounter = 0;
         bool hh;
 
+        /** Base video address, defined by R12 and R13. */
+        uint_fast16_t baseAddress = 0;
         /** Address of next accessed byte. */
         uint_fast16_t byteAddress = 0;
         /** Address of current scan. */

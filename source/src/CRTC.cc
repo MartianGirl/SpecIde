@@ -152,8 +152,6 @@ void CRTC::clock() {
                 vDisplay = true;
             }
 
-            lineAddress = ((regs[12] & 0x3F) * 0x100 + regs[13]) + (regs[1] * vCounter);
-
             if (vCounter == regs[6]) {  // Vertical Displayed
                 vDisplay = false;
             }
@@ -163,6 +161,12 @@ void CRTC::clock() {
             }
         }
 
+        // Base address is updated on VCC=0 (CRTC 1) or VCC=0 and VLC=0 (other)
+        if (vCounter == 0 && (type == 1 || rCounter == 0)) {
+            baseAddress = (regs[12] & 0x3F) * 0x100 + regs[13];
+        }
+
+        lineAddress = baseAddress + (regs[1] * vCounter);
         scanAddress = ((rCounter & 7) << 11) | ((lineAddress & 0x3FF) << 1);
         pageAddress = lineAddress >> 12;
 
