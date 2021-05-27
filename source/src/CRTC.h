@@ -47,14 +47,12 @@ class CRTC {
         uint_fast8_t rCounter = 0;
         bool hh;
 
-        /** Base video address, defined by R12 and R13. */
-        uint_fast16_t baseAddress = 0;
-        /** Address of next accessed byte. */
-        uint_fast16_t byteAddress = 0;
-        /** Address of current scan. */
-        uint_fast16_t scanAddress = 0;
         /** Address of current character line. */
         uint_fast16_t lineAddress = 0;
+        /** Address of current screen character. */
+        uint_fast16_t charAddress = 0;
+        /** Address of current scan. */
+        uint_fast16_t byteAddress = 0;
         /** Address of current mem page. */
         uint_fast16_t pageAddress = 0;
 

@@ -132,6 +132,17 @@ void CRTC::clock() {
     // This is for interlace control
     hh = (hCounter > (regs[0] >> 1));
 
+    if (hCounter == regs[1]) {   // Horizontal Displayed
+        hDisplay = false;                   // Drawing border
+        if (rCounter == regs[9]) {
+            lineAddress += hCounter;
+        }
+    }
+
+    if (hCounter == regs[2]) {   // Horizontal Sync Position
+        hSync = true;                       // HSYNC pulse
+    }
+
     // Here increment Raster Counter, Vertical Sync Width Counter
     if (hCounter > regs[0]) {   // Horizontal Total marks the end of a scan
         hCounter = 0;               // Reset Horizontal Counter 
@@ -163,12 +174,8 @@ void CRTC::clock() {
 
         // Base address is updated on VCC=0 (CRTC 1) or VCC=0 and VLC=0 (other)
         if (vCounter == 0 && (type == 1 || rCounter == 0)) {
-            baseAddress = (regs[12] & 0x3F) * 0x100 + regs[13];
+            lineAddress = (regs[12] & 0x3F) * 0x100 + regs[13];
         }
-
-        lineAddress = baseAddress + (regs[1] * vCounter);
-        scanAddress = ((rCounter & 7) << 11) | ((lineAddress & 0x3FF) << 1);
-        pageAddress = lineAddress >> 12;
 
         if (vSync) {
             ++vswCounter;
@@ -179,14 +186,6 @@ void CRTC::clock() {
         }
     }
 
-    if (hCounter == regs[1]) {   // Horizontal Displayed
-        hDisplay = false;                   // Drawing border
-    }
-
-    if (hCounter == regs[2]) {   // Horizontal Sync Position
-        hSync = true;                       // HSYNC pulse
-    }
-
     if (hSync) {    // Horizontal Sync Width is incremented during HSYNC pulse
         ++hswCounter;
         if (hswCounter == hswMax) {    // Horizontal Sync Width
@@ -195,7 +194,9 @@ void CRTC::clock() {
         }
     }
 
-    byteAddress = scanAddress + hCounter * 2;
+    pageAddress = lineAddress >> 12;
+    charAddress = ((lineAddress & 0x3FF) + hCounter) << 1;
+    byteAddress = ((rCounter & 7) << 11) | (charAddress & 0x7FF);
     dispEn = hDisplay && vDisplay;
 }
 // vim: et:sw=4:ts=4
