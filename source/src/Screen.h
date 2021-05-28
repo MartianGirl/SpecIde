@@ -31,8 +31,11 @@
 #include "CommonDefs.h"
 #include "Console.h"
 
+#if (SPECIDE_SDL2==1)
+#else
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
+#endif
 
 #include <cctype>
 #include <cstddef>
@@ -65,8 +68,19 @@ class Screen {
         /** Vector of file names as strings. */
         std::vector<std::string> files;
 
+#if (SPECIDE_SDL2==1)
+#else
         /** SFML Window object. */
         sf::RenderWindow window;
+        /** Best video mode. It uses the resolution of the desktop. */
+        sf::VideoMode bestMode;
+        /** Texture. */
+        sf::Texture scrTexture;
+        /** Sprite. Contains the texture to be drawn. */
+        sf::Sprite scrSprite;
+        /** ZX Spectrum font for drawing the menus. */
+        sf::Font zxFont;
+#endif
         /** Window width. */
         uint32_t w = 688;
         /** Window height. */
@@ -76,8 +90,6 @@ class Screen {
 
         /** Vector of available video modes. */
         std::vector<sf::VideoMode> modes;
-        /** Best video mode. It uses the resolution of the desktop. */
-        sf::VideoMode bestMode;
         /** Suggested drawable scans for better fit on single scan modes. */
         uint32_t suggestedScansSingle;
         /** Suggested drawable scans for better fit on double scan modes. */
@@ -120,13 +132,6 @@ class Screen {
         float xScale;
         /** Vertical stretch of the texture. */
         float yScale;
-
-        /** Texture. */
-        sf::Texture scrTexture;
-        /** Sprite. Contains the texture to be drawn. */
-        sf::Sprite scrSprite;
-        /** ZX Spectrum font for drawing the menus. */
-        sf::Font zxFont;    
 
         /** Thread for a text console. */
         ConsoleThread console;

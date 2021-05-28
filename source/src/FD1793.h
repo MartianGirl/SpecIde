@@ -60,32 +60,29 @@ enum class FD1793Scan
     FD1793_SCAN_ERROR
 };
 
-constexpr uint_fast8_t SREG_DB0 = 1 << 0;
-constexpr uint_fast8_t SREG_DB1 = 1 << 1;
-constexpr uint_fast8_t SREG_DB2 = 1 << 2;
-constexpr uint_fast8_t SREG_DB3 = 1 << 3;
-constexpr uint_fast8_t SREG_CB = 1 << 4;
-constexpr uint_fast8_t SREG_EXM = 1 << 5;
-constexpr uint_fast8_t SREG_DIO = 1 << 6;
-constexpr uint_fast8_t SREG_RQM = 1 << 7;
+uint32_t constexpr DELAY_1ms = 875;     // Clocking at 1.000MHz
+uint32_t constexpr SERVICE_MFM = 46;
+uint32_t constexpr SERVICE_FM = 91;
+uint32_t constexpr BYTE_DELAY = 100;
 
-constexpr size_t DELAY_1ms = 875;     // Clocking at 1.000MHz
-constexpr size_t SERVICE_MFM = 46;
-constexpr size_t SERVICE_FM = 91;
-constexpr size_t BYTE_DELAY = 100;
+uint_fast32_t MAX_TRDOS_DRIVES = 2;
 
 class FD1793 {
 
     public:
         uint_fast8_t trackReg;
         uint_fast8_t sectorReg;
+        uint_fast8_t statusReg;
+        uint_fast8_t commandReg;
+        uint_fast8_t systemReg;
         uint_fast8_t dataBuffer[65536];
 
         FD1793State state;
         FD1793Mode mode;
         FD1793Access stage;
 
-        TRDosDrive drive[4];
+        TRDosDrive drive[MAX_TRDOS_DRIVES];
+        uint_fast8_t presCylNum[MAX_TRDOS_DRIVES];
 
         FD1793() :
             drive{TRDosDrive(true), TRDosDrive(false), TRDosDrive(false), TRDosDrive(false)},

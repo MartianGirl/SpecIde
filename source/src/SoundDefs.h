@@ -23,6 +23,7 @@ uint32_t constexpr BASE_CLOCK_CPC = 8000000;
 int constexpr FRAME_TIME_48 = 19968;
 int constexpr FRAME_TIME_128 = 19992;
 int constexpr FRAME_TIME_PENTAGON = 20480;
+int constexpr FRAME_TIME_50HZ = 20000;
 
 uint32_t constexpr SAMPLE_RATE = 44100;
 

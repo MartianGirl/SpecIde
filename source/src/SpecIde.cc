@@ -17,8 +17,6 @@
 #include <fstream>
 #include <memory>
 
-#include <SFML/Graphics.hpp>
-
 #include "SpecIde.h"
 #include "SpeccyScreen.h"
 #include "CpcScreen.h"

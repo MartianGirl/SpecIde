@@ -70,28 +70,31 @@ void CPC::loadRoms(RomVariant model) {
     } while (fail && j < romDirs.size());
 }
 
-void CPC::loadExtensionRoms() {
+void CPC::loadExpansionRoms() {
 
     vector<string> romDirs = getRomDirs();
+    char buffer[0x4000];
 
-    for (size_t romSlot = 1; romSlot < 16; romSlot++) {
+    for (size_t ii = 0; ii < 0x100; ++ii) {
+        extReady[ii] = false;
+    }
+
+    for (map<uint8_t, ExpansionRom>::iterator it = ext.begin(); it != ext.end(); ++it) {
         size_t j = 0;
         bool fail = true;
-        if (romNames[romSlot].empty()) {
-            extPresent[romSlot] = false;
-        } else do {
-            string romPath = romDirs[j] + romNames[romSlot];
+        string romName = it->second.name;
+        uint8_t romSlot = it->first;
+        if (!romName.empty()) do {
+            string romPath = romDirs[j] + romName;
             cout << "Trying ROM in Slot #"
                 << static_cast<uint32_t>(romSlot) << ": " << romPath << "... ";
             ifstream ifs(romPath, ifstream::binary);
-            fail = ifs.fail() || ifs.read(reinterpret_cast<char*>(ext[romSlot]), 0x4000).fail();
-            extPresent[romSlot] = !fail;
+            fail = ifs.fail() || ifs.read(buffer, 0x4000).fail();
+            it->second.data.assign(buffer, &buffer[0x4000]);
+            extReady[romSlot] = !fail;
             cout << string(fail ? "FAIL" : "OK") << endl;
             ++j;
         } while (fail && j < romDirs.size());
-    }
-    for (size_t romSlot = 16; romSlot < 256; ++romSlot) {
-        extPresent[romSlot] = false;
     }
 }
 
@@ -99,9 +102,10 @@ void CPC::set464() {
 
     cpc128K = false;
     cpcDisk = false;
+    expBit = false;
 
     loadRoms(RomVariant::ROM_CPC464);
-    loadExtensionRoms();
+    loadExpansionRoms();
     reset();
 }
 
@@ -109,11 +113,13 @@ void CPC::set664() {
 
     cpc128K = false;
     cpcDisk = true;
+    expBit = true;
+    fdc765.clockFrequency = 4;
 
-    romNames[0x07] = "amsdos.rom";
+    ext[0x07] = ExpansionRom("amsdos.rom");
 
     loadRoms(RomVariant::ROM_CPC664);
-    loadExtensionRoms();
+    loadExpansionRoms();
     reset();
 }
 
@@ -121,11 +127,13 @@ void CPC::set6128() {
 
     cpc128K = true;
     cpcDisk = true;
+    expBit = true;
+    fdc765.clockFrequency = 4;
 
-    romNames[0x07] = "amsdos.rom";
+    ext[0x07] = ExpansionRom("amsdos.rom");
 
     loadRoms(RomVariant::ROM_CPC6128);
-    loadExtensionRoms();
+    loadExpansionRoms();
     reset();
 }
 
@@ -177,7 +185,7 @@ void CPC::clock() {
     ga.clock();
 
     if (ga.crtcClock()) {
-        ppi.portB = 0x5E | (ga.crtc.vSync ? 1 : 0);
+        ppi.portB = 0x5E | (expBit ? 0x20 : 0) | (ga.crtc.vSync ? 1 : 0);
     }
 
     if (ga.psgClock()) {
@@ -200,11 +208,6 @@ void CPC::clock() {
 
         psg.clock();
     }
-    /*
-       ++count;
-       if (cpcDisk && !(count & 0x07))
-       fdc.clock();
-   */
 
     // Z80 gets data from the ULA or memory, only when reading.
     if (!io_) {
@@ -219,18 +222,21 @@ void CPC::clock() {
 
         if (m1_ && (z80.a & 0x2000) == 0x0000) {
             romBank = z80.d;
-            if (extPresent[romBank]) {
-                hiRom = ext[romBank];
+            if (romBank != 0 && extReady[romBank]) {
+                hiRom = &ext[romBank].data[0];
             } else {
                 hiRom = &rom[0x4000];
             }
-
         }
     }
 
     if (ga.cpuClock()) {
 
         z80.c = ga.z80_c;
+
+        if (cpcDisk && romBank == 0x07) {
+            fdc765.clock();
+        }
 
         if (!io_) {
             // CRTC
@@ -287,35 +293,42 @@ void CPC::clock() {
                 }
             }
 
-            /*
             // Peripherals
             if ((z80.a & 0x0400) == 0x0000) {
-            // FDC
-            if ((z80.a & 0x0080) == 0x0000) {
-            switch (z80.a & 0x0101) {
-            case 0x0000:    // Drive A motor
-            break;
-            case 0x0001:    // Drive B motor
-            break;
-            case 0x0100:    // FDC main status register
-            break;
-            case 0x0101:    // FDC data register
-            break;
-            default:
-            break;
-            }
-            }
-            }
 
-            */
+                // FDC
+                if (cpcDisk && romBank == 0x07 && (z80.a & 0x0080) == 0x0000) {
+                    switch (z80.a & 0x0101) {
+                        case 0x0100:    // FDC main status register
+                            if (z80.rd) {
+                                z80.d = fdc765.status();
+                            }
+                            break;
+                        case 0x0101:    // FDC data register
+                            if (z80.wr) {
+                                fdc765.write(z80.d);
+                            } else if (z80.rd) {
+                                z80.d = fdc765.read();
+                            }
+                            break;
+                        case 0x0000:    // FDC motor
+                            if (z80.wr) {
+                                fdc765.motor((z80.d & 0x01) == 0x01);
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
         } else if (!as_) {
             if (!rd_) {
                 switch (memArea) {
                     case 0:
-                        z80.d = ga.lowerRom ? rom[z80.a & 0x3FFF] : mem[0][z80.a & 0x3FFF];
+                        z80.d = ga.lowerRom ? loRom[z80.a & 0x3FFF] : mem[0][z80.a & 0x3FFF];
                         break;
                     case 3:
-                        z80.d = ga.upperRom ? rom[(z80.a & 0x3FFF) | 0x4000] : mem[3][z80.a & 0x3FFF];
+                        z80.d = ga.upperRom ? hiRom[z80.a & 0x3FFF] : mem[3][z80.a & 0x3FFF];
                         break;
                     default:
                         z80.d = mem[memArea][z80.a & 0x3FFF];
@@ -335,7 +348,7 @@ void CPC::reset() {
 
     z80.reset();
     psgReset();
-//    fdc.reset();
+    fdc765.reset();
 }
 
 void CPC::psgReset() {

@@ -126,7 +126,7 @@ void Spectrum::setIssue2(RomVariant variant) {
     ula.setUlaVersion(0);
 
     loadRoms(variant);
-    setSoundRate(SoundRate::SOUNDRATE_48K);
+    setSoundRate(SoundRate::SOUNDRATE_48K, sync);
 
     reset();
 }
@@ -142,7 +142,7 @@ void Spectrum::setIssue3(RomVariant variant) {
     ula.setUlaVersion(1);
 
     loadRoms(variant);
-    setSoundRate(SoundRate::SOUNDRATE_48K);
+    setSoundRate(SoundRate::SOUNDRATE_48K, sync);
 
     reset();
 }
@@ -158,7 +158,7 @@ void Spectrum::set128K(RomVariant variant) {
     ula.setUlaVersion(2);
 
     loadRoms(variant);
-    setSoundRate(SoundRate::SOUNDRATE_128K);
+    setSoundRate(SoundRate::SOUNDRATE_128K, sync);
 
     reset();
 }
@@ -174,7 +174,7 @@ void Spectrum::setPlus2(RomVariant variant) {
     ula.setUlaVersion(3);
 
     loadRoms(variant);
-    setSoundRate(SoundRate::SOUNDRATE_128K);
+    setSoundRate(SoundRate::SOUNDRATE_128K, sync);
 
     reset();
 }
@@ -190,7 +190,7 @@ void Spectrum::setPlus2A(RomVariant variant) {
     ula.setUlaVersion(4);
 
     loadRoms(variant);
-    setSoundRate(SoundRate::SOUNDRATE_128K);
+    setSoundRate(SoundRate::SOUNDRATE_128K, sync);
 
     reset();
 }
@@ -206,7 +206,7 @@ void Spectrum::setPlus3(RomVariant variant) {
     ula.setUlaVersion(4);
 
     loadRoms(variant);
-    setSoundRate(SoundRate::SOUNDRATE_128K);
+    setSoundRate(SoundRate::SOUNDRATE_128K, sync);
 
     reset();
 }
@@ -222,7 +222,7 @@ void Spectrum::setPentagon(RomVariant variant) {
     ula.setUlaVersion(5);
 
     loadRoms(variant);
-    setSoundRate(SoundRate::SOUNDRATE_PENTAGON);
+    setSoundRate(SoundRate::SOUNDRATE_PENTAGON, sync);
 
     reset();
 }
@@ -310,11 +310,8 @@ void Spectrum::clock() {
     if (!ula.mem) {
         // Snow effect. ULA::snow is always false for +2A/+3/Pentagon
         if (ula.snow && contendedAccess) {
-            if (memArea == 1) {
-                bus = scr[(ula.a & 0x3F80) | (z80.a & 0x007F)];
-            } else {
-                bus = sno[(ula.a & 0x3F80) | (z80.a & 0x007F)];
-            }
+            uint_fast16_t snowaddr = (ula.a & 0x3F80) | (z80.a & 0x007F);
+            bus = (memArea == 1) ? scr[snowaddr] : sno[snowaddr];
         } else {
             bus = scr[ula.a];
         }
@@ -863,7 +860,7 @@ void Spectrum::trapSaBytes() {
     z80.startInstruction();
 }
 
-void Spectrum::setSoundRate(SoundRate rate) {
+void Spectrum::setSoundRate(SoundRate rate, bool syncToVideo) {
 
     double value = 0;
     switch (rate) {
@@ -880,6 +877,12 @@ void Spectrum::setSoundRate(SoundRate rate) {
             frame = FRAME_TIME_48;
             break;
     }
+
+    if (syncToVideo) {
+        double factor = static_cast<double>(FRAME_TIME_50HZ) / static_cast<double>(frame);
+        value /= factor;
+    }
+
     skip = static_cast<uint32_t>(value);
     tail = value - skip;
     skipCycles = skip;

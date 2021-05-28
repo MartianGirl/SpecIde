@@ -61,45 +61,60 @@ enum class FDC765Scan
     FDC765_SCAN_ERROR
 };
 
-constexpr uint_fast8_t SREG_DB0 = 1 << 0;
-constexpr uint_fast8_t SREG_DB1 = 1 << 1;
-constexpr uint_fast8_t SREG_DB2 = 1 << 2;
-constexpr uint_fast8_t SREG_DB3 = 1 << 3;
-constexpr uint_fast8_t SREG_CB = 1 << 4;
-constexpr uint_fast8_t SREG_EXM = 1 << 5;
-constexpr uint_fast8_t SREG_DIO = 1 << 6;
-constexpr uint_fast8_t SREG_RQM = 1 << 7;
+uint_fast8_t constexpr SREG_DB0 = 1 << 0;
+uint_fast8_t constexpr SREG_DB1 = 1 << 1;
+uint_fast8_t constexpr SREG_DB2 = 1 << 2;
+uint_fast8_t constexpr SREG_DB3 = 1 << 3;
+uint_fast8_t constexpr SREG_CB = 1 << 4;
+uint_fast8_t constexpr SREG_EXM = 1 << 5;
+uint_fast8_t constexpr SREG_DIO = 1 << 6;
+uint_fast8_t constexpr SREG_RQM = 1 << 7;
 
-constexpr size_t DELAY_1ms = 875;     // Clocking at 1.000MHz
-constexpr size_t SERVICE_MFM = 46;
-constexpr size_t SERVICE_FM = 91;
-constexpr size_t BYTE_DELAY = 100;
+uint32_t constexpr DELAY_1ms = 875;     // Clocking at 1.000MHz
+uint32_t constexpr SERVICE_MFM = 46;
+uint32_t constexpr SERVICE_FM = 91;
+uint32_t constexpr BYTE_DELAY = 100;
 
-constexpr size_t DATABUFFER_SIZE = 65536;
-constexpr size_t RESBUFFER_SIZE = 16;
-constexpr size_t CMDBUFFER_SIZE = 16;
+uint32_t constexpr DATABUFFER_SIZE = 65536;
+uint32_t constexpr RESBUFFER_SIZE = 16;
+uint32_t constexpr CMDBUFFER_SIZE = 16;
 
-constexpr size_t MAX_DRIVES = 2;
-constexpr size_t NUM_REGS = 4;
+uint32_t constexpr MAX_PLUS3_DRIVES = 2;
+uint32_t constexpr NUM_REGS = 4;
 
 class FDC765 {
 
     public:
+        /** Clock frequency in MHz. */
+        uint_fast32_t clockFrequency = 1;
+        /** Status register. */
         uint_fast8_t statusReg = 0x00;
 
+        /** Command buffer. */
         uint8_t cmdBuffer[CMDBUFFER_SIZE];
+        /** Result buffer. */
         uint8_t resBuffer[RESBUFFER_SIZE];
+        /** Data buffer. */
         uint8_t dataBuffer[DATABUFFER_SIZE];
 
-        unsigned int cmdIndex;
-        unsigned int resIndex;
-        unsigned int dataIndex;
+        /** Command buffer index. */
+        uint32_t cmdIndex;
+        /** Result buffer index. */
+        uint32_t resIndex;
+        /** Data buffer index. */
+        uint32_t dataIndex;
 
-        unsigned int cmdBytes;
-        unsigned int resBytes;
-        unsigned int dataBytes;
+        /** Command expected length. */
+        uint32_t cmdBytes;
+        /** Result expected length. */
+        uint32_t resBytes;
+        /** Data transfer expected length. */
+        uint32_t dataBytes;
 
+
+        /** Byte ready flag. */
         bool byte = false;
+        /** Interrupt flag. */
         bool interrupt = false;
 
         bool multiTrackBit;
@@ -124,14 +139,15 @@ class FDC765 {
         FDC765Mode mode;
         FDC765Access stage;
 
-        Plus3Disk drive[MAX_DRIVES];
-        uint_fast8_t presCylNum[MAX_DRIVES];
+        Plus3Disk drive[MAX_PLUS3_DRIVES];
+        uint_fast8_t presCylNum[MAX_PLUS3_DRIVES];
         uint_fast8_t sReg[NUM_REGS];
 
         size_t lastDrive;
         size_t firstSector = 0x00;
         size_t currSector = 0x00;
         size_t lastSector = 0x00;
+        size_t stepSector = 0x01;
 
         uint_fast8_t resTrack = 0x00;
         uint_fast8_t resHead = 0x00;
@@ -162,6 +178,8 @@ class FDC765 {
         bool readDeletedDataOp();
         bool readIdOp();
         bool headLoadOp();
+        void updateHeadUnload();
+
         bool findHoleOp();
         bool readTrackOp();
 
@@ -171,6 +189,7 @@ class FDC765 {
         void writeCmd();
         void formatCmd();
         void specifyCmd();
+        void scanCmd();
 
         uint_fast8_t read();
         void write(uint_fast8_t value);

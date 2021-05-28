@@ -33,15 +33,20 @@ uint_fast8_t FD1793::read(uint_fast8_t a) {
     static uint_fast8_t retval = 0x00;
 
     switch (addr) {
-        case 0x00:  // State register
+        case 0x00:  // Status register
+            retval = statusReg;
             break;
         case 0x01:  // Track register
+            retval = trackReg;
             break;
         case 0x02:  // Sector register
+            retval = sectorReg;
             break;
         case 0x03:  // Data register
+            retval = dataReg;
             break;
-        case 0x07:  // System register
+        case 0x07:  // System register (Not an FD1793 register, though)
+            retval = systemReg;
             break;
     }
 
@@ -52,14 +57,19 @@ void FD1793::write(uint_fast8_t value) {
 
     switch (addr) {
         case 0x00:  // Command register
+            commandReg = value;
             break;
         case 0x01:  // Track register
+            trackReg = value;
             break;
         case 0x02:  // Sector register
+            sectorReg = value;
             break;
         case 0x03:  // Data register
+            dataReg = value;
             break;
         case 0x07:  // System register
+            systemReg = value;
             break;
     }
 }

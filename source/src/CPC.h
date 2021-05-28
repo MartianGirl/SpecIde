@@ -30,9 +30,19 @@
 
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <string>
 
 using namespace std;
+
+struct ExpansionRom {
+
+    std::string name;
+    std::vector<uint8_t> data;
+
+    ExpansionRom() : name(), data(0x4000, 0x00) {}
+    ExpansionRom(std::string n) : name(n), data(0x4000, 0x00) {}
+};
 
 /**
  * CPC
@@ -74,6 +84,7 @@ class CPC {
 
         bool cpc128K = true;
         bool cpcDisk = true;
+        bool expBit = false;
 
         bool tapeSound = false;
         bool playSound = false;
@@ -81,24 +92,25 @@ class CPC {
 
 
 
-        /** Array of strings with the extension ROM names. */
-        std::string romNames[16];
         /** RAM array. RAM pages are defined as pointers in this array. */
         uint8_t ram[1 << 17];
         /** Internal ROM array. */
         uint8_t rom[1 << 15];
-        /** External ROM array. ROM pages are defined as pointers in this array. */
-        uint8_t ext[16][1 << 14];
-        /** Currently selected expansion ROM page. */
-        uint_fast8_t romBank;
-        bool extPresent[256];
         /** Currently selected RAM pages. */
         uint8_t* mem[4];
+        /** External ROM map. ROM pages are defined as pointers in this array. */
+        std::map<uint8_t, ExpansionRom> ext;
+        /** Installed Expansion ROMs. */
+        bool extReady[0x100];
+        /** Currently selected expansion ROM page. */
+        uint_fast8_t romBank;
         /** Pointer to lower ROM. */
         uint8_t* loRom = &rom[0x0000];
+        /** Pointer to high ROM. */
         uint8_t* hiRom = &rom[0x4000];
 
         size_t counter = 0;
+        bool updateMotor = false;
 
         void run();
 
@@ -119,9 +131,9 @@ class CPC {
         void loadRoms(RomVariant model);
 
         /**
-         * Load extension ROMs.
+         * Load expansion ROMs.
          */
-        void loadExtensionRoms();
+        void loadExpansionRoms();
 
         /**
          * Configure an Amstrad CPC 464 computer.

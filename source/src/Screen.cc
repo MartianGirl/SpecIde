@@ -34,53 +34,18 @@ using namespace std::chrono;
 #include <iostream>
 
 using namespace std;
-using namespace sf;
 
 Screen::Screen(map<string, string> o, vector<string> f) :
     options(o),
-    files(f),
-    window() {}
+    files(f) {}
+
+#if (SPECIDE_SDL2==1)
+#else
+using namespace sf;
 
 Screen::~Screen() {
 
     window.close();
-}
-
-void Screen::setup() {
-
-    scale = getScale();
-    w *= scale;
-    h *= scale;
-
-    loadFont();
-    chooseVideoMode();
-
-    fullscreen = (options["fullscreen"] == "yes");
-    cout << "Full screen mode: " << options["fullscreen"] << endl;
-
-    smooth = (options["antialias"] == "yes");
-    cout << "Antialiasing: " << options["antialias"] << endl;
-
-    syncToVideo = (options["sync"] == "yes");
-    cout << "Sync to video: " << options["sync"] << endl;
-}
-
-uint32_t Screen::getScale() {
-
-    uint32_t s = 1;
-    try {
-        s = stoi(options["scale"]);
-    } catch (invalid_argument &ia) {
-        cout << "Invalid scale value: '" << options["scale"] << "' - " << ia.what() << endl;
-    }
-
-    if (s < 1) {
-        s = 1;
-    } else if (s > 10) {
-        s = 10;
-    }
-    cout << "Selected scale factor: " << s << endl;
-    return s;
 }
 
 void Screen::loadFont() {
@@ -133,23 +98,6 @@ void Screen::chooseVideoMode() {
     cout << "Selected Full Screen Mode: ";
     cout << bestMode.width << "x" << bestMode.height << "-" << bestMode.bitsPerPixel << endl;
     adjustViewPort();
-}
-
-void Screen::adjustViewPort() {
-
-    uint32_t divider = 0;
-    do {
-        ++divider;
-        suggestedScansSingle = bestMode.height / divider;
-    } while (suggestedScansSingle > 288); // 312 - 24 VBlank lines.
-    cout << "Selected " << suggestedScansSingle << " scans for single scan mode." << endl;
-
-    divider = 0;
-    do {
-        ++divider;
-        suggestedScansDouble = bestMode.height / divider;
-    } while (suggestedScansDouble > 576); // 624 - 48 VBlank lines.
-    cout << "Selected " << suggestedScansDouble << " scans for double scan mode." << endl;
 }
 
 void Screen::reopenWindow(bool fs) {
@@ -232,6 +180,61 @@ void Screen::texture(uint_fast32_t x, uint_fast32_t y) {
     }
     scrTexture.setRepeated(false);
     scrTexture.setSmooth(false);
+}
+#endif
+
+void Screen::setup() {
+
+    scale = getScale();
+    w *= scale;
+    h *= scale;
+
+    loadFont();
+    chooseVideoMode();
+
+    fullscreen = (options["fullscreen"] == "yes");
+    cout << "Full screen mode: " << options["fullscreen"] << endl;
+
+    smooth = (options["antialias"] == "yes");
+    cout << "Antialiasing: " << options["antialias"] << endl;
+
+    syncToVideo = (options["sync"] == "yes");
+    cout << "Sync to video: " << options["sync"] << endl;
+}
+
+uint32_t Screen::getScale() {
+
+    uint32_t s = 1;
+    try {
+        s = stoi(options["scale"]);
+    } catch (invalid_argument &ia) {
+        cout << "Invalid scale value: '" << options["scale"] << "' - " << ia.what() << endl;
+    }
+
+    if (s < 1) {
+        s = 1;
+    } else if (s > 10) {
+        s = 10;
+    }
+    cout << "Selected scale factor: " << s << endl;
+    return s;
+}
+
+void Screen::adjustViewPort() {
+
+    uint32_t divider = 0;
+    do {
+        ++divider;
+        suggestedScansSingle = bestMode.height / divider;
+    } while (suggestedScansSingle > 304); // 312 - 8 VBlank lines.
+    cout << "Selected " << suggestedScansSingle << " scans for single scan mode." << endl;
+
+    divider = 0;
+    do {
+        ++divider;
+        suggestedScansDouble = bestMode.height / divider;
+    } while (suggestedScansDouble > 608); // 624 - 16 VBlank lines.
+    cout << "Selected " << suggestedScansDouble << " scans for double scan mode." << endl;
 }
 
 FileTypes Screen::guessFileType(string const& fileName) {

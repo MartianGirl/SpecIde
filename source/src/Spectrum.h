@@ -124,6 +124,8 @@ class Spectrum {
         int filter[FILTER_BZZ_SIZE];
         /** Current index in filter array. */
         size_t index = 0;
+        /** Sync frame rate to monitor's 50Hz frame rate. */
+        bool sync = false;
 
         /**
          * Map of contended memory areas. Typically, $4000-$7FFF is contended,
@@ -252,9 +254,10 @@ class Spectrum {
         /**
          * Adjust sample rate to CPU clock rate.
          *
-         * @rate The selected sound rate.
+         * @param rate The selected sound rate.
+         * @param syncToVideo SpecIde is sinced to video refresh frequency.
          */
-        void setSoundRate(SoundRate rate);
+        void setSoundRate(SoundRate rate, bool syncToVideo);
 
         /**
          * Update pagination registers, and update the memory map.

@@ -43,6 +43,7 @@ void SpeccyScreen::setup() {
 
     cout << "Initialising common settings..." << endl;
     Screen::setup();
+    spectrum.sync = syncToVideo;
 
     cout << "Initialising ZX Spectrum..." << endl;
     // Select ROMs and ULA variant.
