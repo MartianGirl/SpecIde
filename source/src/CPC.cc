@@ -113,7 +113,7 @@ void CPC::set664() {
 
     cpc128K = false;
     cpcDisk = true;
-    expBit = true;
+    expBit = false;
     fdc765.clockFrequency = 4;
 
     ext[0x07] = ExpansionRom("amsdos.rom");
@@ -127,7 +127,7 @@ void CPC::set6128() {
 
     cpc128K = true;
     cpcDisk = true;
-    expBit = true;
+    expBit = false;
     fdc765.clockFrequency = 4;
 
     ext[0x07] = ExpansionRom("amsdos.rom");
@@ -185,7 +185,7 @@ void CPC::clock() {
     ga.clock();
 
     if (ga.crtcClock()) {
-        ppi.portB = 0x5E | (expBit ? 0x20 : 0) | (ga.crtc.vSync ? 1 : 0);
+        ppi.portB = 0x5E | (expBit ? 0x20 : 0x00) | (ga.crtc.vSync ? 0x1 : 0x0);
     }
 
     if (ga.psgClock()) {
@@ -214,24 +214,26 @@ void CPC::clock() {
         // Gate Array. This is accessible by both I/O reads and I/O writes.
         if (m1_ && (z80.a & 0xC000) == 0x4000) {
             if ((z80.d & 0xC0) == 0xC0) {
-                selectRam(z80.d);
+                if (cpc128K && z80.wr) {
+                    selectRam(z80.d);
+                }
             } else {
                 ga.write(z80.d);
             }
         }
-
-        if (m1_ && (z80.a & 0x2000) == 0x0000) {
+        // ROM expansion selection.
+        if (z80.wr && (z80.a & 0x2000) == 0x0000) {
             romBank = z80.d;
-            if (romBank != 0 && extReady[romBank]) {
+            if ((romBank != 0) && extReady[romBank]) {
                 hiRom = &ext[romBank].data[0];
             } else {
+                romBank = 0;
                 hiRom = &rom[0x4000];
             }
         }
     }
 
     if (ga.cpuClock()) {
-
         z80.c = ga.z80_c;
 
         if (cpcDisk && romBank == 0x07) {

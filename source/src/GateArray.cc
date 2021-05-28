@@ -22,7 +22,6 @@ using namespace std;
 uint32_t GateArray::pixelsX1[X_SIZE * Y_SIZE / 2];
 uint32_t GateArray::pixelsX2[X_SIZE * Y_SIZE];
 
-
 void GateArray::write(uint_fast8_t byte) {
 
     // 11xx xxxx: RAM memory management (performed externally)
@@ -48,20 +47,15 @@ void GateArray::write(uint_fast8_t byte) {
 
 void GateArray::selectPen(uint_fast8_t byte) {
 
-    // Pen 0x10 and higher is for border.
-    if (byte & 0x10) {
-        pen = 0xFF;
-    } else {
-        pen = byte & 0x0F;
-    }
+    pen = byte & 0x1F;
 }
 
 void GateArray::selectColour(uint_fast8_t byte) {
 
-    if (pen == 0xFF) {
+    if ((pen & 0x10) == 0x10) {
         border = byte & 0x1F;
     } else {
-        pens[pen] = byte & 0x1F;
+        pens[pen & 0x0F] = byte & 0x1F;
     }
 }
 
@@ -321,18 +315,23 @@ void GateArray::updateBeam() {
 
     // Blanking should also be activated if hCounter < 28, but the picture
     // fits better the screen this way...
-    blanking = (crtc.hSync);
+    blanking = (crtc.hSync || crtc.vSync);
 
-    if ((crtc.hSync && !hSync_d) || xPos >= X_SIZE) {
-        xPos = 0;
-        // yPos maybe should be incremented only if hCounter is not less than
-        // 28, but the border obtained without this condition looks better
-        if (hCounter >= 16 && ++yPos >= Y_SIZE) {
+    // Increment yPos with hSync rising edges.
+    // yPos maybe should be incremented only if hCounter is not less than
+    // 28, but the border obtained without this condition looks better
+    if (crtc.hSync && !hSync_d && hCounter >= 16) {
+        if (++yPos >= (Y_SIZE / 2)) {
             yPos = 0;
+            sync = true;
         }
     }
 
-    if (crtc.vSync && !vSync_d) {
+    if (xPos >= X_SIZE || (crtc.hSync && xPos > 720)) {
+        xPos = 0;
+    }
+
+    if (crtc.vSync && yPos > 256) {
         yPos = 0;
         sync = true;
     }

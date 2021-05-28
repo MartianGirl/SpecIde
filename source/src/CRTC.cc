@@ -75,16 +75,29 @@ void CRTC::wrRegister(uint_fast8_t byte) {
     }
 
     if (index == 3) {
-        hswMax = byte & 0x0F;
+        vswMax = (byte & 0xF0) >> 4;
+        hswMax = (byte & 0x0F);
         switch (type) {
-            case 0:
+            case 0: // Type 0 (UM6845):
+                // If VSW = 0, this gives 16 VSYNC lines.
+                // If HSW = 0, this gives no HSYNC.
+                if (vswMax == 0) vswMax = 0x10;
+                break;
+            case 1: // Type 1 (UM6845R):
+                // VSW is ignored. VSYNC is fixed to 16 lines.
+                // If HWS = 0, this gives no HSYNC.
                 vswMax = 0x10;
                 break;
-            case 1:
-                vswMax = (byte & 0xF0) >> 8;
-                break;
+            case 2: // Type 2 (MC6845):
+                // VSW is ignored. VSYNC is fixed to 16 lines.
+                // If HSW = 0, this gives 16 HSYNC cycles.
+            case 3: // fall-through
+            case 4: // Type 3, 4 (Pre-ASIC, ASIC)
+                // If VSW = 0, this gives 16 VSYNC lines.
+                // if HSW = 0, this gives 16 HSYNC cycles.
+                if (vswMax == 0) vswMax = 0x10;
+                if (hswMax == 0) hswMax = 0x10;
             default:
-                vswMax = (byte & 0xF0);
                 break;
         }
     }
@@ -92,10 +105,20 @@ void CRTC::wrRegister(uint_fast8_t byte) {
 
 uint_fast8_t CRTC::rdStatus() {
 
-    if (type == 1) {
-    }
+    uint_fast8_t value = 0x00;
 
-    return 0xFF;
+    switch (type) {
+        case 1:
+            value = status;
+            break;
+        case 3: // fall-through
+        case 4:
+            value = rdRegister();
+            break;
+        default:
+            break;
+    }
+    return value;
 }
 
 uint_fast8_t CRTC::rdRegister() {
@@ -141,10 +164,11 @@ void CRTC::clock() {
 
     if (hCounter == regs[2]) {   // Horizontal Sync Position
         hSync = true;                       // HSYNC pulse
+        hswCounter = 0;
     }
 
     // Here increment Raster Counter, Vertical Sync Width Counter
-    if (hCounter > regs[0]) {   // Horizontal Total marks the end of a scan
+    if (hCounter == regs[0]) {   // Horizontal Total marks the end of a scan
         hCounter = 0;               // Reset Horizontal Counter 
         hDisplay = true;            // Drawing screen
 
@@ -161,14 +185,17 @@ void CRTC::clock() {
                 vCounter = 0;
                 rCounter = 0;
                 vDisplay = true;
+                status &= 0xDF;
             }
 
             if (vCounter == regs[6]) {  // Vertical Displayed
                 vDisplay = false;
+                status |= 0x20;
             }
 
             if (vCounter == regs[7]) {  // Vertical Sync Position
                 vSync = true;
+                vswCounter = 0;
             }
         }
 
@@ -178,19 +205,15 @@ void CRTC::clock() {
         }
 
         if (vSync) {
-            ++vswCounter;
-            if (vswCounter == vswMax) {
+            if (vswCounter++ == vswMax) {
                 vSync = false;
-                vswCounter = 0;
             }
         }
     }
 
     if (hSync) {    // Horizontal Sync Width is incremented during HSYNC pulse
-        ++hswCounter;
-        if (hswCounter == hswMax) {    // Horizontal Sync Width
+        if (hswCounter++ == hswMax) {    // Horizontal Sync Width
             hSync = false;
-            hswCounter = 0;
         }
     }
 

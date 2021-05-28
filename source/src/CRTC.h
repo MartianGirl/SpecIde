@@ -34,7 +34,7 @@ class CRTC {
         uint_fast8_t regs[32];
         AccessType dirs[32];
 
-        CRTC(uint_fast8_t type = 0);
+        CRTC(uint_fast8_t type = 1);
 
         uint_fast8_t hCounter = 0;
         uint_fast8_t hswCounter = 0;
@@ -46,6 +46,8 @@ class CRTC {
 
         uint_fast8_t rCounter = 0;
         bool hh;
+
+        uint_fast8_t status = 0;
 
         /** Address of current character line. */
         uint_fast16_t lineAddress = 0;

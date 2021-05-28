@@ -30,11 +30,11 @@ class GateArray {
         uint_fast16_t z80_c = 0xFFFF;
 
         /** Selected pen. */
-        uint_fast8_t pen;
+        uint_fast8_t pen = 0;
         /** Pen colour references. */
         uint_fast8_t pens[16];
         /** Border colour reference. */
-        uint_fast8_t border;
+        uint_fast8_t border = 1;
         /** New video mode. */
         uint_fast8_t newMode = 1;
         /** Actual video mode. */

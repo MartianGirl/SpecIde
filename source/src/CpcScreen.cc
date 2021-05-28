@@ -101,7 +101,7 @@ void CpcScreen::setup() {
     loadFiles();
 
     h = 576;
-    w = 800;
+    w = 768;
     reopenWindow(fullscreen);
     setFullScreen(fullscreen, true);
     setSmooth(smooth);
