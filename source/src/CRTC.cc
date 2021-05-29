@@ -155,33 +155,20 @@ void CRTC::clock() {
     // This is for interlace control
     hh = (hCounter > (regs[0] >> 1));
 
-    if (hCounter == regs[1]) {   // Horizontal Displayed
-        hDisplay = false;                   // Drawing border
-        if (rCounter == regs[9]) {
-            lineAddress += hCounter;
-        }
-    }
-
-    if (hCounter == regs[2]) {   // Horizontal Sync Position
-        hSync = true;                       // HSYNC pulse
-        hswCounter = 0;
-    }
-
     // Here increment Raster Counter, Vertical Sync Width Counter
-    if (hCounter == regs[0]) {   // Horizontal Total marks the end of a scan
-        hCounter = 0;               // Reset Horizontal Counter 
-        hDisplay = true;            // Drawing screen
+    if (hCounter == (regs[0] + 1)) {    // Horizontal Total marks the end of a scan
+        hCounter = 0;                       // Reset Horizontal Counter
+        hDisplay = true;                    // Drawing screen
 
         // Increment raster counter and check
         rCounter = (rCounter + 1) & 0x1F;
-
-        if (rCounter > regs[9]) {   // Maximum Raster Address
+        if (rCounter == (regs[9] + 1)) {   // Maximum Raster Address
             rCounter = 0;               // Reset Raster Counter
 
             vCounter = (vCounter + 1) & 0x7F;
             // Vertical Total marks the end of a frame, but we also must
             // account for Vertical Total Adjustment
-            if (vCounter > regs[4] && rCounter == regs[5]) {
+            if (vCounter == (regs[4] + 1) && rCounter == regs[5]) {
                 vCounter = 0;
                 rCounter = 0;
                 vDisplay = true;
@@ -209,6 +196,18 @@ void CRTC::clock() {
                 vSync = false;
             }
         }
+    }
+
+    if (hCounter == regs[1]) {   // Horizontal Displayed
+        hDisplay = false;                   // Drawing border
+        if (rCounter == regs[9]) {
+            lineAddress += hCounter;
+        }
+    }
+
+    if (hCounter == regs[2]) {   // Horizontal Sync Position
+        hSync = true;                       // HSYNC pulse
+        hswCounter = 0;
     }
 
     if (hSync) {    // Horizontal Sync Width is incremented during HSYNC pulse

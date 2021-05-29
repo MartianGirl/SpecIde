@@ -278,7 +278,7 @@ void GateArray::intAcknowledge() {
 
     if ((z80_c & (SIGNAL_M1_ | SIGNAL_IORQ_ | SIGNAL_INT_)) == 0) {
         clearInt = true;
-    } else if ((z80_c & SIGNAL_M1_) == SIGNAL_M1_) {
+    } else if (z80_c & SIGNAL_M1_) {
         clearInt = false;
     }
 
@@ -298,11 +298,9 @@ void GateArray::updateVideoMode() {
 
     if (crtc.hSync) {
         if (cClkCounter < 8) {
-            ++cClkCounter;
-
             // Mode is updated on the falling edge of bit 4 of this counter.
             // If cClkCounter was already 8, we don't enter the if above.
-            if (cClkCounter == 8) {
+            if (++cClkCounter == 8) {
                 actMode = newMode;
             }
         }
@@ -327,7 +325,7 @@ void GateArray::updateBeam() {
         }
     }
 
-    if (xPos >= X_SIZE || (crtc.hSync && xPos > 720)) {
+    if (xPos >= X_SIZE || (crtc.hSync && !hSync_d)) {
         xPos = 0;
     }
 
@@ -350,6 +348,9 @@ void GateArray::generateInterrupts() {
 
         if (hCounter < 28) {
             ++hCounter;
+            if (hCounter == 4) {
+                intCounter = 0;
+            }
         }
     }
 
