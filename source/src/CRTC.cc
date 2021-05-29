@@ -91,6 +91,9 @@ void CRTC::wrRegister(uint_fast8_t byte) {
             case 2: // Type 2 (MC6845):
                 // VSW is ignored. VSYNC is fixed to 16 lines.
                 // If HSW = 0, this gives 16 HSYNC cycles.
+                vswMax = 0x10;
+                if (hswMax == 0) hswMax = 0x10;
+                break;
             case 3: // fall-through
             case 4: // Type 3, 4 (Pre-ASIC, ASIC)
                 // If VSW = 0, this gives 16 VSYNC lines.
@@ -162,8 +165,8 @@ void CRTC::clock() {
 
         // Increment raster counter and check
         rCounter = (rCounter + 1) & 0x1F;
-        if (rCounter == (regs[9] + 1)) {   // Maximum Raster Address
-            rCounter = 0;               // Reset Raster Counter
+        if (rCounter == (regs[9] + 1)) {    // Maximum Raster Address
+            rCounter = 0;                       // Reset Raster Counter
 
             vCounter = (vCounter + 1) & 0x7F;
             // Vertical Total marks the end of a frame, but we also must
@@ -184,16 +187,16 @@ void CRTC::clock() {
                 vSync = true;
                 vswCounter = 0;
             }
-        }
 
-        // Base address is updated on VCC=0 (CRTC 1) or VCC=0 and VLC=0 (other)
-        if (vCounter == 0 && (type == 1 || rCounter == 0)) {
-            lineAddress = (regs[12] & 0x3F) * 0x100 + regs[13];
-        }
+            // Base address is updated on VCC=0 (CRTC 1) or VCC=0 and VLC=0 (other)
+            if (vCounter == 0 && (type == 1 || rCounter == 0)) {
+                lineAddress = (regs[12] & 0x3F) * 0x100 + regs[13];
+            }
 
-        if (vSync) {
-            if (vswCounter++ == vswMax) {
-                vSync = false;
+            if (vSync) {
+                if (++vswCounter == vswMax) {
+                    vSync = false;
+                }
             }
         }
     }
@@ -216,7 +219,7 @@ void CRTC::clock() {
         }
     }
 
-    pageAddress = lineAddress >> 12;
+    pageAddress = (lineAddress & 0x3000) >> 12;
     charAddress = ((lineAddress & 0x3FF) + hCounter) << 1;
     byteAddress = ((rCounter & 7) << 11) | (charAddress & 0x7FF);
     dispEn = hDisplay && vDisplay;

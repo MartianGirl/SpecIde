@@ -222,6 +222,7 @@ void GateArray::clock() {
 
     // Increment state counter
     counter = (counter + 1) & 0x0F;
+    paint();
 
     switch (counter) {
         case 0x0:   // fall-through
@@ -233,7 +234,6 @@ void GateArray::clock() {
 
         case 0x2:   // fall-through
         case 0xa:   // Paint. Right after CPU state change.
-            paint();
             intAcknowledge();
             break;
 
@@ -263,9 +263,12 @@ void GateArray::clock() {
             // CRTC is clocked. Some values have updated.
             crtc.clock();
 
-            updateBeam();
             updateVideoMode();
             generateInterrupts();
+            updateBeam();
+
+            hSync_d = crtc.hSync;
+            vSync_d = crtc.vSync;
             break;
         default:
             break;
@@ -283,7 +286,7 @@ void GateArray::intAcknowledge() {
     }
 
     if (clearInt) {
-        intCounter = 0;
+        intCounter &= 0x1F;
         z80_c |= SIGNAL_INT_;
     }
 }
@@ -313,7 +316,7 @@ void GateArray::updateBeam() {
 
     // Blanking should also be activated if hCounter < 28, but the picture
     // fits better the screen this way...
-    blanking = (crtc.hSync || crtc.vSync);
+    blanking = hCounter < 28;
 
     // Increment yPos with hSync rising edges.
     // yPos maybe should be incremented only if hCounter is not less than
@@ -325,11 +328,11 @@ void GateArray::updateBeam() {
         }
     }
 
-    if (xPos >= X_SIZE || (crtc.hSync && !hSync_d)) {
+    if (xPos >= X_SIZE || crtc.hSync) {
         xPos = 0;
     }
 
-    if (crtc.vSync && yPos > 256) {
+    if (crtc.vSync && !vSync_d && yPos > 200) {
         yPos = 0;
         sync = true;
     }
@@ -341,8 +344,8 @@ void GateArray::generateInterrupts() {
     // If intCounter reaches 52, an INT is generated and the counter
     // is reset.
     if (!crtc.hSync && hSync_d) {
+        uint_fast32_t oldCounter = intCounter;
         if (++intCounter == 52) {
-            z80_c &= ~SIGNAL_INT_;
             intCounter = 0;
         }
 
@@ -352,28 +355,29 @@ void GateArray::generateInterrupts() {
                 intCounter = 0;
             }
         }
+
+        if (intCounter == 0 && oldCounter > 32) {
+            z80_c &= ~SIGNAL_INT_;
+        }
     }
 
     if (crtc.vSync && !vSync_d) {
         hCounter = 0;
     }
-
-    hSync_d = crtc.hSync;
-    vSync_d = crtc.vSync;
 }
 
 void GateArray::paint() {
 
     if (!blanking) {
         uint_fast32_t index = pens[pixelTable[actMode][colour]];
-        for (size_t ii = 0; ii < 8; ++ii) {
-            pixelsX1[(yPos * X_SIZE) + xPos] = colours[inksel ? index : border];
-            if (modeTable[actMode][ii]) {
-                colour = (colour << 1) & 0xFF;
-                index = pens[pixelTable[actMode][colour]];
-            }
-            ++xPos;
+        uint_fast32_t c = counter % 8;
+        pixelsX1[(yPos * X_SIZE) + xPos] = colours[inksel ? index : border];
+        if (modeTable[actMode][c]) {
+            colour = (colour << 1) & 0xFF;
         }
+    } else {
+        pixelsX1[(yPos * X_SIZE) + xPos] = 0;
     }
+    ++xPos;
 }
 // vim: et:sw=4:ts=4
