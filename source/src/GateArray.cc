@@ -297,18 +297,23 @@ void GateArray::updateVideoMode() {
     // and it counts up to 8. When it reaches 8, it stops and keeps
     // its value until HSYNC falls.
     // If cClkEdge is 0-3, the mode selection clock is high.
-    static uint_fast32_t cClkCounter;
+    static uint_fast32_t cClkCounter = 0;
+    bool trigger = false;
 
     if (crtc.hSync) {
         if (cClkCounter < 8) {
-            // Mode is updated on the falling edge of bit 4 of this counter.
-            // If cClkCounter was already 8, we don't enter the if above.
-            if (++cClkCounter == 8) {
-                actMode = newMode;
-            }
+            ++cClkCounter;
+            trigger = (cClkCounter == 8);
         }
     } else {
+        // Mode is updated on the falling edge of bit 4 of this counter.
+        // If cClkCounter was already 8, we don't enter the if above.
+        trigger = hSync_d && (cClkCounter > 3);
         cClkCounter = 0;
+    }
+
+    if (trigger) {
+        actMode = newMode;
     }
 }
 
@@ -316,12 +321,12 @@ void GateArray::updateBeam() {
 
     // Blanking should also be activated if hCounter < 28, but the picture
     // fits better the screen this way...
-    blanking = hCounter < 28;
+    blanking = crtc.hSync || hCounter < 26;
 
     // Increment yPos with hSync rising edges.
     // yPos maybe should be incremented only if hCounter is not less than
     // 28, but the border obtained without this condition looks better
-    if (crtc.hSync && !hSync_d && hCounter >= 16) {
+    if (crtc.hSync && !hSync_d) {
         if (++yPos >= (Y_SIZE / 2)) {
             yPos = 0;
             sync = true;
@@ -332,7 +337,7 @@ void GateArray::updateBeam() {
         xPos = 0;
     }
 
-    if (crtc.vSync && !vSync_d && yPos > 200) {
+    if (crtc.vSync && !vSync_d && yPos > 156) {
         yPos = 0;
         sync = true;
     }
@@ -343,26 +348,30 @@ void GateArray::generateInterrupts() {
     // In HSYNC falling edges, intCounter and hCounter are increased.
     // If intCounter reaches 52, an INT is generated and the counter
     // is reset.
+    if (crtc.vSync && !vSync_d) {
+        hCounter &= 0x01;
+    }
+
     if (!crtc.hSync && hSync_d) {
-        uint_fast32_t oldCounter = intCounter;
-        if (++intCounter == 52) {
+        bool trigger = false;
+
+        ++intCounter;
+        if (intCounter == 52) {
+            trigger = true;
             intCounter = 0;
         }
 
         if (hCounter < 28) {
             ++hCounter;
             if (hCounter == 4) {
+                trigger = (intCounter > 31);    // INT if intCounter.b5 falls.
                 intCounter = 0;
             }
         }
 
-        if (intCounter == 0 && oldCounter > 32) {
+        if (trigger) {
             z80_c &= ~SIGNAL_INT_;
         }
-    }
-
-    if (crtc.vSync && !vSync_d) {
-        hCounter = 0;
     }
 }
 

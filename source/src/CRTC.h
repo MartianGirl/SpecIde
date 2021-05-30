@@ -28,23 +28,49 @@ enum class AccessType
 
 class CRTC {
     public:
-
-        uint_fast8_t type;
-        uint_fast8_t index;
-        uint_fast8_t regs[32];
-        AccessType dirs[32];
-
         CRTC(uint_fast8_t type = 1);
 
+        uint_fast32_t type;
+        uint_fast8_t index;
+        uint_fast8_t regs[32];
+        uint_fast8_t mask[32];
+        AccessType dirs[32];
+
+        /** Horizontal counter. */
         uint_fast8_t hCounter = 0;
+        /** Horizontal total (R0). */
+        uint_fast8_t hTotal = 65;
+        /** Horizontal displayed (R1). */
+        uint_fast8_t hDisplayed = 40;
+        /** HSync position (R2). */
+        uint_fast8_t hsPos = 46;
+
+        /** HSync width counter. */
         uint_fast8_t hswCounter = 0;
+        /** HSync max width (R3, b3-b0). */
         uint_fast8_t hswMax = 14;
 
+        /** Vertical counter. */
         uint_fast8_t vCounter = 0;
+        /** Vertical total (R4). */
+        uint_fast8_t vTotal = 34;
+        /** Vertical adjust (R5). */
+        uint_fast8_t vAdjust = 5;
+        /** Vertical displayed (R6). */
+        uint_fast8_t vDisplayed = 30;
+
+        /** VSync position (R7). */
+        uint_fast8_t vsPos = 32;
+        /** VSync width counter. */
         uint_fast8_t vswCounter = 0;
+        /** VSync max width (R3, b7-b4). */
         uint_fast8_t vswMax = 8;
 
+        /** Raster counter. */
         uint_fast8_t rCounter = 0;
+        /** Raster max address (R9). */
+        uint_fast8_t rMax = 7;
+
         bool hh;
 
         uint_fast8_t status = 0;
@@ -67,8 +93,8 @@ class CRTC {
 
         void wrAddress(uint_fast8_t byte);
         void wrRegister(uint_fast8_t byte);
-        uint_fast8_t rdStatus();
-        uint_fast8_t rdRegister();
+        void rdStatus(uint_fast8_t &byte);
+        void rdRegister(uint_fast8_t &byte);
         
         void clock();
 };

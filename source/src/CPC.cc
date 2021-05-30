@@ -175,11 +175,91 @@ void CPC::clock() {
     bool m1_ = z80.c & SIGNAL_M1_;
     bool as_ = z80.c & SIGNAL_MREQ_;
     bool io_ = z80.c & SIGNAL_IORQ_;
-    bool rd_ = z80.c & SIGNAL_RD_;
-    bool wr_ = z80.c & SIGNAL_WR_;
     size_t memArea = z80.a >> 14;
 
-    ga.d = mem[ga.crtc.pageAddress][ga.crtc.byteAddress | ga.cClkOffset()];
+    if (!io_) {
+        // Gate Array. This is accessible by both I/O reads and I/O writes.
+        if ((z80.a & 0xC000) == 0x4000) {
+            if ((z80.d & 0xC0) == 0xC0) {
+                if (cpc128K && z80.wr) {
+                    selectRam(z80.d);
+                }
+            } else if (m1_) {
+                ga.write(z80.d);
+            }
+        }
+
+        // ROM expansion selection.
+        if (z80.wr && !(z80.a & 0x2000)) {
+            romBank = z80.d;
+            if (romBank && extReady[romBank]) {
+                hiRom = &ext[romBank].data[0];
+            } else {
+                romBank = 0;
+                hiRom = &rom[0x4000];
+            }
+        }
+
+        // CRTC
+        if ((z80.rd || z80.wr) && ((z80.a & 0x4000) == 0x0000)) {
+            switch (z80.a & 0x0300) {
+                case 0x0000:    // CRTC Register Select (WO) at &BC00
+                    ga.crtc.wrAddress(z80.d);
+                    break;
+                case 0x0100:    // CRTC Register Write (WO) at &BD00
+                    ga.crtc.wrRegister(z80.d);
+                    break;
+                case 0x0200:    // CRTC Status Register Read (only type 1)
+                    ga.crtc.rdStatus(ga.d);
+                    break;
+                case 0x0300:    // CRTC Register Read (RO)
+                    ga.crtc.rdRegister(ga.d);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // PPI
+        if ((z80.a & 0x0800) == 0x0000) {
+            switch (z80.a & 0x0300) {
+                case 0x0000:    // Port A: &F4xx
+                    if (z80.rd) {
+                        z80.d = ppi.readPortA();
+                    } else if (z80.wr) {
+                        ppi.writePortA(z80.d);
+                    }
+                    break;
+                case 0x0100:    // Port B: &F5xx
+                    if (z80.rd) {
+                        z80.d = ppi.readPortB();
+                    } else if (z80.wr) {
+                        ppi.writePortB(z80.d);
+                    }
+                    break;
+                case 0x0200:    // Port C: &F6xx
+                    if (z80.rd) {
+                        z80.d = ppi.readPortC();
+                    } else if (z80.wr) {
+                        ppi.writePortC(z80.d);
+                    }
+                    break;
+                case 0x0300:    // Control port: &F7xx
+                    if (z80.wr) {
+                        ppi.writeControlPort(z80.d);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    if (io_ || ga.blockIorq()) {
+        ga.d = mem[ga.crtc.pageAddress][ga.crtc.byteAddress | ga.cClkOffset()];
+    } else {
+        ga.d = z80.d;
+    }
 
     // First we clock the Gate Array. Further clocks will be generated here.
     ga.clock();
@@ -210,29 +290,6 @@ void CPC::clock() {
     }
 
     // Z80 gets data from the ULA or memory, only when reading.
-    if (!io_) {
-        // Gate Array. This is accessible by both I/O reads and I/O writes.
-        if (m1_ && (z80.a & 0xC000) == 0x4000) {
-            if ((z80.d & 0xC0) == 0xC0) {
-                if (cpc128K && z80.wr) {
-                    selectRam(z80.d);
-                }
-            } else {
-                ga.write(z80.d);
-            }
-        }
-        // ROM expansion selection.
-        if (z80.wr && (z80.a & 0x2000) == 0x0000) {
-            romBank = z80.d;
-            if ((romBank != 0) && extReady[romBank]) {
-                hiRom = &ext[romBank].data[0];
-            } else {
-                romBank = 0;
-                hiRom = &rom[0x4000];
-            }
-        }
-    }
-
     if (ga.cpuClock()) {
         z80.c = ga.z80_c;
 
@@ -241,59 +298,6 @@ void CPC::clock() {
         }
 
         if (!io_) {
-            // CRTC
-            if ((z80.rd || z80.wr) && ((z80.a & 0x4000) == 0x0000)) {
-                switch (z80.a & 0x0300) {
-                    case 0x0000:    // CRTC Register Select (WO) at &BC00
-                        ga.crtc.wrAddress(z80.d);
-                        break;
-                    case 0x0100:    // CRTC Register Write (WO) at &BD00
-                        ga.crtc.wrRegister(z80.d);
-                        break;
-                    case 0x0200:    // CRTC Status Register Read (only type 1)
-                        z80.d = ga.crtc.rdStatus();
-                        break;
-                    case 0x0300:    // CRTC Register Read (RO)
-                        z80.d = ga.crtc.rdRegister();
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            // PPI
-            if ((z80.a & 0x0800) == 0x0000) {
-                switch (z80.a & 0x0300) {
-                    case 0x0000:    // Port A: &F4xx
-                        if (z80.rd) {
-                            z80.d = ppi.readPortA();
-                        } else if (z80.wr) {
-                            ppi.writePortA(z80.d);
-                        }
-                        break;
-                    case 0x0100:    // Port B: &F5xx
-                        if (z80.rd) {
-                            z80.d = ppi.readPortB();
-                        } else if (z80.wr) {
-                            ppi.writePortB(z80.d);
-                        }
-                        break;
-                    case 0x0200:    // Port C: &F6xx
-                        if (z80.rd) {
-                            z80.d = ppi.readPortC();
-                        } else if (z80.wr) {
-                            ppi.writePortC(z80.d);
-                        }
-                        break;
-                    case 0x0300:    // Control port: &F7xx
-                        if (z80.wr) {
-                            ppi.writeControlPort(z80.d);
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
 
             // Peripherals
             if ((z80.a & 0x0400) == 0x0000) {
@@ -324,7 +328,7 @@ void CPC::clock() {
                 }
             }
         } else if (!as_) {
-            if (!rd_) {
+            if (z80.rd) {
                 switch (memArea) {
                     case 0:
                         z80.d = ga.lowerRom ? loRom[z80.a & 0x3FFF] : mem[0][z80.a & 0x3FFF];
@@ -336,7 +340,7 @@ void CPC::clock() {
                         z80.d = mem[memArea][z80.a & 0x3FFF];
                         break;
                 }
-            } else if (!wr_) {
+            } else if (z80.wr) {
                 mem[memArea][z80.a & 0x3FFF] = z80.d;
             }
         }

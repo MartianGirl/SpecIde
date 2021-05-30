@@ -108,6 +108,7 @@ class GateArray {
         bool cpuReady() const { return readyTable[counter]; }
         uint_fast16_t cClkOffset() const { return cClkBit[counter]; }
         bool muxVideo() const { return muxTable[counter]; }
+        bool blockIorq() const { return e244Table[counter]; }
 
         /**
          * Write a byte to the Gate Array.
