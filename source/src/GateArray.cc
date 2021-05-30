@@ -353,23 +353,20 @@ void GateArray::generateInterrupts() {
     }
 
     if (!crtc.hSync && hSync_d) {
-        bool trigger = false;
+        uint_fast32_t oldCounter = intCounter;
 
-        ++intCounter;
-        if (intCounter == 52) {
-            trigger = true;
+        if (++intCounter == 52) {
             intCounter = 0;
         }
 
         if (hCounter < 28) {
             ++hCounter;
             if (hCounter == 4) {
-                trigger = (intCounter > 31);    // INT if intCounter.b5 falls.
                 intCounter = 0;
             }
         }
 
-        if (trigger) {
+        if (intCounter == 0 && oldCounter > 31) {
             z80_c &= ~SIGNAL_INT_;
         }
     }
