@@ -100,8 +100,14 @@ void CpcScreen::setup() {
 
     loadFiles();
 
-    h = 576;
+    h = 625;
     w = 800;
+
+    lBorder = 128;
+    rBorder = 144;
+    tBorder = 16;
+    bBorder = 0;
+
     reopenWindow(fullscreen);
     setFullScreen(fullscreen, true);
     setSmooth(smooth);

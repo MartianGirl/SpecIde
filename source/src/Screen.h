@@ -88,6 +88,11 @@ class Screen {
         /** Window scale factor. */
         uint32_t scale;
 
+        uint_fast32_t lBorder = 0;
+        uint_fast32_t rBorder = 0;
+        uint_fast32_t tBorder = 0;
+        uint_fast32_t bBorder = 0;
+
         /** Vector of available video modes. */
         std::vector<sf::VideoMode> modes;
         /** Suggested drawable scans for better fit on single scan modes. */

@@ -135,11 +135,7 @@ void CRTC::wrRegister(uint_fast8_t byte) {
                 vDisplayed = regs[6];
                 break;
             case 7: // Vertical Sync Position.
-                if (type == 0) {
-                    vsPos = regs[7] + 1;
-                } else {
-                    vsPos = regs[7];
-                }
+                vsPos = regs[7];
                 break;
             case 9: // Max Raster Address.
                 rMax = regs[9] + 1;
@@ -147,6 +143,8 @@ void CRTC::wrRegister(uint_fast8_t byte) {
             default:
                 break;
         }
+
+        outOfRange = (vsPos >= vTotal);
     }
 }
 
@@ -243,15 +241,17 @@ void CRTC::clock() {
                 vswCounter = 0;
             }
 
-            if (vSync) {
-                if (vswCounter++ == vswMax) {
-                    vSync = false;
-                }
-            }
-
             // Base address is updated on VCC=0 (CRTC 1) or VCC=0 and VLC=0 (other)
             if (vCounter == 0 && (type == 1 || rCounter == 0)) {
                 lineAddress = (regs[12] & 0x3F) * 0x100 + regs[13];
+            }
+        }
+
+        // Raster level
+        if (vSync) {
+            if (vswCounter++ == vswMax) {
+                vSync = false;
+                vswCounter = 0;
             }
         }
     }
@@ -271,12 +271,13 @@ void CRTC::clock() {
     if (hSync) {    // Horizontal Sync Width is incremented during HSYNC pulse
         if (hswCounter++ == hswMax) {    // Horizontal Sync Width
             hSync = false;
+            hswCounter = 0;
         }
     }
 
     charAddress = lineAddress + hCounter;
-    pageAddress = (charAddress & 0x3000) >> 12;
-    byteAddress = ((rCounter & 7) << 11) | ((charAddress & 0x3FF) << 1);
+    pageAddress = (charAddress & 0x3000) << 2;
+    byteAddress = pageAddress | ((rCounter & 7) << 11) | ((charAddress & 0x3FF) << 1);
     dispEn = hDisplay && vDisplay;
 }
 // vim: et:sw=4:ts=4

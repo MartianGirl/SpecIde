@@ -136,27 +136,24 @@ void Screen::setFullScreen(bool fs, bool wide) {
         yScale = nearbyintf(bestMode.height / static_cast<float>(suggestedScans));
 
         // Adjust depending on the vertical scale.
-        xOffset = (bestMode.width - (xModifier * xSize * yScale * wModifier / 2)) / 2;
+        xOffset = (bestMode.width - (xModifier * (xSize - lBorder - rBorder)  * yScale * wModifier / 2)) / 2;
         yOffset = 0;
 
-        cout << "XScale: " << fixed << setprecision(3) << xScale << " ";
-        cout << "YScale: " << fixed << setprecision(3) << yScale << endl;
         cout << "Using scale " << fixed << setprecision(3) << yScale << endl;
 
         uint_fast32_t start = (totalScans - suggestedScans) / 2;
         uint_fast32_t lines = bestMode.height;
 
         scrSprite.setTexture(scrTexture);
-        scrSprite.setTextureRect(sf::IntRect(8, static_cast<uint_fast32_t>(start),
-                    static_cast<uint_fast32_t>(xSize - 8), static_cast<uint_fast32_t>(lines)));
+        scrSprite.setTextureRect(sf::IntRect(lBorder, start + tBorder, xSize - rBorder, lines - bBorder));
         scrSprite.setPosition(xOffset, yOffset);
         scrSprite.setScale(Vector2f(xModifier * wModifier * yScale / 2, yScale));
     } else {
         // In this case we want to have the same windows size for double scan modes and
         // single scan modes. 588 displayable lines are assumed.
         scrSprite.setTexture(scrTexture);
-        scrSprite.setTextureRect(sf::IntRect(8, 16 / yModifier,
-                    static_cast<uint_fast32_t>(xSize - 8), 588 / yModifier));
+        scrSprite.setTextureRect(sf::IntRect(lBorder, 2 * (tBorder + 8) / yModifier,
+                    xSize - rBorder, w / yModifier));
         scrSprite.setPosition(0, 0);
         scrSprite.setScale(Vector2f(wModifier * static_cast<float>(scale), yModifier * static_cast<float>(scale)));
     }

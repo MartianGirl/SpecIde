@@ -326,20 +326,17 @@ void GateArray::updateBeam() {
     // Increment yPos with hSync rising edges.
     // yPos maybe should be incremented only if hCounter is not less than
     // 28, but the border obtained without this condition looks better
-    if (crtc.hSync && !hSync_d) {
-        if (++yPos >= (Y_SIZE / 2)) {
+    if (crtc.hswCounter == 8 || xPos >= X_SIZE) {
+        xPos = 0;
+
+        ++yPos;
+        // This links the monitor coordinates (xPos, yPos) with the CRTC coordinates.
+        bool vFlyBack = yPos > crtc.vDisplayed * crtc.rMax;
+        if (yPos >= (Y_SIZE / 2)
+                || (!crtc.outOfRange && crtc.vswCounter == 2 && vFlyBack)) {
             yPos = 0;
             sync = true;
         }
-    }
-
-    if (xPos >= X_SIZE || crtc.hSync) {
-        xPos = 0;
-    }
-
-    if (crtc.vSync && !vSync_d && yPos > 156) {
-        yPos = 0;
-        sync = true;
     }
 }
 

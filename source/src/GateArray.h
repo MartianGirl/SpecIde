@@ -140,7 +140,7 @@ class GateArray {
          */
         void selectScreenAndRom(uint_fast8_t byte);
 
-        static uint_fast32_t constexpr X_SIZE = 832;
+        static uint_fast32_t constexpr X_SIZE = 1024;
         static uint_fast32_t constexpr Y_SIZE = 625;
 
         static uint32_t pixelsX1[X_SIZE * Y_SIZE / 2];

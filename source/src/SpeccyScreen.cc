@@ -164,6 +164,11 @@ void SpeccyScreen::setup() {
     }
     cout << "Scan mode: " << options["scanmode"] << endl;
 
+    lBorder = 8;
+    rBorder = 8;
+    tBorder = 0;
+    bBorder = 0;
+
     xSize = ULA::X_SIZE;
     ySize = ULA::Y_SIZE / (doubleScanMode ? 1 : 2);
     texture(xSize, ySize);

@@ -28,7 +28,7 @@ enum class AccessType
 
 class CRTC {
     public:
-        CRTC(uint_fast8_t type = 1);
+        CRTC(uint_fast8_t type = 0);
 
         uint_fast32_t type;
         uint_fast8_t index;
@@ -72,6 +72,9 @@ class CRTC {
         uint_fast8_t rMax = 7;
 
         bool hh;
+
+        /** VSync is out of the vertical counter range. */
+        bool outOfRange = false;
 
         uint_fast8_t status = 0;
 

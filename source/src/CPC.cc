@@ -256,7 +256,7 @@ void CPC::clock() {
     }
 
     if (io_ || ga.blockIorq()) {
-        ga.d = mem[ga.crtc.pageAddress][ga.crtc.byteAddress | ga.cClkOffset()];
+        ga.d = ram[ga.crtc.byteAddress | ga.cClkOffset()];
     } else {
         ga.d = z80.d;
     }
