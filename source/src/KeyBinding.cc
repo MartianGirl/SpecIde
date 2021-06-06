@@ -105,6 +105,29 @@ KeyBinding symbolKeys[3] = {
     {Keyboard::Quote, 2, 0x01}      // Double quote: Symbol Shift + P
 };
 
+/**
+ * Mapping from joystick data to keys, for
+ * Sinclair Port 1 joystick and extra buttons.
+ */
+JoystickKeyBinding spectrumKeyJoystick[12] = {
+
+    {3, 0x10},  // Sinclair Port 1 Left: 6
+    {3, 0x08},  // Sinclair Port 1 Right: 7
+    {3, 0x04},  // Sinclair Port 1 Up: 8
+    {3, 0x02},  // Sinclair Port 1 Down: 9
+    {3, 0x01},  // Sinclair Port 1 Fire: 0
+    {0, 0x10},  // Pad button 1: B
+    {0, 0x08},  // Pad button 2: N
+    {7, 0x10},  // Pad button 3: V
+    {7, 0x08},  // Pad button 4: C
+    {7, 0x04},  // Pad button 5: X
+    {6, 0x10},  // Pad button 6: G
+    {1, 0x10}   // Pad button 7: H
+};
+
+/**
+ * Amstrad CPC keyboard matrix.
+ */
 KeyBinding cpcKeys[73] = {
     {Keyboard::Insert, 0, 0x80},
     {Keyboard::RControl, 0, 0x40},
@@ -188,5 +211,9 @@ KeyBinding cpcKeys[73] = {
     {Keyboard::Num1, 8, 0x01},
 
     {Keyboard::Backspace, 9, 0x80}
+};
+
+JoystickKeyBinding cpcJoystick[7] = {
+
 };
 // vim: et:sw=4:ts=4:

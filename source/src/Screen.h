@@ -106,6 +106,8 @@ class Screen {
         bool smooth = false;
         /** Sync to video mode active. */
         bool syncToVideo = false;
+        /** Use a wide screen mode. */
+        bool wide = false;
 
         /** Sound flag. */
         bool playSound = true;
@@ -183,6 +185,127 @@ class Screen {
         virtual void run() = 0;
 
         /**
+         * Exit the emulation loop.
+         */
+        virtual void close() = 0;
+
+        /**
+         * Reset the emulator.
+         */
+        virtual void reset() = 0;
+
+        /**
+         * Give or remove focus to the emulator.
+         *
+         * @param hasFocus New focus status.
+         */
+        virtual void focus(bool hasFocus) = 0;
+
+        /**
+         * Create empty disk.
+         */
+        virtual void createEmptyDisk() = 0;
+
+        /**
+         * Save current disk.
+         */
+        virtual void saveDisk() = 0;
+
+        /**
+         * Select previous disk from disk list.
+         */
+        virtual void selectPreviousDisk() = 0;
+
+        /**
+         * Select next disk.
+         */
+        virtual void selectNextDisk() = 0;
+
+        /**
+         * Append load data to save tape.
+         */
+        virtual void appendLoadTape() = 0;
+
+        /**
+         * Clear save tape.
+         */
+        virtual void clearSaveTape() = 0;
+
+        /**
+         * Write save tape to disk.
+         */
+        virtual void writeSaveTape() = 0;
+
+        /**
+         * Toggle save tape or load tape to load data from it.
+         */
+        virtual void selectSaveTape() = 0;
+
+        /**
+         * Reset tape counter.
+         *
+         * This sets a mark in the tape so we can rewind to this point.
+         */
+        virtual void resetTapeCounter() = 0;
+
+        /**
+         * Start or Stop tape.
+         */
+        virtual void startStopTape() = 0;
+
+        /**
+         * Rewind tape.
+         *
+         * @param toCounter Rewinds tape to the previously set mark.
+         */
+        virtual void rewindTape(bool toCounter) = 0;
+
+        /**
+         * Toggle sound on/off.
+         */
+        virtual void toggleSound() = 0;
+
+        /**
+         * Toggle tape sound on/off.
+         */
+        virtual void toggleTapeSound() = 0;
+
+        /**
+         * Toggle PSG type.
+         */
+        virtual void togglePsgType() = 0;
+
+        /**
+         * Move joystick horizontal axis.
+         *
+         * @param l Activate left bit.
+         * @param r Activate right bit.
+         */
+        virtual void joystickHorizontalAxis(bool l, bool r) = 0;
+
+        /**
+         * Move joystick vertical axis.
+         *
+         * @param u Activate up bit.
+         * @param d Activate down bit.
+         */
+        virtual void joystickVerticalAxis(bool u, bool d) = 0;
+
+        /**
+         * Press joystick button.
+         *
+         * @param button Joystick button to press.
+         */
+        virtual void joystickButtonPress(uint_fast32_t button) = 0;
+
+        /**
+         * Release joystick button.
+         *
+         * @param button Joystick button to release.
+         */
+        virtual void joystickButtonRelease(uint_fast32_t button) = 0;
+
+        /**
          * Guess file type based on the extension.
          */
         FileTypes guessFileType(std::string const& filename);
@@ -198,9 +321,8 @@ class Screen {
          * Change texture parameters for either full screen mode or windowed.
          *
          * @param fs Set parameters for full screen or windowed mode.
-         * @param wide True if the texture is for an 80-column display.
          */
-        void setFullScreen(bool fs, bool wide);
+        void setFullScreen(bool fs);
 
         /**
          * Toggle GL interpolation.
@@ -208,6 +330,11 @@ class Screen {
          * @param sm New smoothing setting.
          */
         void setSmooth(bool sm);
+
+        /**
+         * Poll window interface events.
+         */
+        void pollEvents();
 
         /**
          * Read commands from the text console.

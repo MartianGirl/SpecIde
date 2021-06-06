@@ -114,7 +114,7 @@ void CPC::set664() {
     cpc128K = false;
     cpcDisk = true;
     expBit = false;
-    fdc765.clockFrequency = 4;
+    fdc765.clockFrequency = 5;
 
     ext[0x07] = ExpansionRom("amsdos.rom");
 
@@ -128,7 +128,7 @@ void CPC::set6128() {
     cpc128K = true;
     cpcDisk = true;
     expBit = false;
-    fdc765.clockFrequency = 4;
+    fdc765.clockFrequency = 5;
 
     ext[0x07] = ExpansionRom("amsdos.rom");
 
@@ -145,14 +145,7 @@ void CPC::run() {
 
         clock();
 
-        /*if (tape.playing) {
-            if (!tape.sample--) {
-                ula.tapeIn = tape.advance() | 0x80;
-            }
-        } else {
-            ula.tapeIn &= 0x7F;
-        }
-
+        /*
         // Generate sound. This maybe can be done using the same counter?
         if (!(--skipCycles)) {
             skipCycles = skip;
@@ -220,7 +213,7 @@ void CPC::clock() {
             }
         }
 
-        // PPI
+        // 8255 PPI
         if ((z80.a & 0x0800) == 0x0000) {
             switch (z80.a & 0x0300) {
                 case 0x0000:    // Port A: &F4xx
@@ -241,12 +234,22 @@ void CPC::clock() {
                     if (z80.rd) {
                         z80.d = ppi.readPortC();
                     } else if (z80.wr) {
+                        uint8_t oldPortC = ppi.portC;
                         ppi.writePortC(z80.d);
+                        if ((ppi.portC ^ oldPortC) & 0x10) {
+                            cout << "Cassette motor: "
+                                << ((ppi.portC & 0x10) ? string("ON") : string("OFF")) << endl;
+                        }
                     }
                     break;
                 case 0x0300:    // Control port: &F7xx
                     if (z80.wr) {
+                        uint8_t oldPortC = ppi.portC;
                         ppi.writeControlPort(z80.d);
+                        if ((ppi.portC ^ oldPortC) & 0x10) {
+                            cout << "Cassette motor: "
+                                << ((ppi.portC & 0x10) ? string("ON") : string("OFF")) << endl;
+                        }
                     }
                     break;
                 default:
@@ -264,8 +267,9 @@ void CPC::clock() {
     // First we clock the Gate Array. Further clocks will be generated here.
     ga.clock();
 
+
     if (ga.crtcClock()) {
-        ppi.portB = 0x5E | (expBit ? 0x20 : 0x00) | (ga.crtc.vSync ? 0x1 : 0x0);
+        ppi.portB = tapeLevel | 0x5E | (expBit ? 0x20 : 0x00) | (ga.crtc.vSync ? 0x1 : 0x0);
     }
 
     if (ga.psgClock()) {
@@ -274,7 +278,7 @@ void CPC::clock() {
         // Execute PSG command.
         switch (ppi.portC & 0xC0) {
             case 0x40:
-                ppi.portA = ppi.inputA ? psg.read() : 0xFF;
+                ppi.portA = ppi.inputA ? psg.read() : 0x00;
                 break;
             case 0x80:
                 psg.write(ppi.portA);
@@ -292,6 +296,14 @@ void CPC::clock() {
     // Z80 gets data from the ULA or memory, only when reading.
     if (ga.cpuClock()) {
         z80.c = ga.z80_c;
+
+        if ((ppi.portC & 0x10) && tape.playing) {
+            if (!tape.sample--) {
+                tapeLevel = (tape.advance() & 0x40) << 1;
+            }
+        } else {
+            tapeLevel = 0x00;
+        }
 
         if (cpcDisk && romBank == 0x07) {
             fdc765.clock();
@@ -351,6 +363,9 @@ void CPC::clock() {
 }
 
 void CPC::reset() {
+
+    ga.reset();
+    selectRam(0);
 
     z80.reset();
     psgReset();
@@ -460,6 +475,8 @@ void CPC::setPage(uint_fast8_t page, uint_fast8_t bank) {
 
 void CPC::scanKeys() {
 
+    if (!pollKeys) return;
+
     for (size_t ii = 0; ii < 16; ++ii) {
         keys[ii] = 0xFF;
     }
@@ -469,5 +486,10 @@ void CPC::scanKeys() {
             keys[cpcKeys[ii].row] &= ~cpcKeys[ii].key;
         }
     }
+}
+
+void CPC::setBrand(uint_fast8_t brandNumber) {
+
+    brand = brandNumber & 0x7;
 }
 // vim: et:sw=4:ts=4

@@ -73,6 +73,23 @@ class CpcScreen : public Screen {
         void run();
 
         /**
+         * Exit the ZX Spectrum emulation.
+         */
+        void close();
+
+        /**
+         * Reset the emulator.
+         */
+        void reset();
+
+        /**
+         * Give or remove focus to the emulator.
+         *
+         * @param hasFocus New focus status.
+         */
+        void focus(bool hasFocus);
+
+        /**
          * Load tape and disk files.
          */
         void loadFiles();
@@ -88,8 +105,107 @@ class CpcScreen : public Screen {
         void updateMenu();
 
         /**
-         * Poll window interface events.
+         * Create empty disk.
          */
-        void pollEvents();
+        virtual void createEmptyDisk();
+
+        /**
+         * Save current disk.
+         */
+        virtual void saveDisk();
+
+        /**
+         * Select previous disk from disk list.
+         */
+        virtual void selectPreviousDisk();
+
+        /**
+         * Select next disk.
+         */
+        virtual void selectNextDisk();
+
+        /**
+         * Append load data to save tape.
+         */
+        virtual void appendLoadTape();
+
+        /**
+         * Clear save tape.
+         */
+        virtual void clearSaveTape();
+
+        /**
+         * Write save tape to disk.
+         */
+        virtual void writeSaveTape();
+
+        /**
+         * Toggle save tape or load tape to load data from it.
+         */
+        virtual void selectSaveTape();
+
+        /**
+         * Reset tape counter.
+         *
+         * This sets a mark in the tape so we can rewind to this point.
+         */
+        virtual void resetTapeCounter();
+
+        /**
+         * Start or Stop tape.
+         */
+        virtual void startStopTape();
+
+        /**
+         * Rewind tape.
+         *
+         * @param toCounter Rewinds tape to the previously set mark.
+         */
+        virtual void rewindTape(bool toCounter);
+
+        /**
+         * Toggle sound on/off.
+         */
+        virtual void toggleSound();
+
+        /**
+         * Toggle tape sound on/off.
+         */
+        virtual void toggleTapeSound();
+
+        /**
+         * Toggle PSG type.
+         */
+        virtual void togglePsgType();
+
+        /**
+         * Move joystick horizontal axis.
+         *
+         * @param l Activate left bit.
+         * @param r Activate right bit.
+         */
+        virtual void joystickHorizontalAxis(bool l, bool r);
+
+        /**
+         * Move joystick vertical axis.
+         *
+         * @param u Activate up bit.
+         * @param d Activate down bit.
+         */
+        virtual void joystickVerticalAxis(bool u, bool d);
+
+        /**
+         * Press joystick button.
+         *
+         * @param button Joystick button to press.
+         */
+        virtual void joystickButtonPress(uint_fast32_t button);
+
+        /**
+         * Release joystick button.
+         *
+         * @param button Joystick button to release.
+         */
+        virtual void joystickButtonRelease(uint_fast32_t button);
 };
 // vim: et:sw=4:ts=4

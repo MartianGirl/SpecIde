@@ -266,7 +266,6 @@ void Spectrum::run() {
                 ++skipCycles;
                 remaining -= 1.0;
             }
-
             sample();
         }
     }
@@ -444,7 +443,7 @@ void Spectrum::clock() {
                 } else {
                     if (kempston && !(z80.a & 0x0020)) {    // Kempston joystick.
                         if (z80.rd) {
-                            z80.d = joystick;
+                            z80.d = kempstonData;
                         }
                     }
                 }

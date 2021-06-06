@@ -100,16 +100,17 @@ void CpcScreen::setup() {
 
     loadFiles();
 
-    h = 625;
-    w = 800;
+    h = 568;
+    w = 768;
 
     lBorder = 128;
     rBorder = 144;
     tBorder = 16;
     bBorder = 0;
 
+    wide = true;
     reopenWindow(fullscreen);
-    setFullScreen(fullscreen, true);
+    setFullScreen(fullscreen);
     setSmooth(smooth);
     cpc.tapeSound = tapeSound;
     cpc.playSound = playSound;
@@ -120,7 +121,7 @@ void CpcScreen::loadFiles() {
     for (vector<string>::iterator it = files.begin(); it != files.end(); ++it) {
         switch (guessFileType(*it)) {
             case FileTypes::FILETYPE_CDT:
-                cpc.tape.loadTzx(*it);
+                cpc.tape.loadCdt(*it);
                 break;
 
             case FileTypes::FILETYPE_CSW:
@@ -205,6 +206,106 @@ void CpcScreen::update() {
 void CpcScreen::updateMenu() {
 }
 
-void CpcScreen::pollEvents() {
+void CpcScreen::close() {
+
+    cpc.psgPlaySound(false);
+    done = true;
+}
+
+void CpcScreen::focus(bool hasFocus) {
+
+    cpc.pollKeys = hasFocus;
+}
+
+void CpcScreen::createEmptyDisk() {
+
+    cpc.fdc765.drive[0].emptyDisk();
+}
+
+void CpcScreen::saveDisk() {
+
+    cpc.fdc765.drive[0].saveDisk();
+}
+
+void CpcScreen::selectPreviousDisk() {
+
+    cpc.fdc765.drive[0].prevDisk();
+}
+
+void CpcScreen::selectNextDisk() {
+
+    cpc.fdc765.drive[0].nextDisk();
+}
+
+void CpcScreen::reset() {
+
+    cpc.reset();
+}
+
+void CpcScreen::appendLoadTape() {
+}
+
+void CpcScreen::clearSaveTape() {
+}
+
+void CpcScreen::writeSaveTape() {
+}
+
+void CpcScreen::selectSaveTape() {
+}
+
+void CpcScreen::resetTapeCounter() {
+
+    cpc.tape.resetCounter();
+}
+
+void CpcScreen::startStopTape() {
+
+    cpc.tape.play();
+    cpc.tapeSound = tapeSound;
+}
+
+void CpcScreen::rewindTape(bool toCounter) {
+
+    cpc.tape.rewind(toCounter ? cpc.tape.counter : 0);
+}
+
+void CpcScreen::toggleTapeSound() {
+
+    cpc.tapeSound = tapeSound = !tapeSound;
+}
+
+void CpcScreen::toggleSound() {
+
+    cpc.playSound = playSound = !playSound;
+    cpc.psgPlaySound(playSound);
+}
+
+void CpcScreen::togglePsgType() {
+
+    aychip = !aychip;
+    cpc.psgChip(aychip);
+}
+
+void CpcScreen::joystickHorizontalAxis(bool l, bool r) {
+
+    (void) l;
+    (void) r;
+}
+
+void CpcScreen::joystickVerticalAxis(bool u, bool d) {
+
+    (void) u;
+    (void) d;
+}
+
+void CpcScreen::joystickButtonPress(uint_fast32_t button) {
+
+    (void) button;
+}
+
+void CpcScreen::joystickButtonRelease(uint_fast32_t button) {
+
+    (void) button;
 }
 // vim: et:sw=4:ts=4

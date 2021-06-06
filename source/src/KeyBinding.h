@@ -28,7 +28,14 @@ struct KeyBinding {
     uint8_t key;
 };
 
+struct JoystickKeyBinding {
+    uint8_t row;
+    uint8_t key;
+};
+
 extern KeyBinding singleKeys[42];
 extern KeyBinding capsKeys[11];
 extern KeyBinding symbolKeys[3];
 extern KeyBinding cpcKeys[73];
+extern JoystickKeyBinding spectrumKeyJoystick[12];
+extern JoystickKeyBinding cpcJoystick[7];

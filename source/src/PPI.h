@@ -15,6 +15,9 @@
 
 #pragma once
 
+#include <iomanip>
+#include <iostream>
+
 /**
  * PPI
  *
@@ -53,22 +56,27 @@ class PPI {
      *
      * @return A byte with the value on port A.
      */
-    uint_fast8_t readPortA() const { return inputA ? portA : 0xFF; };
+    uint_fast8_t readPortA() const { return (inputA ? portA : 0xFF); };
 
     /**
      * Read port B.
      *
      * @return A byte with the value on port B.
      */
-    uint_fast8_t readPortB() const { return inputB ? portB : 0xFF; }
+    uint_fast8_t readPortB() const { return (inputB ? portB : 0xFF); }
 
     /**
      * Read port C.
      *
      * @return A byte with the value on port C.
      */
-    uint_fast8_t readPortC() const { return 
-        (inputHiC ? portC & 0xF0 : 0xF0) | (inputLoC ? portC & 0x0F : 0x0F); }
+    uint_fast8_t readPortC() const {
+
+        uint_fast8_t byte = 0xFF;
+        if (inputHiC) { byte &= 0x0F; byte |= portC & 0xF0; }
+        if (inputLoC) { byte &= 0xF0; byte |= portC & 0x0F; }
+        return byte;
+    }
 
     /**
      * Write port A from the data bus.
@@ -100,14 +108,10 @@ class PPI {
      * @param byte The value for port C.
      */
     void writePortC(uint_fast8_t byte) {
-       
-        if (!inputLoC) {
-            portC = (portC & 0xF0) | (byte & 0x0F);
-        }
 
-        if (!inputHiC) {
-            portC = (portC & 0x0F) | (byte & 0xF0);
-        }
+        if (!inputLoC) { portC &= 0xF0; portC |= byte & 0x0F; }
+        if (!inputHiC) { portC &= 0x0F; portC |= byte & 0xF0; }
+        //std::cout << "Write portC: " << std::hex << static_cast<uint_fast32_t>(portC) << std::endl;
     }
 
     /**
@@ -122,16 +126,52 @@ class PPI {
         control = byte;
 
         if ((control & 0x80) == 0x80) {
+            uint_fast8_t newModeA = (control & 0x60) >> 5;
+            uint_fast8_t newModeB = (control & 0x04) >> 2;
 
-            modeA = (control & 0x60) >> 5;
-            modeB = (control & 0x04) >> 2;
-            modeC = 0;
+            bool newInputA = ((control & 0x10) >> 4) == 1;
+            bool newInputB = ((control & 0x02) >> 1) == 1;
+            bool newInputHiC = ((control & 0x08) >> 3) == 1;
+            bool newInputLoC = (control & 0x01) == 1;
 
-            inputA = ((control & 0x10) >> 4) == 1;
-            inputB = ((control & 0x02) >> 1) == 1;
-            inputLoC = ((control & 0x08) >> 3) == 1;
-            inputHiC = (control & 0x01) == 1;
+            if (newModeA != modeA) {
+                portA = 0;
+                modeA = newModeA;
+            }
+
+            if (newModeB != modeB) {
+                portB = 0;
+                modeB = newModeB;
+            }
+
+            if (newInputA != inputA) {
+                portA = 0;
+                inputA = newInputA;
+            }
+
+            if (newInputB != inputB) {
+                portB = 0;
+                inputB = newInputB;
+            }
+
+            if (newInputHiC != inputHiC) {
+                portC &= 0x0F;
+                inputHiC = newInputHiC;
+            }
+
+            if (newInputLoC != inputLoC) {
+                portC &= 0xF0;
+                inputLoC = newInputLoC;
+            }
         } else {
+            uint8_t mask = 1 << ((control & 0xe) >> 1);
+            if (control & 0x1) {
+                //std::cout << "Set portC bit " << ((control & 0xe) / 2) << std::endl;
+                portC |= mask;
+            } else {
+                //std::cout << "Clear portC bit " << ((control & 0xe) / 2) << std::endl;
+                portC &= ~mask;
+            }
         }
     }
 };

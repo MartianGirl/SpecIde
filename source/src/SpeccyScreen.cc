@@ -175,8 +175,9 @@ void SpeccyScreen::setup() {
 
     loadFiles();
 
+    wide = false;
     reopenWindow(fullscreen);
-    setFullScreen(fullscreen, false);
+    setFullScreen(fullscreen);
     setSmooth(smooth);
     spectrum.ula.tapeSound = tapeSound;
     spectrum.ula.playSound = playSound;
@@ -379,225 +380,161 @@ void SpeccyScreen::updateMenu() {
     }
 }
 
-void SpeccyScreen::pollEvents() {
+void SpeccyScreen::close() {
 
-    Event event;
-    while (window.pollEvent(event)) {
-        switch (event.type) {
-            case Event::Closed:
-                spectrum.playSound(false);
-                done = true;
-                break;
+    spectrum.playSound(false);
+    done = true;
+}
 
-            case Event::GainedFocus:
-            case Event::LostFocus:
-                spectrum.ula.pollKeys = window.hasFocus();
-                break;
+void SpeccyScreen::focus(bool hasFocus) {
 
-            case Event::KeyPressed:
-                switch (event.key.code) {
-                    case Keyboard::Menu:    // fall-through
-                    case Keyboard::F1:      // Show menu
-                        menu = true;
-                        break;
-                    case Keyboard::F2:  // Window/Fullscreen
-                        if (event.key.shift) {
-                            smooth = !smooth;
-                            setSmooth(smooth);
-                        } else {
-                            fullscreen = !fullscreen;
-                            reopenWindow(fullscreen);
-                            setFullScreen(fullscreen, false);
-                        }
-                        break;
-                    case Keyboard::F3:  // Save DSK to disk
-                        if (event.key.shift) {
-                            spectrum.fdc765.drive[0].emptyDisk();
-                        } else {
-                            spectrum.fdc765.drive[0].saveDisk();
-                        }
-                        break;
-                    case Keyboard::F4:  // Select DSK from list
-                        if (event.key.shift) {
-                            spectrum.fdc765.drive[0].prevDisk();
-                        } else {
-                            spectrum.fdc765.drive[0].nextDisk();
-                        }
-                        break;
-                    case Keyboard::F5:  // Reset Spectrum
-                        spectrum.reset();
-                        break;
-                    case Keyboard::F6:  // Clear save data
-                        if (event.key.shift) {
-                            spectrum.tape.appendLoadData();
-                        } else {
-                            spectrum.tape.clearSaveData();
-                        }
-                        break;
-                    case Keyboard::F7:  // Write save data
-                        if (event.key.shift) {
-                            spectrum.tape.useSaveData = !spectrum.tape.useSaveData;
-                            spectrum.tape.selectTapData();
-                        } else {
-                            spectrum.tape.writeSaveData();
-                        }
-                        break;
-                    case Keyboard::F8:  // PSG chip type
-                        aychip = !aychip;
-                        spectrum.psgChip(aychip);
-                        break;
-                    case Keyboard::F9:  // Toggle sound ON/OFF
-                        if (event.key.shift) {
-                            tapeSound = !tapeSound;
-                            spectrum.ula.tapeSound = tapeSound;
-                        } else {
-                            playSound = !playSound;
-                            spectrum.ula.playSound = playSound;
-                            spectrum.psgPlaySound(psgSound && playSound);
-                        }
-                        break;
-                    case Keyboard::F10: // Quit
-                        done = true;
-                        break;
-                    case Keyboard::F11: // Play/Stop tape
-                        if (event.key.shift) {
-                            spectrum.tape.resetCounter();
-                        } else {
-                            spectrum.tape.play();
-                            spectrum.ula.tapeSound = tapeSound;
-                        }
-                        break;
-                    case Keyboard::F12:
-                        if (event.key.shift) {
-                            spectrum.tape.rewind(spectrum.tape.counter);
-                        } else {
-                            spectrum.tape.rewind();
-                        }
-                        break;
+    spectrum.ula.pollKeys = hasFocus;
+}
 
-                    default:
-                        break;
-                }
-                break;
+void SpeccyScreen::createEmptyDisk() {
 
-            case Event::JoystickMoved:
-                switch (event.joystickMove.axis) {
-                    case Joystick::X:
-                    case Joystick::U:
-                    case Joystick::PovX:
-                        if (spectrum.kempston) {
-                            spectrum.joystick &= 0xFC;
-                            if (event.joystickMove.position < -34.0) {
-                                spectrum.joystick |= 0x02;
-                            } else if (event.joystickMove.position > 34.0) {
-                                spectrum.joystick |= 0x01;
-                            }
-                        } else {
-                            spectrum.ula.keys[3] |= 0x018;
-                            if (event.joystickMove.position < -34.0) {
-                                spectrum.ula.keys[3] &= 0xEF;
-                            } else if (event.joystickMove.position > 34.0) {
-                                spectrum.ula.keys[3] &= 0xF7;
-                            }
-                        }
-                        break;
+    spectrum.fdc765.drive[0].emptyDisk();
+}
 
-                    case Joystick::Y:
-                    case Joystick::V:
-                    case Joystick::PovY:
-                        if (spectrum.kempston) {
-                            spectrum.joystick &= 0xF3;
-                            if (event.joystickMove.position < -34.0) {
-                                spectrum.joystick |= 0x08;
-                            } else if (event.joystickMove.position > 34.0) {
-                                spectrum.joystick |= 0x04;
-                            }
-                        } else {
-                            spectrum.ula.keys[3] |= 0x06;
-                            if (event.joystickMove.position < -34.0) {
-                                spectrum.ula.keys[3] &= 0xFD;
-                            } else if (event.joystickMove.position > 34.0) {
-                                spectrum.ula.keys[3] &= 0xFB;
-                            }
-                        }
-                        break;
+void SpeccyScreen::saveDisk() {
 
-                    default:
-                        break;
-                }
-                break;
+    spectrum.fdc765.drive[0].saveDisk();
+}
 
-            case Event::JoystickButtonPressed:
-                if (pad) {
-                    switch (event.joystickButton.button) {
-                        case 1: // Emulate press 'B'
-                            spectrum.ula.keys[0] &= 0xEF; break;
-                        case 2: // Emulate press 'N'
-                            spectrum.ula.keys[0] &= 0xF7; break;
-                        case 3: // Emulate press 'V'
-                            spectrum.ula.keys[7] &= 0xEF; break;
-                        case 4: // Emulate press 'C'
-                            spectrum.ula.keys[7] &= 0xF7; break;
-                        case 5: // Emulate press 'X'
-                            spectrum.ula.keys[7] &= 0xFB; break;
-                        case 6: // Emulate press 'G'
-                            spectrum.ula.keys[6] &= 0xEF; break;
-                        case 7: // Emulate press 'H'
-                            spectrum.ula.keys[1] &= 0xEF; break;
-                        default:    // Other buttons map to the joystick.
-                            if (spectrum.kempston) {
-                                spectrum.joystick |= 0x10;
-                            } else {
-                                spectrum.ula.keys[3] &= 0xFE;   // '0'
-                            }
-                            break;
-                    }
-                } else {
-                    if (spectrum.kempston) {
-                        spectrum.joystick |= 0x10;
-                    } else {
-                        spectrum.ula.keys[3] &= 0xFE;
-                    }
-                }
-                break;
+void SpeccyScreen::selectPreviousDisk() {
 
-            case Event::JoystickButtonReleased:
-                if (pad) {
-                    switch (event.joystickButton.button) {
-                        case 1: // Emulate release 'B'
-                            spectrum.ula.keys[0] |= 0x10; break;
-                        case 2: // Emulate release 'N'
-                            spectrum.ula.keys[0] |= 0x08; break;
-                        case 3: // Emulate release 'V'
-                            spectrum.ula.keys[7] |= 0x10; break;
-                        case 4: // Emulate release 'C'
-                            spectrum.ula.keys[7] |= 0x08; break;
-                        case 5: // Emulate release 'X'
-                            spectrum.ula.keys[7] |= 0x04; break;
-                        case 6: // Emulate release 'G'
-                            spectrum.ula.keys[6] |= 0x10; break;
-                        case 7: // Emulate release 'H'
-                            spectrum.ula.keys[1] |= 0x10; break;
-                        default:    // Other buttons map to the joystick.
-                            if (spectrum.kempston) {
-                                spectrum.joystick &= 0xEF;
-                            } else {
-                                spectrum.ula.keys[3] |= 0x01;
-                            }
-                            break;
-                    }
-                } else {
-                    if (spectrum.kempston) {
-                        spectrum.joystick &= 0xEF;
-                    } else {
-                        spectrum.ula.keys[3] |= 0x01;
-                    }
-                }
-                break;
+    spectrum.fdc765.drive[0].prevDisk();
+}
 
-            default:
-                break;
+void SpeccyScreen::selectNextDisk() {
+
+    spectrum.fdc765.drive[0].nextDisk();
+}
+
+void SpeccyScreen::reset() {
+
+    spectrum.reset();
+}
+
+void SpeccyScreen::appendLoadTape() {
+
+    spectrum.tape.appendLoadData();
+}
+
+void SpeccyScreen::clearSaveTape() {
+
+    spectrum.tape.clearSaveData();
+}
+
+void SpeccyScreen::writeSaveTape() {
+
+    spectrum.tape.writeSaveData();
+}
+
+void SpeccyScreen::selectSaveTape() {
+
+    spectrum.tape.useSaveData = !spectrum.tape.useSaveData;
+    spectrum.tape.selectTapData();
+}
+
+void SpeccyScreen::resetTapeCounter() {
+
+    spectrum.tape.resetCounter();
+}
+
+void SpeccyScreen::startStopTape() {
+
+    spectrum.tape.play();
+    spectrum.ula.tapeSound = tapeSound;
+}
+
+void SpeccyScreen::rewindTape(bool toCounter) {
+
+    spectrum.tape.rewind(toCounter ? spectrum.tape.counter : 0);
+}
+
+void SpeccyScreen::toggleTapeSound() {
+
+    spectrum.ula.tapeSound = tapeSound = !tapeSound;
+}
+
+void SpeccyScreen::toggleSound() {
+
+    spectrum.ula.playSound = playSound = !playSound;
+    spectrum.psgPlaySound(psgSound & playSound);
+}
+
+void SpeccyScreen::togglePsgType() {
+
+    aychip = !aychip;
+    spectrum.psgChip(aychip);
+}
+
+void SpeccyScreen::joystickHorizontalAxis(bool l, bool r) {
+
+    if (spectrum.kempston) {
+        spectrum.kempstonData &= 0xFC;
+        if (l) {
+            spectrum.kempstonData |= 0x02;
+        } else if (r) {
+            spectrum.kempstonData |= 0x01;
         }
+    } else {
+        spectrum.ula.sinclairData &= 0xFC;
+        if (l) {
+            spectrum.ula.sinclairData |= 0x02;
+        } else if (r) {
+            spectrum.ula.sinclairData |= 0x01;
+        }
+    }
+}
+
+void SpeccyScreen::joystickVerticalAxis(bool u, bool d) {
+
+    if (spectrum.kempston) {
+        spectrum.kempstonData &= 0xF3;
+        if (u) {
+            spectrum.kempstonData |= 0x08;
+        } else if (d) {
+            spectrum.kempstonData |= 0x04;
+        }
+    } else {
+        spectrum.ula.sinclairData &= 0xF3;
+        if (u) {
+            spectrum.ula.sinclairData |= 0x08;
+        } else if (d) {
+            spectrum.ula.sinclairData |= 0x04;
+        }
+    }
+}
+
+void SpeccyScreen::joystickButtonPress(uint_fast32_t button) {
+
+    if (pad) {
+        button += 4;
+    } else {
+        button = 4;  // Interpret every button as default.
+    }
+
+    if (spectrum.kempston && button < 5) {
+        spectrum.kempstonData |= 1 << button;
+    } else {
+        spectrum.ula.sinclairData |= 1 << button;
+    }
+}
+
+void SpeccyScreen::joystickButtonRelease(uint_fast32_t button) {
+
+    if (pad) {
+        button += 4;
+    } else {
+        button = 4;  // Interpret every button as default.
+    }
+
+    if (spectrum.kempston && button < 5) {
+        spectrum.kempstonData &= ~(1 << button);
+    } else {
+        spectrum.ula.sinclairData &= ~(1 << button);
     }
 }
 // vim: et:sw=4:ts=4

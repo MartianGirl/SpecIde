@@ -119,7 +119,7 @@ void Screen::reopenWindow(bool fs) {
     }
 }
 
-void Screen::setFullScreen(bool fs, bool wide) {
+void Screen::setFullScreen(bool fs) {
 
     fullscreen = fs;
 
@@ -251,7 +251,7 @@ FileTypes Screen::guessFileType(string const& fileName) {
     if (extension == ".tzx") {
         return FileTypes::FILETYPE_TZX;
     } else if (extension == ".cdt") {
-        return FileTypes::FILETYPE_TZX;
+        return FileTypes::FILETYPE_CDT;
     } else if (extension == ".tap") {
         return FileTypes::FILETYPE_TAP;
     } else if (extension == ".dsk") {
@@ -260,6 +260,145 @@ FileTypes Screen::guessFileType(string const& fileName) {
         return FileTypes::FILETYPE_CSW;
     } else {
         return FileTypes::FILETYPE_ERR;
+    }
+}
+
+void Screen::pollEvents() {
+
+    Event event;
+    while (window.pollEvent(event)) {
+        switch (event.type) {
+            case Event::Closed:
+                close();
+                break;
+
+            case Event::GainedFocus:
+            case Event::LostFocus:
+                focus(window.hasFocus());
+                break;
+
+            case Event::KeyPressed:
+                switch (event.key.code) {
+                    case Keyboard::Menu:    // fall-through
+                    case Keyboard::F1:      // Show menu
+                        menu = true;
+                        break;
+                    case Keyboard::F2:  // Window/Fullscreen
+                        if (event.key.shift) {
+                            smooth = !smooth;
+                            setSmooth(smooth);
+                        } else {
+                            fullscreen = !fullscreen;
+                            reopenWindow(fullscreen);
+                            setFullScreen(fullscreen);
+                        }
+                        break;
+                    case Keyboard::F3:  // Save DSK to disk
+                        if (event.key.shift) {
+                            createEmptyDisk();
+                        } else {
+                            saveDisk();
+                        }
+                        break;
+                    case Keyboard::F4:  // Select DSK from list
+                        if (event.key.shift) {
+                            selectPreviousDisk();
+                        } else {
+                            selectNextDisk();
+                        }
+                        break;
+                    case Keyboard::F5:  // Reset Spectrum
+                        reset();
+                        break;
+                    case Keyboard::F6:  // Clear save data
+                        if (event.key.shift) {
+                            appendLoadTape();
+                        } else {
+                            clearSaveTape();
+                        }
+                        break;
+                    case Keyboard::F7:  // Write save data
+                        if (event.key.shift) {
+                            selectSaveTape();
+                        } else {
+                            writeSaveTape();
+                        }
+                        break;
+                    case Keyboard::F8:  // PSG chip type
+                        togglePsgType();
+                        break;
+                    case Keyboard::F9:  // Toggle sound ON/OFF
+                        if (event.key.shift) {
+                            toggleTapeSound();
+                        } else {
+                            toggleSound();
+                        }
+                        break;
+                    case Keyboard::F10: // Quit
+                        done = true;
+                        break;
+                    case Keyboard::F11: // Play/Stop tape
+                        if (event.key.shift) {
+                            resetTapeCounter();
+                        } else {
+                            startStopTape();
+                        }
+                        break;
+                    case Keyboard::F12:
+                        if (event.key.shift) {
+                            rewindTape(true);
+                        } else {
+                            rewindTape(false);
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+
+            case Event::JoystickMoved:
+                switch (event.joystickMove.axis) {
+                    case Joystick::X:
+                    case Joystick::U:
+                    case Joystick::PovX:
+                        if (event.joystickMove.position < -34.0) {
+                            joystickHorizontalAxis(true, false);
+                        } else if (event.joystickMove.position > 34.0) {
+                            joystickHorizontalAxis(false, true);
+                        } else {
+                            joystickHorizontalAxis(false, false);
+                        }
+                        break;
+
+                    case Joystick::Y:
+                    case Joystick::V:
+                    case Joystick::PovY:
+                        if (event.joystickMove.position < -34.0) {
+                            joystickVerticalAxis(true, false);
+                        } else if (event.joystickMove.position > 34.0) {
+                            joystickVerticalAxis(false, true);
+                        } else {
+                            joystickVerticalAxis(false, false);
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+
+            case Event::JoystickButtonPressed:
+                joystickButtonPress(event.joystickButton.button);
+                break;
+
+            case Event::JoystickButtonReleased:
+                joystickButtonRelease(event.joystickButton.button);
+                break;
+
+            default:
+                break;
+        }
     }
 }
 

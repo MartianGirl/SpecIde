@@ -77,6 +77,8 @@ class GateArray {
          */
         void clock();
 
+        void reset();
+
         /**
          * Paint pixels into bitmap.
          */

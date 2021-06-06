@@ -383,4 +383,11 @@ void GateArray::paint() {
     }
     ++xPos;
 }
+
+void GateArray::reset() {
+
+    lowerRom = true;
+    upperRom = true;
+    z80_c = 0xFFFF;
+}
 // vim: et:sw=4:ts=4

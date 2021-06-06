@@ -44,6 +44,15 @@ struct ExpansionRom {
     ExpansionRom(std::string n) : name(n), data(0x4000, 0x00) {}
 };
 
+uint_fast8_t constexpr BRAND_ISP = 0x00;
+uint_fast8_t constexpr BRAND_TRIUMPH = 0x01;
+uint_fast8_t constexpr BRAND_SAISHO = 0x02;
+uint_fast8_t constexpr BRAND_SOLAVOX = 0x03;
+uint_fast8_t constexpr BRAND_AWA = 0x04;
+uint_fast8_t constexpr BRAND_SCHNEIDER = 0x05;
+uint_fast8_t constexpr BRAND_ORION = 0x06;
+uint_fast8_t constexpr BRAND_AMSTRAD = 0x07;
+
 /**
  * CPC
  *
@@ -88,6 +97,12 @@ class CPC {
 
         bool tapeSound = false;
         bool playSound = false;
+        bool pollKeys = true;
+
+        uint_fast8_t tapeLevel = 0;
+
+        uint_fast8_t brand = BRAND_AMSTRAD;
+
         StereoMode stereo = StereoMode::STEREO_MONO;
 
 
@@ -149,6 +164,11 @@ class CPC {
          * Configure an Amstrad CPC 6128 computer.
          */
         void set6128();
+
+        /**
+         * Configure model brand.
+         */
+        void setBrand(uint_fast8_t brand);
 
         /**
          * Update RAM mapping.

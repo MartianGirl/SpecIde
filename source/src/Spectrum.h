@@ -83,7 +83,7 @@ class Spectrum {
         /** Byte in bus, delayed 1 clock. */
         uint_fast8_t bus_1 = 0xFF;
         /** Byte in Kempston joystick port. */
-        uint_fast8_t joystick = 0x00;
+        uint_fast8_t kempstonData = 0x00;
 
         /** Kempston interface present. If false, Sinclair joystick is emulated. */
         bool kempston = false;

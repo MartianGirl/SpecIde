@@ -66,6 +66,7 @@ class Tape {
         Tape() {}
 
         void loadTzx(string const& fileName);
+        void loadCdt(string const& fileName);
         void loadTap(string const& fileName);
         void loadCsw(string const& fileName);
         void updateFlashTap();

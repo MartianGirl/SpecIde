@@ -28,6 +28,24 @@ void Tape::loadTzx(string const& fileName) {
     updateFlashTap();
 }
 
+void Tape::loadCdt(string const& fileName) {
+
+    counter = pulseData.size();
+
+    // Create a .tzx object, load its contents in pulseData, scaled to
+    // match the CPU speed.
+    TZXFile cdt;
+    cdt.load(fileName);
+    cdt.parse(pulseData, indexData, stopData, stopIf48K);
+
+    // Pulses in ZX Spectrum TZX tapes are defined in T-States of a 3.5MHz clock.
+    // To achieve the same speed in an Amstrad CPC at 4MHz, we need to scale the
+    // pulse lengths.
+    for (size_t ii = counter; ii < pulseData.size(); ++ii) {
+        pulseData[ii] = pulseData[ii] * 8 / 7;
+    }
+}
+
 void Tape::loadTap(string const& fileName) {
 
     counter = pulseData.size();

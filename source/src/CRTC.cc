@@ -170,7 +170,16 @@ void CRTC::rdStatus(uint_fast8_t &byte) {
 void CRTC::rdRegister(uint_fast8_t &byte) {
 
     if (dirs[index] != AccessType::CRTC_WO) {
-        byte = regs[index];
+        switch (index) {
+            case 0x1f:  // fall-through
+                if (type != 1) {   // Hi-Z in type 1
+                    byte = regs[(type < 3) ? index : ((index & 0x7) | 0x8)];
+                }
+                break;
+            default:
+                byte = regs[(type < 3) ? index : ((index & 0x7) | 0x8)];
+                break;
+        }
     } else {
         switch (type) {
             case 0: // fall-through

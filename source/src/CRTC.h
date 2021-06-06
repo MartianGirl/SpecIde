@@ -28,7 +28,7 @@ enum class AccessType
 
 class CRTC {
     public:
-        CRTC(uint_fast8_t type = 0);
+        CRTC(uint_fast8_t type = 1);
 
         uint_fast32_t type;
         uint_fast8_t index;

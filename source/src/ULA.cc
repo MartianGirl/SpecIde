@@ -364,6 +364,12 @@ void ULA::scanKeys() {
         }
     }
 
+    for (size_t ii = 0; ii < sizeof(spectrumKeyJoystick) / sizeof(JoystickKeyBinding); ++ii) {
+        if (sinclairData & (1 << ii)) {
+            keys[spectrumKeyJoystick[ii].row] &= ~spectrumKeyJoystick[ii].key;
+        }
+    }
+
     // Activate Caps Lock (Caps Shift + 2) when both Shifts are presseda.
     if (Keyboard::isKeyPressed(Keyboard::LShift) && Keyboard::isKeyPressed(Keyboard::RShift)) {
         keys[7] &= 0xFE;    // Press Caps Shift
