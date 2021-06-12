@@ -263,8 +263,8 @@ void GateArray::clock() {
             // CRTC is clocked. Some values have updated.
             crtc.clock();
 
-            updateVideoMode();
             generateInterrupts();
+            updateVideoMode();
             updateBeam();
 
             hSync_d = crtc.hSync;
@@ -302,13 +302,16 @@ void GateArray::updateVideoMode() {
 
     if (crtc.hSync) {
         if (cClkCounter < 8) {
-            ++cClkCounter;
-            trigger = (cClkCounter == 8);
+            if (++cClkCounter == 8) {
+                trigger = true;
+            }
         }
     } else {
         // Mode is updated on the falling edge of bit 4 of this counter.
         // If cClkCounter was already 8, we don't enter the if above.
-        trigger = hSync_d && (cClkCounter > 3);
+        if (cClkCounter & 4) {
+            trigger = true;
+        }
         cClkCounter = 0;
     }
 
@@ -323,20 +326,24 @@ void GateArray::updateBeam() {
     // fits better the screen this way...
     blanking = crtc.hSync || hCounter < 26;
 
-    // Increment yPos with hSync rising edges.
-    // yPos maybe should be incremented only if hCounter is not less than
-    // 28, but the border obtained without this condition looks better
-    if (crtc.hswCounter == 8 || xPos >= X_SIZE) {
+    if (xPos >= X_SIZE) {
         xPos = 0;
+        xInc = 0;
+        yPos += yInc;
 
-        ++yPos;
-        // This links the monitor coordinates (xPos, yPos) with the CRTC coordinates.
-        bool vFlyBack = yPos > crtc.vDisplayed * crtc.rMax;
-        if (yPos >= (Y_SIZE / 2)
-                || (!crtc.outOfRange && crtc.vswCounter == 2 && vFlyBack)) {
+        if (yPos >= Y_SIZE / 2) {
             yPos = 0;
+            yInc = 0;
             sync = true;
         }
+    }
+
+    if (!xPos && !crtc.hSync && hSync_d) {
+        xInc = 1;
+    }
+
+    if (!yPos && !crtc.vSync && vSync_d) {
+        yInc = 1;
     }
 }
 
@@ -381,7 +388,7 @@ void GateArray::paint() {
     } else {
         pixelsX1[(yPos * X_SIZE) + xPos] = 0;
     }
-    ++xPos;
+    xPos += xInc;
 }
 
 void GateArray::reset() {

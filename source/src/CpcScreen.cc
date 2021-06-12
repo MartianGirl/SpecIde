@@ -100,12 +100,12 @@ void CpcScreen::setup() {
 
     loadFiles();
 
-    h = 568;
-    w = 768;
+    h = 560;
+    w = 784;
 
-    lBorder = 128;
-    rBorder = 144;
-    tBorder = 16;
+    lBorder = 0;
+    rBorder = 232;
+    tBorder = 4;
     bBorder = 0;
 
     wide = true;

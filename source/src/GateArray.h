@@ -56,6 +56,8 @@ class GateArray {
 
         uint_fast32_t xPos = 0;
         uint_fast32_t yPos = 0;
+        uint_fast32_t xInc = 0;
+        uint_fast32_t yInc = 0;
          
         bool hSync_d = false;
         bool vSync_d = false;
@@ -69,7 +71,6 @@ class GateArray {
         /** HSYNC counter for upper border delay. */
         uint_fast32_t hCounter = 0;
 
-        uint_fast32_t yInc = 1;
         uint_fast32_t scanlines = 0;
 
         /**
