@@ -99,7 +99,10 @@ class CPC {
         bool playSound = false;
         bool pollKeys = true;
 
+        /** Tape signal level. */
         uint_fast8_t tapeLevel = 0;
+        /** Tape playing speed. Automatic tape control causes speed variations. */
+        double tapeSpeed = 0.0;
 
         uint_fast8_t brand = BRAND_AMSTRAD;
 

@@ -297,12 +297,20 @@ void CPC::clock() {
     if (ga.cpuClock()) {
         z80.c = ga.z80_c;
 
-        if ((ppi.portC & 0x10) && tape.playing) {
+        if (tape.playing) {
+            if ((ppi.portC & 0x10) && tapeSpeed < 1.0) {
+                tapeSpeed += 0.000006;
+            } else if (!(ppi.portC & 0x10) && tapeSpeed > 0.0) {
+                tapeSpeed -= 0.000006;
+            }
+
             if (!tape.sample--) {
-                tapeLevel = (tape.advance() & 0x40) << 1;
+                tapeLevel = (tapeSpeed > 0.25) ? ((tape.advance() & 0x40) << 1) : 0;
+                tape.sample += (1 / tapeSpeed) - 1;
             }
         } else {
-            tapeLevel = 0x00;
+            tapeLevel = 0;
+            tapeSpeed = 0.0;
         }
 
         if (cpcDisk && romBank == 0x07) {
