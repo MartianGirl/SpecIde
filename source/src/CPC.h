@@ -101,8 +101,8 @@ class CPC {
 
         /** Tape signal level. */
         uint_fast8_t tapeLevel = 0;
-        /** Tape playing speed. Automatic tape control causes speed variations. */
-        double tapeSpeed = 0.0;
+        /** Counter of cycles for the tape relay charge. */
+        uint_fast32_t relay = 0;
 
         uint_fast8_t brand = BRAND_AMSTRAD;
 

@@ -27,13 +27,13 @@ class PPI {
 
     public:
     /** Byte in port A. */
-    uint_fast8_t portA;
+    uint_fast8_t portA = 0;
     /** Byte in port B. */
-    uint_fast8_t portB;
+    uint_fast8_t portB = 0;
     /** Byte in port C. */
-    uint_fast8_t portC;
+    uint_fast8_t portC = 0;
     /** Control port. */
-    uint_fast8_t control;
+    uint_fast8_t control = 0;
 
     /** Port A mode. */
     uint_fast8_t modeA = 0;
@@ -111,7 +111,6 @@ class PPI {
 
         if (!inputLoC) { portC &= 0xF0; portC |= byte & 0x0F; }
         if (!inputHiC) { portC &= 0x0F; portC |= byte & 0xF0; }
-        //std::cout << "Write portC: " << std::hex << static_cast<uint_fast32_t>(portC) << std::endl;
     }
 
     /**
@@ -125,51 +124,23 @@ class PPI {
 
         control = byte;
 
-        if ((control & 0x80) == 0x80) {
-            uint_fast8_t newModeA = (control & 0x60) >> 5;
-            uint_fast8_t newModeB = (control & 0x04) >> 2;
+        if (control & 0x80) {
+            modeA = (control & 0x60) >> 5;
+            modeB = (control & 0x04) >> 2;
 
-            bool newInputA = ((control & 0x10) >> 4) == 1;
-            bool newInputB = ((control & 0x02) >> 1) == 1;
-            bool newInputHiC = ((control & 0x08) >> 3) == 1;
-            bool newInputLoC = (control & 0x01) == 1;
+            inputA = (control & 0x10);
+            inputB = (control & 0x02);
+            inputHiC = (control & 0x08);
+            inputLoC = (control & 0x01);
 
-            if (newModeA != modeA) {
-                portA = 0;
-                modeA = newModeA;
-            }
-
-            if (newModeB != modeB) {
-                portB = 0;
-                modeB = newModeB;
-            }
-
-            if (newInputA != inputA) {
-                portA = 0;
-                inputA = newInputA;
-            }
-
-            if (newInputB != inputB) {
-                portB = 0;
-                inputB = newInputB;
-            }
-
-            if (newInputHiC != inputHiC) {
-                portC &= 0x0F;
-                inputHiC = newInputHiC;
-            }
-
-            if (newInputLoC != inputLoC) {
-                portC &= 0xF0;
-                inputLoC = newInputLoC;
-            }
+            portA = 0;
+            portB = 0;
+            portC = 0;
         } else {
             uint8_t mask = 1 << ((control & 0xe) >> 1);
             if (control & 0x1) {
-                //std::cout << "Set portC bit " << ((control & 0xe) / 2) << std::endl;
                 portC |= mask;
             } else {
-                //std::cout << "Clear portC bit " << ((control & 0xe) / 2) << std::endl;
                 portC &= ~mask;
             }
         }

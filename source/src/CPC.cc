@@ -234,22 +234,12 @@ void CPC::clock() {
                     if (z80.rd) {
                         z80.d = ppi.readPortC();
                     } else if (z80.wr) {
-                        uint8_t oldPortC = ppi.portC;
                         ppi.writePortC(z80.d);
-                        if ((ppi.portC ^ oldPortC) & 0x10) {
-                            cout << "Cassette motor: "
-                                << ((ppi.portC & 0x10) ? string("ON") : string("OFF")) << endl;
-                        }
                     }
                     break;
                 case 0x0300:    // Control port: &F7xx
                     if (z80.wr) {
-                        uint8_t oldPortC = ppi.portC;
                         ppi.writeControlPort(z80.d);
-                        if ((ppi.portC ^ oldPortC) & 0x10) {
-                            cout << "Cassette motor: "
-                                << ((ppi.portC & 0x10) ? string("ON") : string("OFF")) << endl;
-                        }
                     }
                     break;
                 default:
@@ -266,7 +256,6 @@ void CPC::clock() {
 
     // First we clock the Gate Array. Further clocks will be generated here.
     ga.clock();
-
 
     if (ga.crtcClock()) {
         ppi.portB = tapeLevel | 0x5E | (expBit ? 0x20 : 0x00) | (ga.crtc.vSync ? 0x1 : 0x0);
@@ -297,20 +286,22 @@ void CPC::clock() {
     if (ga.cpuClock()) {
         z80.c = ga.z80_c;
 
-        if (tape.playing) {
-            if ((ppi.portC & 0x10) && tapeSpeed < 1.0) {
-                tapeSpeed += 0.000006;
-            } else if (!(ppi.portC & 0x10) && tapeSpeed > 0.0) {
-                tapeSpeed -= 0.000006;
+        if (ppi.portC & 0x10) {
+            if (relay < 500000) {
+                ++relay;
             }
+        } else {
+            relay = 0;
+        }
 
+        if (tape.playing && relay >= 200000) {
+            // 400000 @ 4MHz = 0.1s
             if (!tape.sample--) {
-                tapeLevel = (tapeSpeed > 0.25) ? ((tape.advance() & 0x40) << 1) : 0;
-                tape.sample += (1 / tapeSpeed) - 1;
+                uint_fast8_t level = tape.advance();
+                tapeLevel = (relay >= 400000) ? ((level & 0x40) << 1) : 0;
             }
         } else {
             tapeLevel = 0;
-            tapeSpeed = 0.0;
         }
 
         if (cpcDisk && romBank == 0x07) {
