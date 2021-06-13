@@ -112,8 +112,10 @@ void CpcScreen::setup() {
     reopenWindow(fullscreen);
     setFullScreen(fullscreen);
     setSmooth(smooth);
-    cpc.tapeSound = tapeSound;
-    cpc.playSound = playSound;
+    cpc.tapeSound = tapeSound && playSound;
+    cpc.psgPlaySound(playSound);
+    cpc.setSoundRate(FRAME_TIME_CPC, syncToVideo);
+    cpc.skipCycles = cpc.skip;
 }
 
 void CpcScreen::loadFiles() {
@@ -154,10 +156,14 @@ void CpcScreen::run() {
     steady_clock::time_point frame;
     steady_clock::time_point wakeup;
 
+    uint_fast32_t delay = 0;
+
     while (!done) {
         while (!done && !menu) {
             // Run a complete frame.
-            cpc.run();
+            delay = cpc.run();
+
+            cpc.playSound(true);
 
             update();
 
@@ -165,21 +171,25 @@ void CpcScreen::run() {
                 // By not sleeping until the next frame is due, we get some
                 // better adjustment
 #ifdef USE_BOOST_THREADS
-                frame = tick + boost::chrono::microseconds(19960);
-                wakeup = tick + boost::chrono::microseconds(18000);
+                frame = tick + boost::chrono::microseconds(delay);
+                wakeup = tick + boost::chrono::microseconds(16000);
 #else
-                frame = tick + std::chrono::microseconds(19960);
-                wakeup = tick + std::chrono::microseconds(18000);
+                frame = tick + std::chrono::microseconds(delay);
+                wakeup = tick + std::chrono::microseconds(16000);
 #endif
 #ifndef DO_NOT_SLEEP
                 sleep_until(wakeup);
 #endif
                 while ((tick = steady_clock::now()) < frame);
+            } else {
+                cpc.setSoundRate(delay, true);
             }
 
             pollEvents();
             pollCommands();
         }
+
+        cpc.playSound(false);
     }
 }
 
@@ -277,7 +287,7 @@ void CpcScreen::toggleTapeSound() {
 
 void CpcScreen::toggleSound() {
 
-    cpc.playSound = playSound = !playSound;
+    cpc.tapeSound = playSound = !playSound;
     cpc.psgPlaySound(playSound);
 }
 

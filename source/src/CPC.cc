@@ -20,6 +20,9 @@
 #include <cstdlib>
 #include <ctime>
 
+int constexpr SAVE_VOLUME = 0x03FF;
+int constexpr LOAD_VOLUME = 0x01FF;
+
 CPC::CPC() {
 
     setPage(0, 0);
@@ -114,7 +117,7 @@ void CPC::set664() {
     cpc128K = false;
     cpcDisk = true;
     expBit = false;
-    fdc765.clockFrequency = 5;
+    fdc765.clockFrequency = 4;
 
     ext[0x07] = ExpansionRom("amsdos.rom");
 
@@ -128,7 +131,7 @@ void CPC::set6128() {
     cpc128K = true;
     cpcDisk = true;
     expBit = false;
-    fdc765.clockFrequency = 5;
+    fdc765.clockFrequency = 4;
 
     ext[0x07] = ExpansionRom("amsdos.rom");
 
@@ -137,30 +140,42 @@ void CPC::set6128() {
     reset();
 }
 
-void CPC::run() {
+void CPC::playSound(bool play) {
 
-    //static double remaining = 0;
+    static bool playing = false;
+    if (!playing && play) {
+        channel.play();
+        playing = true;
+    } else if (playing && !play) {
+        channel.stop();
+        playing = false;
+    }
+}
+
+uint_fast32_t CPC::run() {
+
+    static double remaining = 0;
+    uint_fast32_t counter = 0;
 
     while (!ga.sync) {
 
         clock();
+        ++counter;
 
-        /*
         // Generate sound. This maybe can be done using the same counter?
         if (!(--skipCycles)) {
             skipCycles = skip;
             remaining += tail;
             if (remaining >= 1.0) {
-                ++skipCycles;
+                skipCycles++;
                 remaining -= 1.0;
             }
-
             sample();
         }
-        */
     }
     scanKeys();
     ga.sync = false;
+    return counter / 16;
 }
 
 void CPC::clock() {
@@ -296,6 +311,13 @@ void CPC::clock() {
 
         if (tape.playing && relay >= 200000) {
             // 400000 @ 4MHz = 0.1s
+            if (tapeSound) {
+                filter[index] = tapeLevel ? LOAD_VOLUME : 0;
+            } else {
+                filter[index] = 0;
+            }
+            index = (index + 1) % FILTER_BZZ_SIZE;
+
             if (!tape.sample--) {
                 uint_fast8_t level = tape.advance();
                 tapeLevel = (relay >= 400000) ? ((level & 0x40) << 1) : 0;
@@ -387,12 +409,19 @@ void CPC::psgChip(bool aychip) {
     psg.setVolumeLevels(aychip);
 }
 
-void CPC::sample(int& l, int& r) {
+void CPC::sample() {
 
-    //buzzer.sample();
+    int sound = 0;
+    int l = 0;
+    int r = 0;
+
+    for (size_t ii = 0; ii < FILTER_BZZ_SIZE; ++ii) {
+        sound += filter[ii];
+    }
+    sound /= FILTER_BZZ_SIZE;
+    l = r = sound;
+
     psg.sample();
-    //l = r = buzzer.signal;
-    l = r = 0;
 
     switch (stereo) {
         case StereoMode::STEREO_ACB: // ACB
@@ -418,6 +447,8 @@ void CPC::sample(int& l, int& r) {
             r += psg.channelC;
             break;
     }
+
+    channel.push(l, r);
 }
 
 void CPC::selectRam(uint_fast8_t byte) {
@@ -490,5 +521,18 @@ void CPC::scanKeys() {
 void CPC::setBrand(uint_fast8_t brandNumber) {
 
     brand = brandNumber & 0x7;
+}
+
+void CPC::setSoundRate(uint_fast32_t frame, bool syncToVideo) {
+
+    double value = static_cast<double>(BASE_CLOCK_CPC) / static_cast<double>(SAMPLE_RATE);
+
+    if (syncToVideo) {
+        double factor = static_cast<double>(FRAME_TIME_50HZ) / static_cast<double>(frame);
+        value /= factor;
+    }
+
+    skip = static_cast<uint32_t>(value);
+    tail = value - skip;
 }
 // vim: et:sw=4:ts=4

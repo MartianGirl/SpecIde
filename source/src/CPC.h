@@ -96,13 +96,22 @@ class CPC {
         bool expBit = false;
 
         bool tapeSound = false;
-        bool playSound = false;
         bool pollKeys = true;
 
         /** Tape signal level. */
         uint_fast8_t tapeLevel = 0;
         /** Counter of cycles for the tape relay charge. */
         uint_fast32_t relay = 0;
+        /** Sample array for tape sound. */
+        int filter[FILTER_BZZ_SIZE];
+        /** Index variable for filter. */
+        size_t index = 0;
+        /** Number of cycles before next sound sample. */
+        uint_fast32_t skip;
+        /** Tail of cycles before next sound sample. */
+        double tail;
+        /** Counter of cycles before next sound sample. */
+        uint_fast32_t skipCycles = 0;
 
         uint_fast8_t brand = BRAND_AMSTRAD;
 
@@ -127,10 +136,14 @@ class CPC {
         /** Pointer to high ROM. */
         uint8_t* hiRom = &rom[0x4000];
 
-        size_t counter = 0;
         bool updateMotor = false;
 
-        void run();
+        /**
+         * Run one frame of emulation.
+         *
+         * @return Frame time in microseconds.
+         */
+        uint_fast32_t run();
 
         // This one is going to be called at 8MHz, and is going to:
         // 1. Clock the GA. This starts the GA counters.
@@ -199,7 +212,16 @@ class CPC {
         void psgChip(bool play);
         void psgPlaySound(bool play);
 
-        void sample(int& l, int& r);
+        void sample();
+
+        void setSoundRate(uint_fast32_t frame, bool syncToVideo);
+
+        /**
+         * Toggle sound playback.
+         *
+         * @param play Enable sound.
+         */
+        void playSound(bool play);
 };
 
 // vim: et:sw=4:ts=4

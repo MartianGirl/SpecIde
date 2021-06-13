@@ -324,7 +324,7 @@ void GateArray::updateBeam() {
 
     // Blanking should also be activated if hCounter < 28, but the picture
     // fits better the screen this way...
-    blanking = crtc.hSync || hCounter < 26;
+    blanking = crtc.hSync || hCounter < 28;
 
     if (xPos >= X_SIZE) {
         xPos = 0;
@@ -353,7 +353,7 @@ void GateArray::generateInterrupts() {
     // If intCounter reaches 52, an INT is generated and the counter
     // is reset.
     if (crtc.vSync && !vSync_d) {
-        hCounter &= 0x01;
+        hCounter = 0x02;
     }
 
     if (!crtc.hSync && hSync_d) {
@@ -363,14 +363,14 @@ void GateArray::generateInterrupts() {
             intCounter = 0;
         }
 
-        if (hCounter < 28) {
+        if ((hCounter & 0x1C) != 0x1C) {
             ++hCounter;
             if (hCounter == 4) {
                 intCounter = 0;
             }
         }
 
-        if (intCounter == 0 && oldCounter > 31) {
+        if (intCounter == 0 && (oldCounter & 0x20)) {
             z80_c &= ~SIGNAL_INT_;
         }
     }
