@@ -52,7 +52,7 @@ void GateArray::selectPen(uint_fast8_t byte) {
 
 void GateArray::selectColour(uint_fast8_t byte) {
 
-    if ((pen & 0x10) == 0x10) {
+    if (pen & 0x10) {
         border = byte & 0x1F;
     } else {
         pens[pen & 0x0F] = byte & 0x1F;
@@ -222,7 +222,6 @@ void GateArray::clock() {
 
     // Increment state counter
     counter = (counter + 1) & 0x0F;
-    paint();
 
     switch (counter) {
         case 0x0:   // fall-through
@@ -235,6 +234,7 @@ void GateArray::clock() {
         case 0x2:   // fall-through
         case 0xa:   // Paint. Right after CPU state change.
             intAcknowledge();
+            paint();
             break;
 
         case 0x1:   // READY falling edge. CPU clock rising edge.
@@ -297,8 +297,13 @@ void GateArray::updateVideoMode() {
     // and it counts up to 8. When it reaches 8, it stops and keeps
     // its value until HSYNC falls.
     // If cClkEdge is 0-3, the mode selection clock is high.
-    static uint_fast32_t cClkCounter = 0;
-    bool trigger = false;
+    static uint_fast32_t cClkCounter = 2;
+    static bool trigger = false;
+
+    if (trigger) {
+        actMode = newMode;
+        trigger = false;
+    }
 
     if (crtc.hSync) {
         if (cClkCounter < 8) {
@@ -312,11 +317,7 @@ void GateArray::updateVideoMode() {
         if (cClkCounter & 4) {
             trigger = true;
         }
-        cClkCounter = 0;
-    }
-
-    if (trigger) {
-        actMode = newMode;
+        cClkCounter = 2;
     }
 }
 
@@ -378,17 +379,19 @@ void GateArray::generateInterrupts() {
 
 void GateArray::paint() {
 
-    if (!blanking) {
-        uint_fast32_t index = pens[pixelTable[actMode][colour]];
-        uint_fast32_t c = counter % 8;
-        pixelsX1[(yPos * X_SIZE) + xPos] = colours[inksel ? index : border];
-        if (modeTable[actMode][c]) {
-            colour = (colour << 1) & 0xFF;
+    uint_fast32_t index = pens[pixelTable[actMode][colour]];
+    for (size_t ii = 0; ii < 8; ++ii) {
+        if (!blanking) {
+            pixelsX1[(yPos * X_SIZE) + xPos] = colours[inksel ? index : border];
+            if (modeTable[actMode][ii] == MOVE) {
+                colour = (colour << 1) & 0xFF;
+                index = pens[pixelTable[actMode][colour]];
+            }
+        } else {
+            pixelsX1[(yPos * X_SIZE) + xPos] = 0;
         }
-    } else {
-        pixelsX1[(yPos * X_SIZE) + xPos] = 0;
+        xPos += xInc;
     }
-    xPos += xInc;
 }
 
 void GateArray::reset() {

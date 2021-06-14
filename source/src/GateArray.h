@@ -18,6 +18,10 @@
 #include "CRTC.h"
 #include "Z80Defs.h"
 
+uint_fast32_t constexpr KEEP = 2;
+uint_fast32_t constexpr MOVE = 1;
+uint_fast32_t constexpr LOAD = 0;
+
 class GateArray {
 
     public:
@@ -249,11 +253,11 @@ class GateArray {
             true, true, false, false, false, false, false, false
         };
 
-        static bool constexpr modeTable[4][8] = {
-            { false, false, false, true, false, false, false, true },
-            { false, true, false, true, false, true, false, true },
-            { true, true, true, true, true, true, true, true },
-            { false, false, false, true, false, false, false, true }
+        static uint_fast32_t constexpr modeTable[4][8] = {
+            { KEEP, KEEP, KEEP, MOVE, KEEP, KEEP, KEEP, LOAD },
+            { KEEP, MOVE, KEEP, MOVE, KEEP, MOVE, KEEP, LOAD },
+            { MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, LOAD },
+            { KEEP, KEEP, KEEP, MOVE, KEEP, KEEP, KEEP, LOAD }
         };
 
         static uint_fast8_t constexpr pixelTable[4][256] = {
