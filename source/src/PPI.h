@@ -72,9 +72,9 @@ class PPI {
      */
     uint_fast8_t readPortC() const {
 
-        uint_fast8_t byte = 0xFF;
-        if (inputHiC) { byte &= 0x0F; byte |= portC & 0xF0; }
-        if (inputLoC) { byte &= 0xF0; byte |= portC & 0x0F; }
+        uint_fast8_t byte = portC;
+        if (inputHiC) { byte &= 0x0F; }
+        if (inputLoC) { byte &= 0xF0; }
         return byte;
     }
 

@@ -67,6 +67,8 @@ class GateArray {
         bool vSync_d = false;
         bool sync = false;
 
+        uint_fast32_t displayHSync = 0;
+        uint_fast32_t displayVSync = 0;
 
         /** Cycle counter. */
         uint_fast32_t counter = 0;

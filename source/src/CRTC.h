@@ -39,42 +39,39 @@ class CRTC {
         /** Horizontal counter. */
         uint_fast8_t hCounter = 0;
         /** Horizontal total (R0). */
-        uint_fast8_t hTotal = 65;
+        uint_fast8_t hTotal = 0;
         /** Horizontal displayed (R1). */
-        uint_fast8_t hDisplayed = 40;
+        uint_fast8_t hDisplayed = 0;
         /** HSync position (R2). */
-        uint_fast8_t hsPos = 46;
+        uint_fast8_t hsPos = 0;
 
         /** HSync width counter. */
         uint_fast8_t hswCounter = 0;
         /** HSync max width (R3, b3-b0). */
-        uint_fast8_t hswMax = 14;
+        uint_fast8_t hswMax = 0;
 
         /** Vertical counter. */
         uint_fast8_t vCounter = 0;
         /** Vertical total (R4). */
-        uint_fast8_t vTotal = 34;
+        uint_fast8_t vTotal = 0;
         /** Vertical adjust (R5). */
-        uint_fast8_t vAdjust = 5;
+        uint_fast8_t vAdjust = 0;
         /** Vertical displayed (R6). */
-        uint_fast8_t vDisplayed = 30;
+        uint_fast8_t vDisplayed = 0;
 
         /** VSync position (R7). */
-        uint_fast8_t vsPos = 32;
+        uint_fast8_t vsPos = 0;
         /** VSync width counter. */
         uint_fast8_t vswCounter = 0;
         /** VSync max width (R3, b7-b4). */
-        uint_fast8_t vswMax = 8;
+        uint_fast8_t vswMax = 0;
 
         /** Raster counter. */
         uint_fast8_t rCounter = 0;
         /** Raster max address (R9). */
-        uint_fast8_t rMax = 7;
+        uint_fast8_t rMax = 0;
 
         bool hh;
-
-        /** VSync is out of the vertical counter range. */
-        bool outOfRange = false;
 
         uint_fast8_t status = 0;
 

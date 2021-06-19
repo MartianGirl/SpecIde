@@ -40,7 +40,7 @@ CRTC::CRTC(uint_fast8_t type) :
         AccessType::CRTC_WO,    // Vertical Total Adjust (WO)
         AccessType::CRTC_WO,    // Vertical Displayed (WO)
         AccessType::CRTC_WO,    // Vertical Sync Position (WO)
-        AccessType::CRTC_WO,    // Interlace & Skey (WO)
+        AccessType::CRTC_WO,    // Interlace & Skew (WO)
         AccessType::CRTC_WO,    // Maximum Raster Address (WO)
         AccessType::CRTC_RW,    // Cursor Start Raster (RW)
         AccessType::CRTC_RW,    // Cursor End Raster (RW)
@@ -143,8 +143,6 @@ void CRTC::wrRegister(uint_fast8_t byte) {
             default:
                 break;
         }
-
-        outOfRange = (vsPos >= vTotal);
     }
 }
 
@@ -184,9 +182,10 @@ void CRTC::rdRegister(uint_fast8_t &byte) {
         switch (type) {
             case 0: // fall-through
             case 1: // fall-through
-            case 2:
                 byte = 0x00;
                 break;
+            case 2:
+                byte = 0xFF;
             default:
                 break;
         }
@@ -248,18 +247,17 @@ void CRTC::clock() {
 
             if (vCounter == vsPos) {  // Vertical Sync Position
                 vSync = true;
-                vswCounter = 0;
             }
+        }
 
-            // Base address is updated on VCC=0 (CRTC 1) or VCC=0 and VLC=0 (other)
-            if (vCounter == 0 && (type == 1 || rCounter == 0)) {
-                lineAddress = (regs[12] & 0x3F) * 0x100 + regs[13];
-            }
+        // Base address is updated on VCC=0 (CRTC 1) or VCC=0 and VLC=0 (other)
+        if (vCounter == 0 && (type == 1 || rCounter == 0)) {
+            lineAddress = (regs[12] & 0x3F) * 0x100 + regs[13];
         }
 
         // Raster level
         if (vSync) {
-            if (vswCounter++ == vswMax) {
+            if (vswCounter++ >= vswMax) {
                 vSync = false;
                 vswCounter = 0;
             }
@@ -275,11 +273,10 @@ void CRTC::clock() {
 
     if (hCounter == hsPos) {   // Horizontal Sync Position
         hSync = true;                       // HSYNC pulse
-        hswCounter = 0;
     }
 
     if (hSync) {    // Horizontal Sync Width is incremented during HSYNC pulse
-        if (hswCounter++ == hswMax) {    // Horizontal Sync Width
+        if (hswCounter++ >= hswMax) {    // Horizontal Sync Width
             hSync = false;
             hswCounter = 0;
         }

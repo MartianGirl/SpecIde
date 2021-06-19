@@ -100,8 +100,11 @@ class CPC {
 
         /** Tape signal level. */
         uint_fast8_t tapeLevel = 0;
-        /** Counter of cycles for the tape relay charge. */
-        uint_fast32_t relay = 0;
+        /** Tape relay status. */
+        bool relay = false;
+        /** Tape speed counter. */
+        uint_fast32_t tapeSpeed = 0;
+
         /** Sample array for tape sound. */
         int filter[FILTER_BZZ_SIZE];
         /** Index variable for filter. */

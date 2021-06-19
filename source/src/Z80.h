@@ -149,7 +149,7 @@ class Z80
         uint_fast8_t flg;
         uint_fast8_t iff;
         uint_fast8_t im;
-        uint_fast8_t intNotReady;
+        uint_fast8_t intNotReady = 0x00;
         uint_fast8_t zeroByte = 0x00;  // For OUT(C), 0
 
         uint_fast8_t x = 0;

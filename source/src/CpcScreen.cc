@@ -105,7 +105,7 @@ void CpcScreen::setup() {
 
     lBorder = 0;
     rBorder = 232;
-    tBorder = 4;
+    tBorder = 2;
     bBorder = 0;
 
     wide = true;
@@ -157,11 +157,13 @@ void CpcScreen::run() {
     steady_clock::time_point wakeup;
 
     uint_fast32_t delay = 0;
+    uint_fast32_t sleep = 0;
 
     while (!done) {
         while (!done && !menu) {
             // Run a complete frame.
             delay = cpc.run();
+            sleep = delay - delay % 2000;
 
             cpc.playSound(true);
 
@@ -172,10 +174,10 @@ void CpcScreen::run() {
                 // better adjustment
 #ifdef USE_BOOST_THREADS
                 frame = tick + boost::chrono::microseconds(delay);
-                wakeup = tick + boost::chrono::microseconds(16000);
+                wakeup = tick + boost::chrono::microseconds(sleep);
 #else
                 frame = tick + std::chrono::microseconds(delay);
-                wakeup = tick + std::chrono::microseconds(16000);
+                wakeup = tick + std::chrono::microseconds(sleep);
 #endif
 #ifndef DO_NOT_SLEEP
                 sleep_until(wakeup);

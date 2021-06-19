@@ -240,9 +240,12 @@ void CPC::clock() {
                     break;
                 case 0x0100:    // Port B: &F5xx
                     if (z80.rd) {
+                        ppi.portB = tapeLevel | 0x5E | (expBit ? 0x20 : 0x00) | (ga.crtc.vSync ? 0x1 : 0x0);
                         z80.d = ppi.readPortB();
+
                     } else if (z80.wr) {
                         ppi.writePortB(z80.d);
+                        ga.crtc.vSync = ppi.portB & 0x1;
                     }
                     break;
                 case 0x0200:    // Port C: &F6xx
@@ -260,6 +263,29 @@ void CPC::clock() {
                 default:
                     break;
             }
+
+            if (!ppi.inputLoC) {
+                psg.setPortA(keys[ppi.portC & 0x0F]);
+            }
+
+            if (!ppi.inputHiC) {
+                relay = ppi.portC & 0x10;
+
+                // Execute PSG command.
+                switch (ppi.portC & 0xC0) {
+                    case 0x40:
+                        ppi.portA = ppi.inputA ? psg.read() : 0x00;
+                        break;
+                    case 0x80:
+                        psg.write(ppi.portA);
+                        break;
+                    case 0xC0:
+                        psg.addr(ppi.portA);
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
     }
 
@@ -272,28 +298,7 @@ void CPC::clock() {
     // First we clock the Gate Array. Further clocks will be generated here.
     ga.clock();
 
-    if (ga.crtcClock()) {
-        ppi.portB = tapeLevel | 0x5E | (expBit ? 0x20 : 0x00) | (ga.crtc.vSync ? 0x1 : 0x0);
-    }
-
     if (ga.psgClock()) {
-        psg.setPortA(keys[ppi.portC & 0x0F]);
-
-        // Execute PSG command.
-        switch (ppi.portC & 0xC0) {
-            case 0x40:
-                ppi.portA = ppi.inputA ? psg.read() : 0x00;
-                break;
-            case 0x80:
-                psg.write(ppi.portA);
-                break;
-            case 0xC0:
-                psg.addr(ppi.portA);
-                break;
-            default:
-                break;
-        }
-
         psg.clock();
     }
 
@@ -301,29 +306,27 @@ void CPC::clock() {
     if (ga.cpuClock()) {
         z80.c = ga.z80_c;
 
-        if (ppi.portC & 0x10) {
-            if (relay < 500000) {
-                ++relay;
+        if (relay) {
+            if (tapeSpeed < 800000) {
+                ++tapeSpeed;
             }
         } else {
-            relay = 0;
+            if (tapeSpeed) {
+                --tapeSpeed;
+            }
         }
 
-        if (tape.playing && relay >= 200000) {
+        if (tape.playing && tapeSpeed) {
             // 400000 @ 4MHz = 0.1s
-            if (tapeSound) {
-                filter[index] = tapeLevel ? LOAD_VOLUME : 0;
-            } else {
-                filter[index] = 0;
-            }
+            filter[index] = (tapeLevel && tapeSound) ? LOAD_VOLUME : 0;
             index = (index + 1) % FILTER_BZZ_SIZE;
 
             if (!tape.sample--) {
-                uint_fast8_t level = tape.advance();
-                tapeLevel = (relay >= 400000) ? ((level & 0x40) << 1) : 0;
+                uint_fast8_t level = ~tape.advance();
+                tapeLevel = (tapeSpeed >= 400000) ? ((level & 0x40) << 1) : 0x80;
             }
         } else {
-            tapeLevel = 0;
+            tapeLevel = 0x80;
         }
 
         if (cpcDisk && romBank == 0x07) {
@@ -331,7 +334,6 @@ void CPC::clock() {
         }
 
         if (!io_) {
-
             // Peripherals
             if ((z80.a & 0x0400) == 0x0000) {
 

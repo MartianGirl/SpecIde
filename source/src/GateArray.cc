@@ -325,7 +325,7 @@ void GateArray::updateBeam() {
 
     // Blanking should also be activated if hCounter < 28, but the picture
     // fits better the screen this way...
-    blanking = crtc.hSync || hCounter < 28;
+    blanking = crtc.hSync || hCounter < 0x1c;
 
     if (xPos >= X_SIZE) {
         xPos = 0;
@@ -336,27 +336,28 @@ void GateArray::updateBeam() {
             yPos = 0;
             yInc = 0;
             sync = true;
+            displayVSync = 0;
         }
     }
 
-    if (!xPos && !crtc.hSync && hSync_d) {
+    if (!xPos && (!crtc.hSync && hSync_d)) {
         xInc = 1;
+        ++displayVSync;
     }
 
-    if (!yPos && !crtc.vSync && vSync_d) {
+    if (!yPos && ((!crtc.vSync && vSync_d) || (displayVSync > 144))) {
         yInc = 1;
     }
 }
 
 void GateArray::generateInterrupts() {
 
+    if (crtc.vSync && !vSync_d) {
+        hCounter = 0x2;
+    }
     // In HSYNC falling edges, intCounter and hCounter are increased.
     // If intCounter reaches 52, an INT is generated and the counter
     // is reset.
-    if (crtc.vSync && !vSync_d) {
-        hCounter = 0x02;
-    }
-
     if (!crtc.hSync && hSync_d) {
         uint_fast32_t oldCounter = intCounter;
 
@@ -364,9 +365,12 @@ void GateArray::generateInterrupts() {
             intCounter = 0;
         }
 
-        if ((hCounter & 0x1C) != 0x1C) {
+        if (hCounter < 0x1c) {
             ++hCounter;
-            if (hCounter == 4) {
+            if (hCounter == 0x4) {
+                if (intCounter < 0x1F) {
+                    oldCounter = 0x20;
+                }
                 intCounter = 0;
             }
         }
