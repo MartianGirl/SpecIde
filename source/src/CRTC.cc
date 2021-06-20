@@ -220,34 +220,33 @@ void CRTC::clock() {
     hh = (hCounter > (hTotal >> 1));
 
     // Here increment Raster Counter, Vertical Sync Width Counter
-    if (hCounter >= hTotal) {   // Horizontal Total marks the end of a scan
+    if (hCounter == hTotal) {   // Horizontal Total marks the end of a scan
         hCounter = 0;               // Reset Horizontal Counter
         hDisplay = true;            // Drawing screen
 
         // Increment raster counter and check
         rCounter = (rCounter + 1) & 0x1F;
-        if (rCounter >= rMax) { // Maximum Raster Address
+        if (rCounter == rMax) { // Maximum Raster Address
             rCounter = 0;           // Reset Raster Counter
 
             vCounter = (vCounter + 1) & 0x7F;
-            // Vertical Total marks the end of a frame, but we also must
-            // account for Vertical Total Adjustment
-            if (((vCounter == vTotal) && (rCounter >= vAdjust))
-                    || (vCounter > vTotal)) {
-                vCounter = 0;
-                rCounter = 0;
-                vDisplay = true;
-                status &= 0xDF;
-            }
-
             if (vCounter == vDisplayed) {  // Vertical Displayed
                 vDisplay = false;
                 status |= 0x20;
             }
+        }
 
-            if (vCounter == vsPos) {  // Vertical Sync Position
-                vSync = true;
-            }
+        // Vertical Total marks the end of a frame, but we also must
+        // account for Vertical Total Adjustment
+        if ((vCounter == vTotal) && (rCounter == vAdjust)) {
+            vCounter = 0;
+            rCounter = 0;
+            vDisplay = true;
+            status &= 0xDF;
+        }
+
+        if ((vCounter == vsPos) && (rCounter == 0)) {  // Vertical Sync Position
+            vSync = true;
         }
 
         // Base address is updated on VCC=0 (CRTC 1) or VCC=0 and VLC=0 (other)
@@ -257,9 +256,11 @@ void CRTC::clock() {
 
         // Raster level
         if (vSync) {
-            if (vswCounter++ >= vswMax) {
+            if (vswCounter++ == vswMax) {   // Don't change this condition!!!
                 vSync = false;
                 vswCounter = 0;
+            } else {
+                vswCounter &= 0x1F;
             }
         }
     }
@@ -276,9 +277,11 @@ void CRTC::clock() {
     }
 
     if (hSync) {    // Horizontal Sync Width is incremented during HSYNC pulse
-        if (hswCounter++ >= hswMax) {    // Horizontal Sync Width
+        if (hswCounter++ == hswMax) {    // Horizontal Sync Width
             hSync = false;
             hswCounter = 0;
+        } else {
+            hswCounter &= 0x1F;
         }
     }
 

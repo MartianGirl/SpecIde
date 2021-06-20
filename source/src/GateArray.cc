@@ -325,7 +325,7 @@ void GateArray::updateBeam() {
 
     // Blanking should also be activated if hCounter < 28, but the picture
     // fits better the screen this way...
-    blanking = crtc.hSync || hCounter < 0x1c;
+    blanking = crtc.hSync || (hCounter < 0x1c);
 
     if (xPos >= X_SIZE) {
         xPos = 0;
@@ -340,12 +340,15 @@ void GateArray::updateBeam() {
         }
     }
 
-    if (!xPos && (!crtc.hSync && hSync_d)) {
-        xInc = 1;
-        ++displayVSync;
+    if (!xPos) {
+        if ((!crtc.hSync && hSync_d)) {
+            xInc = 1;
+            ++displayVSync;
+        }
     }
 
-    if (!yPos && ((!crtc.vSync && vSync_d) || (displayVSync > 144))) {
+
+    if (!yPos && ((!crtc.vSync && vSync_d) || (displayVSync > 160))) {
         yInc = 1;
     }
 }
@@ -366,11 +369,7 @@ void GateArray::generateInterrupts() {
         }
 
         if (hCounter < 0x1c) {
-            ++hCounter;
-            if (hCounter == 0x4) {
-                if (intCounter < 0x1F) {
-                    oldCounter = 0x20;
-                }
+            if (++hCounter == 0x4) {
                 intCounter = 0;
             }
         }
