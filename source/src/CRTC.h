@@ -73,6 +73,7 @@ class CRTC {
 
         bool hh;
 
+        uint_fast32_t maxScans = 312;
         uint_fast8_t status = 0;
 
         /** Address of current character line. */

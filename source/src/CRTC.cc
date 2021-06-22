@@ -89,38 +89,20 @@ void CRTC::wrRegister(uint_fast8_t byte) {
                 hDisplayed = regs[1];
                 break;
             case 2: // Horizontal Sync Position.
-                if (type == 0) {
-                    hsPos = regs[2] + 1;
-                } else {
-                    hsPos = regs[2];
-                }
+                hsPos = regs[2];
                 break;
             case 3: // Horizontal & Vertical Sync Width.
                 vswMax = (regs[3] & 0xF0) >> 4;
                 hswMax = (regs[3] & 0x0F);
                 switch (type) {
-                    case 0: // Type 0 (UM6845):
-                        // If VSW = 0, this gives 16 VSYNC lines.
-                        // If HSW = 0, this gives no HSYNC.
-                        if (vswMax == 0) vswMax = 0x10;
-                        break;
                     case 1: // Type 1 (UM6845R):
                         // VSW is ignored. VSYNC is fixed to 16 lines.
-                        // If HWS = 0, this gives no HSYNC.
-                        vswMax = 0x10;
+                        vswMax = 0x0;
                         break;
                     case 2: // Type 2 (MC6845):
                         // VSW is ignored. VSYNC is fixed to 16 lines.
-                        // If HSW = 0, this gives 16 HSYNC cycles.
-                        vswMax = 0x10;
-                        if (hswMax == 0) hswMax = 0x10;
+                        vswMax = 0x0;
                         break;
-                    case 3: // fall-through
-                    case 4: // Type 3, 4 (Pre-ASIC, ASIC)
-                        // If VSW = 0, this gives 16 VSYNC lines.
-                        // if HSW = 0, this gives 16 HSYNC cycles.
-                        if (vswMax == 0) vswMax = 0x10;
-                        if (hswMax == 0) hswMax = 0x10;
                     default:
                         break;
                 }
@@ -143,6 +125,12 @@ void CRTC::wrRegister(uint_fast8_t byte) {
             default:
                 break;
         }
+    }
+
+    maxScans = vTotal * rMax + vAdjust;
+    // This is just CNGSoft's hack for PheelOne.
+    if (maxScans > 312 && type == 1) {
+        vswMax = 0xe;
     }
 }
 
@@ -228,21 +216,34 @@ void CRTC::clock() {
         rCounter = (rCounter + 1) & 0x1F;
         if (rCounter == rMax) { // Maximum Raster Address
             rCounter = 0;           // Reset Raster Counter
-
             vCounter = (vCounter + 1) & 0x7F;
-            if (vCounter == vDisplayed) {  // Vertical Displayed
-                vDisplay = false;
-                status |= 0x20;
+        }
+
+        if (vCounter == vTotal) {
+            // Vertical Total marks the end of a frame, but we also must
+            // account for Vertical Total Adjustment
+            if (rCounter == vAdjust) {
+                vCounter = 0;
+                rCounter = 0;
+                vDisplay = true;
+                status &= 0xDF;
             }
         }
 
-        // Vertical Total marks the end of a frame, but we also must
-        // account for Vertical Total Adjustment
-        if ((vCounter == vTotal) && (rCounter == vAdjust)) {
-            vCounter = 0;
-            rCounter = 0;
-            vDisplay = true;
-            status &= 0xDF;
+        if ((vCounter == vDisplayed) && (rCounter == 0)) {  // Vertical Displayed
+            vDisplay = false;
+            status |= 0x20;
+        }
+
+        // All CRTC types consider 1, 2, 3... 16.
+        // CRTC types 1 and 2 have this setting fixed to 16 lines.
+        // This block must be placed here so VSW = 1 actually does 1 line.
+        if (vSync) {
+            vswCounter = (vswCounter + 1) & 0xF;
+            if (vswCounter == vswMax) {
+                vSync = false;
+                vswCounter = 0;
+            }
         }
 
         if ((vCounter == vsPos) && (rCounter == 0)) {  // Vertical Sync Position
@@ -253,16 +254,6 @@ void CRTC::clock() {
         if (vCounter == 0 && (type == 1 || rCounter == 0)) {
             lineAddress = (regs[12] & 0x3F) * 0x100 + regs[13];
         }
-
-        // Raster level
-        if (vSync) {
-            if (vswCounter++ == vswMax) {   // Don't change this condition!!!
-                vSync = false;
-                vswCounter = 0;
-            } else {
-                vswCounter &= 0x1F;
-            }
-        }
     }
 
     if (hCounter == hDisplayed) {   // Horizontal Displayed
@@ -272,16 +263,28 @@ void CRTC::clock() {
         }
     }
 
+    // CRTC type 2, 3, 4: HSW in range 1..16. This block checks 1, 2, 3...
+    // HSW = 0 gives 16 chars.
+    if (hSync && type > 1) {
+        hswCounter = (hswCounter + 1) & 0xF;
+        if (hswCounter == hswMax) {
+            hSync = false;
+            hswCounter = 0;
+        }
+    }
+
     if (hCounter == hsPos) {   // Horizontal Sync Position
         hSync = true;                       // HSYNC pulse
     }
 
-    if (hSync) {    // Horizontal Sync Width is incremented during HSYNC pulse
-        if (hswCounter++ == hswMax) {    // Horizontal Sync Width
+    // CRTC type 0, 1: HSW in range 0..15. This block checks 0, 1, 2...
+    // HSW = 0 gives no HSYNC.
+    if (hSync && type < 2) {
+        if (hswCounter == hswMax) {
             hSync = false;
             hswCounter = 0;
         } else {
-            hswCounter &= 0x1F;
+            hswCounter = (hswCounter + 1) & 0xF;
         }
     }
 

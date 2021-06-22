@@ -331,12 +331,32 @@ void GateArray::updateBeam() {
         xPos = 0;
         xInc = 0;
         yPos += yInc;
+        yCnt += yInc;
 
-        if (yPos >= Y_SIZE / 2) {
-            yPos = 0;
-            yInc = 0;
-            sync = true;
-            displayVSync = 0;
+        if (crtc.maxScans >= Y_SIZE / 2) {
+            // The CRTC may be configured to generate more than 312 lines. If this
+            // happens, the CRT is going to retrace at 312, but the emulator will
+            // keep running code until the frame is complete.
+            if (yPos >= Y_SIZE / 2) {
+                yPos = 0;
+                yInc = 0;
+                displayVSync = 0;
+            }
+            if (yCnt >= crtc.maxScans) {
+                sync = true;
+                yCnt = 0;
+            }
+        } else {
+            // If the CRTC is configured to generate 312 lines or less, all the
+            // emulation is running in the same frame, so we just keep running
+            // until we've got 312 lines.
+            if (yPos >= Y_SIZE / 2) {
+                yPos = 0;
+                yInc = 0;
+                displayVSync = 0;
+                yCnt = 0;
+                sync = true;
+            }
         }
     }
 
@@ -348,7 +368,7 @@ void GateArray::updateBeam() {
     }
 
 
-    if (!yPos && ((!crtc.vSync && vSync_d) || (displayVSync > 160))) {
+    if (!yPos && ((!crtc.vSync && vSync_d) || (displayVSync > 304))) {
         yInc = 1;
     }
 }

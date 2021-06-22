@@ -307,7 +307,7 @@ void CPC::clock() {
         z80.c = ga.z80_c;
 
         if (relay) {
-            if (tapeSpeed < 800000) {
+            if (tapeSpeed < 686000) {
                 ++tapeSpeed;
             }
         } else {
@@ -322,11 +322,11 @@ void CPC::clock() {
             index = (index + 1) % FILTER_BZZ_SIZE;
 
             if (!tape.sample--) {
-                uint_fast8_t level = ~tape.advance();
-                tapeLevel = (tapeSpeed >= 400000) ? ((level & 0x40) << 1) : 0x80;
+                uint_fast8_t level = tape.advance();
+                tapeLevel = (tapeSpeed >= 343000) ? ((level & 0x40) << 1) : 0x00;
             }
         } else {
-            tapeLevel = 0x80;
+            tapeLevel = 0x00;
         }
 
         if (cpcDisk && romBank == 0x07) {
