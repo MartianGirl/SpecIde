@@ -187,6 +187,7 @@ void CPC::clock() {
 
     if (!io_) {
         // Gate Array. This is accessible by both I/O reads and I/O writes.
+        // &7Fxx is Gate Array / RAM selection port.
         if ((z80.a & 0xC000) == 0x4000) {
             if ((z80.d & 0xC0) == 0xC0) {
                 if (cpc128K && z80.wr) {
@@ -198,6 +199,7 @@ void CPC::clock() {
         }
 
         // ROM expansion selection.
+        // &DFxx is ROM selection port.
         if (z80.wr && !(z80.a & 0x2000)) {
             romBank = z80.d;
             if (romBank && extReady[romBank]) {
@@ -208,19 +210,20 @@ void CPC::clock() {
             }
         }
 
-        // CRTC
+        // CRTC.
+        // &BCxx, &BDxx, &BExx, &BFxx are CRTC ports.
         if ((z80.rd || z80.wr) && ((z80.a & 0x4000) == 0x0000)) {
             switch (z80.a & 0x0300) {
-                case 0x0000:    // CRTC Register Select (WO) at &BC00
+                case 0x0000:    // CRTC Register Select (WO) at &BC00.
                     ga.crtc.wrAddress(z80.d);
                     break;
-                case 0x0100:    // CRTC Register Write (WO) at &BD00
+                case 0x0100:    // CRTC Register Write (WO) at &BD00.
                     ga.crtc.wrRegister(z80.d);
                     break;
-                case 0x0200:    // CRTC Status Register Read (only type 1)
+                case 0x0200:    // CRTC Status Register Read (type 1) at &BE00.
                     ga.crtc.rdStatus(ga.d);
                     break;
-                case 0x0300:    // CRTC Register Read (RO)
+                case 0x0300:    // CRTC Register Read (RO) at &BF00.
                     ga.crtc.rdRegister(ga.d);
                     break;
                 default:
@@ -228,7 +231,8 @@ void CPC::clock() {
             }
         }
 
-        // 8255 PPI
+        // 8255 PPI.
+        // &F4xx, &F5xx, &F6xx, &F7xx are 8255 ports.
         if ((z80.a & 0x0800) == 0x0000) {
             switch (z80.a & 0x0300) {
                 case 0x0000:    // Port A: &F4xx
@@ -242,10 +246,8 @@ void CPC::clock() {
                     if (z80.rd) {
                         ppi.portB = tapeLevel | 0x5E | (expBit ? 0x20 : 0x00) | (ga.crtc.vSync ? 0x1 : 0x0);
                         z80.d = ppi.readPortB();
-
                     } else if (z80.wr) {
                         ppi.writePortB(z80.d);
-                        ga.crtc.vSync = ppi.portB & 0x1;
                     }
                     break;
                 case 0x0200:    // Port C: &F6xx
@@ -302,7 +304,13 @@ void CPC::clock() {
         psg.clock();
     }
 
+    // The FDC chip is clocked at 4MHz, only rising edges.
+    if (cpcDisk && ga.fdcClock()) {
+        fdc765.clock();
+    }
+
     // Z80 gets data from the ULA or memory, only when reading.
+    // Z80 is clocked at 4MHz, but acts on both rising and falling edges.
     if (ga.cpuClock()) {
         z80.c = ga.z80_c;
 
@@ -329,30 +337,26 @@ void CPC::clock() {
             tapeLevel = 0x00;
         }
 
-        if (cpcDisk && romBank == 0x07) {
-            fdc765.clock();
-        }
-
         if (!io_) {
             // Peripherals
             if ((z80.a & 0x0400) == 0x0000) {
 
                 // FDC
-                if (cpcDisk && romBank == 0x07 && (z80.a & 0x0080) == 0x0000) {
+                if (cpcDisk && (z80.a & 0x0480) == 0x0000) {
                     switch (z80.a & 0x0101) {
-                        case 0x0100:    // FDC main status register
+                        case 0x0100:    // FDC main status register (&FB7E)
                             if (z80.rd) {
                                 z80.d = fdc765.status();
                             }
                             break;
-                        case 0x0101:    // FDC data register
+                        case 0x0101:    // FDC data register (&FB7F)
                             if (z80.wr) {
                                 fdc765.write(z80.d);
                             } else if (z80.rd) {
                                 z80.d = fdc765.read();
                             }
                             break;
-                        case 0x0000:    // FDC motor
+                        case 0x0000:    // FDC motor (&FA7E)
                             if (z80.wr) {
                                 fdc765.motor((z80.d & 0x01) == 0x01);
                             }

@@ -208,7 +208,7 @@ void CRTC::clock() {
     hh = (hCounter > (hTotal >> 1));
 
     // Here increment Raster Counter, Vertical Sync Width Counter
-    if (hCounter == hTotal) {   // Horizontal Total marks the end of a scan
+    if (hCounter >= hTotal) {   // Horizontal Total marks the end of a scan
         hCounter = 0;               // Reset Horizontal Counter
         hDisplay = true;            // Drawing screen
 
@@ -219,15 +219,13 @@ void CRTC::clock() {
             vCounter = (vCounter + 1) & 0x7F;
         }
 
-        if (vCounter == vTotal) {
+        if ((vCounter == vTotal && rCounter >= vAdjust) || (vCounter > vTotal)) {
             // Vertical Total marks the end of a frame, but we also must
             // account for Vertical Total Adjustment
-            if (rCounter == vAdjust) {
-                vCounter = 0;
-                rCounter = 0;
-                vDisplay = true;
-                status &= 0xDF;
-            }
+            vCounter = 0;
+            rCounter = 0;
+            vDisplay = true;
+            status &= 0xDF;
         }
 
         if ((vCounter == vDisplayed) && (rCounter == 0)) {  // Vertical Displayed

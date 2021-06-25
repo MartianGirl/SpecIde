@@ -364,11 +364,14 @@ void GateArray::updateBeam() {
         if ((!crtc.hSync && hSync_d)) {
             xInc = 1;
             ++displayVSync;
+            // for (size_t ii = 0; ii < 16; ++ii) {
+                // cout << "R" << ii << ": " << static_cast<uint32_t>(crtc.regs[ii]) << " ";
+            // }
+            // cout << endl;
         }
     }
 
-
-    if (!yPos && ((!crtc.vSync && vSync_d) || (displayVSync > 304))) {
+    if (!yPos && ((!crtc.vSync && vSync_d) || (displayVSync > Y_SIZE / 2))) {
         yInc = 1;
     }
 }

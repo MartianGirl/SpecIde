@@ -53,6 +53,7 @@ void FDC765::clock() {
             break;
 
         case FDC765State::FDC765_STATE_RECEIVE:
+            // Send data from CPU to FDC.
             mode = FDC765Mode::FDC765_MODE_WRITE;
             statusReg = SREG_RQM | SREG_CB | SREG_EXM;
 
@@ -77,6 +78,7 @@ void FDC765::clock() {
             break;
 
         case FDC765State::FDC765_STATE_TRANSMIT:
+            // Send data from FDC to CPU.
             mode = FDC765Mode::FDC765_MODE_READ;
             statusReg = SREG_RQM | SREG_DIO | SREG_CB | SREG_EXM;
 
@@ -101,6 +103,7 @@ void FDC765::clock() {
             break;
 
         case FDC765State::FDC765_STATE_RESULT:
+            // Send result bytes from FDC to CPU.
             mode = FDC765Mode::FDC765_MODE_NONE;
             statusReg = SREG_RQM | SREG_DIO | SREG_CB;
             if (byte) {
@@ -118,91 +121,78 @@ void FDC765::checkCommand() {
     switch (cmdBuffer[0] & 0x1F) {
 
         case 0x02:  // Read Track (Diagnostic)
-            cout << "Read Track" << endl;
             cmdBytes = 9;   // 02+MF+SK    HU TR HD SC SZ NM GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD NM SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x03:  // Specify SPD/DMA
-            cout << "Specify" << endl;
             cmdBytes = 3;   // 03          XX YY
             resBytes = 0;   //
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x04:  // Sense drive status
-            cout << "Sense drive status" << endl;
             cmdBytes = 2;   // 04          HU
             resBytes = 1;   //             S3
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x05:  // Write sector(s)
-            cout << "Write sector" << endl;
             cmdBytes = 9;   // 05+MT+MF    HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x06:  // Read sector(s)
-            cout << "Read sector" << endl;
             cmdBytes = 9;   // 06+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x07:  // Recalibrate and seek physical track 0
-            cout << "Recalibrate" << endl;
             cmdBytes = 2;   // 07          HU
             resBytes = 0;
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x08:  // Sense interrupt status
-            cout << "Sense interrupt" << endl;
             cmdBytes = 1;   // 08
             resBytes = 2;   //             S0 TP
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x09:  // Write deleted sector(s)
-            cout << "Write deleted" << endl;
             cmdBytes = 9;   // 09+MT+MF    HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x0A:  // Read ID
-            cout << "Read ID" << endl;
             cmdBytes = 2;   // 0A+MF       HU
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x0C:  // Read deleted sector(s)
-            cout << "Read deleted" << endl;
             cmdBytes = 9;   // 0C+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x0D:  // Format track
-            cout << "Format track" << endl;
             cmdBytes = 6;   // 0D+MF       HU SZ NM GP FB
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x0F:  // Seek track N
-            cout << "Seek track" << endl;
             cmdBytes = 3;   // 0F          HU TP
             resBytes = 0;
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x10:  // Version
-            cout << "version" << endl;
             cmdBytes = 1;
             resBytes = 1;
             state = FDC765State::FDC765_STATE_COMMAND;
@@ -517,8 +507,7 @@ bool FDC765::seekForReadOp() {
         return true;
     }
 
-    return ((currSector == firstSector)
-            && drive[cmdDrive()].idSize == cmdBuffer[5]);
+    return (currSector == firstSector);
 }
 
 bool FDC765::readOp() {
@@ -583,8 +572,12 @@ bool FDC765::readRegularDataOp() {
     vector<uint8_t> buf(&drive[cmdDrive()].buffer[offset],
             &drive[cmdDrive()].buffer[finish]);
 
-    // Complete length
-    buf.resize(outlen, 0x00);
+    if (actlen == 0x80 && outlen == 0x200
+            && cmdBuffer[2] == 0x01) {
+        // SpeedLock D7 AAAA: All we need is the error code.
+        sReg[0] |= 0x40;
+        error = true;
+    }
 
     // Detect Speedlock protection:
     // CRC error on track 00, sector 02, which is 512 bytes long.
@@ -626,7 +619,9 @@ bool FDC765::readDeletedDataOp() {
             &drive[cmdDrive()].buffer[finish]);
 
     // Complete length
-    buf.resize(outlen, 0x00);
+    if (actlen < outlen) {
+        sReg[0] |= 0x40;
+    }
 
     // Detect Speedlock protection:
     // CRC error on track 00, sector 02, which is 512 bytes long.
@@ -1190,6 +1185,11 @@ void FDC765::write(uint_fast8_t value) {
     }
 }
 
+uint_fast8_t FDC765::status() {
+
+    return statusReg;
+}
+
 void FDC765::checkDrive() {
 
     if (cmdDrive() > 1 || cmdHead() > 0) {
@@ -1208,7 +1208,9 @@ void FDC765::motor(bool status) {
 void FDC765::randomizeSector(vector<uint8_t>& buf) {
 
     // Theoretically, there is a pattern here. However, this seems to work.
-    buf.back() |= rand() & 0xFF;
+    if (buf.size() >= 0x200) {
+        for (size_t ii = 0x100; ii < 0x200; ++ii) buf[ii] |= rand() & 0xFF;
+    }
 }
 
 void FDC765::appendToDataBuffer(vector<uint8_t>& buf) {

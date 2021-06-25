@@ -114,6 +114,7 @@ class GateArray {
 
         bool psgClock() const { return counter == 0; }
         bool cpuClock() const { return (counter & 1) == 1; }
+        bool fdcClock() const { return (counter & 3) == 1; }
         bool crtcClock() const { return counter == 0xb; }
         bool cpuReady() const { return readyTable[counter]; }
         uint_fast16_t cClkOffset() const { return cClkBit[counter]; }

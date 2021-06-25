@@ -208,6 +208,8 @@ void Spectrum::setPlus3(RomVariant variant) {
     loadRoms(variant);
     setSoundRate(SoundRate::SOUNDRATE_128K, sync);
 
+    fdc765.clockFrequency = 0.875;  // Relative to 1MHz
+
     reset();
 }
 

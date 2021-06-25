@@ -70,10 +70,10 @@ uint_fast8_t constexpr SREG_EXM = 1 << 5;
 uint_fast8_t constexpr SREG_DIO = 1 << 6;
 uint_fast8_t constexpr SREG_RQM = 1 << 7;
 
-uint32_t constexpr DELAY_1ms = 875;     // Clocking at 1.000MHz
-uint32_t constexpr SERVICE_MFM = 46;
-uint32_t constexpr SERVICE_FM = 91;
-uint32_t constexpr BYTE_DELAY = 100;
+uint32_t constexpr DELAY_1ms = 1000;     // Clocking at 1.000MHz
+uint32_t constexpr SERVICE_MFM = 53;
+uint32_t constexpr SERVICE_FM = 104;
+uint32_t constexpr BYTE_DELAY = 114;
 
 uint32_t constexpr DATABUFFER_SIZE = 65536;
 uint32_t constexpr RESBUFFER_SIZE = 16;
@@ -86,7 +86,7 @@ class FDC765 {
 
     public:
         /** Clock frequency in MHz. */
-        uint_fast32_t clockFrequency = 1;
+        float clockFrequency = 1;
         /** Status register. */
         uint_fast8_t statusReg = 0x00;
 
@@ -194,7 +194,7 @@ class FDC765 {
         uint_fast8_t read();
         void write(uint_fast8_t value);
 
-        uint_fast8_t status() { return statusReg; }
+        uint_fast8_t status();
         uint_fast8_t cmdDrive() { return (cmdBuffer[1] & 0x01); } // 2 drives max.
         uint_fast8_t cmdHead() { return ((cmdBuffer[1] & 0x04) >> 2); }
 

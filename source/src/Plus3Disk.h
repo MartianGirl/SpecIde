@@ -56,6 +56,7 @@ class Plus3Disk {
         uint_fast8_t statusReg2;
         uint_fast16_t length;
         uint_fast8_t filler;
+        uint_fast8_t gap;
         vector<uint8_t> buffer;
 
         vector<DSKFile> images;
@@ -171,6 +172,7 @@ class Plus3Disk {
                     statusReg2 = images[currentImage].tracks[tr].sectors[sc].fdcStatusReg2;
                     buffer = images[currentImage].tracks[tr].sectors[sc].data;
                     length = images[currentImage].tracks[tr].sectors[sc].sectorLength;
+                    gap = images[currentImage].tracks[tr].gapLength;
                     filler = images[currentImage].tracks[tr].fillerByte;
                 } else {
                     idTrack = rand() & 0xFF;
