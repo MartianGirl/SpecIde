@@ -325,46 +325,57 @@ void GateArray::updateBeam() {
 
     // Blanking should also be activated if hCounter < 28, but the picture
     // fits better the screen this way...
-    blanking = crtc.hSync || (hCounter < 0x1c);
+    blanking = crtc.hSync || crtc.vSync || (hCounter < 0x1c);
 
-    if (xPos >= X_SIZE) {
-        xPos = 0;
-        xInc = 0;
-        ++scansFromVSync;
-    }
-
+    // Accept HSync always (on falling edge).
     if (!crtc.hSync && hSync_d) {
         hSyncAccepted = true;
-        ++scansFromVSync;
-        ++scansFromFrame;
     }
 
-    // The monitor can only accept VSyncs if they are withing its vertical
+    // The monitor can only accept VSyncs if they are within its vertical
     // frequency range. CRTC::vSyncSeparation is the number of scans for this
     // to happen.
+    // The separation-between-VSyncs counter is reset when a VSync is accepted.
     if ((!crtc.vSync && vSync_d) && (scansFromVSync >= crtc.vSyncSeparation)) {
         vSyncAccepted = true;
         scansFromVSync = 0;
     }
 
+    // If the beam passes through the right edge, it returns to the left edge.
+    if (xPos >= X_SIZE) {
+        xPos = 0;               // Move beam to the left...
+        xInc = 0;               // ...and keep it there!
+    }
+
     if (hSyncAccepted) {
-        xPos = 0;
-        xInc = 0;
-        yPos += yInc;
+        xPos = 0;   // Move beam to the left...
+        xInc = 0;   // ...and keep it there... (for a moment)
+        ++scansFromVSync;       // Consider the time of the horizontal sweep.
+        // Vertical position (and scans-from-frame-start counter) are increased
+        // only if HSync happens outside of a VSync pulse.
+        // (This is regarding geommetry, not time!)
+        if (!crtc.vSync) {
+            yPos += yInc;
+            ++scansFromFrame;
+        }
 
         // Retrace happens if the screen reaches the end, or if an VSync is
         // accepted (occurs within VFreq range). In this case, we position
         // the beam at the top of the screen and signal that we have a new frame.
         if ((yPos >= Y_SIZE / 2) || vSyncAccepted) {
-            yPos = 0;
-            yInc = 0;
             sync = true;
+            yPos = 0;           // Move beam to the top...
+            yInc = 0;           // ...and keep it there!
+            scansFromFrame = 0; // New frame starts!
         }
     }
 
+    // We consider the HSync pulse here, and we start moving the beam again...
+    // But only if we were already in the left side.
+    // (I'd say that this is redundant, in the way this function is written...)
     if (!xPos && hSyncAccepted) {
         xInc = 1;
-        hSyncAccepted = false;
+        hSyncAccepted = false;  // We've already considered this HSync.
         //for (size_t ii = 0; ii < 16; ++ii) {
             //cout << "R" << ii << ": " << static_cast<uint32_t>(crtc.regs[ii]) << " ";
         //}
@@ -373,10 +384,9 @@ void GateArray::updateBeam() {
 
     // If the retrace occurred because the beam reached the bottom of the picture,
     // the beam will wait until vSync happens.
-    if (!yPos && (vSyncAccepted || scansFromFrame == Y_SIZE / 2)) {
+    if (!yPos && (vSyncAccepted || scansFromFrame == 0)) {
         yInc = 1;
         vSyncAccepted = false;
-        scansFromFrame = 0;
     }
 }
 
@@ -418,7 +428,11 @@ void GateArray::paint() {
                 index = pens[pixelTable[actMode][colour]];
             }
         } else {
-            pixelsX1[(yPos * X_SIZE) + xPos] = 0;
+#if SPECIDE_BYTE_ORDER == 1
+            pixelsX1[(yPos * X_SIZE) + xPos] = 0x000000FF;
+#else
+            pixelsX1[(yPos * X_SIZE) + xPos] = 0xFF000000;
+#endif
         }
         xPos += xInc;
     }
