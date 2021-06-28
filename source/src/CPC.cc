@@ -152,15 +152,14 @@ void CPC::playSound(bool play) {
     }
 }
 
-uint_fast32_t CPC::run() {
+void CPC::run() {
 
     static double remaining = 0;
-    uint_fast32_t counter = 0;
 
-    while (!ga.sync) {
+    while (!ga.sync && cycles < 336000) {
 
         clock();
-        ++counter;
+        ++cycles;
 
         // Generate sound. This maybe can be done using the same counter?
         if (!(--skipCycles)) {
@@ -173,9 +172,6 @@ uint_fast32_t CPC::run() {
             sample();
         }
     }
-    scanKeys();
-    ga.sync = false;
-    return counter / 16;
 }
 
 void CPC::clock() {
@@ -392,6 +388,7 @@ void CPC::clock() {
 void CPC::reset() {
 
     ga.reset();
+    ga.crtc.reset();
     selectRam(0);
 
     z80.reset();

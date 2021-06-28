@@ -128,9 +128,17 @@ void CRTC::wrRegister(uint_fast8_t byte) {
     }
 
     maxScans = vTotal * rMax + vAdjust;
-    // This is just CNGSoft's hack for PheelOne.
-    if (maxScans > 312 && type == 1) {
-        vswMax = 0xe;
+
+    double base = (1000000.0 / 78.125);
+    vSyncSeparation = hTotal ? (base / hTotal) : 200;
+
+    if (index == 12 || index == 13) {
+        // This is necessary to accept changes to the screen base address after
+        // the scanline check has been done at HCC = 0. In this case, the address
+        // will be updated for the next scanline.
+        if (vCounter == 0 && (type == 1 || rCounter == 0)) {
+            updateLineAddress = true;
+        }
     }
 }
 
@@ -249,13 +257,17 @@ void CRTC::clock() {
         }
 
         // Base address is updated on VCC=0 (CRTC 1) or VCC=0 and VLC=0 (other)
-        if (vCounter == 0 && (type == 1 || rCounter == 0)) {
-            lineAddress = (regs[12] & 0x3F) * 0x100 + regs[13];
+        if (updateLineAddress
+                || (vCounter == 0 && (type == 1 || rCounter == 0))) {
+            lineAddress = ((regs[12] & 0x3F) << 8) | regs[13];
+            updateLineAddress = false;
         }
     }
 
+
     if (hCounter == hDisplayed) {   // Horizontal Displayed
         hDisplay = false;                   // Drawing border
+
         if (rCounter == rMax - 1) {
             lineAddress += hCounter;
         }
@@ -290,5 +302,12 @@ void CRTC::clock() {
     pageAddress = (charAddress & 0x3000) << 2;
     byteAddress = pageAddress | ((rCounter & 7) << 11) | ((charAddress & 0x3FF) << 1);
     dispEn = hDisplay && vDisplay;
+}
+
+void CRTC::reset() {
+
+    for (size_t ii = 0; ii < 31; ++ii) {
+        regs[ii] = 0x00;
+    }
 }
 // vim: et:sw=4:ts=4

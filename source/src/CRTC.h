@@ -73,7 +73,12 @@ class CRTC {
 
         bool hh;
 
+        /** Programmed number of scans in the CRTC. */
         uint_fast32_t maxScans = 312;
+        /** Separation between VSYNCs for max. 51.5 Hz VFreq. */
+        uint_fast32_t vSyncSeparation = 300;
+
+        /** CRTC type 1 status register. */
         uint_fast8_t status = 0;
 
         /** Address of current character line. */
@@ -84,6 +89,7 @@ class CRTC {
         uint_fast16_t byteAddress = 0;
         /** Address of current mem page. */
         uint_fast16_t pageAddress = 0;
+        bool updateLineAddress = false;
 
         bool hDisplay = false;
         bool vDisplay = false;
@@ -98,6 +104,7 @@ class CRTC {
         void rdRegister(uint_fast8_t &byte);
         
         void clock();
+        void reset();
 };
 
 

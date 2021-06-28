@@ -330,49 +330,53 @@ void GateArray::updateBeam() {
     if (xPos >= X_SIZE) {
         xPos = 0;
         xInc = 0;
+        ++scansFromVSync;
+    }
+
+    if (!crtc.hSync && hSync_d) {
+        hSyncAccepted = true;
+        ++scansFromVSync;
+        ++scansFromFrame;
+    }
+
+    // The monitor can only accept VSyncs if they are withing its vertical
+    // frequency range. CRTC::vSyncSeparation is the number of scans for this
+    // to happen.
+    if ((!crtc.vSync && vSync_d) && (scansFromVSync >= crtc.vSyncSeparation)) {
+        vSyncAccepted = true;
+        scansFromVSync = 0;
+    }
+
+    if (hSyncAccepted) {
+        xPos = 0;
+        xInc = 0;
         yPos += yInc;
-        yCnt += yInc;
 
-        if (crtc.maxScans >= Y_SIZE / 2) {
-            // The CRTC may be configured to generate more than 312 lines. If this
-            // happens, the CRT is going to retrace at 312, but the emulator will
-            // keep running code until the frame is complete.
-            if (yPos >= Y_SIZE / 2) {
-                yPos = 0;
-                yInc = 0;
-                displayVSync = 0;
-            }
-            if (yCnt >= crtc.maxScans) {
-                sync = true;
-                yCnt = 0;
-            }
-        } else {
-            // If the CRTC is configured to generate 312 lines or less, all the
-            // emulation is running in the same frame, so we just keep running
-            // until we've got 312 lines.
-            if (yPos >= Y_SIZE / 2) {
-                yPos = 0;
-                yInc = 0;
-                displayVSync = 0;
-                yCnt = 0;
-                sync = true;
-            }
+        // Retrace happens if the screen reaches the end, or if an VSync is
+        // accepted (occurs within VFreq range). In this case, we position
+        // the beam at the top of the screen and signal that we have a new frame.
+        if ((yPos >= Y_SIZE / 2) || vSyncAccepted) {
+            yPos = 0;
+            yInc = 0;
+            sync = true;
         }
     }
 
-    if (!xPos) {
-        if ((!crtc.hSync && hSync_d)) {
-            xInc = 1;
-            ++displayVSync;
-            // for (size_t ii = 0; ii < 16; ++ii) {
-                // cout << "R" << ii << ": " << static_cast<uint32_t>(crtc.regs[ii]) << " ";
-            // }
-            // cout << endl;
-        }
+    if (!xPos && hSyncAccepted) {
+        xInc = 1;
+        hSyncAccepted = false;
+        //for (size_t ii = 0; ii < 16; ++ii) {
+            //cout << "R" << ii << ": " << static_cast<uint32_t>(crtc.regs[ii]) << " ";
+        //}
+        //cout << endl;
     }
 
-    if (!yPos && ((!crtc.vSync && vSync_d) || (displayVSync > Y_SIZE / 2))) {
+    // If the retrace occurred because the beam reached the bottom of the picture,
+    // the beam will wait until vSync happens.
+    if (!yPos && (vSyncAccepted || scansFromFrame == Y_SIZE / 2)) {
         yInc = 1;
+        vSyncAccepted = false;
+        scansFromFrame = 0;
     }
 }
 
@@ -424,6 +428,11 @@ void GateArray::reset() {
 
     lowerRom = true;
     upperRom = true;
-    z80_c = 0xFFFF;
+    actMode = 0;
+    border = 0x10;
+    z80_c = ~SIGNAL_RESET_;
+    counter = 0;
+    hCounter = 0;
+    intCounter = 0;
 }
 // vim: et:sw=4:ts=4

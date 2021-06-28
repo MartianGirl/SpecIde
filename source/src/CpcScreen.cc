@@ -103,9 +103,9 @@ void CpcScreen::setup() {
     h = 560;
     w = 784;
 
-    lBorder = 0;
-    rBorder = 232;
-    tBorder = 2;
+    lBorder = 8;
+    rBorder = 248;
+    tBorder = 0;
     bBorder = 0;
 
     wide = true;
@@ -156,20 +156,22 @@ void CpcScreen::run() {
     steady_clock::time_point frame;
     steady_clock::time_point wakeup;
 
-    uint_fast32_t delay = 0;
-    uint_fast32_t sleep = 0;
-
     while (!done) {
         while (!done && !menu) {
-            // Run a complete frame.
-            delay = cpc.run();
-            sleep = delay - delay % 2000;
-
+            // Run until either we get a new frame, or we get 20ms of emulation.
+            cpc.run();
             cpc.playSound(true);
 
-            update();
-
             if (!syncToVideo) {
+                uint_fast32_t delay = cpc.cycles / 16;
+                uint_fast32_t sleep = delay - (delay % 5000);
+                cpc.cycles = 0;
+
+                if (cpc.ga.sync) {
+                    cpc.ga.sync = false;
+                    update();
+                }
+
                 // By not sleeping until the next frame is due, we get some
                 // better adjustment
 #ifdef USE_BOOST_THREADS
@@ -184,9 +186,17 @@ void CpcScreen::run() {
 #endif
                 while ((tick = steady_clock::now()) < frame);
             } else {
-                cpc.setSoundRate(delay, true);
+                // If we are syncing with the PC's vertical refresh, we need
+                // to get at least 20ms of emulation. If this is the case, we
+                // update no matter the status of the screen.
+                if (cpc.cycles >= 320000) {
+                    update();
+                    cpc.cycles -= 320000;
+                }
+                cpc.ga.sync = false;
             }
 
+            cpc.scanKeys();
             pollEvents();
             pollCommands();
         }

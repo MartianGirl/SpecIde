@@ -104,6 +104,8 @@ class CPC {
         bool relay = false;
         /** Tape speed counter. */
         uint_fast32_t tapeSpeed = 0;
+        /** Gate Array cycle counter. */
+        uint_fast32_t cycles = 0;
 
         /** Sample array for tape sound. */
         int filter[FILTER_BZZ_SIZE];
@@ -142,11 +144,9 @@ class CPC {
         bool updateMotor = false;
 
         /**
-         * Run one frame of emulation.
-         *
-         * @return Frame time in microseconds.
+         * Run one frame of emulation or 20ms, whatever happens first.
          */
-        uint_fast32_t run();
+        void run();
 
         // This one is going to be called at 8MHz, and is going to:
         // 1. Clock the GA. This starts the GA counters.

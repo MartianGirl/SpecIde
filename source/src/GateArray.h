@@ -62,14 +62,16 @@ class GateArray {
         uint_fast32_t yPos = 0;
         uint_fast32_t xInc = 0;
         uint_fast32_t yInc = 0;
-        uint_fast32_t yCnt = 0;
          
         bool hSync_d = false;
         bool vSync_d = false;
         bool sync = false;
 
-        uint_fast32_t displayHSync = 0;
-        uint_fast32_t displayVSync = 0;
+        bool hSyncAccepted = false;
+        bool vSyncAccepted = false;
+
+        uint_fast32_t scansFromVSync = 0;
+        uint_fast32_t scansFromFrame = 0;
 
         /** Cycle counter. */
         uint_fast32_t counter = 0;
