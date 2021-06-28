@@ -164,7 +164,7 @@ void CpcScreen::run() {
 
             if (!syncToVideo) {
                 uint_fast32_t delay = cpc.cycles / 16;
-                uint_fast32_t sleep = delay - (delay % 5000);
+                uint_fast32_t sleep = delay - (delay % 1000);
                 cpc.cycles = 0;
 
                 if (cpc.ga.sync) {
