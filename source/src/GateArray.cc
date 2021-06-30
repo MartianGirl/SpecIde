@@ -327,8 +327,8 @@ void GateArray::updateBeam() {
     // fits better the screen this way...
     blanking = crtc.hSync || crtc.vSync || (hCounter < 0x1c);
 
-    // Accept HSync always (on falling edge).
-    if (!crtc.hSync && hSync_d) {
+    // Accept HSync only if longer than 2.
+    if (crtc.hSync && crtc.hswCounter == 3) {
         hSyncAccepted = true;
     }
 

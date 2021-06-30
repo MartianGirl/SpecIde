@@ -153,7 +153,7 @@ void Screen::setFullScreen(bool fs) {
         // single scan modes. 588 displayable lines are assumed.
         scrSprite.setTexture(scrTexture);
         scrSprite.setTextureRect(sf::IntRect(lBorder, 2 * (tBorder + 8) / yModifier,
-                    xSize - rBorder, w / yModifier));
+                    xSize - rBorder, h / yModifier));
         scrSprite.setPosition(0, 0);
         scrSprite.setScale(Vector2f(wModifier * static_cast<float>(scale), yModifier * static_cast<float>(scale)));
     }

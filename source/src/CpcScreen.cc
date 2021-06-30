@@ -101,11 +101,11 @@ void CpcScreen::setup() {
     loadFiles();
 
     h = 560;
-    w = 784;
+    w = 776;
 
-    lBorder = 8;
-    rBorder = 248;
-    tBorder = 0;
+    lBorder = 160;
+    rBorder = 16;
+    tBorder = 2;
     bBorder = 0;
 
     wide = true;

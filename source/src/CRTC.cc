@@ -80,8 +80,8 @@ void CRTC::wrRegister(uint_fast8_t byte) {
 
         switch (index) {
             case 0: // Horizontal Total. Actual value = Set value + 1.
-                if (type == 0) {
-                    if (regs[0] == 0x00) regs[0] = 0x01;
+                if (type == 0 && !regs[0]) {
+                    regs[0] = 0x01;
                 }
                 hTotal = regs[0] + 1;
                 break;
@@ -129,8 +129,8 @@ void CRTC::wrRegister(uint_fast8_t byte) {
 
     maxScans = vTotal * rMax + vAdjust;
 
-    double base = (1000000.0 / 78.125);
-    vSyncSeparation = hTotal ? (base / hTotal) : 200;
+    double base = (1000000.0 / 56.5);
+    vSyncSeparation = hTotal ? (base / hTotal) : 276;
 
     if (index == 12 || index == 13) {
         // This is necessary to accept changes to the screen base address after
@@ -254,6 +254,7 @@ void CRTC::clock() {
 
         if ((vCounter == vsPos) && (rCounter == 0)) {  // Vertical Sync Position
             vSync = true;
+            vswCounter = 0;
         }
 
         // Base address is updated on VCC=0 (CRTC 1) or VCC=0 and VLC=0 (other)
@@ -269,7 +270,7 @@ void CRTC::clock() {
         hDisplay = false;                   // Drawing border
 
         if (rCounter == rMax - 1) {
-            lineAddress += hCounter;
+            lineAddress += hDisplayed;
         }
     }
 
@@ -285,6 +286,7 @@ void CRTC::clock() {
 
     if (hCounter == hsPos) {   // Horizontal Sync Position
         hSync = true;                       // HSYNC pulse
+        hswCounter = 0;
     }
 
     // CRTC type 0, 1: HSW in range 0..15. This block checks 0, 1, 2...
