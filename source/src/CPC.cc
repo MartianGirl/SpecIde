@@ -152,25 +152,38 @@ void CPC::playSound(bool play) {
     }
 }
 
-void CPC::run() {
+void CPC::run(bool frame) {
+
+    cycles = 0;
+    ga.sync = false;
+
+    if (frame) {
+        while(!ga.sync) {
+            clock();
+            generateSound();
+            ++cycles;
+        }
+    } else {
+        while (cycles++ < 16 * FRAME_TIME_CPC) {
+            clock();
+            generateSound();
+        }
+    }
+}
+
+void CPC::generateSound() {
 
     static double remaining = 0;
 
-    while (!ga.sync && cycles < 336000) {
-
-        clock();
-        ++cycles;
-
-        // Generate sound. This maybe can be done using the same counter?
-        if (!(--skipCycles)) {
-            skipCycles = skip;
-            remaining += tail;
-            if (remaining >= 1.0) {
-                skipCycles++;
-                remaining -= 1.0;
-            }
-            sample();
+    // Generate sound. This maybe can be done using the same counter?
+    if (!(--skipCycles)) {
+        skipCycles = skip;
+        remaining += tail;
+        if (remaining >= 1.0) {
+            skipCycles++;
+            remaining -= 1.0;
         }
+        sample();
     }
 }
 

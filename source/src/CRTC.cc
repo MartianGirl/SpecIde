@@ -32,26 +32,24 @@ CRTC::CRTC(uint_fast8_t type) :
         0x3F, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, static_cast<uint_fast8_t>((type == 1) ? 0xFF : 0x00)},
     dirs{
-        AccessType::CRTC_WO,    // Horizontal Total (WO)
-        AccessType::CRTC_WO,    // Horizontal Displayed (WO)
-        AccessType::CRTC_WO,    // Horizontal Sync Position (WO)
-        AccessType::CRTC_WO,    // Horizontal & Vertical Sync Width (WO)
-        AccessType::CRTC_WO,    // Vertical Total (WO)
-        AccessType::CRTC_WO,    // Vertical Total Adjust (WO)
-        AccessType::CRTC_WO,    // Vertical Displayed (WO)
-        AccessType::CRTC_WO,    // Vertical Sync Position (WO)
-        AccessType::CRTC_WO,    // Interlace & Skew (WO)
-        AccessType::CRTC_WO,    // Maximum Raster Address (WO)
-        AccessType::CRTC_RW,    // Cursor Start Raster (RW)
-        AccessType::CRTC_RW,    // Cursor End Raster (RW)
-        (type == 0 || type == 3 || type == 4)
-            ? AccessType::CRTC_RW : AccessType::CRTC_WO,    // Display Start Address (High byte)
-        (type == 0 || type == 3 || type == 4)
-            ? AccessType::CRTC_RW : AccessType::CRTC_WO,    // Display Start Address (Low byte)
-        AccessType::CRTC_RW,    // Cursor Address (High byte)
-        AccessType::CRTC_RW,    // Cursor Address (Low byte)
-        AccessType::CRTC_RO,    // Light Pen Address (High byte)
-        AccessType::CRTC_RO,    // Light Pen Address (Low byte)
+        AccessType::CRTC_WO,    // R0: Horizontal Total (WO)
+        AccessType::CRTC_WO,    // R1: Horizontal Displayed (WO)
+        AccessType::CRTC_WO,    // R2: Horizontal Sync Position (WO)
+        AccessType::CRTC_WO,    // R3: Horizontal & Vertical Sync Width (WO)
+        AccessType::CRTC_WO,    // R4: Vertical Total (WO)
+        AccessType::CRTC_WO,    // R5: Vertical Total Adjust (WO)
+        AccessType::CRTC_WO,    // R6: Vertical Displayed (WO)
+        AccessType::CRTC_WO,    // R7: Vertical Sync Position (WO)
+        AccessType::CRTC_WO,    // R8: Interlace & Skew (WO)
+        AccessType::CRTC_WO,    // R9: Maximum Raster Address (WO)
+        AccessType::CRTC_RW,    // R10: Cursor Start Raster (RW)
+        AccessType::CRTC_RW,    // R11: Cursor End Raster (RW)
+        (type == 0 || type > 2) ? AccessType::CRTC_RW : AccessType::CRTC_WO,    // R12: Display Address (High)
+        (type == 0 || type > 2) ? AccessType::CRTC_RW : AccessType::CRTC_WO,    // R13: Display Address (Low)
+        AccessType::CRTC_RW,    // R14: Cursor Address (High byte)
+        AccessType::CRTC_RW,    // R15: Cursor Address (Low byte)
+        AccessType::CRTC_RO,    // R16: Light Pen Address (High byte)
+        AccessType::CRTC_RO,    // R17: Light Pen Address (Low byte)
         AccessType::CRTC_RO,    // All the remaining addresses are unused.
         AccessType::CRTC_RO,
         AccessType::CRTC_RO,
@@ -145,12 +143,8 @@ void CRTC::wrRegister(uint_fast8_t byte) {
 void CRTC::rdStatus(uint_fast8_t &byte) {
 
     switch (type) {
-        case 0: // fall-through
-        case 2:
-            byte = 0x00;
-            break;
         case 1:
-            byte = status;
+            byte = vDisplayed ? 0x20 : 0x00;
             break;
         case 3: // fall-through
         case 4:
@@ -163,25 +157,32 @@ void CRTC::rdStatus(uint_fast8_t &byte) {
 
 void CRTC::rdRegister(uint_fast8_t &byte) {
 
+    // CRTC type 3 or 4 decode read address partially.
+    uint_fast8_t address = (type > 2) ? ((index & 0x7) | 0x8) : index;
+
     if (dirs[index] != AccessType::CRTC_WO) {
-        switch (index) {
-            case 0x1f:  // fall-through
-                if (type != 1) {   // Hi-Z in type 1
-                    byte = regs[(type < 3) ? index : ((index & 0x7) | 0x8)];
-                }
+        switch (address) {
+            case 0x1f:
+                if (type != 1) byte = 0x0;
                 break;
             default:
-                byte = regs[(type < 3) ? index : ((index & 0x7) | 0x8)];
-                break;
+                byte = regs[address];
         }
     } else {
         switch (type) {
-            case 0: // fall-through
-            case 1: // fall-through
-                byte = 0x00;
+            case 0:
+                byte = 0x0;
+                break;
+            case 1:
+                if (address == 12 || address == 13) byte = 0x0;
                 break;
             case 2:
-                byte = 0xFF;
+                byte = 0x0;
+                break;
+            case 3:
+            case 4:
+                if (address == 10) byte = vSync ? 0x20 : 0x00;
+                if (address == 11) byte = vCounter;
             default:
                 break;
         }
@@ -213,8 +214,6 @@ void CRTC::clock() {
     ++hCounter;
 
     // This is for interlace control
-    hh = (hCounter > (hTotal >> 1));
-
     // Here increment Raster Counter, Vertical Sync Width Counter
     if (hCounter >= hTotal) {   // Horizontal Total marks the end of a scan
         hCounter = 0;               // Reset Horizontal Counter
@@ -223,6 +222,8 @@ void CRTC::clock() {
         // Increment raster counter and check
         rCounter = (rCounter + 1) & 0x1F;
         if (rCounter == rMax) { // Maximum Raster Address
+            oddField = !oddField;
+
             rCounter = 0;           // Reset Raster Counter
             vCounter = (vCounter + 1) & 0x7F;
         }
@@ -230,41 +231,34 @@ void CRTC::clock() {
         if ((vCounter == vTotal && rCounter >= vAdjust) || (vCounter > vTotal)) {
             // Vertical Total marks the end of a frame, but we also must
             // account for Vertical Total Adjustment
+            interlace = regs[8] & 0x3;
+            if (interlace & 0x1) {
+                oddField = !oddField;
+                vSyncOffset = !oddField ? (regs[0] / 2 + 1) : 0;
+            } else {
+                oddField = true;
+                vSyncOffset = 0;
+            }
+
             vCounter = 0;
             rCounter = 0;
             vDisplay = true;
-            status &= 0xDF;
         }
 
         if ((vCounter == vDisplayed) && (rCounter == 0)) {  // Vertical Displayed
             vDisplay = false;
-            status |= 0x20;
-        }
-
-        // All CRTC types consider 1, 2, 3... 16.
-        // CRTC types 1 and 2 have this setting fixed to 16 lines.
-        // This block must be placed here so VSW = 1 actually does 1 line.
-        if (vSync) {
-            vswCounter = (vswCounter + 1) & 0xF;
-            if (vswCounter == vswMax) {
-                vSync = false;
-                vswCounter = 0;
-            }
-        }
-
-        if ((vCounter == vsPos) && (rCounter == 0)) {  // Vertical Sync Position
-            vSync = true;
-            vswCounter = 0;
         }
 
         // Base address is updated on VCC=0 (CRTC 1) or VCC=0 and VLC=0 (other)
-        if (updateLineAddress
-                || (vCounter == 0 && (type == 1 || rCounter == 0))) {
+        if (updateLineAddress) {
             lineAddress = ((regs[12] & 0x3F) << 8) | regs[13];
             updateLineAddress = false;
+        } else if ((vCounter == 0 && (type == 1 || rCounter == 0))) {
+            if (!(interlace & 0x1) || oddField) {
+                lineAddress = ((regs[12] & 0x3F) << 8) | regs[13];
+            }
         }
     }
-
 
     if (hCounter == hDisplayed) {   // Horizontal Displayed
         hDisplay = false;                   // Drawing border
@@ -300,6 +294,22 @@ void CRTC::clock() {
         }
     }
 
+    // All CRTC types consider 1, 2, 3... 16.
+    // CRTC types 1 and 2 have this setting fixed to 16 lines.
+    // This block must be placed here so VSW = 1 actually does 1 line.
+    if (vSync && (hCounter == vSyncOffset)) {
+        vswCounter = (vswCounter + 1) & 0xF;
+        if (vswCounter == vswMax) {
+            vSync = false;
+            vswCounter = 0;
+        }
+    }
+
+    if ((vCounter == vsPos) && (rCounter == 0) && (hCounter == vSyncOffset)) {  // Vertical Sync Position
+        vSync = true;
+        vswCounter = 0;
+    }
+
     charAddress = lineAddress + hCounter;
     pageAddress = (charAddress & 0x3000) << 2;
     byteAddress = pageAddress | ((rCounter & 7) << 11) | ((charAddress & 0x3FF) << 1);
@@ -311,5 +321,6 @@ void CRTC::reset() {
     for (size_t ii = 0; ii < 31; ++ii) {
         regs[ii] = 0x00;
     }
+    oddField = true;
 }
 // vim: et:sw=4:ts=4

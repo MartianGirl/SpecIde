@@ -336,7 +336,7 @@ void GateArray::updateBeam() {
     // frequency range. CRTC::vSyncSeparation is the number of scans for this
     // to happen.
     // The separation-between-VSyncs counter is reset when a VSync is accepted.
-    if ((!crtc.vSync && vSync_d) && (scansFromVSync >= crtc.vSyncSeparation)) {
+    if (crtc.vSync && crtc.vswCounter == 3 && scansFromVSync >= crtc.vSyncSeparation) {
         vSyncAccepted = true;
         scansFromVSync = 0;
     }

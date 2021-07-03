@@ -144,9 +144,14 @@ class CPC {
         bool updateMotor = false;
 
         /**
-         * Run one frame of emulation or 20ms, whatever happens first.
+         * Run one frame of emulation, or the default frame time.
+         *
+         * @param frame Run for a complete frame, no matter the time.
          */
-        void run();
+        void run(bool frame);
+
+
+        void generateSound();
 
         // This one is going to be called at 8MHz, and is going to:
         // 1. Clock the GA. This starts the GA counters.

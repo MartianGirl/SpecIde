@@ -28,7 +28,7 @@ enum class AccessType
 
 class CRTC {
     public:
-        CRTC(uint_fast8_t type = 1);
+        CRTC(uint_fast8_t type = 0);
 
         uint_fast32_t type;
         uint_fast8_t index;
@@ -71,15 +71,17 @@ class CRTC {
         /** Raster max address (R9). */
         uint_fast8_t rMax = 0;
 
-        bool hh;
+        /** Interlace mode. */
+        uint_fast8_t interlace = 0;
+        /** Odd field indicator. */
+        bool oddField = true;
+        /** Horizontal position where VSync pulse starts. */
+        uint_fast8_t vSyncOffset = 0;
 
         /** Programmed number of scans in the CRTC. */
         uint_fast32_t maxScans = 312;
         /** Separation between VSYNCs for max. 51.5 Hz VFreq. */
         uint_fast32_t vSyncSeparation = 300;
-
-        /** CRTC type 1 status register. */
-        uint_fast8_t status = 0;
 
         /** Address of current character line. */
         uint_fast16_t lineAddress = 0;
