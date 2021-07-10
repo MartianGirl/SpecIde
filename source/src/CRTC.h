@@ -80,7 +80,7 @@ class CRTC {
 
         /** Programmed number of scans in the CRTC. */
         uint_fast32_t maxScans = 312;
-        /** Separation between VSYNCs for max. 51.5 Hz VFreq. */
+        /** Separation between VSYNCs for max. 72Hz VFreq. */
         uint_fast32_t vSyncSeparation = 300;
 
         /** Address of current character line. */

@@ -323,13 +323,18 @@ void GateArray::updateVideoMode() {
 
 void GateArray::updateBeam() {
 
+    // This function is invoked every time the CRTC is clocked, so each time
+    // we count an horizontal character.
+    ++charsFromHSync;
+
     // Blanking should also be activated if hCounter < 28, but the picture
     // fits better the screen this way...
-    blanking = crtc.hSync || crtc.vSync || (hCounter < 0x1c);
+    blanking = crtc.hSync || crtc.vSync || hCounter < 0x1c;
 
     // Accept HSync only if longer than 2.
-    if (crtc.hSync && crtc.hswCounter == 3) {
+    if (crtc.hSync && crtc.hswCounter == 3 && charsFromHSync > 49) {
         hSyncAccepted = true;
+        charsFromHSync = 0;
     }
 
     // The monitor can only accept VSyncs if they are within its vertical
@@ -354,7 +359,7 @@ void GateArray::updateBeam() {
         // Vertical position (and scans-from-frame-start counter) are increased
         // only if HSync happens outside of a VSync pulse.
         // (This is regarding geommetry, not time!)
-        if (!crtc.vSync) {
+        if (!crtc.vSync || crtc.vswCounter < 2 || crtc.vswCounter > 5) {
             yPos += yInc;
             ++scansFromFrame;
         }

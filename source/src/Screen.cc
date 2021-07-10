@@ -136,7 +136,7 @@ void Screen::setFullScreen(bool fs) {
         yScale = nearbyintf(bestMode.height / static_cast<float>(suggestedScans));
 
         // Adjust depending on the vertical scale.
-        xOffset = (bestMode.width - (xModifier * (xSize - lBorder - rBorder)  * yScale * wModifier / 2)) / 2;
+        xOffset = (bestMode.width - ((xSize - lBorder - rBorder) * xModifier * yScale * wModifier / 2)) / (4 / wModifier);
         yOffset = 0;
 
         cout << "Using scale " << fixed << setprecision(3) << yScale << endl;

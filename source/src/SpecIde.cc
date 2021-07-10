@@ -89,7 +89,14 @@ map<string, Option> arguments = {
 
     // SD1 was a protection device used in Camelot Warriors.
     {"--sd1",           {"sd1", "yes"}},
-    {"--nosd1",         {"sd1", "no"}}
+    {"--nosd1",         {"sd1", "no"}},
+
+    // Amstrad CPC specific options.
+    {"--crtc0",         {"crtc", "0"}},
+    {"--crtc1",         {"crtc", "1"}},
+    {"--crtc2",         {"crtc", "2"}},
+    {"--crtc3",         {"crtc", "3"}},
+    {"--crtc4",         {"crtc", "4"}}
 };
 
 int main(int argc, char* argv[]) {
@@ -226,6 +233,7 @@ void readOptions(map<string, string>& options) {
     options["sd1"] = "no";
     options["scale"] = "1";
     options["z80type"] = "nmos";
+    options["crtc"] = "0";
 
     vector<string> cfgPaths;
     string cfgName("SpecIde.cfg");

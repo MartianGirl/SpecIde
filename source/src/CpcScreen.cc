@@ -54,6 +54,18 @@ void CpcScreen::setup() {
         cpc.set6128();
     } // Default model is ZX Spectrum 48K Issue 3...
 
+    uint_fast32_t crtc = 0;
+    if (!options["crtc"].empty()) {
+        try {
+            crtc = stoi(options["crtc"]);
+        } catch (invalid_argument &ia) {
+            cout << "Invalid CRTC type: '" << options["crtc"] << "' - " << ia.what() << endl;
+            options["crtc"] = "0";
+        }
+    }
+    cout << "CRTC type: " << crtc << endl;
+    cpc.ga.crtc.type = crtc;
+
     // Select joystick options.
     pad = (options["pad"] == "yes");
     cout << "Map game pad extra buttons to keys: " << options["pad"] << endl;
@@ -103,9 +115,9 @@ void CpcScreen::setup() {
     h = 560;
     w = 776;
 
-    lBorder = 196;
-    rBorder = 48;
-    tBorder = 4;
+    lBorder = 192;
+    rBorder = 224;
+    tBorder = 12;
     bBorder = 0;
 
     wide = true;

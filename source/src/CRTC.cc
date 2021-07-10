@@ -127,8 +127,8 @@ void CRTC::wrRegister(uint_fast8_t byte) {
 
     maxScans = vTotal * rMax + vAdjust;
 
-    double base = (1000000.0 / 56.5);
-    vSyncSeparation = hTotal ? (base / hTotal) : 276;
+    double base = (1000000.0 / 72.0);
+    vSyncSeparation = hTotal ? (base / hTotal) : 217;
 
     if (index == 12 || index == 13) {
         // This is necessary to accept changes to the screen base address after
