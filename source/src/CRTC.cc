@@ -79,7 +79,7 @@ void CRTC::wrRegister(uint_fast8_t byte) {
         switch (index) {
             case 0: // Horizontal Total. Actual value = Set value + 1.
                 if (type == 0 && !regs[0]) {
-                    regs[0] = 0x01;
+                    regs[0] = 1;
                 }
                 hTotal = regs[0] + 1;
                 break;
@@ -106,7 +106,9 @@ void CRTC::wrRegister(uint_fast8_t byte) {
                 }
                 break;
             case 4: // Vertical total.
-                vTotal = regs[4] + 1;
+                if (type != 0) {
+                    vTotal = regs[4] + 1;
+                }
                 break;
             case 5: // Vertical adjust.
                 vAdjust = regs[5];
@@ -120,6 +122,14 @@ void CRTC::wrRegister(uint_fast8_t byte) {
             case 9: // Max Raster Address.
                 rMax = regs[9] + 1;
                 break;
+            case 12:
+            case 13:
+                // This is necessary to accept changes to the screen base address after
+                // the scanline check has been done at HCC = 0. In this case, the address
+                // will be updated for the next scanline.
+                if (vCounter == 0 && (type == 1 || rCounter == 0)) {
+                    updateLineAddress = true;
+                }
             default:
                 break;
         }
@@ -129,15 +139,6 @@ void CRTC::wrRegister(uint_fast8_t byte) {
 
     double base = (1000000.0 / 72.0);
     vSyncSeparation = hTotal ? (base / hTotal) : 217;
-
-    if (index == 12 || index == 13) {
-        // This is necessary to accept changes to the screen base address after
-        // the scanline check has been done at HCC = 0. In this case, the address
-        // will be updated for the next scanline.
-        if (vCounter == 0 && (type == 1 || rCounter == 0)) {
-            updateLineAddress = true;
-        }
-    }
 }
 
 void CRTC::rdStatus(uint_fast8_t &byte) {
@@ -216,16 +217,20 @@ void CRTC::clock() {
     // This is for interlace control
     // Here increment Raster Counter, Vertical Sync Width Counter
     if (hCounter >= hTotal) {   // Horizontal Total marks the end of a scan
-        hCounter = 0;               // Reset Horizontal Counter
         hDisplay = true;            // Drawing screen
+        hCounter = 0;               // Reset Horizontal Counter
 
         // Increment raster counter and check
         rCounter = (rCounter + 1) & 0x1F;
-        if (rCounter == rMax) { // Maximum Raster Address
+        if (rCounter >= rMax) { // Maximum Raster Address
             oddField = !oddField;
 
             rCounter = 0;           // Reset Raster Counter
             vCounter = (vCounter + 1) & 0x7F;
+
+            if (type == 0) {
+                vTotal = regs[4] + 1;
+            }
         }
 
         if ((vCounter == vTotal && rCounter >= vAdjust) || (vCounter > vTotal)) {
