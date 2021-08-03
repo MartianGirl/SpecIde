@@ -334,6 +334,7 @@ void GateArray::updateBeam() {
     // Accept HSync only if longer than 2.
     if (crtc.hswCounter == 3 && charsFromHSync > 48) {
         hSyncAccepted = true;
+        charsFromHSync = 0;
     }
 
     // The monitor can only accept VSyncs if they are within its vertical
@@ -369,7 +370,16 @@ void GateArray::updateBeam() {
         // accepted (occurs within VFreq range). In this case, we position
         // the beam at the top of the screen and signal that we have a new frame.
         if (yPos >= Y_SIZE / 2 || vSyncAccepted) {
-            sync = true;
+            for (size_t jj = yPos; jj < Y_SIZE / 2; ++jj) {
+                for (size_t ii = 0; ii < X_SIZE; ++ii) {
+#if SPECIDE_BYTE_ORDER == 1
+                    pixelsX1[(jj * X_SIZE) + ii] = 0x000000FF;
+#else
+                    pixelsX1[(jj * X_SIZE) + ii] = 0xFF000000;
+#endif
+                }
+            }
+            sync = (yPos != 0);
             yPos = 0;           // Move beam to the top...
             yInc = 1;           // ...and keep it there!
             vSyncAccepted = false;

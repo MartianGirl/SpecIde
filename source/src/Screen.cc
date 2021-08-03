@@ -223,14 +223,14 @@ void Screen::adjustViewPort() {
     do {
         ++divider;
         suggestedScansSingle = bestMode.height / divider;
-    } while (suggestedScansSingle > 304); // 312 - 8 VBlank lines.
+    } while (suggestedScansSingle > 288); // Aim for 288 visible rasters.
     cout << "Selected " << suggestedScansSingle << " scans for single scan mode." << endl;
 
     divider = 0;
     do {
         ++divider;
         suggestedScansDouble = bestMode.height / divider;
-    } while (suggestedScansDouble > 608); // 624 - 16 VBlank lines.
+    } while (suggestedScansDouble > 576); // Aim for 576 visible rasters.
     cout << "Selected " << suggestedScansDouble << " scans for double scan mode." << endl;
 }
 

@@ -106,7 +106,7 @@ void CRTC::wrRegister(uint_fast8_t byte) {
                 }
                 break;
             case 4: // Vertical total.
-                if (type != 0) {
+                if (type == 1 && vCounter == 0) {
                     vTotal = regs[4] + 1;
                 }
                 break;
@@ -137,8 +137,8 @@ void CRTC::wrRegister(uint_fast8_t byte) {
 
     maxScans = vTotal * rMax + vAdjust;
 
-    double base = (1000000.0 / 72.0);
-    vSyncSeparation = hTotal ? (base / hTotal) : 217;
+    double base = (1000000.0 / 57.5);
+    vSyncSeparation = base / (hTotal ? hTotal : 64);
 }
 
 void CRTC::rdStatus(uint_fast8_t &byte) {
@@ -228,9 +228,7 @@ void CRTC::clock() {
             rCounter = 0;           // Reset Raster Counter
             vCounter = (vCounter + 1) & 0x7F;
 
-            if (type == 0) {
-                vTotal = regs[4] + 1;
-            }
+            vTotal = regs[4] + 1;
         }
 
         if ((vCounter == vTotal && rCounter >= vAdjust) || (vCounter > vTotal)) {

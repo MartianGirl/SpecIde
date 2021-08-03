@@ -679,8 +679,8 @@ void TZXFile::pushSymbol(uint32_t rep, uint32_t sym,
 
 void TZXFile::addPause(uint32_t pause, vector<uint32_t>& data) {
 
-    data.push_back(3500 * pause);
-    data.push_back(100);  // Keep number of pulses even
+    data.push_back(3495 * pause);
+    data.push_back(5 * pause);  // Keep number of pulses even
 }
 
 // vim: et:sw=4:ts=4
