@@ -152,7 +152,7 @@ void Screen::setFullScreen(bool fs) {
         // In this case we want to have the same windows size for double scan modes and
         // single scan modes. 588 displayable lines are assumed.
         scrSprite.setTexture(scrTexture);
-        scrSprite.setTextureRect(sf::IntRect(lBorder, 2 * (tBorder + 8) / yModifier,
+        scrSprite.setTextureRect(sf::IntRect(lBorder, 2 * (tBorder + 12) / yModifier,
                     xSize - rBorder, h / yModifier));
         scrSprite.setPosition(0, 0);
         scrSprite.setScale(Vector2f(wModifier * static_cast<float>(scale), yModifier * static_cast<float>(scale)));

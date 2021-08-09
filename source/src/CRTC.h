@@ -100,6 +100,25 @@ class CRTC {
         bool vSync = false;
         bool dispEn = false;
 
+        /** End of scan. Usually when C0 == R0. */
+        bool endOfScan = false;
+        /** End of character row. This condition is triggered when C9 == R9 + 1. */
+        bool endOfRow = false;
+        /** Screen frame has ended. */
+        bool endOfFrame = false;
+        /** First scan of character row. Usually this means C9 == 0. */
+        bool firstScanInRow = false;
+        /** Last scan of character row. Usually this means C9 == R9. */
+        bool lastScanInRow = false;
+        /** First character row on the screen. */
+        bool firstRow = false;
+        /** Last character row on the screen. */
+        bool lastRow = false;
+        /** End of horizontal displayed area. C0 == R1. */
+        bool hDispOff = false;
+        /** End of vertical displayed area. C4 == R6. */
+        bool vDispOff = false;
+
         void wrAddress(uint_fast8_t byte);
         void wrRegister(uint_fast8_t byte);
         void rdStatus(uint_fast8_t &byte);

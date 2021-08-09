@@ -117,7 +117,7 @@ void CpcScreen::setup() {
 
     lBorder = 192;
     rBorder = 224;
-    tBorder = 12;
+    tBorder = 8;
     bBorder = 0;
 
     wide = true;

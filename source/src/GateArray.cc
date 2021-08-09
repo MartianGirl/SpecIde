@@ -332,7 +332,7 @@ void GateArray::updateBeam() {
     blanking = crtc.hSync || crtc.vSync || hCounter < 0x1c;
 
     // Accept HSync only if longer than 2.
-    if (crtc.hswCounter == 3 && charsFromHSync > 48) {
+    if (crtc.hswCounter == 3 && charsFromHSync > 62) {
         hSyncAccepted = true;
         charsFromHSync = 0;
     }

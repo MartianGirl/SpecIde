@@ -78,7 +78,7 @@ void CRTC::wrRegister(uint_fast8_t byte) {
 
         switch (index) {
             case 0: // Horizontal Total. Actual value = Set value + 1.
-                if (type == 0 && !regs[0]) {
+                if (type == 0 && regs[0] == 0) {
                     regs[0] = 1;
                 }
                 hTotal = regs[0] + 1;
@@ -120,16 +120,8 @@ void CRTC::wrRegister(uint_fast8_t byte) {
                 vsPos = regs[7];
                 break;
             case 9: // Max Raster Address.
-                rMax = regs[9] + 1;
+                    rMax = regs[9] + 1;
                 break;
-            case 12:
-            case 13:
-                // This is necessary to accept changes to the screen base address after
-                // the scanline check has been done at HCC = 0. In this case, the address
-                // will be updated for the next scanline.
-                if (vCounter == 0 && (type == 1 || rCounter == 0)) {
-                    updateLineAddress = true;
-                }
             default:
                 break;
         }
@@ -145,6 +137,7 @@ void CRTC::rdStatus(uint_fast8_t &byte) {
 
     switch (type) {
         case 1:
+            // Status reg on CRTC type 1 reflects VDisplayed.
             byte = vDisplayed ? 0x20 : 0x00;
             break;
         case 3: // fall-through
@@ -164,10 +157,16 @@ void CRTC::rdRegister(uint_fast8_t &byte) {
     if (dirs[index] != AccessType::CRTC_WO) {
         switch (address) {
             case 0x1f:
-                if (type != 1) byte = 0x0;
+                // R31 on CRTC 0 or 2 returns 0.
+                // R31 on CRTC 1 returns the contents of the bus (HiZ).
+                // R31 on CRTC 3 or 4 returns R15 because of incomplete decoding.
+                if (type != 1) {
+                    byte = 0x0;
+                }
                 break;
             default:
                 byte = regs[address];
+                break;
         }
     } else {
         switch (type) {
@@ -182,8 +181,13 @@ void CRTC::rdRegister(uint_fast8_t &byte) {
                 break;
             case 3:
             case 4:
-                if (address == 10) byte = vSync ? 0x20 : 0x00;
-                if (address == 11) byte = vCounter;
+                if (address == 10) {
+                    // R10.b5 reflects VSync status.
+                    byte = vSync ? 0x20 : 0x00;
+                } else if (address == 11) {
+                    // R11 reflects VCC.
+                    byte = vCounter;
+                }
             default:
                 break;
         }
@@ -211,59 +215,94 @@ void CRTC::clock() {
     //      Compared to R0 / 2
     //          Affect Interlace Control
 
-    // Horizontal counter is incremented with each tick
-    ++hCounter;
-
     // This is for interlace control
     // Here increment Raster Counter, Vertical Sync Width Counter
-    if (hCounter >= hTotal) {   // Horizontal Total marks the end of a scan
-        hDisplay = true;            // Drawing screen
-        hCounter = 0;               // Reset Horizontal Counter
+    // Horizontal counter is incremented with each tick.
+    ++hCounter;
+    if (hCounter == hTotal) {
+        endOfScan = true;
+    }
 
-        // Increment raster counter and check
-        rCounter = (rCounter + 1) & 0x1F;
-        if (rCounter >= rMax) { // Maximum Raster Address
-            oddField = !oddField;
+    if (endOfScan) {    // Horizontal Total marks the end of a scan.
+        hCounter = 0;               // Reset Horizontal Counter.
+        hDisplay = true;            // Start drawing screen.
 
-            rCounter = 0;           // Reset Raster Counter
-            vCounter = (vCounter + 1) & 0x7F;
-
-            vTotal = regs[4] + 1;
+        rCounter = (rCounter + 1) & 0x1F;   // Increment raster counter.
+        if (rCounter == rMax) {
+            endOfRow = true;
         }
 
-        if ((vCounter == vTotal && rCounter >= vAdjust) || (vCounter > vTotal)) {
-            // Vertical Total marks the end of a frame, but we also must
-            // account for Vertical Total Adjustment
-            interlace = regs[8] & 0x3;
-            if (interlace & 0x1) {
-                oddField = !oddField;
-                vSyncOffset = !oddField ? (regs[0] / 2 + 1) : 0;
-            } else {
-                oddField = true;
-                vSyncOffset = 0;
-            }
+        updateLineAddress = firstRow && (firstScanInRow || (type == 1 && !endOfRow));
+        firstScanInRow = false;
+    }
 
-            vCounter = 0;
-            rCounter = 0;
-            vDisplay = true;
+    if (endOfRow) { // Maximum Raster Address
+        rCounter = 0;           // Reset Raster Counter
+
+        vCounter = (vCounter + 1) & 0x7F;
+        vDispOff = (vCounter == vDisplayed);
+        firstRow = false;
+        firstScanInRow = true;
+
+        if (vCounter == vTotal + 1) {
+            endOfFrame = true;
         }
 
-        if ((vCounter == vDisplayed) && (rCounter == 0)) {  // Vertical Displayed
-            vDisplay = false;
-        }
+        oddField = !oddField;
+        vTotal = regs[4] + 1;
+    }
 
-        // Base address is updated on VCC=0 (CRTC 1) or VCC=0 and VLC=0 (other)
-        if (updateLineAddress) {
-            lineAddress = ((regs[12] & 0x3F) << 8) | regs[13];
-            updateLineAddress = false;
-        } else if ((vCounter == 0 && (type == 1 || rCounter == 0))) {
-            if (!(interlace & 0x1) || oddField) {
-                lineAddress = ((regs[12] & 0x3F) << 8) | regs[13];
-            }
+    if (endOfScan) {
+        // VAdjust is checked on the updated VTotal line.
+        if (vCounter == vTotal && rCounter == vAdjust) {
+            endOfFrame = true;
         }
     }
 
-    if (hCounter == hDisplayed) {   // Horizontal Displayed
+    if (vDispOff) {  // Vertical Displayed
+        vDispOff = false;
+        vDisplay = false;
+    }
+
+    if (endOfFrame) {
+        vCounter = 0;
+        rCounter = 0;
+
+        firstRow = true;
+        firstScanInRow = true;
+
+        vDisplay = true;
+        vDispOff = (vCounter == vDisplayed);
+        // Vertical Total marks the end of a frame, but we also must
+        // account for Vertical Total Adjustment
+        interlace = regs[8] & 0x3;
+        if (interlace & 0x1) {
+            oddField = !oddField;
+            vSyncOffset = !oddField ? (regs[0] / 2 + 1) : 0;
+        } else {
+            oddField = true;
+            vSyncOffset = 0;
+        }
+    }
+
+    // Base address is updated on VCC=0 (CRTC 1) or VCC=0 and VLC=0 (other)
+    if (updateLineAddress) {
+        lineAddress = ((regs[12] & 0x3F) << 8) | regs[13];
+        updateLineAddress = false;
+    } else if (endOfFrame && (!(interlace & 0x1) || oddField)) {
+        lineAddress = ((regs[12] & 0x3F) << 8) | regs[13];
+    }
+
+    endOfScan = false;
+    endOfRow = false;
+    endOfFrame = false;
+
+    if (hCounter == hDisplayed) {
+        hDispOff = true;
+    }
+
+    if (hDispOff) {   // Horizontal Displayed
+        hDispOff = false;
         hDisplay = false;                   // Drawing border
 
         if (rCounter == rMax - 1) {
@@ -317,6 +356,7 @@ void CRTC::clock() {
     pageAddress = (charAddress & 0x3000) << 2;
     byteAddress = pageAddress | ((rCounter & 7) << 11) | ((charAddress & 0x3FF) << 1);
     dispEn = hDisplay && vDisplay;
+
 }
 
 void CRTC::reset() {

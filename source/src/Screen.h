@@ -84,7 +84,7 @@ class Screen {
         /** Window width. */
         uint32_t w = 688;
         /** Window height. */
-        uint32_t h = 576;
+        uint32_t h = 560;
         /** Window scale factor. */
         uint32_t scale;
 
