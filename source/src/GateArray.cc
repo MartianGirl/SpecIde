@@ -346,7 +346,7 @@ void GateArray::updateBeam() {
         rastersFromVSync = 0;
     }
 
-    if (xPos >= X_SIZE || hSyncAccepted) {
+    if (xPos >= X_SIZE) {
         xPos = 0;   // Move beam to the left...
         xInc = 0;   // ...and keep it there... (for a moment)
     }
@@ -354,11 +354,12 @@ void GateArray::updateBeam() {
     // We consider the HSync pulse here, and we start moving the beam again...
     // But only if we were already in the left side.
     // (I'd say that this is redundant, in the way this function is written...)
-    if (!xPos && hSyncAccepted) {
+    if (hSyncAccepted) {
+        xPos = 0;
         xInc = 1;
         hSyncAccepted = false;  // We've already considered this HSync.
-        charsFromHSync = 0;
         ++rastersFromVSync;       // Consider the time of the horizontal sweep.
+
         // Vertical position (and scans-from-frame-start counter) are increased
         // only if HSync happens outside of a VSync pulse.
         // (This is regarding geommetry, not time!)

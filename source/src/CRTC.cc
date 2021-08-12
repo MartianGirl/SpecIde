@@ -118,6 +118,10 @@ void CRTC::wrRegister(uint_fast8_t byte) {
                 break;
             case 7: // Vertical Sync Position.
                 vsPos = regs[7];
+                if (vCounter == vsPos) {
+                    vSync = true;
+                    vswCounter = 0;
+                }
                 break;
             case 9: // Max Raster Address.
                     rMax = regs[9] + 1;
