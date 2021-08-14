@@ -15,28 +15,17 @@
 
 #pragma once
 
-#include <SFML/Window/Keyboard.hpp>
+/**
+ * SDLWindow
+ *
+ * Wrapper to SDL2 window functionality.
+ */
+class SDLWindow {
 
-#include <cstdint>
+    SDL_Window* window;
 
-using namespace sf;
-
-struct KeyBinding {
-
-    Keyboard::Key keyName;
-    uint8_t row;
-    uint8_t key;
+    public:
+    void create()
 };
+// vim: et:sw=4:ts=4
 
-struct JoystickKeyBinding {
-
-    uint8_t row;
-    uint8_t key;
-};
-
-extern KeyBinding singleKeys[42];
-extern KeyBinding capsKeys[11];
-extern KeyBinding symbolKeys[3];
-extern KeyBinding cpcKeys[73];
-extern JoystickKeyBinding spectrumKeyJoystick[12];
-extern JoystickKeyBinding cpcJoystick[2][6];

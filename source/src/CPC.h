@@ -88,7 +88,7 @@ class CPC {
 
         uint_fast8_t bus = 0xFF;
 
-        uint_fast8_t joystick = 0x00;
+        uint_fast8_t joystick[2] = { 0x00, 0x00 };
         uint_fast16_t pageRegs = 0x00;
 
         bool cpc128K = true;

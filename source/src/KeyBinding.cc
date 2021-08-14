@@ -110,7 +110,6 @@ KeyBinding symbolKeys[3] = {
  * Sinclair Port 1 joystick and extra buttons.
  */
 JoystickKeyBinding spectrumKeyJoystick[12] = {
-
     {3, 0x10},  // Sinclair Port 1 Left: 6
     {3, 0x08},  // Sinclair Port 1 Right: 7
     {3, 0x04},  // Sinclair Port 1 Up: 8
@@ -158,9 +157,9 @@ KeyBinding cpcKeys[73] = {
     {Keyboard::Delete, 2, 0x01},
 
     {Keyboard::Period, 3, 0x80},
-    {Keyboard::Slash, 3, 0x40},
+    //{Keyboard::Slash, 3, 0x40},
     {Keyboard::Semicolon, 3, 0x20},
-    //{Keyboard::Colon, 3, 0x10},
+    //{Keyboard::Quote, 3, 0x10},
     {Keyboard::P, 3, 0x08},
     {Keyboard::Quote, 3, 0x04},
     {Keyboard::Hyphen, 3, 0x02},
@@ -213,7 +212,21 @@ KeyBinding cpcKeys[73] = {
     {Keyboard::Backspace, 9, 0x80}
 };
 
-JoystickKeyBinding cpcJoystick[7] = {
-
+JoystickKeyBinding cpcJoystick[2][6] = {
+    {
+        {9, 0x08},  // Joystick 1 Right
+        {9, 0x04},  // Joystick 1 Left
+        {9, 0x02},  // Joystick 1 Down
+        {9, 0x01},  // Joystick 1 Up
+        {9, 0x10},  // Joystick 1 Fire 2
+        {9, 0x20}   // Joystick 1 Fire 1
+    }, {
+        {6, 0x08},  // Joystick 2 Right (T)
+        {6, 0x04},  // Joystick 2 Left (R)
+        {6, 0x02},  // Joystick 2 Down (5)
+        {6, 0x01},  // Joystick 2 Up (6)
+        {6, 0x10},  // Joystick 2 Fire 2
+        {6, 0x20}   // Joystick 2 Fire 1
+    }
 };
 // vim: et:sw=4:ts=4:

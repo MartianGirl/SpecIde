@@ -532,6 +532,14 @@ void CPC::scanKeys() {
             keys[cpcKeys[ii].row] &= ~cpcKeys[ii].key;
         }
     }
+
+    for (size_t jj = 0; jj < 2; ++jj) {
+        for (size_t ii = 0; ii < 6; ++ii) {
+            if (joystick[jj] & (1 << ii)) {
+                keys[cpcJoystick[jj][ii].row] &= ~cpcJoystick[jj][ii].key;
+            }
+        }
+    }
 }
 
 void CPC::setBrand(uint_fast8_t brandNumber) {

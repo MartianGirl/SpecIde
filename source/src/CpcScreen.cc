@@ -206,6 +206,22 @@ void CpcScreen::run() {
 
         cpc.playSound(false);
     }
+
+    while (!done && menu) {
+
+        Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == Event::KeyPressed) {
+                menu = false;
+            }
+        }
+#ifdef USE_BOOST_THREADS
+        sleep_until(tick + boost::chrono::microseconds(20000));
+#else
+        sleep_until(tick + std::chrono::microseconds(20000));
+#endif
+        tick = steady_clock::now();
+    }
 }
 
 void CpcScreen::update() {
@@ -314,23 +330,37 @@ void CpcScreen::togglePsgType() {
 
 void CpcScreen::joystickHorizontalAxis(bool l, bool r) {
 
-    (void) l;
-    (void) r;
+    cpc.joystick[0] &= 0xFC;
+    if (l) {
+        cpc.joystick[0] |= 0x02;
+    } else if (r) {
+        cpc.joystick[0] |= 0x01;
+    }
 }
 
 void CpcScreen::joystickVerticalAxis(bool u, bool d) {
 
-    (void) u;
-    (void) d;
+    cpc.joystick[0] &= 0xF3;
+    if (u) {
+        cpc.joystick[0] |= 0x08;
+    } else if (d) {
+        cpc.joystick[0] |= 0x04;
+    }
 }
 
 void CpcScreen::joystickButtonPress(uint_fast32_t button) {
 
-    (void) button;
+    button += 4;
+    if (button < 6) {
+        cpc.joystick[0] |= 1 << button;
+    }
 }
 
 void CpcScreen::joystickButtonRelease(uint_fast32_t button) {
 
-    (void) button;
+    button += 4;
+    if (button < 6) {
+        cpc.joystick[0] &= ~(1 << button);
+    }
 }
 // vim: et:sw=4:ts=4
