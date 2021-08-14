@@ -17,10 +17,22 @@
 
 #include <iostream>
 
-using namespace std;
+using std::cin;
+using std::cout;
+using std::endl;
+using std::getline;
+using std::ref;
+using std::string;
+#ifdef USE_BOOST_THREADS
+using boost::lock_guard;
+using boost::mutex;
+#else
+using std::lock_guard;
+using std::mutex;
+#endif
 
 ConsoleThread::ConsoleThread() :
-    consoleThread(std::ref(console)) {
+    consoleThread(ref(console)) {
 }
 
 ConsoleThread::~ConsoleThread() {

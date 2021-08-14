@@ -27,8 +27,7 @@ else()
         find_package(SFML COMPONENTS audio graphics window system)
         set(Boost_NO_BOOST_CMAKE TRUE)
     endif()
-    set(MEDIA_LIBRARIES ${SFML_LIBRARIES})
-    set(MEDIA_INCLUDE_DIRS ${SFML_INCLUDE_DIRS})
+    set(MEDIA_LIBRARIES sfml-audio sfml-graphics sfml-window sfml-system)
     set(SpecIde_SDL2 0)
 endif()
 message("Media libraries found: " ${MEDIA_LIBRARIES})
@@ -37,7 +36,7 @@ message("Media include dirs found: " ${MEDIA_INCLUDE_DIRS})
 find_package(Boost COMPONENTS chrono system thread unit_test_framework REQUIRED)
 find_package(ZLIB REQUIRED)
 
-include_directories(${Boost_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR} ${MEDIA_INCLUDE_DIR})
+include_directories(${Boost_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR} ${MEDIA_INCLUDE_DIRS})
 
 add_executable(SpecIde SpecIde.cc Console.cc
     Screen.cc KeyBinding.cc
