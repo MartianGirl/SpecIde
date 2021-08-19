@@ -54,8 +54,6 @@ class CRTC {
         uint_fast8_t vCounter = 0;
         /** Vertical total (R4). */
         uint_fast8_t vTotal = 0;
-        /** Vertical adjust (R5). */
-        uint_fast8_t vAdjust = 0;
         /** Vertical displayed (R6). */
         uint_fast8_t vDisplayed = 0;
 
@@ -70,6 +68,11 @@ class CRTC {
         uint_fast8_t rCounter = 0;
         /** Raster max address (R9). */
         uint_fast8_t rMax = 0;
+
+        /** Adjust counter. */
+        uint_fast8_t vaCounter = 0;
+        /** Vertical adjust (R5). */
+        uint_fast8_t vAdjust = 0;
 
         /** Interlace mode. */
         uint_fast8_t interlace = 0;
@@ -118,6 +121,15 @@ class CRTC {
         bool hDispOff = false;
         /** End of vertical displayed area. C4 == R6. */
         bool vDispOff = false;
+
+        bool finishFrame = false;
+        bool enterVAdjust = false;
+        bool finishRow = false;
+        bool processVAdjust = false;
+        bool lastScan = false;
+        uint_fast8_t nextVCounter = 0;
+        uint_fast8_t nextRCounter = 0;
+        uint_fast8_t nextACounter = 0;
 
         void wrAddress(uint_fast8_t byte);
         void wrRegister(uint_fast8_t byte);
