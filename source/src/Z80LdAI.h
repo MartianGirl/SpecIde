@@ -42,7 +42,7 @@ bool z80LdAI()
             flg = af.b.l & FLAG_C;                              // 0000000C
             flg |= (ir.b.h & (FLAG_S | FLAG_5 | FLAG_3));       // S050300C
             flg |= (ir.b.h == 0x00) ? FLAG_Z : 0x00;            // SZ50300C
-            flg |= (iff & IFF2);                                // SZ503P0C
+            flg |= (zeroByte || !intAccept) ? (iff & IFF2) : 0; // SZ503P0C
             af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
