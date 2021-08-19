@@ -259,13 +259,27 @@ class GateArray {
             true, true, false, false, false, false, false, false
         };
 
+        /**
+         * Paint loop stages.
+         *
+         * These constants are synchronized with the counter, so the load
+         * happens at 0x2/0xa, and the first pixel is painted at 0x3/0xb.
+         * This seems to give the best results.
+         */
         static uint_fast32_t constexpr modeTable[4][8] = {
-            { KEEP, KEEP, KEEP, MOVE, KEEP, KEEP, KEEP, LOAD },
-            { KEEP, MOVE, KEEP, MOVE, KEEP, MOVE, KEEP, LOAD },
-            { MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, LOAD },
-            { KEEP, KEEP, KEEP, MOVE, KEEP, KEEP, KEEP, LOAD }
+            { KEEP, KEEP, LOAD, KEEP, KEEP, KEEP, MOVE, KEEP },
+            { MOVE, KEEP, LOAD, KEEP, MOVE, KEEP, MOVE, KEEP },
+            { MOVE, MOVE, LOAD, MOVE, MOVE, MOVE, MOVE, MOVE },
+            { KEEP, KEEP, LOAD, KEEP, KEEP, KEEP, MOVE, KEEP }
         };
 
+        /**
+         * Pixel decoding table.
+         *
+         * These tables return the upper pixel value (pen) from a given byte.
+         * In order to get the remaining pixels, just left-shift the byte, as
+         * CPC hardware does.
+         */
         static uint_fast8_t constexpr pixelTable[4][256] = {
             { 
                 0x0, 0x0, 0x8, 0x8, 0x0, 0x0, 0x8, 0x8, 0x2, 0x2, 0xa, 0xa, 0x2, 0x2, 0xa, 0xa,

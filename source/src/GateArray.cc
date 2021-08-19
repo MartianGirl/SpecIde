@@ -225,16 +225,12 @@ void GateArray::clock() {
 
     switch (counter) {
         case 0x0:   // fall-through
+        case 0x2:   // fall-through
         case 0x4:   // fall-through
         case 0x8:   // fall-through
+        case 0xa:   // fall-through
         case 0xe:   // Right after CPU state change.
             intAcknowledge();
-            break;
-
-        case 0x2:   // fall-through
-        case 0xa:   // Paint. Right after CPU state change.
-            intAcknowledge();
-            paint();
             break;
 
         case 0x1:   // READY falling edge. CPU clock rising edge.
@@ -243,12 +239,6 @@ void GateArray::clock() {
         case 0xc:   // READY rising edge. Right after CPU state change.
             intAcknowledge();
             z80_c |= SIGNAL_WAIT_;
-            break;
-
-        case 0x7:   // fall-through
-        case 0xf:   // Latch video data
-            inksel = dispen;
-            colour = videoByte;
             break;
 
         case 0x6:   // CAS_ and S3 rising edge. Right after CPU state change.
@@ -273,6 +263,8 @@ void GateArray::clock() {
         default:
             break;
     }
+
+    paint();
 }
 
 void GateArray::intAcknowledge() {
@@ -371,6 +363,7 @@ void GateArray::updateBeam() {
         // accepted (occurs within VFreq range). In this case, we position
         // the beam at the top of the screen and signal that we have a new frame.
         if (yPos >= Y_SIZE / 2 || vSyncAccepted) {
+            sync = (yPos > 0x7);
             for (size_t jj = yPos; jj < Y_SIZE / 2; ++jj) {
                 for (size_t ii = 0; ii < X_SIZE; ++ii) {
 #if SPECIDE_BYTE_ORDER == 1
@@ -380,7 +373,6 @@ void GateArray::updateBeam() {
 #endif
                 }
             }
-            sync = (yPos != 0);
             yPos = 0;           // Move beam to the top...
             yInc = 1;           // ...and keep it there!
             vSyncAccepted = false;
@@ -422,23 +414,24 @@ void GateArray::generateInterrupts() {
 
 void GateArray::paint() {
 
-    uint_fast32_t index = pens[pixelTable[actMode][colour]];
-    for (size_t ii = 0; ii < 8; ++ii) {
-        if (!blanking) {
-            pixelsX1[(yPos * X_SIZE) + xPos] = colours[inksel ? index : border];
-            if (modeTable[actMode][ii] == MOVE) {
-                colour = (colour << 1) & 0xFF;
-                index = pens[pixelTable[actMode][colour]];
-            }
-        } else {
-#if SPECIDE_BYTE_ORDER == 1
-            pixelsX1[(yPos * X_SIZE) + xPos] = 0x000000FF;
-#else
-            pixelsX1[(yPos * X_SIZE) + xPos] = 0xFF000000;
-#endif
+    if (!blanking) {
+        pixelsX1[(yPos * X_SIZE) + xPos]
+            = colours[inksel ? pens[pixelTable[actMode][colour]] : border];
+        switch (modeTable[actMode][counter & 0x7]) {
+            case MOVE:
+                colour = (colour << 1) & 0xFF; break;
+            case LOAD:
+                colour = videoByte; inksel = dispen; break;
+            default: break;
         }
-        xPos += xInc;
+    } else {
+#if SPECIDE_BYTE_ORDER == 1
+        pixelsX1[(yPos * X_SIZE) + xPos] = 0x000000FF;
+#else
+        pixelsX1[(yPos * X_SIZE) + xPos] = 0xFF000000;
+#endif
     }
+    xPos += xInc;
 }
 
 void GateArray::reset() {
