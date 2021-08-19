@@ -115,8 +115,8 @@ void CpcScreen::setup() {
     h = 560;
     w = 776;
 
-    lBorder = 192;
-    rBorder = 224;
+    lBorder = 204;
+    rBorder = 244;
     tBorder = 8;
     bBorder = 0;
 
@@ -205,22 +205,22 @@ void CpcScreen::run() {
         }
 
         cpc.playSound(false);
-    }
 
-    while (!done && menu) {
+        while (!done && menu) {
 
-        Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == Event::KeyPressed) {
-                menu = false;
+            Event event;
+            while (window.pollEvent(event)) {
+                if (event.type == Event::KeyPressed) {
+                    menu = false;
+                }
             }
-        }
 #ifdef USE_BOOST_THREADS
-        sleep_until(tick + boost::chrono::microseconds(20000));
+            sleep_until(tick + boost::chrono::microseconds(20000));
 #else
-        sleep_until(tick + std::chrono::microseconds(20000));
+            sleep_until(tick + std::chrono::microseconds(20000));
 #endif
-        tick = steady_clock::now();
+            tick = steady_clock::now();
+        }
     }
 }
 
