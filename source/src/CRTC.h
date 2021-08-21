@@ -122,14 +122,17 @@ class CRTC {
         /** End of vertical displayed area. C4 == R6. */
         bool vDispOff = false;
 
-        bool finishFrame = false;
+        bool finishFrameAttempt = false;
         bool enterVAdjust = false;
         bool finishRow = false;
         bool processVAdjust = false;
-        bool lastScan = false;
+        bool finishFrame = false;
         uint_fast8_t nextVCounter = 0;
         uint_fast8_t nextRCounter = 0;
         uint_fast8_t nextACounter = 0;
+
+        bool vTotalUpdated = false;
+        bool rMaxUpdated = false;
 
         void wrAddress(uint_fast8_t byte);
         void wrRegister(uint_fast8_t byte);
