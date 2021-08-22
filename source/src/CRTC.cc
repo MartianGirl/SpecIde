@@ -163,10 +163,10 @@ void CRTC::wrRegister(uint_fast8_t byte) {
                     << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
 #endif
                 break;
-#ifdef DEBUGLOG
             case 12:    // fall-through
             case 13:
                 updateLineAddress = (vCounter == 0) && ((rCounter == 0) || type == 1);
+#ifdef DEBUGLOG
                 cout << "Update base address(" << regs[13] + (regs[12] & 0x3F) * 0x100
                     << ") at VCC=" << static_cast<uint32_t>(vCounter)
                     << " VLC=" << static_cast<uint32_t>(rCounter)
@@ -335,10 +335,6 @@ void CRTC::clock() {
         } else {
             // Conditions that alter end of frame when R4 is modified.
             if (vTotalUpdated && !rMaxUpdated) {
-                // Force end of frame if vTotal is set to VCC on row end.
-                if (nextRCounter == rMax && nextVCounter == vTotal) {
-                    finishFrame = true;
-                }
                 // Abort end of frame on VLC=0 if vTotal is set so VCC!=VTotal.
                 if (rMax == 1 && nextVCounter != vTotal) {
                     finishFrame = false;
@@ -347,17 +343,13 @@ void CRTC::clock() {
             // Conditions that alter end of frame when R9 is modified.
             if (!vTotalUpdated && rMaxUpdated) {
                 if (nextRCounter == rMax) {
-                    if (nextVCounter == vTotal) {
-                        finishFrame = true;
-                    } else {
-                        // Still have to consider how this affects on interlaced modes...
-                        finishRow = true;
-                    }
+                    // Still have to consider how this affects on interlaced modes...
+                    finishRow = true;
                 }
             }
             // Line-to-line rupture.
-            if (vTotalUpdated && rMaxUpdated) {
-                if (nextRCounter == rMax && nextVCounter == vTotal && rMax == 1 && vTotal == 1) {
+            if (vTotalUpdated || rMaxUpdated) {
+                if (nextRCounter == rMax && nextVCounter == vTotal) {
                     finishFrame = true;
                 }
             }

@@ -318,10 +318,11 @@ void GateArray::updateBeam() {
     // This function is invoked every time the CRTC is clocked, so each time
     // we count an horizontal character.
     ++charsFromHSync;
+    ++charsInRaster;
 
     // Blanking should also be activated if hCounter < 28, but the picture
     // fits better the screen this way...
-    blanking = crtc.hSync || crtc.vSync || hCounter < 0x1c;
+    blanking = crtc.hSync || hCounter < 0x1c;
 
     // Accept HSync only if longer than 2.
     if (crtc.hswCounter == 3 && charsFromHSync > 62) {
@@ -346,11 +347,19 @@ void GateArray::updateBeam() {
     // We consider the HSync pulse here, and we start moving the beam again...
     // But only if we were already in the left side.
     // (I'd say that this is redundant, in the way this function is written...)
-    if (hSyncAccepted) {
-        xPos = 0;
+    if (hSyncAccepted || (charsInRaster > 64 && !xPos)) {
+        // Beam starting point depends on how long last raster was...
+        xPos = 16 * ((charsInRaster > 64 && charsInRaster < 67)
+                ? charsInRaster - 64 : 0);
         xInc = 1;
-        hSyncAccepted = false;  // We've already considered this HSync.
         ++rastersFromVSync;       // Consider the time of the horizontal sweep.
+
+        // Clear chars in raster counter if there was an HSync.
+        bool vSyncByOverflow = hSyncAccepted && charsInRaster > 127;
+        if (hSyncAccepted) {
+            charsInRaster = 0;
+        }
+        hSyncAccepted = false;  // We've already considered this HSync.
 
         // Vertical position (and scans-from-frame-start counter) are increased
         // only if HSync happens outside of a VSync pulse.
@@ -362,15 +371,17 @@ void GateArray::updateBeam() {
         // Retrace happens if the screen reaches the end, or if an VSync is
         // accepted (occurs within VFreq range). In this case, we position
         // the beam at the top of the screen and signal that we have a new frame.
-        if (yPos >= Y_SIZE / 2 || vSyncAccepted) {
+        if (yPos >= Y_SIZE / 2 || vSyncAccepted || vSyncByOverflow) {
             sync = (yPos > 0x7);
-            for (size_t jj = yPos; jj < Y_SIZE / 2; ++jj) {
-                for (size_t ii = 0; ii < X_SIZE; ++ii) {
+            if (!vSyncByOverflow) {
+                for (size_t jj = yPos; jj < Y_SIZE / 2; ++jj) {
+                    for (size_t ii = 0; ii < X_SIZE; ++ii) {
 #if SPECIDE_BYTE_ORDER == 1
-                    pixelsX1[(jj * X_SIZE) + ii] = 0x000000FF;
+                        pixelsX1[(jj * X_SIZE) + ii] = 0x000000FF;
 #else
-                    pixelsX1[(jj * X_SIZE) + ii] = 0xFF000000;
+                        pixelsX1[(jj * X_SIZE) + ii] = 0xFF000000;
 #endif
+                    }
                 }
             }
             yPos = 0;           // Move beam to the top...
