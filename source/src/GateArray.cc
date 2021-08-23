@@ -388,11 +388,6 @@ void GateArray::updateBeam() {
             yInc = 1;           // ...and keep it there!
             vSyncAccepted = false;
         }
-
-        //for (size_t ii = 0; ii < 16; ++ii) {
-            //cout << "R" << ii << ": " << static_cast<uint32_t>(crtc.regs[ii]) << " ";
-        //}
-        //cout << endl;
     }
 }
 

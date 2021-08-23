@@ -265,7 +265,6 @@ void CRTC::clock() {
     //      Compared to R0 / 2
     //          Affect Interlace Control
 
-    // This is for interlace control
     // Here increment Raster Counter, Vertical Sync Width Counter
     // Horizontal counter is incremented with each tick.
     ++hCounter;
@@ -333,24 +332,18 @@ void CRTC::clock() {
         if (processVAdjust) {
             vaCounter = (vaCounter + 1) & 0x1F;
         } else {
-            // Conditions that alter end of frame when R4 is modified.
-            if (vTotalUpdated && !rMaxUpdated) {
+            if (vTotalUpdated || rMaxUpdated) {
                 // Abort end of frame on VLC=0 if vTotal is set so VCC!=VTotal.
-                if (rMax == 1 && nextVCounter != vTotal) {
+                if (rCounter == 0 && vCounter == 0 && nextVCounter != vTotal) {
                     finishFrame = false;
                 }
-            }
-            // Conditions that alter end of frame when R9 is modified.
-            if (!vTotalUpdated && rMaxUpdated) {
-                if (nextRCounter == rMax) {
-                    // Still have to consider how this affects on interlaced modes...
-                    finishRow = true;
-                }
-            }
-            // Line-to-line rupture.
-            if (vTotalUpdated || rMaxUpdated) {
-                if (nextRCounter == rMax && nextVCounter == vTotal) {
+                // Updated R4 or R9 may trigger a frame end.
+                if (nextVCounter == vTotal && (finishRow || nextRCounter == rMax)) {
                     finishFrame = true;
+                }
+                // If frame is not finished, maybe row is...
+                if (!finishFrame) {
+                    finishRow = (nextRCounter == rMax);
                 }
             }
 
