@@ -17,7 +17,6 @@
 
 #include <iostream>
 
-#undef DEBUGLOG
 using namespace std;
 
 CRTC::CRTC(uint_fast8_t type) :
@@ -87,7 +86,7 @@ void CRTC::wrRegister(uint_fast8_t byte) {
                 break;
             case 1: // Horizontal Displayed.
                 hDisplayed = regs[1];
-#ifdef DEBUGLOG
+#ifdef DEBUGCRTC
                 cout << "Update HDisp(" << static_cast<uint32_t>(hDisplayed)
                     << ") at VCC=" << static_cast<uint32_t>(vCounter)
                     << " VLC=" << static_cast<uint32_t>(rCounter)
@@ -117,7 +116,7 @@ void CRTC::wrRegister(uint_fast8_t byte) {
             case 4: // Vertical total.
                 vTotal = regs[4] + 1;
                 vTotalUpdated = true;
-#ifdef DEBUGLOG
+#ifdef DEBUGCRTC
                 cout << "Update VTotal(" << static_cast<uint32_t>(vTotal)
                     << ") at VCC=" << static_cast<uint32_t>(vCounter)
                     << " VLC=" << static_cast<uint32_t>(rCounter)
@@ -127,7 +126,7 @@ void CRTC::wrRegister(uint_fast8_t byte) {
                 break;
             case 5: // Vertical adjust.
                 vAdjust = regs[5];
-#ifdef DEBUGLOG
+#ifdef DEBUGCRTC
                 cout << "Update VAdjust(" << static_cast<uint32_t>(vAdjust)
                     << ") at VCC=" << static_cast<uint32_t>(vCounter)
                     << " VLC=" << static_cast<uint32_t>(rCounter)
@@ -137,7 +136,7 @@ void CRTC::wrRegister(uint_fast8_t byte) {
                 break;
             case 6: // Vertical displayed.
                 vDisplayed = regs[6];
-#ifdef DEBUGLOG
+#ifdef DEBUGCRTC
                 cout << "Update VDisplayed(" << static_cast<uint32_t>(vDisplayed)
                     << ") at VCC=" << static_cast<uint32_t>(vCounter)
                     << " VLC=" << static_cast<uint32_t>(rCounter)
@@ -155,7 +154,7 @@ void CRTC::wrRegister(uint_fast8_t byte) {
             case 9: // Max Raster Address.
                 rMax = regs[9] + 1;
                 rMaxUpdated = true;
-#ifdef DEBUGLOG
+#ifdef DEBUGCRTC
                 cout << "Update RMax(" << static_cast<uint32_t>(rMax)
                     << ") at VCC=" << static_cast<uint32_t>(vCounter)
                     << " VLC=" << static_cast<uint32_t>(rCounter)
@@ -166,7 +165,7 @@ void CRTC::wrRegister(uint_fast8_t byte) {
             case 12:    // fall-through
             case 13:
                 updateLineAddress = (vCounter == 0) && ((rCounter == 0) || type == 1);
-#ifdef DEBUGLOG
+#ifdef DEBUGCRTC
                 cout << "Update base address(" << regs[13] + (regs[12] & 0x3F) * 0x100
                     << ") at VCC=" << static_cast<uint32_t>(vCounter)
                     << " VLC=" << static_cast<uint32_t>(rCounter)
@@ -271,7 +270,7 @@ void CRTC::clock() {
 
     // On HCC=1 the conditions for End Of Frame and End Of Row are checked.
     if (hCounter == 1) {
-#ifdef DEBUGLOG
+#ifdef DEBUGCRTC
         cout << "Position: VCC=" << static_cast<uint32_t>(vCounter)
             << " VLC=" << static_cast<uint32_t>(rCounter)
             << " VAD=" << static_cast<uint32_t>(vaCounter)
@@ -279,7 +278,10 @@ void CRTC::clock() {
             << " HSync=" << static_cast<uint32_t>(hsPos)
             << " HDisp=" << static_cast<uint32_t>(hDisplayed)
             << " HTotal=" << static_cast<uint32_t>(hTotal)
+            << " VSync=" << static_cast<uint32_t>(vsPos)
             << " VDisp=" << static_cast<uint32_t>(vDisplayed)
+            << " VTotal=" << static_cast<uint32_t>(vTotal)
+            << " RMax=" << static_cast<uint32_t>(rMax)
             << " Address=" << lineAddress << endl;
 #endif
         nextRCounter = (rCounter + 1) & 0x1F;
@@ -291,7 +293,7 @@ void CRTC::clock() {
         bool finishFrameOnAdjust = processVAdjust && (nextACounter == vAdjust);
         bool finishFrameOnRowEnd = (nextVCounter == vTotal) && (nextRCounter == rMax);
         finishFrameAttempt = finishFrameOnAdjust || finishFrameOnRowEnd;
-#ifdef DEBUGLOG
+#ifdef DEBUGCRTC
         if (finishFrameOnAdjust) {
             cout << "Attempt finish frame (adjust) at VCC=" << static_cast<uint32_t>(vCounter);
             cout << " VLC=" << static_cast<uint32_t>(rCounter);
@@ -309,7 +311,7 @@ void CRTC::clock() {
     // On HCC=2 the conditions for entering Vertical Adjustment are checked.
     if (hCounter == 2) {
         enterVAdjust = (vCounter == vTotal - 1) && (rCounter == rMax - 1) && (vAdjust != 0);
-#ifdef DEBUGLOG
+#ifdef DEBUGCRTC
         if (enterVAdjust) {
             cout << "Entering vAdjust at VCC=" << static_cast<uint32_t>(vCounter);
             cout << " VLC=" << static_cast<uint32_t>(rCounter) << endl;
@@ -334,8 +336,12 @@ void CRTC::clock() {
         } else {
             if (vTotalUpdated || rMaxUpdated) {
                 // Abort end of frame on VLC=0 if vTotal is set so VCC!=VTotal.
-                if (rCounter == 0 && vCounter == 0 && nextVCounter != vTotal) {
-                    finishFrame = false;
+                if (vCounter == 0) {
+                    if (rCounter == 0 && nextVCounter != vTotal) {
+                        finishFrame = false;
+                    } else if (rCounter != 0 && nextVCounter == vTotal) {
+                        finishFrame = true;
+                    }
                 }
                 // Updated R4 or R9 may trigger a frame end.
                 if (nextVCounter == vTotal && (finishRow || nextRCounter == rMax)) {
@@ -346,9 +352,9 @@ void CRTC::clock() {
                     finishRow = (nextRCounter == rMax);
                 }
             }
-
-            rCounter = (rCounter + 1) & 0x1F;   // Increment raster counter.
         }
+
+        rCounter = (rCounter + 1) & 0x1F;   // Increment raster counter.
 
         if (enterVAdjust) {
             processVAdjust = true;
@@ -359,7 +365,7 @@ void CRTC::clock() {
         endOfRow = finishRow && !endOfFrame;
         finishRow = finishFrame = vTotalUpdated = rMaxUpdated = false;
 
-#ifdef DEBUGLOG
+#ifdef DEBUGCRTC
         if (rCounter > rMax) {
             cout << "rCounter out of limit at VCC=" << static_cast<uint32_t>(vCounter);
             cout << " VLC=" << static_cast<uint32_t>(rCounter) << endl;
@@ -369,7 +375,7 @@ void CRTC::clock() {
         if (updateLineAddress) {
             lineAddress = ((regs[12] & 0x3F) << 8) | regs[13];
             updateLineAddress = false;
-#ifdef DEBUGLOG
+#ifdef DEBUGCRTC
             cout << "Updated line address on top area: " << lineAddress << endl;
 #endif
         }
@@ -380,7 +386,7 @@ void CRTC::clock() {
         vaCounter = 0;
 
         vCounter = (vCounter + 1) & 0x7F;
-#ifdef DEBUGLOG
+#ifdef DEBUGCRTC
         if (vCounter > vTotal) {
             cout << "VCC out of range VCC=" << static_cast<uint32_t>(vCounter) << endl;
         }
@@ -390,7 +396,7 @@ void CRTC::clock() {
     }
 
     if (endOfFrame) {
-#ifdef DEBUGLOG
+#ifdef DEBUGCRTC
         cout << "Finish frame at VCC=" << static_cast<uint32_t>(vCounter);
         cout << " VLC=" << static_cast<uint32_t>(rCounter) << endl;
 #endif
@@ -414,7 +420,7 @@ void CRTC::clock() {
 
         if (oddField) {
             lineAddress = ((regs[12] & 0x3F) << 8) | regs[13];
-#ifdef DEBUGLOG
+#ifdef DEBUGCRTC
             cout << "Updated line address on end of frame: " << lineAddress << endl;
 #endif
         }

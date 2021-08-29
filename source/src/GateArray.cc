@@ -372,6 +372,9 @@ void GateArray::updateBeam() {
         // accepted (occurs within VFreq range). In this case, we position
         // the beam at the top of the screen and signal that we have a new frame.
         if (yPos >= Y_SIZE / 2 || vSyncAccepted || vSyncByOverflow) {
+#ifdef DEBUGCRTC
+            cout << endl << "New frame at yPos=" << yPos << endl << endl;
+#endif
             sync = (yPos > 0x7);
             if (!vSyncByOverflow) {
                 for (size_t jj = yPos; jj < Y_SIZE / 2; ++jj) {
