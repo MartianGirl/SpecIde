@@ -123,50 +123,51 @@ void Screen::setFullScreen(bool fs) {
 
     fullscreen = fs;
 
-    uint_fast32_t suggestedScans = doubleScanMode ? suggestedScansDouble : suggestedScansSingle;
-    uint_fast32_t wModifier = wide ? 1 : 2;
-    uint_fast32_t xModifier = doubleScanMode ? wModifier : 1;
-    uint_fast32_t yModifier = doubleScanMode ? 1 : 2;
-    uint_fast32_t totalScans = doubleScanMode ? 625 : 312;
+    uint_fast32_t displayedScans = 270;
+    uint_fast32_t totalScans = 312;
+
+    float pixelRatio = 14.75 / getPixelClock();
+    yScale = static_cast<float>(bestMode.height) / static_cast<float>(displayedScans);
+    xScale = pixelRatio * yScale;
+
+    uint_fast32_t yModifier = doubleScanMode ? 2 : 1;
+    uint_fast32_t xModifier = wide ? 2 : 1;
+    yScale /= yModifier;
+    xScale /= xModifier;
+
+    uint_fast32_t start = (totalScans - displayedScans) / 2;
+    uint_fast32_t lines = displayedScans;
 
     if (fs) {
         // Use best mode available.
         fesetround(FE_TONEAREST);
-        xScale = bestMode.width / static_cast<float>(xSize);
-        yScale = nearbyintf(bestMode.height / static_cast<float>(suggestedScans));
 
         // Adjust depending on the vertical scale.
-        xOffset = (bestMode.width - ((xSize - lBorder - rBorder) * xModifier * yScale * wModifier / 2)) / (4 / wModifier);
+        xOffset = (bestMode.width - xScale * (xSize - lBorder - rBorder)) / 2;
         yOffset = 0;
 
-        cout << "Using scale " << fixed << setprecision(3) << yScale << endl;
-
-        uint_fast32_t start = (totalScans - suggestedScans) / 2;
-        uint_fast32_t lines = bestMode.height;
+        cout << "Using scale " << fixed << setprecision(3) << yScale << " " << xScale << endl;
 
         scrSprite.setTexture(scrTexture);
-        scrSprite.setTextureRect(sf::IntRect(lBorder, start + tBorder, xSize - rBorder, lines - bBorder));
+        scrSprite.setTextureRect(sf::IntRect(lBorder, (start + tBorder) * yModifier,
+                    xSize - lBorder - rBorder, (lines - bBorder) * yModifier));
         scrSprite.setPosition(xOffset, yOffset);
-        scrSprite.setScale(Vector2f(xModifier * wModifier * yScale / 2, yScale));
+        scrSprite.setScale(Vector2f(xScale, yScale));
     } else {
         // In this case we want to have the same windows size for double scan modes and
         // single scan modes. 588 displayable lines are assumed.
         scrSprite.setTexture(scrTexture);
-        scrSprite.setTextureRect(sf::IntRect(lBorder, 2 * (tBorder + 12) / yModifier,
-                    xSize - rBorder, h / yModifier));
+        scrSprite.setTextureRect(sf::IntRect(lBorder, (start + tBorder) * yModifier,
+                    xSize - lBorder - rBorder, (lines - bBorder) * yModifier));
         scrSprite.setPosition(0, 0);
-        scrSprite.setScale(Vector2f(wModifier * static_cast<float>(scale), yModifier * static_cast<float>(scale)));
+        scrSprite.setScale(Vector2f(2 * pixelRatio / xModifier * static_cast<float>(scale),
+                    2 * static_cast<float>(scale) / yModifier));
     }
 
     window.setVerticalSyncEnabled(syncToVideo);
     window.setKeyRepeatEnabled(false);
     window.setMouseCursorVisible(false);
     window.setJoystickThreshold(0.5);
-}
-
-void Screen::setSmooth(bool sm) {
-
-    scrTexture.setSmooth(sm);
 }
 
 void Screen::texture(uint_fast32_t x, uint_fast32_t y) {
@@ -176,7 +177,7 @@ void Screen::texture(uint_fast32_t x, uint_fast32_t y) {
         assert(false);
     }
     scrTexture.setRepeated(false);
-    scrTexture.setSmooth(false);
+    scrTexture.setSmooth(true);
 }
 #endif
 
@@ -191,9 +192,6 @@ void Screen::setup() {
 
     fullscreen = (options["fullscreen"] == "yes");
     cout << "Full screen mode: " << options["fullscreen"] << endl;
-
-    smooth = (options["antialias"] == "yes");
-    cout << "Antialiasing: " << options["antialias"] << endl;
 
     syncToVideo = (options["sync"] == "yes");
     cout << "Sync to video: " << options["sync"] << endl;
@@ -284,14 +282,9 @@ void Screen::pollEvents() {
                         menu = true;
                         break;
                     case Keyboard::F2:  // Window/Fullscreen
-                        if (event.key.shift) {
-                            smooth = !smooth;
-                            setSmooth(smooth);
-                        } else {
-                            fullscreen = !fullscreen;
-                            reopenWindow(fullscreen);
-                            setFullScreen(fullscreen);
-                        }
+                        fullscreen = !fullscreen;
+                        reopenWindow(fullscreen);
+                        setFullScreen(fullscreen);
                         break;
                     case Keyboard::F3:  // Save DSK to disk
                         if (event.key.shift) {

@@ -107,76 +107,76 @@ class SpeccyScreen : public Screen {
         /**
          * Create empty disk.
          */
-        virtual void createEmptyDisk();
+        void createEmptyDisk();
 
         /**
          * Save current disk.
          */
-        virtual void saveDisk();
+        void saveDisk();
 
         /**
          * Select previous disk from disk list.
          */
-        virtual void selectPreviousDisk();
+        void selectPreviousDisk();
 
         /**
          * Select next disk.
          */
-        virtual void selectNextDisk();
+        void selectNextDisk();
 
         /**
          * Append load data to save tape.
          */
-        virtual void appendLoadTape();
+        void appendLoadTape();
 
         /**
          * Clear save tape.
          */
-        virtual void clearSaveTape();
+        void clearSaveTape();
 
         /**
          * Write save tape to disk.
          */
-        virtual void writeSaveTape();
+        void writeSaveTape();
 
         /**
          * Toggle save tape or load tape to load data from it.
          */
-        virtual void selectSaveTape();
+        void selectSaveTape();
 
         /**
          * Reset tape counter.
          *
          * This sets a mark in the tape so we can rewind to this point.
          */
-        virtual void resetTapeCounter();
+        void resetTapeCounter();
 
         /**
          * Start or Stop tape.
          */
-        virtual void startStopTape();
+        void startStopTape();
 
         /**
          * Rewind tape.
          *
          * @param toCounter Rewinds tape to the previously set mark.
          */
-        virtual void rewindTape(bool toCounter);
+        void rewindTape(bool toCounter);
 
         /**
          * Toggle sound on/off.
          */
-        virtual void toggleSound();
+        void toggleSound();
 
         /**
          * Toggle tape sound on/off.
          */
-        virtual void toggleTapeSound();
+        void toggleTapeSound();
 
         /**
          * Toggle PSG type.
          */
-        virtual void togglePsgType();
+        void togglePsgType();
 
         /**
          * Move joystick horizontal axis.
@@ -184,7 +184,7 @@ class SpeccyScreen : public Screen {
          * @param l Activate left bit.
          * @param r Activate right bit.
          */
-        virtual void joystickHorizontalAxis(bool l, bool r);
+        void joystickHorizontalAxis(bool l, bool r);
 
         /**
          * Move joystick vertical axis.
@@ -192,20 +192,27 @@ class SpeccyScreen : public Screen {
          * @param u Activate up bit.
          * @param d Activate down bit.
          */
-        virtual void joystickVerticalAxis(bool u, bool d);
+        void joystickVerticalAxis(bool u, bool d);
 
         /**
          * Press joystick button.
          *
          * @param button Joystick button to press.
          */
-        virtual void joystickButtonPress(uint_fast32_t button);
+        void joystickButtonPress(uint_fast32_t button);
 
         /**
          * Release joystick button.
          *
          * @param button Joystick button to release.
          */
-        virtual void joystickButtonRelease(uint_fast32_t button);
+        void joystickButtonRelease(uint_fast32_t button);
+
+        /**
+         * Get pixel clock.
+         *
+         * @return Pixel clock, in kHz.
+         */
+        float getPixelClock();
 };
 // vim: et:sw=4:ts=4

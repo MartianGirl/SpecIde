@@ -112,18 +112,14 @@ void CpcScreen::setup() {
 
     loadFiles();
 
-    h = 560;
-    w = 776;
-
-    lBorder = 204;
-    rBorder = 244;
+    lBorder = 208;
+    rBorder = 40;
     tBorder = 8;
     bBorder = 0;
 
     wide = true;
     reopenWindow(fullscreen);
     setFullScreen(fullscreen);
-    setSmooth(smooth);
     cpc.tapeSound = tapeSound && playSound;
     cpc.psgPlaySound(playSound);
     cpc.setSoundRate(FRAME_TIME_CPC, syncToVideo);
@@ -362,5 +358,10 @@ void CpcScreen::joystickButtonRelease(uint_fast32_t button) {
     if (button < 6) {
         cpc.joystick[0] &= ~(1 << button);
     }
+}
+
+float CpcScreen::getPixelClock() {
+
+    return static_cast<float>(BASE_CLOCK_CPC) / 1000000.0;
 }
 // vim: et:sw=4:ts=4

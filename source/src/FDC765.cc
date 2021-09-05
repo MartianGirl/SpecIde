@@ -572,6 +572,9 @@ bool FDC765::readRegularDataOp() {
     vector<uint8_t> buf(&drive[cmdDrive()].buffer[offset],
             &drive[cmdDrive()].buffer[finish]);
 
+    // Complete length
+    buf.resize(outlen, drive[cmdDrive()].filler);
+
     if (actlen == 0x80 && outlen == 0x200
             && cmdBuffer[2] == 0x01) {
         // SpeedLock D7 AAAA: All we need is the error code.
@@ -619,9 +622,7 @@ bool FDC765::readDeletedDataOp() {
             &drive[cmdDrive()].buffer[finish]);
 
     // Complete length
-    if (actlen < outlen) {
-        sReg[0] |= 0x40;
-    }
+    buf.resize(outlen, drive[cmdDrive()].filler);
 
     // Detect Speedlock protection:
     // CRC error on track 00, sector 02, which is 512 bytes long.
@@ -1208,9 +1209,7 @@ void FDC765::motor(bool status) {
 void FDC765::randomizeSector(vector<uint8_t>& buf) {
 
     // Theoretically, there is a pattern here. However, this seems to work.
-    if (buf.size() >= 0x200) {
-        for (size_t ii = 0x100; ii < 0x200; ++ii) buf[ii] |= rand() & 0xFF;
-    }
+    buf.back() |= rand() & 0xFF;
 }
 
 void FDC765::appendToDataBuffer(vector<uint8_t>& buf) {

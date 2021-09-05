@@ -164,8 +164,8 @@ void SpeccyScreen::setup() {
     }
     cout << "Scan mode: " << options["scanmode"] << endl;
 
-    lBorder = 8;
-    rBorder = 8;
+    lBorder = 12;
+    rBorder = 4;
     tBorder = 0;
     bBorder = 0;
 
@@ -178,7 +178,6 @@ void SpeccyScreen::setup() {
     wide = false;
     reopenWindow(fullscreen);
     setFullScreen(fullscreen);
-    setSmooth(smooth);
     spectrum.ula.tapeSound = tapeSound;
     spectrum.ula.playSound = playSound;
     spectrum.psgPlaySound(psgSound && playSound);
@@ -482,9 +481,9 @@ void SpeccyScreen::joystickHorizontalAxis(bool l, bool r) {
     } else {
         spectrum.ula.sinclairData &= 0xFC;
         if (l) {
-            spectrum.ula.sinclairData |= 0x02;
-        } else if (r) {
             spectrum.ula.sinclairData |= 0x01;
+        } else if (r) {
+            spectrum.ula.sinclairData |= 0x02;
         }
     }
 }
@@ -536,5 +535,12 @@ void SpeccyScreen::joystickButtonRelease(uint_fast32_t button) {
     } else {
         spectrum.ula.sinclairData &= ~(1 << button);
     }
+}
+
+float SpeccyScreen::getPixelClock() {
+
+    float baseClock = (spectrum.ula.ulaVersion == 2 || spectrum.ula.ulaVersion == 3)
+        ? BASE_CLOCK_128 : BASE_CLOCK_48;
+    return 2 * baseClock / 1000000.0;
 }
 // vim: et:sw=4:ts=4

@@ -82,9 +82,9 @@ class Screen {
         sf::Font zxFont;
 #endif
         /** Window width. */
-        uint32_t w = 688;
+        uint32_t w = 704;
         /** Window height. */
-        uint32_t h = 560;
+        uint32_t h = 540;
         /** Window scale factor. */
         uint32_t scale;
 
@@ -102,8 +102,6 @@ class Screen {
 
         /** Full screen mode active. */
         bool fullscreen = false;
-        /** Antialiasing mode active. */
-        bool smooth = false;
         /** Sync to video mode active. */
         bool syncToVideo = false;
         /** Use a wide screen mode. */
@@ -325,13 +323,6 @@ class Screen {
         void setFullScreen(bool fs);
 
         /**
-         * Toggle GL interpolation.
-         *
-         * @param sm New smoothing setting.
-         */
-        void setSmooth(bool sm);
-
-        /**
          * Poll window interface events.
          */
         void pollEvents();
@@ -340,5 +331,12 @@ class Screen {
          * Read commands from the text console.
          */
         void pollCommands();
+
+        /**
+         * Get pixel clock.
+         *
+         * @return Pixel clock, in kHz.
+         */
+        virtual float getPixelClock() = 0;
 };
 // vim: et:sw=4:ts=4
