@@ -498,6 +498,31 @@ void Z80::decode(uint_fast8_t byte) {
     z = (opcode & 0x07);        // .....zzz
     p = y >> 1;                 // ..pp....
     q = y & 0x01;               // ....q...
+
+    switch (prefix) {
+        case PREFIX_ED:
+            instruction = edprefixed[opcode];
+            break;
+        case PREFIX_CB:
+            instruction = cbprefixed[opcode];
+            break;
+        case PREFIX_DD:
+            instruction = ddprefixed[opcode];
+            break;
+        case PREFIX_FD:
+            instruction = fdprefixed[opcode];
+            break;
+        case PREFIX_DD | PREFIX_CB:
+        case PREFIX_FD | PREFIX_CB:
+            instruction = xxcbprefixed[opcode];
+            break;
+        case PREFIX_NO:
+            instruction = unprefixed[opcode];
+            break;
+        default:
+            assert(false);
+            break;
+    }
 }
 
 void Z80::startInstruction() {
@@ -605,30 +630,7 @@ bool Z80::execute() {
     bool finished = false;
 
     if (!skipCycles) {
-        switch (prefix) {
-            case PREFIX_ED:
-                finished = (this->*(edprefixed[opcode]))();
-                break;
-            case PREFIX_CB:
-                finished = (this->*(cbprefixed[opcode]))();
-                break;
-            case PREFIX_DD:
-                finished = (this->*(ddprefixed[opcode]))();
-                break;
-            case PREFIX_FD:
-                finished = (this->*(fdprefixed[opcode]))();
-                break;
-            case PREFIX_DD | PREFIX_CB:
-            case PREFIX_FD | PREFIX_CB:
-                finished = (this->*(xxcbprefixed[opcode]))();
-                break;
-            case PREFIX_NO:
-                finished = (this->*(unprefixed[opcode]))();
-                break;
-            default:
-                assert(false);
-                break;
-        }
+        finished = (this->*instruction)();
     } else {
         --skipCycles;
     }

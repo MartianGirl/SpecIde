@@ -168,6 +168,8 @@ class Z80
         uint_fast8_t cpuProcCycles = 0;
         uint_fast32_t memAddrMode = 0x00000000;
 
+        bool (Z80::*instruction)() = &Z80::z80Nop;
+
         bool nmiAccept = false;
         bool nmiProcess = false;
         bool intAccept = false;

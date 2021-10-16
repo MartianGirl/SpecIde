@@ -47,12 +47,8 @@ bool z80PrefixFDCB()
             wz.b.h = ((wz.b.l & 0x80) == 0x80) ? 0xFF : 0x00;
             wz.w += iy.w;
 
-            opcode = iReg.b.h;
-            x = (iReg.b.h & 0xC0) >> 6; // xx......
-            y = (iReg.b.h & 0x38) >> 3; // ..yyy...
-            z = (iReg.b.h & 0x07);      // .....zzz
-            p = y >> 1;               // ..pp....
-            q = y & 0x01;             // ....q...
+            prefix = PREFIX_FD | PREFIX_CB;
+            decode(iReg.b.h);
 
             memRdCycles = 1;
             memWrCycles = (x == 1) ? 0 : 1;
@@ -60,8 +56,6 @@ bool z80PrefixFDCB()
             ioWrCycles = 0;
             cpuProcCycles = 0;
             skipCycles = 1;
-
-            prefix = PREFIX_FD | PREFIX_CB;
             return true;
 
         default:    // Should not happen
