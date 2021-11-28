@@ -203,7 +203,7 @@ void displayHelp() {
     cout << "--average              Render PAL double scan mode, averaging scanlines." << endl;
     cout << "--nodoublescan         Single scan mode. (Default)" << endl;
     cout << "--sync                 Sync emulation to PC video refresh rate." << endl;
-    cout << "--antialias            Set antialiasing." << endl;
+    cout << "                         (Useful only for 50Hz video modes...)" << endl;
     cout << endl;
     cout << "Sound options (add prefix 'no' to disable. Eg. --nosound):" << endl;
     cout << "--sound                Enable beeper/PSG sound. (Default)" << endl;
