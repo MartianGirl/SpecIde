@@ -160,44 +160,42 @@ void CpcScreen::loadFiles() {
 
 void CpcScreen::run() {
 
-    steady_clock::time_point tick = steady_clock::now();
-    steady_clock::time_point frame;
-    steady_clock::time_point wakeup;
-
     while (!done) {
+        high_resolution_clock::time_point start = high_resolution_clock::now();
+        high_resolution_clock::time_point frame;
+        high_resolution_clock::time_point wakeup;
+
         while (!done && !menu) {
+            start = high_resolution_clock::now();
+
             // Run until either we get a new frame, or we get 20ms of emulation.
+            cpc.scanKeys();
+            pollEvents();
+            pollCommands();
+
             cpc.run(!syncToVideo);
             cpc.playSound(true);
+
             update();
 
             if (!syncToVideo) {
                 uint_fast32_t delay = cpc.cycles / 16;
-                uint_fast32_t sleep = delay - (delay % 1000);
+                uint_fast32_t sleep = delay - (delay % 2000);
 
                 // By not sleeping until the next frame is due, we get some
                 // better adjustment
-#ifdef USE_BOOST_THREADS
-                frame = tick + boost::chrono::microseconds(delay);
-                wakeup = tick + boost::chrono::microseconds(sleep);
-#else
-                frame = tick + std::chrono::microseconds(delay);
-                wakeup = tick + std::chrono::microseconds(sleep);
-#endif
+                frame = start + chrono::microseconds(delay);
+                wakeup = start + chrono::microseconds(sleep);
 #ifndef DO_NOT_SLEEP
                 sleep_until(wakeup);
 #endif
-                while ((tick = steady_clock::now()) < frame);
+                while (high_resolution_clock::now() < frame);
             } else {
                 // If we are syncing with the PC's vertical refresh, we need
                 // to get at least 20ms of emulation. If this is the case, we
                 // update no matter the status of the screen.
                 cpc.setSoundRate(FRAME_TIME_CPC, true);
             }
-
-            cpc.scanKeys();
-            pollEvents();
-            pollCommands();
         }
 
         cpc.playSound(false);
@@ -210,12 +208,7 @@ void CpcScreen::run() {
                     menu = false;
                 }
             }
-#ifdef USE_BOOST_THREADS
-            sleep_until(tick + boost::chrono::microseconds(20000));
-#else
-            sleep_until(tick + std::chrono::microseconds(20000));
-#endif
-            tick = steady_clock::now();
+            sleep_for(chrono::microseconds(20000));
         }
     }
 }

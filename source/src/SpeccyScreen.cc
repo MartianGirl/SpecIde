@@ -221,13 +221,17 @@ void SpeccyScreen::loadFiles() {
 
 void SpeccyScreen::run() {
 
-    high_resolution_clock::time_point tick = high_resolution_clock::now();
-    high_resolution_clock::time_point frame;
-    high_resolution_clock::time_point wakeup;
-
     while (!done) {
+        high_resolution_clock::time_point start = high_resolution_clock::now();
+        high_resolution_clock::time_point frame;
+        high_resolution_clock::time_point wakeup;
+
         while (!done && !menu) {
+            start = high_resolution_clock::now();
+
             // Run a complete frame.
+            pollEvents();
+            pollCommands();
             spectrum.run();
 
             // Delay starting playing sound (if disabled) until first frame
@@ -245,21 +249,13 @@ void SpeccyScreen::run() {
             if (!syncToVideo) {
                 // By not sleeping until the next frame is due, we get some
                 // better adjustment
-#ifdef USE_BOOST_THREADS
-                frame = tick + boost::chrono::microseconds(spectrum.frame);
-                wakeup = tick + boost::chrono::microseconds(18000);
-#else
-                frame = tick + std::chrono::microseconds(spectrum.frame);
-                wakeup = tick + std::chrono::microseconds(18000);
-#endif
+                frame = start + chrono::microseconds(spectrum.frame);
+                wakeup = start + chrono::microseconds(18000);
 #ifndef DO_NOT_SLEEP
                 sleep_until(wakeup);
 #endif
-                while ((tick = high_resolution_clock::now()) < frame);
+                while (high_resolution_clock::now() < frame);
             }
-
-            pollEvents();
-            pollCommands();
         }
 
         // Disable sound for menus
@@ -270,12 +266,7 @@ void SpeccyScreen::run() {
             updateMenu();
 
             if (!syncToVideo) {
-#ifdef USE_BOOST_THREADS
-                sleep_until(tick + boost::chrono::microseconds(spectrum.frame));
-#else
-                sleep_until(tick + std::chrono::microseconds(spectrum.frame));
-#endif
-                tick = high_resolution_clock::now();
+                sleep_for(chrono::microseconds(20000));
             }
         }
     }
