@@ -221,9 +221,9 @@ void SpeccyScreen::loadFiles() {
 
 void SpeccyScreen::run() {
 
-    steady_clock::time_point tick = steady_clock::now();
-    steady_clock::time_point frame;
-    steady_clock::time_point wakeup;
+    high_resolution_clock::time_point tick = high_resolution_clock::now();
+    high_resolution_clock::time_point frame;
+    high_resolution_clock::time_point wakeup;
 
     while (!done) {
         while (!done && !menu) {
@@ -255,7 +255,7 @@ void SpeccyScreen::run() {
 #ifndef DO_NOT_SLEEP
                 sleep_until(wakeup);
 #endif
-                while ((tick = steady_clock::now()) < frame);
+                while ((tick = high_resolution_clock::now()) < frame);
             }
 
             pollEvents();
@@ -275,7 +275,7 @@ void SpeccyScreen::run() {
 #else
                 sleep_until(tick + std::chrono::microseconds(spectrum.frame));
 #endif
-                tick = steady_clock::now();
+                tick = high_resolution_clock::now();
             }
         }
     }
