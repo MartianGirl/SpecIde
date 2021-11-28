@@ -339,4 +339,15 @@ class Screen {
          */
         virtual float getPixelClock() = 0;
 };
+
+/**
+ * Precise sleep function.
+ *
+ * Code by Blat Blatnik. Explanation here:
+ * https://blat-blatnik.github.io/computerBear/making-accurate-sleep-function/
+ *
+ * @param delay Sleep delay.
+ */
+void preciseSleep(double delay);
+
 // vim: et:sw=4:ts=4

@@ -222,9 +222,10 @@ void SpeccyScreen::loadFiles() {
 void SpeccyScreen::run() {
 
     while (!done) {
-        high_resolution_clock::time_point start = high_resolution_clock::now();
+
+        high_resolution_clock::time_point start;
         high_resolution_clock::time_point frame;
-        high_resolution_clock::time_point wakeup;
+        double seconds;
 
         while (!done && !menu) {
             start = high_resolution_clock::now();
@@ -249,12 +250,14 @@ void SpeccyScreen::run() {
             if (!syncToVideo) {
                 // By not sleeping until the next frame is due, we get some
                 // better adjustment
-                frame = start + chrono::microseconds(spectrum.frame);
-                wakeup = start + chrono::microseconds(18000);
-#ifndef DO_NOT_SLEEP
-                sleep_until(wakeup);
+                frame = high_resolution_clock::now();
+                seconds = static_cast<double>(spectrum.frame) / 1e6
+                    - (frame - start).count() / 1e9;
+#ifdef DO_NOT_SLEEP
+                while ((high_resolution_clock::now() - frame).count() / 1e9 < seconds);
+#else
+                preciseSleep(seconds);
 #endif
-                while (high_resolution_clock::now() < frame);
             }
         }
 

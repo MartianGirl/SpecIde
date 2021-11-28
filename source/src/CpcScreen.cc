@@ -161,9 +161,10 @@ void CpcScreen::loadFiles() {
 void CpcScreen::run() {
 
     while (!done) {
-        high_resolution_clock::time_point start = high_resolution_clock::now();
+
+        high_resolution_clock::time_point start;
         high_resolution_clock::time_point frame;
-        high_resolution_clock::time_point wakeup;
+        double seconds;
 
         while (!done && !menu) {
             start = high_resolution_clock::now();
@@ -179,17 +180,17 @@ void CpcScreen::run() {
             update();
 
             if (!syncToVideo) {
-                uint_fast32_t delay = cpc.cycles / 16;
-                uint_fast32_t sleep = delay - (delay % 2000);
+                frame = high_resolution_clock::now();
+                seconds = static_cast<double>(cpc.cycles) / 16e6
+                    - (frame - start).count() / 1e9;
 
                 // By not sleeping until the next frame is due, we get some
                 // better adjustment
-                frame = start + chrono::microseconds(delay);
-                wakeup = start + chrono::microseconds(sleep);
-#ifndef DO_NOT_SLEEP
-                sleep_until(wakeup);
+#ifdef DO_NOT_SLEEP
+                while ((high_resolution_clock::now() - frame).count() / 1e9 < seconds);
+#else
+                preciseSleep(seconds);
 #endif
-                while (high_resolution_clock::now() < frame);
             } else {
                 // If we are syncing with the PC's vertical refresh, we need
                 // to get at least 20ms of emulation. If this is the case, we
