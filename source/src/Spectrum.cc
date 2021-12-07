@@ -917,7 +917,7 @@ bool Spectrum::allowPageChange() {
             return ula.mem;
         case 3: // 128/+2: Allow page change when no accesses are in progress.
         case 2: // fall-through
-            return ula.mem && ((z80.c & (SIGNAL_MREQ_ | SIGNAL_IORQ_)) == (SIGNAL_MREQ_ | SIGNAL_IORQ_));
+            return ula.mem && ((z80.c & SIGNAL_IORQ_) == SIGNAL_IORQ_);
         default: // 48K models: Forbid all page changes.
             return false;
     }
