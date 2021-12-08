@@ -119,6 +119,7 @@ void Spectrum::setIssue2(RomVariant variant) {
 
     spectrum128K = false;
     spectrumPlus2A = false;
+    pentagon = false;
     plus3Disk = false;
     betaDisk128 = false;
     psgChips = 0;
@@ -135,6 +136,7 @@ void Spectrum::setIssue3(RomVariant variant) {
 
     spectrum128K = false;
     spectrumPlus2A = false;
+    pentagon = false;
     plus3Disk = false;
     betaDisk128 = false;
     psgChips = 0;
@@ -151,6 +153,7 @@ void Spectrum::set128K(RomVariant variant) {
 
     spectrum128K = true;
     spectrumPlus2A = false;
+    pentagon = false;
     plus3Disk = false;
     betaDisk128 = false;
     psgChips = 1;
@@ -167,6 +170,7 @@ void Spectrum::setPlus2(RomVariant variant) {
 
     spectrum128K = true;
     spectrumPlus2A = false;
+    pentagon = false;
     plus3Disk = false;
     betaDisk128 = false;
     psgChips = 1;
@@ -183,6 +187,7 @@ void Spectrum::setPlus2A(RomVariant variant) {
 
     spectrum128K = false;
     spectrumPlus2A = true;
+    pentagon = false;
     plus3Disk = false;
     betaDisk128 = false;
     psgChips = 1;
@@ -199,6 +204,7 @@ void Spectrum::setPlus3(RomVariant variant) {
 
     spectrum128K = false;
     spectrumPlus2A = true;
+    pentagon = false;
     plus3Disk = true;
     betaDisk128 = false;
     psgChips = 1;
@@ -217,6 +223,7 @@ void Spectrum::setPentagon(RomVariant variant) {
 
     spectrum128K = true;
     spectrumPlus2A = false;
+    pentagon = true;
     plus3Disk = false;
     betaDisk128 = true;
     psgChips = 1;
@@ -341,6 +348,12 @@ void Spectrum::clock() {
         }
     }
 
+    // Switch pages only if the ULA is not accessing memory.
+    if (switchPage && allowPageChange()) {
+        updatePage();
+        switchPage = false;
+    }
+
     // We clock the Z80 if the ULA allows.
     if (ula.cpuClock) {
         // Z80 gets data from the ULA or memory, only when reading.
@@ -355,8 +368,9 @@ void Spectrum::clock() {
                 // 128K only ports (pagination, disk)
                 if (spectrum128K) {
                     if (!(z80.a & 0x8002)) {
-                        if (z80.wr || z80.rd)
-                            updatePage(0);
+                        if (z80.wr || z80.rd) {
+                            selectPage(0);
+                        }
                     }
                 } else if (spectrumPlus2A) {
                     switch (z80.a & 0xF002) {
@@ -369,7 +383,7 @@ void Spectrum::clock() {
                             break;
                         case 0x1000:    // 0x1FFD (+3 High Page Register)
                             if (z80.wr) {
-                                updatePage(1);
+                                selectPage(1);
                             }
                             break;
                         case 0x2000:    // 0x2FFD (+3 FDC765 Main Status)
@@ -393,7 +407,7 @@ void Spectrum::clock() {
                         case 0x6000: // fall-through
                         case 0x7000: // 0x7FFD (128K Page Register / +3 Low Page Register)
                             if (z80.wr) {
-                                updatePage(0);
+                                selectPage(0);
                             }
                             break;
 
@@ -489,64 +503,69 @@ void Spectrum::clock() {
     }
 }
 
-void Spectrum::updatePage(uint_fast8_t reg) {
+void Spectrum::selectPage(uint_fast8_t reg) {
 
     if (!(pageRegs & 0x0020)) {
         if (reg == 1) {
             pageRegs = (z80.d << 8) | (pageRegs & 0x00FF);
         } else {
-            pageRegs = z80.d | (pageRegs & 0xFF00);
+            pageRegs = (pageRegs & 0xFF00) | z80.d;
         }
 
         // Update +3 disk drive(s) motor status.
         fdc765.motor(plus3Disk && (pageRegs & 0x0800));
 
-        // Select screen to display.
-        setScreenPage(((pageRegs & 0x0008) >> 2) | 0x05);
-        setSnowPage(pageRegs & 0x0005);
+        switchPage = true;
+    }
+}
 
-        if (pageRegs & 0x0100) {      // Special pagination mode.
-            switch (pageRegs & 0x0600) {
-                case 0x0000:
-                    setPage(0, 0, false, false);
-                    setPage(1, 1, false, false);
-                    setPage(2, 2, false, false);
-                    setPage(3, 3, false, false);
-                    break;
-                case 0x0200:
-                    setPage(0, 4, false, true);
-                    setPage(1, 5, false, true);
-                    setPage(2, 6, false, true);
-                    setPage(3, 7, false, true);
-                    break;
-                case 0x0400:
-                    setPage(0, 4, false, true);
-                    setPage(1, 5, false, true);
-                    setPage(2, 6, false, true);
-                    setPage(3, 3, false, false);
-                    break;
-                case 0x0600:
-                    setPage(0, 4, false, true);
-                    setPage(1, 7, false, true);
-                    setPage(2, 6, false, true);
-                    setPage(3, 3, false, false);
-                    break;
-                default:
-                    assert(false);
-            }
-        } else {                    // Normal pagination mode.
-            ramBank = pageRegs & 0x0007;
-            romBank = ((pageRegs & 0x0010) >> 4) | ((pageRegs & 0x0400) >> 9);
+void Spectrum::updatePage() {
 
-            setPage(0, romBank, true, false);
-            setPage(1, 5, false, true);
-            setPage(2, 2, false, false);
-            setPage(3, ramBank, false, ((ramBank & mask) == mask));
+    // Select screen to display.
+    setScreenPage(((pageRegs & 0x0008) >> 2) | 0x05);
+    setSnowPage(pageRegs & 0x0005);
 
-            rom48 = ((spectrumPlus2A && romBank == 3)
-                    || (spectrum128K && romBank == 1));
-            tape.is48K = set48 = (pageRegs & 0x0020);
+    if (pageRegs & 0x0100) {      // Special pagination mode.
+        switch (pageRegs & 0x0600) {
+            case 0x0000:
+                setPage(0, 0, false, false);
+                setPage(1, 1, false, false);
+                setPage(2, 2, false, false);
+                setPage(3, 3, false, false);
+                break;
+            case 0x0200:
+                setPage(0, 4, false, true);
+                setPage(1, 5, false, true);
+                setPage(2, 6, false, true);
+                setPage(3, 7, false, true);
+                break;
+            case 0x0400:
+                setPage(0, 4, false, true);
+                setPage(1, 5, false, true);
+                setPage(2, 6, false, true);
+                setPage(3, 3, false, false);
+                break;
+            case 0x0600:
+                setPage(0, 4, false, true);
+                setPage(1, 7, false, true);
+                setPage(2, 6, false, true);
+                setPage(3, 3, false, false);
+                break;
+            default:
+                assert(false);
         }
+    } else {                    // Normal pagination mode.
+        ramBank = pageRegs & 0x0007;
+        romBank = ((pageRegs & 0x0010) >> 4) | ((pageRegs & 0x0400) >> 9);
+
+        setPage(0, romBank, true, false);
+        setPage(1, 5, false, true);
+        setPage(2, 2, false, false);
+        setPage(3, ramBank, false, ((ramBank & mask) == mask));
+
+        rom48 = ((spectrumPlus2A && romBank == 3)
+                || (spectrum128K && romBank == 1));
+        tape.is48K = set48 = (pageRegs & 0x0020);
     }
 }
 
@@ -887,5 +906,20 @@ void Spectrum::setSoundRate(SoundRate rate, bool syncToVideo) {
     skip = static_cast<uint32_t>(value);
     tail = value - skip;
     skipCycles = skip;
+}
+
+bool Spectrum::allowPageChange() {
+
+    switch (ula.ulaVersion) {
+        case 5: // Pentagon: Allow page change always (?)
+            return true;
+        case 4: // +2A/+3: Allow page change when the ULA is not reading.
+            return ula.mem;
+        case 3: // 128/+2: Allow page change when no accesses are in progress.
+        case 2: // fall-through
+            return ula.mem && ((z80.c & SIGNAL_IORQ_) == SIGNAL_IORQ_);
+        default: // 48K models: Forbid all page changes.
+            return false;
+    }
 }
 // vim: et:sw=4:ts=4

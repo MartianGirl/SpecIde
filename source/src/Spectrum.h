@@ -91,6 +91,8 @@ class Spectrum {
         bool spectrum128K = false;
         /** Emulate a Gate Array based Spectrum (+2A, +3). */
         bool spectrumPlus2A = false;
+        /** Emulate a ZX Pentagon clone. */
+        bool pentagon = false;
         /** Emulate +3 disk controller and disk drives. */
         bool plus3Disk = false;
         /** Emulate BetaDisk128 disk interface. */
@@ -111,6 +113,8 @@ class Spectrum {
         uint_fast8_t ramBank = 0x00;
         /** Currently selected ROM page on $0000-$3FFF. */
         uint_fast8_t romBank = 0x00;
+        /** Perform a page switch when possible. */
+        bool switchPage = false;
 
         /** Number of cycles before next sound sample. */
         uint_fast32_t skip;
@@ -260,11 +264,21 @@ class Spectrum {
         void setSoundRate(SoundRate rate, bool syncToVideo);
 
         /**
-         * Update pagination registers, and update the memory map.
+         * Update pagination registers.
          *
          * @param reg 0x00 for 128K ($7FFD) register, 0x01 for +3 ($1FFD) register.
          */
-        void updatePage(uint_fast8_t reg);
+        void selectPage(uint_fast8_t reg);
+
+        /**
+         * Return true if the screen page can be changed.
+         */
+        bool allowPageChange();
+
+        /**
+         * Update the memory map, as soon as possible.
+         */
+        void updatePage();
 
         /**
          * Update page info in the memory map.

@@ -209,7 +209,11 @@ void CpcScreen::run() {
                     menu = false;
                 }
             }
-            sleep_for(chrono::microseconds(20000));
+#ifdef USE_BOOST_THREADS
+            sleep_for(boost::chrono::microseconds(20000));
+#else
+            sleep_for(std::chrono::microseconds(20000));
+#endif
         }
     }
 }
