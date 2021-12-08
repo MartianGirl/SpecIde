@@ -249,8 +249,13 @@ void SpeccyScreen::run() {
             if (!syncToVideo) {
                 // By not sleeping until the next frame is due, we get some
                 // better adjustment
-                frame = start + chrono::microseconds(spectrum.frame);
-                wakeup = start + chrono::microseconds(18000);
+#ifdef USE_BOOST_THREADS
+                frame = start + boost::chrono::microseconds(spectrum.frame);
+                wakeup = start + boost::chrono::microseconds(18000);
+#else
+                frame = start + std::chrono::microseconds(spectrum.frame);
+                wakeup = start + std::chrono::microseconds(18000);
+#endif
 #ifndef DO_NOT_SLEEP
                 sleep_until(wakeup);
 #endif
@@ -266,7 +271,11 @@ void SpeccyScreen::run() {
             updateMenu();
 
             if (!syncToVideo) {
-                sleep_for(chrono::microseconds(20000));
+#ifdef USE_BOOST_THREADS
+                sleep_for(boost::chrono::microseconds(20000));
+#else
+                sleep_for(std::chrono::microseconds(20000));
+#endif
             }
         }
     }

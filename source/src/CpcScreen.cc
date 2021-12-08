@@ -184,8 +184,13 @@ void CpcScreen::run() {
 
                 // By not sleeping until the next frame is due, we get some
                 // better adjustment
-                frame = start + chrono::microseconds(delay);
-                wakeup = start + chrono::microseconds(sleep);
+#ifdef USE_BOOST_THREADS
+                frame = start + boost::chrono::microseconds(delay);
+                wakeup = start + boost::chrono::microseconds(sleep);
+#else
+                frame = start + std::chrono::microseconds(delay);
+                wakeup = start + std::chrono::microseconds(sleep);
+#endif
 #ifndef DO_NOT_SLEEP
                 sleep_until(wakeup);
 #endif
@@ -208,7 +213,11 @@ void CpcScreen::run() {
                     menu = false;
                 }
             }
-            sleep_for(chrono::microseconds(20000));
+#ifdef USE_BOOST_THREADS
+            sleep_for(boost::chrono::microseconds(20000));
+#else
+            sleep_for(std::chrono::microseconds(20000));
+#endif
         }
     }
 }
