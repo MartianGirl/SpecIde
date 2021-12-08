@@ -417,7 +417,11 @@ void preciseSleep(double seconds) {
     if (seconds > 0) {
         while (seconds > estimate) {
             auto start = high_resolution_clock::now();
-            this_thread::sleep_for(chrono::milliseconds(1));
+#ifdef USE_BOOST_THREADS
+            sleep_for(boost::chrono::milliseconds(1));
+#else
+            sleep_for(std::chrono::milliseconds(1));
+#endif
             auto end = high_resolution_clock::now();
 
             double observed = (end - start).count() / 1e9;
