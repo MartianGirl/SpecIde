@@ -412,7 +412,7 @@ void preciseSleep(double seconds) {
     static double estimate = 5e-3;
     static double mean = 5e-3;
     static double m2 = 0;
-    static int64_t count = 1;
+    static uint64_t count = 1;
 
     if (seconds > 0) {
         while (seconds > estimate) {
