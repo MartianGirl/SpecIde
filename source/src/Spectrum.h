@@ -160,8 +160,8 @@ class Spectrum {
         /** True if 48K BASIC ROM is selected. Useful for trapping tape routines. */
         bool rom48 = true;
 
-        /** Clock cycle counter. */
-        size_t count = 0;
+        /** Clock cycle counter. Only LSBs are important; overflow is not a problem. */
+        uint_fast32_t count = 0;
 
         /** Stereo mode: ABC, ACB, Turbosound modes. */
         StereoMode stereo = StereoMode::STEREO_MONO;
