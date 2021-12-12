@@ -314,16 +314,15 @@ void Spectrum::clock() {
     // Speccies.
     bus_1 = bus;
 
-    bool contendedAccess = contendedPage[memArea] && !as_;
     if (!ula.mem) {
         // Snow effect. ULA::snow is always false for +2A/+3/Pentagon
-        if (ula.snow && contendedAccess) {
+        if (ula.snow && contendedPage[memArea] && !as_) {
             uint_fast16_t snowaddr = (ula.a & 0x3F80) | (z80.a & 0x007F);
             bus = (memArea == 1) ? scr[snowaddr] : sno[snowaddr];
         } else {
             bus = scr[ula.a];
         }
-    } else if (!spectrumPlus2A || contendedAccess) {
+    } else if (!spectrumPlus2A || (contendedPage[memArea] && !as_)) {
         // For +2A/+3 machines, the Gate Array stores all bytes that pass
         // though it. This means, any contended access will alter this byte.
         // For other machines, this byte is altered with each access.
@@ -335,7 +334,10 @@ void Spectrum::clock() {
 
     z80.c = ula.z80_c;
 
+    // Count is only used for its less significant bits, so there is no
+    // overflow risk even with 32 bit types.
     ++count;
+
     if (!(count & 0x03)) {
         ula.beeper();
         psgClock();
