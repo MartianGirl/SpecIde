@@ -250,19 +250,16 @@ void ULA::generateVideoDataGa() {
 
 void ULA::generateVideoDataPentagon() {
 
-    // Check for contended memory or I/O accesses.
-    mem = memTable[pixel & 0x0F];
-
     // Read from memory.
     switch (pixel & 0x0F) {
-        case 0x06: a = dataAddr++; break;
-        case 0x07: dataReg = d; break;
-        case 0x08: a = attrAddr++; break;
-        case 0x09: attrReg = d; break;
-        case 0x0A: a = dataAddr++; break;
-        case 0x0B: dataReg = d; break;
-        case 0x0C: a = attrAddr++; break;
-        case 0x0D: attrReg = d; break;
+        case 0x05: a = dataAddr++; break;
+        case 0x06: dataReg = d; a = attrAddr++; break;
+        case 0x07: attrReg = d; break;
+
+        case 0x0d: a = dataAddr++; break;
+        case 0x0e: dataReg = d; a = attrAddr++; break;
+        case 0x0f: attrReg = d; break;
+
         default: break;
     }
 }
@@ -559,6 +556,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             interruptEnd = 0x180;
             snow = false;
             idle = true;
+            mem = false;
             generateVideoData = &ULA::generateVideoDataPentagon;
             break;
         default:
@@ -597,13 +595,6 @@ void ULA::setUlaVersion(uint_fast8_t version) {
         false, false, false, true, false, false, false, true
     };
 
-    // Cycle states for Pentagon
-    bool memPent[16] = {
-        true, true, true, true, true, true, false, false,
-        false, true, false, false, false, true, true, true
-    };
-
-
     for (uint_fast8_t ii = 0; ii < 16; ++ii) {
         if (ulaVersion == 4) {
             // +2A/+3 has no floating bus.
@@ -615,7 +606,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             // idleTable is not necessary for Pentagon; idle = true always,
             // and delay is irrelevant.
             delayTable[ii] = false;
-            memTable[ii] = memPent[ii];
+            memTable[ii] = false;
         } else {
             delayTable[ii] = delayUla[ii];
             memTable[ii] = memUla[ii];
