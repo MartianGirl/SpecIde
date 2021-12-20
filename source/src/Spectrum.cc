@@ -466,7 +466,7 @@ void Spectrum::clock() {
                     }
                 }
 
-                if (!(z80.a & 0x0004)) {
+                if (pentagon && !(z80.a & 0x0004)) {
                     if (z80.wr) {
                         covox = z80.d * 0x40;
                     }
