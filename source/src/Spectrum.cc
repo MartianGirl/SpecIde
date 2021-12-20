@@ -751,6 +751,8 @@ void Spectrum::sample() {
             break;
     }
 
+    l = 2 * (l - 0x4000);
+    r = 2 * (r - 0x4000);
     channel.push(l, r);
 }
 
