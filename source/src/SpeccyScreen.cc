@@ -135,6 +135,9 @@ void SpeccyScreen::setup() {
     spectrum.psgChip(aychip);
     cout << "PSG chip: " << options["psgtype"] << endl;
 
+    spectrum.hasCovox = (options["covox"] == "yes");
+    cout << "Covox on port $FB: " << options["covox"] << endl;
+
     // Other stuff.
     spectrum.flashTap = (options["flashtap"] == "yes");
     cout << "FlashTAP: " << options["flashtap"] << endl;

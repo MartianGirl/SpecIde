@@ -122,6 +122,8 @@ class Spectrum {
         double tail;
         /** Counter of cycles before next sound sample. */
         uint_fast32_t skipCycles = 0;
+        /** Emulate Covox on port $FB. */
+        bool hasCovox = false;
         /** Sound byte in Covox port. */
         int covox = 0;
         /** Array of samples sent to the Covox. */

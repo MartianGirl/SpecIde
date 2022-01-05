@@ -466,7 +466,7 @@ void Spectrum::clock() {
                     }
                 }
 
-                if (pentagon && !(z80.a & 0x0004)) {
+                if (hasCovox && !(z80.a & 0x0004)) {
                     if (z80.wr) {
                         covox = z80.d * 0x40;
                     }
@@ -789,12 +789,18 @@ void Spectrum::checkTapeTraps() {
 
     if (rom48 && (z80.state == Z80State::ST_OCF_T4L_RFSH2)) {
         switch (z80.pc.w) {
-            case 0x056D:    // LD_START
+            // These addresses are catched on the REFRESH cycles. Since PC
+            // has been already incremented, these values are the intended
+            // address plus one.
+            case 0x056D:    // LD_START (0x56C + 1)
+                // Note: Trap at 0x056D so the break check is performed.
+                // Otherwise, the emulator will hang if the searched block
+                // is not found.
                 if (tape.tapData.size()) {
                     trapLdStart();
                 }
                 break;
-            case 0x04D1:    // SA_FLAG
+            case 0x04D1:    // SA_FLAG (0x04D0 + 1)
                 trapSaBytes();
                 break;
             default:
