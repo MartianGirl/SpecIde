@@ -144,10 +144,8 @@ int main(int argc, char* argv[]) {
 
 void displayLicense() {
 
-    cout << "SpecIde Version ";
-    cout << SPECIDE_VERSION_MAJOR << ".";
-    cout << SPECIDE_VERSION_MINOR << ".";
-    cout << SPECIDE_VERSION_TWEAK << endl << endl;
+    cout << "SpecIde built on: " << SPECIDE_BUILD_TIME << endl;
+    cout << "Built from: " << SPECIDE_BUILD_COMMIT << endl << endl;
     cout << "(c) 2016-2019 Marta Sevillano Mancilla." << endl << endl;
     cout << "This program is free software: you can redistribute it and/or modify" << endl;
     cout << "it under the terms of the GNU General Public License as published by" << endl;

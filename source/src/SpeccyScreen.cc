@@ -295,11 +295,8 @@ void SpeccyScreen::update() {
     if (spectrum.tape.pulseData.size()) {
         char str[64];
         unsigned int percent = 100 * spectrum.tape.pointer / spectrum.tape.pulseData.size();
-        snprintf(str, 64, "SpecIde %d.%d.%d [%03u%%]",
-                SPECIDE_VERSION_MAJOR,
-                SPECIDE_VERSION_MINOR,
-                SPECIDE_VERSION_TWEAK,
-                percent);
+        snprintf(str, 64, "SpecIde [%s(%s)] [%03u%%]",
+                SPECIDE_BUILD_DATE, SPECIDE_BUILD_COMMIT, percent);
         window.setTitle(str);
     }
 }

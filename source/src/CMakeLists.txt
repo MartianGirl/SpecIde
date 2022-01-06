@@ -47,10 +47,21 @@ add_executable(SpecIde SpecIde.cc Console.cc
     DSKFile.cc)
 target_link_libraries(SpecIde ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} ${MEDIA_LIBRARIES})
 
-# Set version information in a config.h file.
-set(SpecIde_VERSION_MAJOR 0)
-set(SpecIde_VERSION_MINOR 6)
-set(SpecIde_VERSION_TWEAK 0)
+# Set build date information in config.h.
+string(TIMESTAMP SpecIde_BUILD_DATE "%Y%m%d" UTC)
+
+# Set timestamp in config.h.
+string(TIMESTAMP SpecIde_BUILD_TIME "%Y-%m-%d %H:%M:%S UTC" UTC)
+
+find_package(Git REQUIRED)
+execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+    RESULT_VARIABLE result
+    OUTPUT_VARIABLE SpecIde_BUILD_COMMIT
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(result)
+    set(SpecIde_BUILD_COMMIT "snapshot")
+endif()
 
 # Set endianness in config.h.
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
