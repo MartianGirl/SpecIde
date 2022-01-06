@@ -94,10 +94,10 @@ bool z80Indr()
             acc.b.l = bc.b.h;
             if (af.b.l & FLAG_C) {
                 if (af.b.l & FLAG_N) {
-                    acc.b.h = ((bc.b.h & 0x0F) == 0x00) ? FLAG_H : 0;
+                    flg = (flg & ~FLAG_H) | (((bc.b.h & 0x0F) == 0x00) ? FLAG_H : 0);
                     acc.b.l -= 1;
                 } else {
-                    acc.b.h = ((bc.b.h & 0x0F) == 0x0F) ? FLAG_H : 0;
+                    flg = (flg & ~FLAG_H) | (((bc.b.h & 0x0F) == 0x0F) ? FLAG_H : 0);
                     acc.b.l += 1;
                 }
             }
@@ -105,7 +105,6 @@ bool z80Indr()
             acc.b.l ^= acc.b.l >> 2;
             acc.b.l ^= acc.b.l >> 4;
             flg ^= (acc.b.l & 1) ? 0x00 : FLAG_PV;
-            flg = (flg & ~FLAG_H) | acc.b.h;
 
             af.b.l = flg;
             prefix = PREFIX_NO;
