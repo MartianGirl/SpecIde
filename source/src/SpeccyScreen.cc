@@ -539,7 +539,7 @@ void SpeccyScreen::joystickButtonRelease(uint_fast32_t button) {
 
 float SpeccyScreen::getPixelClock() {
 
-    float baseClock = (spectrum.ula.ulaVersion == 2 || spectrum.ula.ulaVersion == 3)
+    float baseClock = (spectrum.ula.ulaVersion >= 2 && spectrum.ula.ulaVersion <= 4)
         ? BASE_CLOCK_128 : BASE_CLOCK_48;
     return 2 * baseClock / 1000000.0;
 }
