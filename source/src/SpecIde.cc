@@ -335,4 +335,18 @@ vector<string> getRomDirs() {
 
     return romDirs;
 }
+
+void printBytes(string const& prefix, size_t len, uint8_t* buf) {
+
+    cout << prefix << " ";
+    for (size_t ii = 0; ii < len; ++ii) {
+        cout << hex << setw(2) << setfill('0');
+        cout << static_cast<uint32_t>(buf[ii]) << " ";
+        if ((ii & 0xF) == 0xF) {
+        cout << endl << ".." << " ";
+        }
+    }
+    cout << endl;
+}
+
 // vim: et:sw=4:ts=4

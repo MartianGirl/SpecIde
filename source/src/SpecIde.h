@@ -77,4 +77,6 @@ struct Option {
     Option(std::string n = "", std::string v = "") : name(n), value(v) {}
 };
 
+void printBytes(std::string const& prefix, size_t len, uint8_t* buf);
+
 // vim: et:sw=4:ts=4
