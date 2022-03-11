@@ -566,6 +566,9 @@ bool FDC765::seekForReadOp() {
 bool FDC765::readOp() {
 
     bool done = false;
+#ifdef DEBUGFDC765
+    cout << firstSector << "..";
+#endif
 
     // We already have read the sector in the seekForReadOp, and
     // currSector holds the current sector number.
@@ -582,7 +585,7 @@ bool FDC765::readOp() {
 
     if (done) {
         drive[cmdDrive()].nextSector();
-        if (sReg[0] == 0x00 && sReg[1] == 0x00 && currSector == lastSector) {
+        if (sReg[0] == 0x00 && sReg[1] == 0x00 && currSector >= lastSector) {
             eocFound = true;
         }
 
@@ -607,6 +610,9 @@ void FDC765::setResultBytesOp() {
 
 bool FDC765::readRegularDataOp() {
 
+#ifdef DEBUGFDC765
+    cout << "Read..";
+#endif
     bool error = false;
 
     size_t actlen = drive[cmdDrive()].length;
@@ -635,13 +641,6 @@ bool FDC765::readRegularDataOp() {
     // Complete length
     buf.resize(outlen, drive[cmdDrive()].filler);
 
-    if (actlen == 0x80 && outlen == 0x200
-            && cmdBuffer[2] == 0x01) {
-        // SpeedLock D7 AAAA: All we need is the error code.
-        sReg[0] |= 0x40;
-        error = true;
-    }
-
     // Detect Speedlock protection:
     // CRC error on track 00, sector 02, which is 512 bytes long.
     if (((sReg[2] & 0x20) == 0x20) && cmdBuffer[2] == 0x00
@@ -654,10 +653,9 @@ bool FDC765::readRegularDataOp() {
     // If we reach here, it is a normal data read. Dump and continue.
     appendToDataBuffer(buf);
 
-
     // We must signal the CM.
     sReg[2] &= 0xBF;
-    return (error || currSector == lastSector);
+    return (error || currSector >= lastSector);
 }
 
 bool FDC765::readDeletedDataOp() {
@@ -667,8 +665,14 @@ bool FDC765::readDeletedDataOp() {
     size_t offset = 0;
 
     if (skipDeletedBit) {
+#ifdef DEBUGFDC765
+        cout << "Skip deleted..";
+#endif
         return false;
     }
+#ifdef DEBUGFDC765
+    cout << "Read deleted..";
+#endif
 
     // If actlen is a multiple of outlen, there are several
     // copies of this sector and we have to choose one.

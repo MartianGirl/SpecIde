@@ -52,7 +52,7 @@ DSKFile::Track::Track() :
 bool DSKFile::Track::load(vector<uint8_t> const& data, size_t offset) {
 
     // Validate magic
-    magicOk = equal(&magic[0x00], &magic[0x0C], &data[offset]);
+    magicOk = equal(&magic[0x00], &magic[0x0A], &data[offset]);
     if (magicOk) {
         trackNumber = data[offset + 0x10];
         sideNumber = data[offset + 0x11];
