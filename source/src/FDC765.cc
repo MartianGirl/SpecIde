@@ -21,7 +21,6 @@
 
 using namespace std;
 
-
 void FDC765::clock() {
 
     updateHeadUnload();
@@ -561,7 +560,8 @@ bool FDC765::seekForReadOp() {
         return true;
     }
 
-    return (currSector == firstSector);
+    return (currSector == firstSector
+            && drive[cmdDrive()].idSize == cmdBuffer[5]);
 }
 
 bool FDC765::readOp() {
