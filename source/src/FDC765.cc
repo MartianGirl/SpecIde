@@ -560,8 +560,7 @@ bool FDC765::seekForReadOp() {
         return true;
     }
 
-    return (currSector == firstSector
-            && drive[cmdDrive()].idSize == cmdBuffer[5]);
+    return (currSector == firstSector);
 }
 
 bool FDC765::readOp() {
@@ -622,6 +621,13 @@ bool FDC765::readRegularDataOp() {
         sectorCopy = (sectorCopy + 1) % sectorCopies;
     }
 
+    // If the actual sector size doesn't match the requested sector size,
+    // then signal ND (No Data)
+    if (drive[cmdDrive()].idSize != cmdBuffer[5]) {
+        sReg[0] |= 0x40;    // 01000HUU - AT
+        sReg[1] |= 0x04;    // xxxxx1xx - ND
+    }
+
     size_t finish = min(offset + outlen, drive[cmdDrive()].buffer.size());
     vector<uint8_t> buf(&drive[cmdDrive()].buffer[offset],
             &drive[cmdDrive()].buffer[finish]);
@@ -648,6 +654,7 @@ bool FDC765::readRegularDataOp() {
     // If we reach here, it is a normal data read. Dump and continue.
     appendToDataBuffer(buf);
 
+
     // We must signal the CM.
     sReg[2] &= 0xBF;
     return (error || currSector == lastSector);
@@ -669,6 +676,13 @@ bool FDC765::readDeletedDataOp() {
         size_t sectorCopies = actlen / outlen;
         offset = outlen * sectorCopy;
         sectorCopy = (sectorCopy + 1) % sectorCopies;
+    }
+
+    // If the actual sector size doesn't match the requested sector size,
+    // then signal ND (No Data)
+    if (drive[cmdDrive()].idSize != cmdBuffer[5]) {
+        sReg[0] |= 0x40;    // 01000HUU - AT
+        sReg[1] |= 0x04;    // xxxxx1xx - ND
     }
 
     size_t finish = min(offset + outlen, drive[cmdDrive()].buffer.size());
