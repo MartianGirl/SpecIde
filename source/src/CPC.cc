@@ -195,14 +195,16 @@ void CPC::clock() {
     size_t memArea = z80.a >> 14;
 
     if (!io_) {
-        // Gate Array. This is accessible by both I/O reads and I/O writes.
-        // &7Fxx is Gate Array / RAM selection port.
-        if ((z80.a & 0xC000) == 0x4000) {
+        // PAL & Gate Array.
+        // PAL is selected when address is 0xxxxxxx xxxxxxxx.
+        // Gate Array is selected when address is 01xxxxxx xxxxxxxx.
+        // Gate Array is accessible by both I/O reads and I/O writes.
+        if (!(z80.a & 0x8000)) {
             if ((z80.d & 0xC0) == 0xC0) {
                 if (cpc128K && z80.wr) {
                     selectRam(z80.d);
                 }
-            } else if (m1_) {
+            } else if (m1_ && (z80.a & 0x4000)) {
                 ga.write(z80.d);
             }
         }
@@ -221,7 +223,7 @@ void CPC::clock() {
 
         // CRTC.
         // &BCxx, &BDxx, &BExx, &BFxx are CRTC ports.
-        if ((z80.rd || z80.wr) && ((z80.a & 0x4000) == 0x0000)) {
+        if ((z80.rd || z80.wr) && !(z80.a & 0x4000)) {
             switch (z80.a & 0x0300) {
                 case 0x0000:    // CRTC Register Select (WO) at &BC00.
                     ga.crtc.wrAddress(z80.d);
@@ -242,7 +244,7 @@ void CPC::clock() {
 
         // 8255 PPI.
         // &F4xx, &F5xx, &F6xx, &F7xx are 8255 ports.
-        if ((z80.a & 0x0800) == 0x0000) {
+        if (!(z80.a & 0x0800)) {
             switch (z80.a & 0x0300) {
                 case 0x0000:    // Port A: &F4xx
                     if (z80.rd) {
@@ -351,7 +353,7 @@ void CPC::clock() {
             if ((z80.a & 0x0400) == 0x0000) {
 
                 // FDC
-                if (cpcDisk && (z80.a & 0x0480) == 0x0000) {
+                if (cpcDisk && !(z80.a & 0x0480)) {
                     switch (z80.a & 0x0101) {
                         case 0x0100:    // FDC main status register (&FB7E)
                             if (z80.rd) {
@@ -365,7 +367,8 @@ void CPC::clock() {
                                 z80.d = fdc765.read();
                             }
                             break;
-                        case 0x0000:    // FDC motor (&FA7E)
+                        case 0x0000:    // fall-through
+                        case 0x0001:    // FDC motor (&FA7E/&FA7F)
                             if (z80.wr) {
                                 fdc765.motor((z80.d & 0x01) == 0x01);
                             }
