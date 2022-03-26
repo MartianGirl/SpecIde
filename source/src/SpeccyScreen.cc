@@ -328,7 +328,6 @@ void SpeccyScreen::updateMenu() {
     ss << "Function keys:" << endl;
     ss << "F1:    This help." << endl;
     ss << "F2:    Fullscreen." << endl;
-    ss << "S-F2:  Antialiasing." << endl;
     ss << "F3:    Save DSK file to disk." << endl;
     ss << "S-F3:  Create empty DSK image." << endl;
     ss << "F4:    Select next disk image." << endl;
