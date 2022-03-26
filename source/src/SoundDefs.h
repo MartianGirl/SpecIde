@@ -15,8 +15,8 @@
 
 #pragma once
 
-size_t constexpr FILTER_BZZ_SIZE = 96;
-size_t constexpr FILTER_PSG_SIZE = 96;
+size_t constexpr FILTER_BZZ_SIZE = 128;
+size_t constexpr FILTER_PSG_SIZE = 128;
 uint32_t constexpr BASE_CLOCK_48 = 7000000;
 uint32_t constexpr BASE_CLOCK_128 = 7093800;
 uint32_t constexpr BASE_CLOCK_CPC = 16000000;

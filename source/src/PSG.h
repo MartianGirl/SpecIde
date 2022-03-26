@@ -251,9 +251,9 @@ class PSG
                 signalA = (r[7] & 0x01) ? 1 : waveA;
                 signalB = (r[7] & 0x02) ? 1 : waveB;
                 signalC = (r[7] & 0x04) ? 1 : waveC;
-                if (!(r[7] & 0x08)) signalA += noise;
-                if (!(r[7] & 0x10)) signalB += noise;
-                if (!(r[7] & 0x20)) signalC += noise;
+                if (!(r[7] & 0x08)) signalA &= noise;
+                if (!(r[7] & 0x10)) signalB &= noise;
+                if (!(r[7] & 0x20)) signalC &= noise;
                 signalA *= out[envA ? envLevel : volumeA];
                 signalB *= out[envB ? envLevel : volumeB];
                 signalC *= out[envC ? envLevel : volumeC];
