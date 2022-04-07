@@ -255,14 +255,20 @@ void CPC::clock() {
                     break;
                 case 0x0100:    // Port B: &F5xx
                     if (z80.rd) {
-                        ppi.portB = tapeLevel | 0x5E | (expBit ? 0x20 : 0x00) | (ga.crtc.vSync ? 0x1 : 0x0);
+                        uint_fast8_t brand = 0x07 << 1;
+                        ppi.portB = tapeLevel
+                            | 0x50 | brand
+                            | (expBit ? 0x20 : 0x00)
+                            | ((ga.crtc.vSync || ga.crtc.vSyncForced) ? 0x1 : 0x0);
                         z80.d = ppi.readPortB();
                     } else if (z80.wr) {
                         ppi.writePortB(z80.d);
+                        ga.crtc.vSyncForced = ppi.portB & 0x1;
                     }
                     break;
                 case 0x0200:    // Port C: &F6xx
                     if (z80.rd) {
+                        ppi.portC = 0x2F;
                         z80.d = ppi.readPortC();
                     } else if (z80.wr) {
                         ppi.writePortC(z80.d);
@@ -287,7 +293,7 @@ void CPC::clock() {
                 // Execute PSG command.
                 switch (ppi.portC & 0xC0) {
                     case 0x40:
-                        ppi.portA = ppi.inputA ? psg.read() : 0x00;
+                        ppi.portA = psg.read();
                         break;
                     case 0x80:
                         psg.write(ppi.portA);
@@ -325,6 +331,7 @@ void CPC::clock() {
     if (ga.cpuClock()) {
         z80.c = ga.z80_c;
 
+        // Tape mechanism delays.
         if (relay) {
             if (tapeSpeed < 686000) {
                 ++tapeSpeed;
@@ -335,10 +342,9 @@ void CPC::clock() {
             }
         }
 
+        // Tape signal.
         if (tape.playing && tapeSpeed) {
             // 400000 @ 4MHz = 0.1s
-            filter[index] = (tapeLevel && tapeSound) ? LOAD_VOLUME : 0;
-            index = (index + 1) % FILTER_BZZ_SIZE;
 
             if (!tape.sample--) {
                 uint_fast8_t level = tape.advance();
@@ -347,6 +353,11 @@ void CPC::clock() {
         } else {
             tapeLevel = 0x00;
         }
+
+        // Tape sounds.
+        filter[index] = (tapeLevel && tapeSound) ? LOAD_VOLUME : 0;
+        filter[index] += (ppi.portC & 0x20) ? SAVE_VOLUME : 0;
+        index = (index + 1) % FILTER_BZZ_SIZE;
 
         if (!io_) {
             // Peripherals
@@ -410,6 +421,7 @@ void CPC::reset() {
     z80.reset();
     psgReset();
     fdc765.reset();
+    ppi.writeControlPort(0x9B);
 }
 
 void CPC::psgReset() {
