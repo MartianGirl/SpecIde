@@ -40,9 +40,10 @@ void Tape::loadCdt(string const& fileName) {
 
     // Pulses in ZX Spectrum TZX tapes are defined in T-States of a 3.5MHz clock.
     // To achieve the same speed in an Amstrad CPC at 4MHz, we need to scale the
-    // pulse lengths.
+    // pulse lengths. The value 1.16 is a bit slower than 8/7, and it seems to
+    // work a bit better.
     for (size_t ii = counter; ii < pulseData.size(); ++ii) {
-        pulseData[ii] = pulseData[ii] * 8 / 7;
+        pulseData[ii] = pulseData[ii] * 1.16;
     }
 }
 
