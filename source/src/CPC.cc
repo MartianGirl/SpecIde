@@ -20,7 +20,7 @@
 #include <cstdlib>
 #include <ctime>
 
-int constexpr SAVE_VOLUME = 0x03FF;
+int constexpr SAVE_VOLUME = 0x01FF;
 int constexpr LOAD_VOLUME = 0x01FF;
 
 CPC::CPC() {
