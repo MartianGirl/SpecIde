@@ -35,6 +35,12 @@
 
 using namespace std;
 
+enum class JoystickType {
+    KEMPSTON,
+    FULLER,
+    SINCLAIR
+};
+
 /**
  * A ZX Spectrum computer.
  *
@@ -84,9 +90,11 @@ class Spectrum {
         uint_fast8_t bus_1 = 0xFF;
         /** Byte in Kempston joystick port. */
         uint_fast8_t kempstonData = 0x00;
+        /** Byte in Fuller joystick port. */
+        uint_fast8_t fullerData = 0xFF;
 
-        /** Kempston interface present. If false, Sinclair joystick is emulated. */
-        bool kempston = false;
+        /** Joystick interface type. By default, Sinclair joystick is emulated. */
+        JoystickType joystickType = JoystickType::SINCLAIR;
         /** Emulate a 128K spectrum (128K, +2, +2A, +3, Pentagon). */
         bool spectrum128K = false;
         /** Emulate a Gate Array based Spectrum (+2A, +3). */
@@ -132,6 +140,7 @@ class Spectrum {
         size_t index = 0;
         /** Sync frame rate to monitor's 50Hz frame rate. */
         bool sync = false;
+        bool fuller = true;
 
         /**
          * Map of contended memory areas. Typically, $4000-$7FFF is contended,

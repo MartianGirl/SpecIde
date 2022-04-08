@@ -78,7 +78,13 @@ void SpeccyScreen::setup() {
     cout << "Model: " << options["model"] << endl;
 
     // Select joystick interface.
-    spectrum.kempston = (options["joystick"] == "kempston");
+    if (options["joystick"] == "kempston") {
+        spectrum.joystickType = JoystickType::KEMPSTON;
+    } else if (options["joystick"] == "fuller") {
+        spectrum.joystickType = JoystickType::FULLER;
+    } else {
+        spectrum.joystickType = JoystickType::SINCLAIR;
+    }
     cout << "Joystick type: " << options["joystick"] << endl;
     pad = (options["pad"] == "yes");
     cout << "Map game pad extra buttons to keys: " << options["pad"] << endl;
@@ -470,39 +476,64 @@ void SpeccyScreen::togglePsgType() {
 
 void SpeccyScreen::joystickHorizontalAxis(bool l, bool r) {
 
-    if (spectrum.kempston) {
-        spectrum.kempstonData &= 0xFC;
-        if (l) {
-            spectrum.kempstonData |= 0x02;
-        } else if (r) {
-            spectrum.kempstonData |= 0x01;
-        }
-    } else {
-        spectrum.ula.sinclairData &= 0xFC;
-        if (l) {
-            spectrum.ula.sinclairData |= 0x01;
-        } else if (r) {
-            spectrum.ula.sinclairData |= 0x02;
-        }
+    switch (spectrum.joystickType) {
+        case JoystickType::KEMPSTON:
+            spectrum.kempstonData &= 0xFC;
+            if (l) {
+                spectrum.kempstonData |= 0x02;
+            } else if (r) {
+                spectrum.kempstonData |= 0x01;
+            }
+            break;
+
+        case JoystickType::FULLER:
+            spectrum.fullerData |= 0x0C;
+            if (l) {
+                spectrum.fullerData &= 0xFB;
+            } else if (r) {
+                spectrum.fullerData &= 0xF7;
+            }
+            break;
+
+        default:    // JoystickType::SINCLAIR
+            spectrum.ula.sinclairData &= 0xFC;
+            if (l) {
+                spectrum.ula.sinclairData |= 0x01;
+            } else if (r) {
+                spectrum.ula.sinclairData |= 0x02;
+            }
+            break;
     }
 }
 
 void SpeccyScreen::joystickVerticalAxis(bool u, bool d) {
 
-    if (spectrum.kempston) {
-        spectrum.kempstonData &= 0xF3;
-        if (u) {
-            spectrum.kempstonData |= 0x08;
-        } else if (d) {
-            spectrum.kempstonData |= 0x04;
-        }
-    } else {
-        spectrum.ula.sinclairData &= 0xF3;
-        if (u) {
-            spectrum.ula.sinclairData |= 0x08;
-        } else if (d) {
-            spectrum.ula.sinclairData |= 0x04;
-        }
+    switch (spectrum.joystickType) {
+        case JoystickType::KEMPSTON:
+            spectrum.kempstonData &= 0xF3;
+            if (u) {
+                spectrum.kempstonData |= 0x08;
+            } else if (d) {
+                spectrum.kempstonData |= 0x04;
+            }
+            break;
+
+        case JoystickType::FULLER:
+            spectrum.fullerData |= 0x03;
+            if (u) {
+                spectrum.fullerData &= 0xFE;
+            } else if (d) {
+                spectrum.fullerData &= 0xFD;
+            }
+            break;
+
+        default:    // JoystickType::SINCLAIR
+            spectrum.ula.sinclairData &= 0xF3;
+            if (u) {
+                spectrum.ula.sinclairData |= 0x08;
+            } else if (d) {
+                spectrum.ula.sinclairData |= 0x04;
+            }
     }
 }
 
@@ -514,8 +545,19 @@ void SpeccyScreen::joystickButtonPress(uint_fast32_t button) {
         button = 4;  // Interpret every button as default.
     }
 
-    if (spectrum.kempston && button < 5) {
-        spectrum.kempstonData |= 1 << button;
+    if (button < 5) {
+        switch (spectrum.joystickType) {
+            case JoystickType::KEMPSTON:
+                spectrum.kempstonData |= 0x10;
+                break;
+
+            case JoystickType::FULLER:
+                spectrum.fullerData &= 0x7F;
+                break;
+
+            default:    // JoystickType::SINCLAIR
+                spectrum.ula.sinclairData |= 1 << button;
+        }
     } else {
         spectrum.ula.sinclairData |= 1 << button;
     }
@@ -529,8 +571,19 @@ void SpeccyScreen::joystickButtonRelease(uint_fast32_t button) {
         button = 4;  // Interpret every button as default.
     }
 
-    if (spectrum.kempston && button < 5) {
-        spectrum.kempstonData &= ~(1 << button);
+    if (button < 5) {
+        switch (spectrum.joystickType) {
+            case JoystickType::KEMPSTON:
+                spectrum.kempstonData &= ~(1 << button);
+                break;
+
+            case JoystickType::FULLER:
+                break;
+
+            default:    // JoystickType::SINCLAIR
+                spectrum.ula.sinclairData &= ~(1 << button);
+                break;
+        }
     } else {
         spectrum.ula.sinclairData &= ~(1 << button);
     }

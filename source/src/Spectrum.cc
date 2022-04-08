@@ -446,6 +446,29 @@ void Spectrum::clock() {
                     }
                 }
 
+                // Fuller Box AY-3-8912 ports.
+                if (fuller) {
+                    switch (z80.a & 0x0060) {
+                        case 0x0020:    // 0x003F
+                            if (z80.wr) {
+                                psgAddr();
+                            } else if (z80.rd) {
+                                psgRead();
+                            }
+                            break;
+
+                        case 0x0040:    // 0x005F
+                            if (z80.wr) {
+                                psgWrite();
+                            } else if (z80.rd) {
+                                psgRead();
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
                 // Common ports.
                 // Ports in the form XXXXXXXX 0XX11111 are blocked when TR-DOS
                 // is active. This affects kempston joystick, for instance.
@@ -459,7 +482,7 @@ void Spectrum::clock() {
                         // }
                     }
                 } else {
-                    if (kempston && !(z80.a & 0x0020)) {    // Kempston joystick.
+                    if (joystickType == JoystickType::KEMPSTON && !(z80.a & 0x0020)) {    // Kempston joystick.
                         if (z80.rd) {
                             z80.d = kempstonData;
                         }
