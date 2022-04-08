@@ -195,14 +195,16 @@ void CPC::clock() {
     size_t memArea = z80.a >> 14;
 
     if (!io_) {
-        // Gate Array. This is accessible by both I/O reads and I/O writes.
-        // &7Fxx is Gate Array / RAM selection port.
-        if ((z80.a & 0xC000) == 0x4000) {
+        // PAL & Gate Array.
+        // PAL is selected when address is 0xxxxxxx xxxxxxxx.
+        // Gate Array is selected when address is 01xxxxxx xxxxxxxx.
+        // Gate Array is accessible by both I/O reads and I/O writes.
+        if (!(z80.a & 0x8000)) {
             if ((z80.d & 0xC0) == 0xC0) {
                 if (cpc128K && z80.wr) {
                     selectRam(z80.d);
                 }
-            } else if (m1_) {
+            } else if (m1_ && (z80.a & 0x4000)) {
                 ga.write(z80.d);
             }
         }
@@ -221,7 +223,7 @@ void CPC::clock() {
 
         // CRTC.
         // &BCxx, &BDxx, &BExx, &BFxx are CRTC ports.
-        if ((z80.rd || z80.wr) && ((z80.a & 0x4000) == 0x0000)) {
+        if ((z80.rd || z80.wr) && !(z80.a & 0x4000)) {
             switch (z80.a & 0x0300) {
                 case 0x0000:    // CRTC Register Select (WO) at &BC00.
                     ga.crtc.wrAddress(z80.d);
@@ -242,7 +244,7 @@ void CPC::clock() {
 
         // 8255 PPI.
         // &F4xx, &F5xx, &F6xx, &F7xx are 8255 ports.
-        if ((z80.a & 0x0800) == 0x0000) {
+        if (!(z80.a & 0x0800)) {
             switch (z80.a & 0x0300) {
                 case 0x0000:    // Port A: &F4xx
                     if (z80.rd) {
@@ -253,14 +255,20 @@ void CPC::clock() {
                     break;
                 case 0x0100:    // Port B: &F5xx
                     if (z80.rd) {
-                        ppi.portB = tapeLevel | 0x5E | (expBit ? 0x20 : 0x00) | (ga.crtc.vSync ? 0x1 : 0x0);
+                        uint_fast8_t brand = 0x07 << 1;
+                        ppi.portB = tapeLevel
+                            | 0x50 | brand
+                            | (expBit ? 0x20 : 0x00)
+                            | ((ga.crtc.vSync || ga.crtc.vSyncForced) ? 0x1 : 0x0);
                         z80.d = ppi.readPortB();
                     } else if (z80.wr) {
                         ppi.writePortB(z80.d);
+                        ga.crtc.vSyncForced = ppi.portB & 0x1;
                     }
                     break;
                 case 0x0200:    // Port C: &F6xx
                     if (z80.rd) {
+                        ppi.portC = 0x2F;
                         z80.d = ppi.readPortC();
                     } else if (z80.wr) {
                         ppi.writePortC(z80.d);
@@ -285,7 +293,7 @@ void CPC::clock() {
                 // Execute PSG command.
                 switch (ppi.portC & 0xC0) {
                     case 0x40:
-                        ppi.portA = ppi.inputA ? psg.read() : 0x00;
+                        ppi.portA = psg.read();
                         break;
                     case 0x80:
                         psg.write(ppi.portA);
@@ -323,6 +331,7 @@ void CPC::clock() {
     if (ga.cpuClock()) {
         z80.c = ga.z80_c;
 
+        // Tape mechanism delays.
         if (relay) {
             if (tapeSpeed < 686000) {
                 ++tapeSpeed;
@@ -333,10 +342,9 @@ void CPC::clock() {
             }
         }
 
+        // Tape signal.
         if (tape.playing && tapeSpeed) {
             // 400000 @ 4MHz = 0.1s
-            filter[index] = (tapeLevel && tapeSound) ? LOAD_VOLUME : 0;
-            index = (index + 1) % FILTER_BZZ_SIZE;
 
             if (!tape.sample--) {
                 uint_fast8_t level = tape.advance();
@@ -346,12 +354,17 @@ void CPC::clock() {
             tapeLevel = 0x00;
         }
 
+        // Tape sounds.
+        filter[index] = (tapeLevel && tapeSound) ? LOAD_VOLUME : 0;
+        filter[index] += (ppi.portC & 0x20) ? SAVE_VOLUME : 0;
+        index = (index + 1) % FILTER_BZZ_SIZE;
+
         if (!io_) {
             // Peripherals
             if ((z80.a & 0x0400) == 0x0000) {
 
                 // FDC
-                if (cpcDisk && (z80.a & 0x0480) == 0x0000) {
+                if (cpcDisk && !(z80.a & 0x0480)) {
                     switch (z80.a & 0x0101) {
                         case 0x0100:    // FDC main status register (&FB7E)
                             if (z80.rd) {
@@ -365,7 +378,8 @@ void CPC::clock() {
                                 z80.d = fdc765.read();
                             }
                             break;
-                        case 0x0000:    // FDC motor (&FA7E)
+                        case 0x0000:    // fall-through
+                        case 0x0001:    // FDC motor (&FA7E/&FA7F)
                             if (z80.wr) {
                                 fdc765.motor((z80.d & 0x01) == 0x01);
                             }
@@ -407,6 +421,7 @@ void CPC::reset() {
     z80.reset();
     psgReset();
     fdc765.reset();
+    ppi.writeControlPort(0x9B);
 }
 
 void CPC::psgReset() {
@@ -464,6 +479,8 @@ void CPC::sample() {
             break;
     }
 
+    l = 2 * (l - 0x4000);
+    r = 2 * (r - 0x4000);
     channel.push(l, r);
 }
 

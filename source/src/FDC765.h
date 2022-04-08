@@ -122,9 +122,13 @@ class FDC765 {
         bool skipDeletedBit;
         bool useDeletedDAM;
 
+        /** Flag: ID Address Mark found. */
         bool idmFound;
+        /** Flag: Data Address Mark or Deleted Data Address Mark found. */
         bool ddmFound;
+        /** Flag: End of Cylinder found. */
         bool eocFound;
+        /** Flag: Sector found. */
         bool secFound;
         bool loaded = false;
         bool unload = false;

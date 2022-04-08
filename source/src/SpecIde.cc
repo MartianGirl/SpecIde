@@ -70,6 +70,8 @@ map<string, Option> arguments = {
     {"--mono",          {"stereo", "mono"}},
     {"--ay",            {"psgtype", "ay"}},
     {"--ym",            {"psgtype", "ym"}},
+    {"--covox",         {"covox", "yes"}},
+    {"--nocovox",       {"covox", "no"}},
 
     // Screen options
     {"--average",       {"scanmode", "average"}},
@@ -142,10 +144,8 @@ int main(int argc, char* argv[]) {
 
 void displayLicense() {
 
-    cout << "SpecIde Version ";
-    cout << SPECIDE_VERSION_MAJOR << ".";
-    cout << SPECIDE_VERSION_MINOR << ".";
-    cout << SPECIDE_VERSION_TWEAK << endl << endl;
+    cout << "SpecIde built on: " << SPECIDE_BUILD_TIME << endl;
+    cout << "Built from: " << SPECIDE_BUILD_COMMIT << endl << endl;
     cout << "(c) 2016-2019 Marta Sevillano Mancilla." << endl << endl;
     cout << "This program is free software: you can redistribute it and/or modify" << endl;
     cout << "it under the terms of the GNU General Public License as published by" << endl;
@@ -193,6 +193,7 @@ void displayHelp() {
     cout << "--psg|--nopsg          Emulate AY chip in 48K Spectrum." << endl;
     cout << "--abc|--acb|--mono     Select stereo mode." << endl;
     cout << "--ay|--ym              Select PSG: AY-3-8912/YM-2149." << endl;
+    cout << "--covox|--nocovox      Emulate LPT-Covox on port $FB." << endl;
     cout << "--sd1                  Emulate Dinamic SD1 dongle." << endl;
     cout << "--cmos                 Z80 is CMOS - OUT(C),0 outputs FFh." << endl;
     cout << endl;
@@ -234,6 +235,7 @@ void readOptions(map<string, string>& options) {
     options["scale"] = "1";
     options["z80type"] = "nmos";
     options["crtc"] = "0";
+    options["covox"] = "no";
 
     vector<string> cfgPaths;
     string cfgName("SpecIde.cfg");
@@ -304,7 +306,7 @@ bool isSpectrum(string const& model) {
 
 bool isCpc(string const& model) {
 
-    set<string> models = {"cpc464", "cpc664", "cpc6128", "cpc464es", "cpc664es", "cpc6128es"};
+    set<string> models = {"cpc464", "cpc664", "cpc6128", "cpc464sp", "cpc664sp", "cpc6128sp"};
 
     return (models.find(model) != models.end());
 }
@@ -333,4 +335,18 @@ vector<string> getRomDirs() {
 
     return romDirs;
 }
+
+void printBytes(string const& prefix, size_t len, uint8_t* buf) {
+
+    cout << prefix << " ";
+    for (size_t ii = 0; ii < len; ++ii) {
+        cout << hex << setw(2) << setfill('0');
+        cout << static_cast<uint32_t>(buf[ii]) << " ";
+        if ((ii & 0xF) == 0xF) {
+        cout << endl << ".." << " ";
+        }
+    }
+    cout << endl;
+}
+
 // vim: et:sw=4:ts=4

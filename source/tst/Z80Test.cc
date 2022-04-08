@@ -1572,10 +1572,7 @@ BOOST_AUTO_TEST_CASE(ldir_test)
         BOOST_CHECK_EQUAL(z80.de.w, 0x4000 + i + 1);
         BOOST_CHECK_EQUAL(z80.hl.w, 0xC000 + i + 1);
         BOOST_CHECK_EQUAL(m.memory[0x4000 + i], i % 0x100);
-        BOOST_CHECK_EQUAL(z80.af.b.l, 
-                (((i + 0x20) % 0x100) & 0x08) 
-                | ((((i + 0x20) % 0x100) & 0x02) << 4) 
-                | 0x04);
+        BOOST_CHECK_EQUAL(z80.af.b.l, (z80.pc.b.h & 0x28) | 0x04);
     }
 
     runCycles(z80, m, 16);
@@ -1654,10 +1651,7 @@ BOOST_AUTO_TEST_CASE(lddr_test)
         BOOST_CHECK_EQUAL(z80.de.w, 0x427F - i - 1);
         BOOST_CHECK_EQUAL(z80.hl.w, 0xC27F - i - 1);
         BOOST_CHECK_EQUAL(m.memory[0x427F - i], (0x27F - i) % 0x100);
-        BOOST_CHECK_EQUAL(z80.af.b.l, 
-                ((((0x27F - i) + 0x20) % 0x100) & 0x08) 
-                | (((((0x27F - i) + 0x20) % 0x100) & 0x02) << 4)
-                | 0x04);
+        BOOST_CHECK_EQUAL(z80.af.b.l, (z80.pc.b.h & 0x28) | 0x04);
     }
 
     runCycles(z80, m, 16);
@@ -1731,8 +1725,7 @@ BOOST_AUTO_TEST_CASE(cpir_test)
 
         uint8_t s = static_cast<uint8_t>(i);
         uint8_t h = (-(s & 0x0F) & 0x10);
-        uint8_t n = 0x20 - s - (h >> 4);
-        uint8_t f = h | (n & 0x08) | ((n << 4) & 0x20) | 0x06;
+        uint8_t f = h | (z80.pc.b.h & 0x28) | 0x06;
 
         BOOST_CHECK_EQUAL(z80.bc.w, 0x0080 - i - 1);
         BOOST_CHECK_EQUAL(z80.hl.w, 0xC000 + i + 1);
@@ -1807,8 +1800,7 @@ BOOST_AUTO_TEST_CASE(cpdr_test)
 
         uint8_t s = static_cast<uint8_t>(0x7F - i);
         uint8_t h = (-(s & 0x0F) & 0x10);
-        uint8_t n = 0x20 - s - (h >> 4);
-        uint8_t f = 0x80 | h | (n & 0x08) | ((n << 4) & 0x20) | 0x06;
+        uint8_t f = 0x80 | h | (z80.pc.b.h & 0x28) | 0x06;
 
         BOOST_CHECK_EQUAL(z80.bc.w, 0x0080 - i - 1);
         BOOST_CHECK_EQUAL(z80.hl.w, 0xC07F - i - 1);

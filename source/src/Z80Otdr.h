@@ -91,6 +91,21 @@ bool z80Otdr()
 
         case 8:
             pc.w -= 0x0002;
+            flg = af.b.l & ~(FLAG_5 | FLAG_3);
+            flg |= pc.b.h & (FLAG_5 | FLAG_3);
+
+            acc.b.l = bc.b.h;
+            if (af.b.l & FLAG_C) {
+                acc.b.l += (af.b.l & FLAG_N) ? -1 : 1;
+                flg = (flg & ~FLAG_H) | ((bc.b.h ^ acc.b.l) & FLAG_H);
+            }
+            acc.b.l &= 0x07;
+            acc.b.l ^= acc.b.l >> 1;
+            acc.b.l ^= acc.b.l >> 2;
+            acc.b.l ^= acc.b.l >> 4;
+            flg ^= (acc.b.l & 1) ? FLAG_PV : 0;
+
+            af.b.l = flg;
             prefix = PREFIX_NO;
             return true;
 

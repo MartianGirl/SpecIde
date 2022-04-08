@@ -29,6 +29,10 @@ BOOST_AUTO_TEST_CASE(constructors_test)
         for (uint32_t jj = 0; jj < file.tracks[ii].sectors.size(); ++jj) {
             cout << static_cast<uint32_t>(file.tracks[ii].sectors[jj].sectorSize) << " ";
         }
+        cout << " -  ";
+        for (uint32_t jj = 0; jj < file.tracks[ii].sectors.size(); ++jj) {
+            cout << static_cast<uint32_t>(file.tracks[ii].sectors[jj].sectorLength) << " ";
+        }
         cout << endl;
     }
 }

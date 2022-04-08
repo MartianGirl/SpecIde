@@ -103,10 +103,8 @@ void Screen::chooseVideoMode() {
 void Screen::reopenWindow(bool fs) {
 
     char str[64];
-    snprintf(str, 64, "SpecIde %d.%d.%d [NO TAPE]",
-            SPECIDE_VERSION_MAJOR,
-            SPECIDE_VERSION_MINOR,
-            SPECIDE_VERSION_TWEAK);
+    snprintf(str, 64, "SpecIde [%s(%s)]",
+            SPECIDE_BUILD_DATE, SPECIDE_BUILD_COMMIT);
 
     window.close();
 

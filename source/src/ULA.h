@@ -29,7 +29,7 @@
 
 using namespace std;
 
-constexpr int SOUND_VOLUME = 0x17FF;
+constexpr int SOUND_VOLUME = 0x19FF;
 constexpr int SAVE_VOLUME = 0x03FF;
 constexpr int LOAD_VOLUME = 0x01FF;
 

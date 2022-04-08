@@ -17,6 +17,7 @@
 #include <iomanip>
 
 #include "FDC765.h"
+#include "SpecIde.h"
 
 using namespace std;
 
@@ -99,6 +100,9 @@ void FDC765::clock() {
                 sReg[0] |= 0x40;    // AT
                 interrupt = true;
                 state = FDC765State::FDC765_STATE_RESULT;
+#ifdef DEBUGFDC765
+                cout << "Overrun!" << endl;
+#endif
             }
             break;
 
@@ -121,99 +125,144 @@ void FDC765::checkCommand() {
     switch (cmdBuffer[0] & 0x1F) {
 
         case 0x02:  // Read Track (Diagnostic)
+#ifdef DEBUGFDC765
+            cout << "Read track" << endl;
+#endif
             cmdBytes = 9;   // 02+MF+SK    HU TR HD SC SZ NM GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD NM SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x03:  // Specify SPD/DMA
+#ifdef DEBUGFDC765
+            cout << "Specify" << endl;
+#endif
             cmdBytes = 3;   // 03          XX YY
             resBytes = 0;   //
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x04:  // Sense drive status
+#ifdef DEBUGFDC765
+            cout << "Sense drive" << endl;
+#endif
             cmdBytes = 2;   // 04          HU
             resBytes = 1;   //             S3
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x05:  // Write sector(s)
+#ifdef DEBUGFDC765
+            cout << "Write sector" << endl;
+#endif
             cmdBytes = 9;   // 05+MT+MF    HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x06:  // Read sector(s)
+#ifdef DEBUGFDC765
+            cout << "Read sector." << endl;
+#endif
             cmdBytes = 9;   // 06+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x07:  // Recalibrate and seek physical track 0
+#ifdef DEBUGFDC765
+            cout << "Recalibrate" << endl;
+#endif
             cmdBytes = 2;   // 07          HU
             resBytes = 0;
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x08:  // Sense interrupt status
+#ifdef DEBUGFDC765
+            cout << "Sense interrupt" << endl;
+#endif
             cmdBytes = 1;   // 08
             resBytes = 2;   //             S0 TP
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x09:  // Write deleted sector(s)
+#ifdef DEBUGFDC765
+            cout << "Write deleted" << endl;
+#endif
             cmdBytes = 9;   // 09+MT+MF    HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x0A:  // Read ID
+#ifdef DEBUGFDC765
+            cout << "Read ID" << endl;
+#endif
             cmdBytes = 2;   // 0A+MF       HU
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x0C:  // Read deleted sector(s)
+#ifdef DEBUGFDC765
+            cout << "Read deleted." << endl;
+#endif
             cmdBytes = 9;   // 0C+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x0D:  // Format track
+#ifdef DEBUGFDC765
+            cout << "Format track" << endl;
+#endif
             cmdBytes = 6;   // 0D+MF       HU SZ NM GP FB
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x0F:  // Seek track N
+#ifdef DEBUGFDC765
+            cout << "Seek track" << endl;
+#endif
             cmdBytes = 3;   // 0F          HU TP
             resBytes = 0;
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x10:  // Version
+#ifdef DEBUGFDC765
+            cout << "Version" << endl;
+#endif
             cmdBytes = 1;
             resBytes = 1;
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x11:  // Scan equal
+#ifdef DEBUGFDC765
             cout << "Scan equal." << endl;
+#endif
             cmdBytes = 9;   // 11+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x19:  // Scan low or equal
+#ifdef DEBUGFDC765
             cout << "Scan low or equal." << endl;
+#endif
             cmdBytes = 9;   // 19+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDC765State::FDC765_STATE_COMMAND;
             break;
 
         case 0x1D:  // Scan high or equal
+#ifdef DEBUGFDC765
             cout << "Scan high or equal." << endl;
+#endif
             cmdBytes = 9;   // 1D+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
             state = FDC765State::FDC765_STATE_COMMAND;
@@ -236,6 +285,9 @@ void FDC765::setup() {
     mfmModeBit = ((cmdBuffer[0] & 0x40) == 0x40);
     skipDeletedBit = ((cmdBuffer[0] & 0x20) == 0x20);
     serviceTimer = clockFrequency * ((mfmModeBit) ? SERVICE_MFM : SERVICE_FM);
+#ifdef DEBUGFDC765
+    printBytes("->", cmdBytes, cmdBuffer);
+#endif
 
     switch (cmdBuffer[0] & 0x1F) {
 
@@ -307,6 +359,7 @@ void FDC765::setup() {
         case 0x19:  // Scan low or equal
         case 0x1D:  // Scan high or equal
             eocFound = false;
+            ddmFound = false;
             drive[cmdDrive()].hole = 0;
             firstSector = cmdBuffer[4];
             lastSector = cmdBuffer[6];
@@ -513,6 +566,9 @@ bool FDC765::seekForReadOp() {
 bool FDC765::readOp() {
 
     bool done = false;
+#ifdef DEBUGFDC765
+    cout << firstSector << "..";
+#endif
 
     // We already have read the sector in the seekForReadOp, and
     // currSector holds the current sector number.
@@ -529,7 +585,7 @@ bool FDC765::readOp() {
 
     if (done) {
         drive[cmdDrive()].nextSector();
-        if (sReg[0] == 0x00 && sReg[1] == 0x00 && currSector == lastSector) {
+        if (sReg[0] == 0x00 && sReg[1] == 0x00 && currSector >= lastSector) {
             eocFound = true;
         }
 
@@ -554,6 +610,9 @@ void FDC765::setResultBytesOp() {
 
 bool FDC765::readRegularDataOp() {
 
+#ifdef DEBUGFDC765
+    cout << "Read..";
+#endif
     bool error = false;
 
     size_t actlen = drive[cmdDrive()].length;
@@ -568,19 +627,19 @@ bool FDC765::readRegularDataOp() {
         sectorCopy = (sectorCopy + 1) % sectorCopies;
     }
 
+    // If the actual sector size doesn't match the requested sector size,
+    // then signal ND (No Data)
+    if (drive[cmdDrive()].idSize != cmdBuffer[5]) {
+        sReg[0] |= 0x40;    // 01000HUU - AT
+        sReg[1] |= 0x04;    // xxxxx1xx - ND
+    }
+
     size_t finish = min(offset + outlen, drive[cmdDrive()].buffer.size());
     vector<uint8_t> buf(&drive[cmdDrive()].buffer[offset],
             &drive[cmdDrive()].buffer[finish]);
 
     // Complete length
     buf.resize(outlen, drive[cmdDrive()].filler);
-
-    if (actlen == 0x80 && outlen == 0x200
-            && cmdBuffer[2] == 0x01) {
-        // SpeedLock D7 AAAA: All we need is the error code.
-        sReg[0] |= 0x40;
-        error = true;
-    }
 
     // Detect Speedlock protection:
     // CRC error on track 00, sector 02, which is 512 bytes long.
@@ -596,18 +655,24 @@ bool FDC765::readRegularDataOp() {
 
     // We must signal the CM.
     sReg[2] &= 0xBF;
-    return (error || currSector == lastSector);
+    return (error || currSector >= lastSector);
 }
 
 bool FDC765::readDeletedDataOp() {
 
     size_t actlen = drive[cmdDrive()].length;
-    size_t outlen = 0x80 << drive[cmdDrive()].idSize;
+    size_t outlen = cmdBuffer[5] ? (0x80 << cmdBuffer[5]) : cmdBuffer[8];
     size_t offset = 0;
 
     if (skipDeletedBit) {
+#ifdef DEBUGFDC765
+        cout << "Skip deleted..";
+#endif
         return false;
     }
+#ifdef DEBUGFDC765
+    cout << "Read deleted..";
+#endif
 
     // If actlen is a multiple of outlen, there are several
     // copies of this sector and we have to choose one.
@@ -615,6 +680,13 @@ bool FDC765::readDeletedDataOp() {
         size_t sectorCopies = actlen / outlen;
         offset = outlen * sectorCopy;
         sectorCopy = (sectorCopy + 1) % sectorCopies;
+    }
+
+    // If the actual sector size doesn't match the requested sector size,
+    // then signal ND (No Data)
+    if (drive[cmdDrive()].idSize != cmdBuffer[5]) {
+        sReg[0] |= 0x40;    // 01000HUU - AT
+        sReg[1] |= 0x04;    // xxxxx1xx - ND
     }
 
     size_t finish = min(offset + outlen, drive[cmdDrive()].buffer.size());
@@ -694,6 +766,10 @@ void FDC765::readCmd() {
             unload = true;
             state = dataBytes ?
                 FDC765State::FDC765_STATE_TRANSMIT : FDC765State::FDC765_STATE_RESULT;
+#ifdef DEBUGFDC765
+            printBytes("<-", dataBytes, dataBuffer);
+            printBytes("<-", resBytes, resBuffer);
+#endif
             break;
 
         case FDC765Access::FDC765_ACCESS_NONE:
@@ -722,6 +798,9 @@ void FDC765::readIdCmd() {
             interrupt = true;
             unload = true;
             state = FDC765State::FDC765_STATE_RESULT;
+#ifdef DEBUGFDC765
+            printBytes("<-", resBytes, resBuffer);
+#endif
             break;
 
         default:
@@ -1026,9 +1105,24 @@ void FDC765::writeCmd() {
 
 void FDC765::specifyCmd() {
 
-    headUnloadTime = (cmdBuffer[1] & 0x0F) * 32 * DELAY_1ms * clockFrequency;
-    stepRateTime = ((cmdBuffer[1] & 0xF0) >> 4) * 32 * DELAY_1ms * clockFrequency;
-    headLoadTime = (cmdBuffer[2] >> 1) * 4 * DELAY_1ms * clockFrequency;
+    // The Head Unload Time is programmable from 16 to 240ms in increments of
+    // 16ms (01 = 16ms, 02 = 32ms ... 0F = 240ms)
+    // The Step Rate Time is programmable from 1 to 16ms in increments of 1ms.
+    // (F = 1ms, E = 2ms, D = 3ms, etc.)
+    // The Head Load Time is programmable from 2 to 254ms in increments of
+    // 2ms. (01 = 2ms, 02 = 4ms, 03 = 6ms ... 7F = 254ms)
+    // The time intervals mentioned above are a direct function of the clock.
+    // Times indicated above are for an 8MHz clock; if the clock was reduced
+    // to 4MHz (mini-floppy application) then all time intervals are increased
+    // by a factor of 2.
+    // Since the base frequency I'm using here is 1MHz (FDC clock in the ZX
+    // Spectrum is 1MHz, but I'm clocking at 7/8, that is, 0.875MHz and I'm
+    // scaling), I've got to multiply all intervals times 8:
+    // 16ms * 8 = 128ms.
+    // 2ms * 8 = 16ms.
+    headUnloadTime = (cmdBuffer[1] & 0x0F) * 128 * DELAY_1ms * clockFrequency;
+    stepRateTime = (0x10 - ((cmdBuffer[1] & 0xF0) >> 4)) * 128 * DELAY_1ms * clockFrequency;
+    headLoadTime = (cmdBuffer[2] >> 1) * 16 * DELAY_1ms * clockFrequency;
     useDma = ((cmdBuffer[2] & 0x01) == 0x00);
     loadTimer = headLoadTime;
     unloadTimer = headUnloadTime;
@@ -1053,6 +1147,7 @@ void FDC765::scanCmd() {
             // end the operation with an error.
             if (seekForReadOp()) {
                 if ((sReg[0] & 0xC0) == 0x00) {
+                    dataBytes = 0x80 << cmdBuffer[5];
                     stage = FDC765Access::FDC765_ACCESS_DATA;
                     state = FDC765State::FDC765_STATE_RECEIVE;
                 } else {
@@ -1077,9 +1172,20 @@ void FDC765::scanCmd() {
                 sReg[1] = drive[cmdDrive()].statusReg1;
                 sReg[2] = drive[cmdDrive()].statusReg2;
 
-                // Now we look at the data mark.
+                // If the FDC encounters a Deleted Data Address Mark on one of
+                // the sectors:
+                // SK = 0: It regards the sector as the last sector on the
+                //         cylinder, sets CM (Control Mark) flag on sReg[2]
+                // and terminates the command.
+                // SK = 1: It skips the sector with the Deleted Address Mark
+                //         and reads the next sector. In the second case, the
+                //         sReg[2] CM (Control Mark) bit is set in order to
+                //         show that a Deleted Sector has been encountered.
                 if ((sReg[2] & 0x40) == 0x40) {
-                    done = true;
+                    if (skipDeletedBit) {
+                    } else {
+                        done = true;
+                    }
                 } else {
                     done = readRegularDataOp();
                 }
@@ -1095,22 +1201,6 @@ void FDC765::scanCmd() {
 
                 vector<uint8_t> buffer = drive[cmdDrive()].buffer;
                 buffer.resize(dataBytes, 0);
-
-                // If we're doing a multisector transfer, we copy this sector
-                // and remove the copied part from the dataBuffer.
-                if (dataIndex >= dataBytes) {
-                    copy(&dataBuffer[0], &dataBuffer[dataBytes], &buffer[0]);
-                    copy(&dataBuffer[dataBytes], &dataBuffer[dataIndex], &dataBuffer[0]);
-                    dataIndex -= dataBytes;
-                } else {
-                    copy(&dataBuffer[0], &dataBuffer[dataIndex], &buffer[0]);
-                }
-
-                drive[cmdDrive()].buffer = buffer;
-                drive[cmdDrive()].statusReg1 = 0x00;
-                drive[cmdDrive()].statusReg2 |= useDeletedDAM ? 0x40 : 0x00;
-                drive[cmdDrive()].writeSector(cmdHead());
-                drive[cmdDrive()].nextSector();
             }
 
             if (((sReg[0] & 0xC0) != 0x00) || currSector == lastSector) {

@@ -102,6 +102,7 @@ class CRTC {
         bool hSync = false;
         bool vSync = false;
         bool dispEn = false;
+        bool vSyncForced = false;
 
         /** End of scan. Usually when C0 == R0. */
         bool endOfScan = false;

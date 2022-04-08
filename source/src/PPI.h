@@ -33,7 +33,7 @@ class PPI {
     /** Byte in port C. */
     uint_fast8_t portC = 0;
     /** Control port. */
-    uint_fast8_t control = 0;
+    uint_fast8_t control = 0x9B;
 
     /** Port A register. */
     uint_fast8_t regA = 0;
@@ -49,14 +49,19 @@ class PPI {
     /** Port C mode. */
     uint_fast8_t modeC = 0;
 
+    /** Port C mask. */
+    uint_fast8_t maskCPort = 0x00;
+    uint_fast8_t maskCReg = 0x00;
+    uint_fast8_t maskCPin = 0x00;
+
     /** Port A direction. */
-    bool inputA = false;
+    bool inputA = true;
     /** Port B direction. */
-    bool inputB = false;
+    bool inputB = true;
     /** Port C direction, low nybble. */
-    bool inputLoC = false;
+    bool inputLoC = true;
     /** Port C direction, high nybble. */
-    bool inputHiC = false;
+    bool inputHiC = true;
 
     /**
      * Read port A.
@@ -65,18 +70,14 @@ class PPI {
      */
     uint_fast8_t readPortA() {
 
+        uint_fast8_t value = regA;
         if (modeA == 2) {
         } else if (modeA == 1) {
-            // Mode 1 as input: STBA is always active.
-            if (inputA) {
-                regC &= 0xD7; portC = regC;
-                regA = portA;
-            }
         } else {
             // Mode 0: Read value from port A.
-            if (inputA) regA = portA;
+            value = inputA ? portA : regA;
         }
-        return regA;
+        return value;
     };
 
     /**
@@ -86,14 +87,13 @@ class PPI {
      */
     uint_fast8_t readPortB() {
 
+        uint_fast8_t value = regB;
         if (modeB) {
-            // Mode 1: Clear IBFB and INTEB
-            regC &= 0xFC; portC = regC;
         } else {
             // Mode 0: Read value from port B.
-            if (inputB) regB = portB;
+            value = inputB ? portB : regB;
         }
-        return regB;
+        return value;
     }
 
     /**
@@ -103,14 +103,31 @@ class PPI {
      */
     uint_fast8_t readPortC() {
 
-        if (inputLoC) { regC &= 0xF0; regC |= portC & 0x0F; }
-        if (inputHiC) { regC &= 0x0F; regC |= portC & 0xF0; }
+        uint_fast8_t value = 0;
 
-        return regC;
+        // On input, reading portC returns the value of the pins not used
+        // as control pins for ports A & B.
+        // On output, reading portC returns the latched value.
+        if (inputLoC) {
+            value |= portC & maskCPort & 0x0F;
+        } else {
+            value |= regC & 0x0F;
+        }
+
+        if (inputHiC) {
+            value |= portC & maskCPort & 0xF0;
+        } else {
+            value |= regC & 0xF0;
+        }
+
+        return value;
     }
 
     /**
      * Write port A from the data bus.
+     *
+     * Writes a byte to port A. The value is output if the port is outbound,
+     * but it is always latched.
      *
      * @param byte The value for port A.
      */
@@ -123,6 +140,9 @@ class PPI {
     /**
      * Write port B from the data bus.
      *
+     * Writes a byte to port B. The value is output if the port is outbound,
+     * but it is always latched.
+     *
      * @param byte The value for port B.
      */
     void writePortB(uint_fast8_t byte) { 
@@ -134,25 +154,24 @@ class PPI {
     /**
      * Write Port C from the data bus.
      *
+     * Writes a byte to port C. The value is output if the port is outbound,
+     * but it is always latched, except for the pins set as control pins.
+     *
      * @param byte The value for port C.
      */
     void writePortC(uint_fast8_t byte) {
 
-        regC = byte;
-        if (modeA == 0 && modeB == 0) {
-            if (!inputLoC) { portC &= 0xF0; portC |= regC & 0x0F; }
-            if (!inputHiC) { portC &= 0x0F; portC |= regC & 0xF0; }
-        } else {
-            if (modeA == 1 && inputA) {
-                portC &= 0xD7;
-                if (!inputHiC) { portC &= 0x3F; portC |= regC & 0xC0; }
-            }
-
-            if (modeB == 1 && inputB) {
-                portC |= 0x03;
-                if (!inputHiC) { portC &= 0x3F; portC |= regC & 0xC0; }
-            }
+        if (!inputLoC) {
+            portC &= 0xF0;
+            portC |= ((byte & maskCPort) | (maskCPin & ~maskCPort)) & 0x0F;
         }
+
+        if (!inputHiC) {
+            portC &= 0x0F;
+            portC |= ((byte & maskCPort) | (maskCPin & ~maskCPort)) & 0xF0;
+        }
+
+        regC = (maskCPin & ~maskCReg) | (byte & maskCReg);
     }
 
     /**
@@ -166,32 +185,60 @@ class PPI {
 
         control = byte;
 
-        // b8: 1 = bit control. 0 = normal mode.
+        // b8: 0 = bit control. 1 = normal mode.
         if (control & 0x80) {
             modeA = (control & 0x60) >> 5;  // b6 b5: Port A mode.
-            modeB = (control & 0x04) >> 2;  // b2. Port B mode.
+            modeB = (control & 0x04) >> 2;  // b2: Port B mode.
 
             inputA = (control & 0x10);      // b4: Port A direction.
-            inputB = (control & 0x02);      // b1. Port B direction.
+            inputB = (control & 0x02);      // b1: Port B direction.
             inputHiC = (control & 0x08);    // b3: Port C high nybble direction.
-            inputLoC = (control & 0x01);    // b0. Port C low nybble direction.
+            inputLoC = (control & 0x01);    // b0: Port C low nybble direction.
 
             // All ports are reset when the control word is updated.
-            regA = 0;
-            regB = 0;
-            regC = 0;
-            if (!inputA) { portA = regA; }
-            if (!inputB) { portB = regB; }
-            if (!inputLoC) { portC &= 0xF0; portC |= regC & 0x0F; }
-            if (!inputHiC) { portC &= 0x0F; portC |= regC & 0xF0; }
-        } else {
-            uint8_t mask = 1 << ((control & 0xe) >> 1);
-            if (control & 0x1) {
-                portC |= mask;
-            } else {
-                portC &= ~mask;
+            regA = 0; portA = inputA ? 0xFF : 0x00;
+            regB = 0; portB = inputB ? 0xFF : 0x00;
+            regC = 0; portC = 0;
+
+            maskCPort = 0;
+            maskCReg = 0;
+            maskCPin = 0;
+            // Mode A = 0 keeps bits PC7-PC3 for I/O.
+            // Mode A = 1 (output) grabs bits PC 7,6,3 for control.
+            // Mode A = 1 (input) grabs bits PC 5,4,3 for control.
+            // Mode A = 2 grabs bits PC7-PC3 for control.
+            switch (modeA) {
+                case 1:
+                    maskCPort |= inputA ? 0xC0 : 0x30;
+                    maskCReg |= 0x00;
+                    break;
+                case 2: // fall-through
+                case 3:
+                    maskCPort |= 0x00;
+                    maskCReg |= 0x00; break;
+                default:
+                    maskCPort |= 0xF8;
+                    maskCReg |= 0xF8;
+                    break;
             }
-            regC = portC;
+
+            // Mode B = 0 keeps bits PC2-PC0 for I/O.
+            // Mode B = 1 grabs bits PC2-PC0 for control.
+            maskCPort |= modeB ? 0x00 : 0x07;
+            maskCReg |= modeB ? 0x00 : 0x07;
+        } else {
+            uint_fast8_t mask = 1 << ((control & 0xe) >> 1);
+            maskCPin &= ~maskCPort;
+            // Bit control mode also updates the latch and port.
+            if (control & 0x1) {
+                maskCPin |= mask;
+                if (!inputLoC) { portC |= mask & 0x0F; regC |= mask & 0x0F; }
+                if (!inputHiC) { portC |= mask & 0xF0; regC |= mask & 0xF0; }
+            } else {
+                maskCPin &= ~mask;
+                if (!inputLoC) { portC &= ~(mask & 0x0F); regC &= ~(mask & 0x0F); }
+                if (!inputHiC) { portC &= ~(mask & 0xF0); regC &= ~(mask & 0xF0); }
+            }
         }
     }
 };

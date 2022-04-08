@@ -229,11 +229,8 @@ void CpcScreen::update() {
     if (cpc.tape.pulseData.size()) {
         char str[64];
         unsigned int percent = 100 * cpc.tape.pointer / cpc.tape.pulseData.size();
-        snprintf(str, 64, "SpecIde %d.%d.%d [%03u%%]",
-                SPECIDE_VERSION_MAJOR,
-                SPECIDE_VERSION_MINOR,
-                SPECIDE_VERSION_TWEAK,
-                percent);
+        snprintf(str, 64, "SpecIde [%s(%s)] [%03u%%]",
+                SPECIDE_BUILD_DATE, SPECIDE_BUILD_COMMIT, percent);
         window.setTitle(str);
     }
 }

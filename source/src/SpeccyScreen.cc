@@ -135,6 +135,9 @@ void SpeccyScreen::setup() {
     spectrum.psgChip(aychip);
     cout << "PSG chip: " << options["psgtype"] << endl;
 
+    spectrum.hasCovox = (options["covox"] == "yes");
+    cout << "Covox on port $FB: " << options["covox"] << endl;
+
     // Other stuff.
     spectrum.flashTap = (options["flashtap"] == "yes");
     cout << "FlashTAP: " << options["flashtap"] << endl;
@@ -290,11 +293,8 @@ void SpeccyScreen::update() {
     if (spectrum.tape.pulseData.size()) {
         char str[64];
         unsigned int percent = 100 * spectrum.tape.pointer / spectrum.tape.pulseData.size();
-        snprintf(str, 64, "SpecIde %d.%d.%d [%03u%%]",
-                SPECIDE_VERSION_MAJOR,
-                SPECIDE_VERSION_MINOR,
-                SPECIDE_VERSION_TWEAK,
-                percent);
+        snprintf(str, 64, "SpecIde [%s(%s)] [%03u%%]",
+                SPECIDE_BUILD_DATE, SPECIDE_BUILD_COMMIT, percent);
         window.setTitle(str);
     }
 }
@@ -326,7 +326,6 @@ void SpeccyScreen::updateMenu() {
     ss << "Function keys:" << endl;
     ss << "F1:    This help." << endl;
     ss << "F2:    Fullscreen." << endl;
-    ss << "S-F2:  Antialiasing." << endl;
     ss << "F3:    Save DSK file to disk." << endl;
     ss << "S-F3:  Create empty DSK image." << endl;
     ss << "F4:    Select next disk image." << endl;
@@ -537,7 +536,7 @@ void SpeccyScreen::joystickButtonRelease(uint_fast32_t button) {
 
 float SpeccyScreen::getPixelClock() {
 
-    float baseClock = (spectrum.ula.ulaVersion == 2 || spectrum.ula.ulaVersion == 3)
+    float baseClock = (spectrum.ula.ulaVersion >= 2 && spectrum.ula.ulaVersion <= 4)
         ? BASE_CLOCK_128 : BASE_CLOCK_48;
     return 2 * baseClock / 1000000.0;
 }
