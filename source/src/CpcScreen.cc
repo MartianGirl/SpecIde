@@ -110,6 +110,7 @@ void CpcScreen::setup() {
     ySize = GateArray::Y_SIZE / (doubleScanMode ? 1 : 2);
     texture(xSize, ySize);
 
+    cpc.tape.speed = 1.16;
     loadFiles();
 
     lBorder = 208;

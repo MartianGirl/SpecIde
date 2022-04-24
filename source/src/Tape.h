@@ -60,6 +60,14 @@ class Tape {
         uint32_t sample = 0;        // Sample counter.
         uint8_t level = 0x7F;       // Tape output level.
 
+        /**
+         * TZX tapes assume a 3.5MHz clock. This value adjusts the
+         * tape speed for different CPU clocks.
+         * ZX Spectrum (@ ~3.5MHz): 1.0.
+         * Amstrad CPC: (@ 4MHz) 1.16.
+         */
+        double speed = 1.0;         // Tape speed factor (1.00 for ZX, 1.16 for CPC)
+
         bool playing = false;       // Is tape playing?
         bool is48K = true;          // For deciding if we stop or not :)
 
