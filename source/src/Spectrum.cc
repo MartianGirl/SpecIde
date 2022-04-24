@@ -825,29 +825,59 @@ uint_fast8_t Spectrum::readMemory(uint_fast16_t a) {
 
 void Spectrum::trapLdStart() {
 
-    // Find first block that matches flag byte (Flag is in AF')
-    while (tape.foundTapBlock(z80.af_.b.h) == false) {
-        tape.nextTapBlock();
-    }
+    // ZF = 1 means treat the flag byte as a normal byte. This is
+    // indicated by setting the number of flag bytes to zero.
+    uint16_t flagByte = (z80.af_.b.l & FLAG_Z) ? 1 : 0;
 
-    // Get parameters from CPU registers
-    uint16_t start = z80.ix.w;
-    uint16_t bytes = z80.de.w;
-    uint16_t block = tape.getBlockLength();
+    // If either there are no flag bytes or the expected flag matches the
+    // block's flag, we signal flag ok. Expected flag is in A'.
+    bool flagOk = tape.foundTapBlock(z80.af_.b.h) || flagByte;
 
-    if (block < bytes) {
-        // Load error if not enough bytes.
-        z80.af.b.l &= 0xFE;
-    } else {
-        block = bytes;
-        z80.af.b.l |= 0x01;
-    }
-    z80.ix.w = (z80.ix.w + block) & 0xFFFF;
-    z80.de.w -= block;
+    // CF = 1 means LOAD, CF = 0 means VERIFY.
+    bool verify = !(z80.af_.b.l & FLAG_C);
 
-    // Dump block to memory.
-    for (uint_fast16_t ii = 0; ii < block; ++ii) {
-        writeMemory(start + ii, tape.getBlockByte(ii + 3));
+    if (flagOk) {
+        // Get parameters from CPU registers
+        uint16_t address = z80.ix.w;
+        uint16_t bytes = z80.de.w;
+
+        uint16_t block = tape.getBlockLength() + flagByte - 1;  // Include parity
+        uint16_t offset = 3 - flagByte;
+        uint8_t parity = flagByte ? 0 : tape.getBlockByte(2);
+
+        if (verify) {
+            while (bytes && block) {
+                uint8_t byte = tape.getBlockByte(offset++);
+                uint8_t mem = readMemory(address++);
+                block--;
+                bytes--;
+                parity ^= byte;
+                if (byte != mem) break;
+            }
+        } else {
+            while (bytes && block) {
+                uint8_t byte = tape.getBlockByte(offset++);
+                writeMemory(address++, byte);
+                block--;
+                bytes--;
+                parity ^= byte;
+            }
+        }
+
+        if (block) {
+            parity ^= tape.getBlockByte(offset);
+        }
+
+        if (!bytes && block && !parity) {
+            z80.af.b.l |= FLAG_C;
+        } else {
+            z80.af.b.l &= ~FLAG_C;
+            if (!block) z80.af.b.l |= FLAG_Z;
+        }
+
+        z80.hl.b.h = parity;
+        z80.ix.w = address;
+        z80.de.w = bytes;
     }
 
     // Advance tape
