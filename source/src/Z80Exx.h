@@ -27,17 +27,17 @@
 
 bool z80Exx()
 {
-    tmp.w = bc.w;
+    acc.w = bc.w;
     bc.w = bc_.w;
-    bc_.w = tmp.w;
+    bc_.w = acc.w;
 
-    tmp.w = de.w;
+    acc.w = de.w;
     de.w = de_.w;
-    de_.w = tmp.w;
+    de_.w = acc.w;
 
-    tmp.w = hl.w;
+    acc.w = hl.w;
     hl.w = hl_.w;
-    hl_.w = tmp.w;
+    hl_.w = acc.w;
 
     flg = 0;
     prefix = PREFIX_NO;
