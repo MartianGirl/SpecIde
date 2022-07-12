@@ -309,7 +309,8 @@ void ULA::tapeEarMic() {
     static uint_fast32_t capacitor = 0;
     static uint_fast32_t chargeDelay = 0;
 
-    if (ulaVersion < 2) {
+    // 128K has MIC and EAR connected together, so the capacitor loop applies.
+    if (ulaVersion < 3) {
         uint_fast32_t v = voltage[soundBits];
 
         if (v > 3000) {
