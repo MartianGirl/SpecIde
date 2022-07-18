@@ -30,6 +30,7 @@ class CRTC {
     public:
         CRTC(uint_fast8_t type = 0);
 
+        /** CRTC type. Numbers as in Amstrad CPC community. */
         uint_fast32_t type;
         uint_fast8_t index;
         uint_fast8_t regs[32];
@@ -81,8 +82,6 @@ class CRTC {
         /** Horizontal position where VSync pulse starts. */
         uint_fast8_t vSyncOffset = 0;
 
-        /** Programmed number of scans in the CRTC. */
-        uint_fast32_t maxScans = 312;
         /** Separation between VSYNCs for max. 72Hz VFreq. */
         uint_fast32_t vSyncSeparation = 300;
 
@@ -94,7 +93,9 @@ class CRTC {
         uint_fast16_t byteAddress = 0;
         /** Address of current mem page. */
         uint_fast16_t pageAddress = 0;
-        bool updateLineAddress = false;
+
+        /** Update video offset from R12/R13, not from VMA'. */
+        bool updateVideoOffset = false;
 
         bool hDisplay = false;
         bool vDisplay = false;
@@ -104,33 +105,13 @@ class CRTC {
         bool dispEn = false;
         bool vSyncForced = false;
 
-        /** End of scan. Usually when C0 == R0. */
-        bool endOfScan = false;
-        /** End of character row. This condition is triggered when C9 == R9 + 1. */
-        bool endOfRow = false;
-        /** Screen frame has ended. */
-        bool endOfFrame = false;
-        /** First scan of character row. Usually this means C9 == 0. */
-        bool firstScanInRow = false;
-        /** Last scan of character row. Usually this means C9 == R9. */
-        bool lastScanInRow = false;
-        /** First character row on the screen. */
-        bool firstRow = false;
-        /** Last character row on the screen. */
-        bool lastRow = false;
         /** End of horizontal displayed area. C0 == R1. */
         bool hDispOff = false;
         /** End of vertical displayed area. C4 == R6. */
         bool vDispOff = false;
 
-        bool finishFrameAttempt = false;
-        bool enterVAdjust = false;
-        bool finishRow = false;
+        /** Processing vertical adjustment lines. */
         bool processVAdjust = false;
-        bool finishFrame = false;
-        uint_fast8_t nextVCounter = 0;
-        uint_fast8_t nextRCounter = 0;
-        uint_fast8_t nextACounter = 0;
 
         bool vTotalUpdated = false;
         bool rMaxUpdated = false;

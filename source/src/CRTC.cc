@@ -66,124 +66,6 @@ CRTC::CRTC(uint_fast8_t type) :
         AccessType::CRTC_RO,
         AccessType::CRTC_RO} {}
 
-void CRTC::wrAddress(uint_fast8_t byte) {
-
-    index = byte & 0x1F;
-}
-
-void CRTC::wrRegister(uint_fast8_t byte) {
-
-    if (dirs[index] == AccessType::CRTC_WO
-            || dirs[index] == AccessType::CRTC_RW) {
-        regs[index] = byte & mask[index];
-
-        switch (index) {
-            case 0: // Horizontal Total. Actual value = Set value + 1.
-                if (type == 0 && regs[0] == 0) {
-                    regs[0] = 1;
-                }
-                hTotal = regs[0] + 1;
-                break;
-            case 1: // Horizontal Displayed.
-                hDisplayed = regs[1];
-#ifdef DEBUGCRTC
-                cout << "Update HDisp(" << static_cast<uint32_t>(hDisplayed)
-                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
-                    << " VLC=" << static_cast<uint32_t>(rCounter)
-                    << " VAD=" << static_cast<uint32_t>(vaCounter)
-                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
-#endif
-                break;
-            case 2: // Horizontal Sync Position.
-                hsPos = regs[2];
-                break;
-            case 3: // Horizontal & Vertical Sync Width.
-                vswMax = (regs[3] & 0xF0) >> 4;
-                hswMax = (regs[3] & 0x0F);
-                switch (type) {
-                    case 1: // Type 1 (UM6845R):
-                        // VSW is ignored. VSYNC is fixed to 16 lines.
-                        vswMax = 0x0;
-                        break;
-                    case 2: // Type 2 (MC6845):
-                        // VSW is ignored. VSYNC is fixed to 16 lines.
-                        vswMax = 0x0;
-                        break;
-                    default:
-                        break;
-                }
-                break;
-            case 4: // Vertical total.
-                vTotal = regs[4] + 1;
-                vTotalUpdated = true;
-#ifdef DEBUGCRTC
-                cout << "Update VTotal(" << static_cast<uint32_t>(vTotal)
-                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
-                    << " VLC=" << static_cast<uint32_t>(rCounter)
-                    << " VAD=" << static_cast<uint32_t>(vaCounter)
-                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
-#endif
-                break;
-            case 5: // Vertical adjust.
-                vAdjust = regs[5];
-#ifdef DEBUGCRTC
-                cout << "Update VAdjust(" << static_cast<uint32_t>(vAdjust)
-                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
-                    << " VLC=" << static_cast<uint32_t>(rCounter)
-                    << " VAD=" << static_cast<uint32_t>(vaCounter)
-                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
-#endif
-                break;
-            case 6: // Vertical displayed.
-                vDisplayed = regs[6];
-#ifdef DEBUGCRTC
-                cout << "Update VDisplayed(" << static_cast<uint32_t>(vDisplayed)
-                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
-                    << " VLC=" << static_cast<uint32_t>(rCounter)
-                    << " VAD=" << static_cast<uint32_t>(vaCounter)
-                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
-#endif
-                break;
-            case 7: // Vertical Sync Position.
-                vsPos = regs[7];
-                if (vCounter == vsPos) {
-                    vSync = true;
-                    vswCounter = 0;
-                }
-                break;
-            case 9: // Max Raster Address.
-                rMax = regs[9] + 1;
-                rMaxUpdated = true;
-#ifdef DEBUGCRTC
-                cout << "Update RMax(" << static_cast<uint32_t>(rMax)
-                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
-                    << " VLC=" << static_cast<uint32_t>(rCounter)
-                    << " VAD=" << static_cast<uint32_t>(vaCounter)
-                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
-#endif
-                break;
-            case 12:    // fall-through
-            case 13:
-                updateLineAddress = (vCounter == 0) && ((rCounter == 0) || type == 1);
-#ifdef DEBUGCRTC
-                cout << "Update base address(" << regs[13] + (regs[12] & 0x3F) * 0x100
-                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
-                    << " VLC=" << static_cast<uint32_t>(rCounter)
-                    << " VAD=" << static_cast<uint32_t>(vaCounter)
-                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
-                break;
-#endif
-            default:
-                break;
-        }
-    }
-
-    maxScans = vTotal * rMax + vAdjust;
-
-    double base = (1000000.0 / 57.5);
-    vSyncSeparation = base / (hTotal ? hTotal : 64);
-}
-
 void CRTC::rdStatus(uint_fast8_t &byte) {
 
     switch (type) {
@@ -243,185 +125,355 @@ void CRTC::rdRegister(uint_fast8_t &byte) {
     }
 }
 
+void CRTC::wrAddress(uint_fast8_t byte) {
+
+    index = byte & 0x1F;
+}
+
+void CRTC::wrRegister(uint_fast8_t byte) {
+
+    if (dirs[index] == AccessType::CRTC_WO
+            || dirs[index] == AccessType::CRTC_RW) {
+        regs[index] = byte & mask[index];
+
+        switch (index) {
+            case 0: // Horizontal Total. Actual value = Set value + 1.
+                if (type == 0 && regs[0] == 0) {
+                    regs[0] = 1;
+                }
+                hTotal = regs[0];
+                break;
+            case 1: // Horizontal Displayed.
+                hDisplayed = regs[1];
+#ifdef DEBUGCRTC
+                cout << "Update HDisp(" << static_cast<uint32_t>(hDisplayed)
+                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
+                    << " VLC=" << static_cast<uint32_t>(rCounter)
+                    << " VAD=" << static_cast<uint32_t>(vaCounter)
+                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
+#endif
+                break;
+            case 2: // Horizontal Sync Position.
+                hsPos = regs[2];
+                break;
+            case 3: // Horizontal & Vertical Sync Width.
+                vswMax = (regs[3] & 0xF0) >> 4;
+                hswMax = (regs[3] & 0x0F);
+                switch (type) {
+                    case 1: // Type 1 (UM6845R):
+                        // VSW is ignored. VSYNC is fixed to 16 lines.
+                        vswMax = 0x0;
+                        break;
+                    case 2: // Type 2 (MC6845):
+                        // VSW is ignored. VSYNC is fixed to 16 lines.
+                        vswMax = 0x0;
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case 4: // Vertical total.
+                vTotal = regs[4];
+                vTotalUpdated = true;
+#ifdef DEBUGCRTC
+                cout << "Update VTotal(" << static_cast<uint32_t>(vTotal)
+                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
+                    << " VLC=" << static_cast<uint32_t>(rCounter)
+                    << " VAD=" << static_cast<uint32_t>(vaCounter)
+                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
+#endif
+                break;
+            case 5: // Vertical adjust.
+                vAdjust = regs[5];
+#ifdef DEBUGCRTC
+                cout << "Update VAdjust(" << static_cast<uint32_t>(vAdjust)
+                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
+                    << " VLC=" << static_cast<uint32_t>(rCounter)
+                    << " VAD=" << static_cast<uint32_t>(vaCounter)
+                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
+#endif
+                break;
+            case 6: // Vertical displayed.
+                vDisplayed = regs[6];
+#ifdef DEBUGCRTC
+                cout << "Update VDisplayed(" << static_cast<uint32_t>(vDisplayed)
+                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
+                    << " VLC=" << static_cast<uint32_t>(rCounter)
+                    << " VAD=" << static_cast<uint32_t>(vaCounter)
+                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
+#endif
+                break;
+            case 7: // Vertical Sync Position.
+                vsPos = regs[7];
+                if (vCounter == vsPos) {
+                    vSync = true;
+                    vswCounter = 0;
+                }
+                break;
+            case 12:    // fall-through
+            case 13:
+#ifdef DEBUGCRTC
+                cout << "Update base address(" << regs[13] + (regs[12] & 0x3F) * 0x100
+                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
+                    << " VLC=" << static_cast<uint32_t>(rCounter)
+                    << " VAD=" << static_cast<uint32_t>(vaCounter)
+                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
+                break;
+#endif
+            default:
+                break;
+        }
+    }
+
+    double base = (1000000.0 / 57.5);
+    vSyncSeparation = base / (hTotal ? hTotal : 64);
+}
+
 void CRTC::clock() {
 
-    // Counters:
-    // - Character counter (aka Horizontal Counter)
-    //      Compared to R0 (Horizontal Total Register)
-    //          Set -> Skew control -> DISPTMG
-    //          Reset Character counter (MR)
-    //          Clock Raster counter
-    //          Clock Vertical Sync Width Counter
-    //          Affect Linear Address Generator
-    //          Affect Interlace Control
-    //
-    //      Compared to R1 (Horizontal Displayed Register)
-    //          Reset -> Skew control -> DISPTMG
-    //          Reset -> Linear Address Generator
-    //      Compared to R2 (Horizontal Sync Position Register)
-    //          Set HSYNC
-    //          Enable Horizontal Sync Width Counter
-    //      Compared to R0 / 2
-    //          Affect Interlace Control
+    updateVideoOffset = false;
 
-    // Here increment Raster Counter, Vertical Sync Width Counter
-    // Horizontal counter is incremented with each tick.
-    ++hCounter;
-
-    // On HCC=1 the conditions for End Of Frame and End Of Row are checked.
-    if (hCounter == 1) {
-#ifdef DEBUGCRTC
-        cout << "Position: VCC=" << static_cast<uint32_t>(vCounter)
-            << " VLC=" << static_cast<uint32_t>(rCounter)
-            << " VAD=" << static_cast<uint32_t>(vaCounter)
-            << " HCC=" << static_cast<uint32_t>(hCounter)
-            << " HSync=" << static_cast<uint32_t>(hsPos)
-            << " HDisp=" << static_cast<uint32_t>(hDisplayed)
-            << " HTotal=" << static_cast<uint32_t>(hTotal)
-            << " VSync=" << static_cast<uint32_t>(vsPos)
-            << " VDisp=" << static_cast<uint32_t>(vDisplayed)
-            << " VTotal=" << static_cast<uint32_t>(vTotal)
-            << " RMax=" << static_cast<uint32_t>(rMax)
-            << " Address=" << lineAddress << endl;
-#endif
-        nextRCounter = (rCounter + 1) & 0x1F;
-        nextVCounter = (vCounter + 1) & 0x7F;
-        nextACounter = (vaCounter + 1) & 0x1F;
-
-        // If we entered adjust area, we are no longer considering VCC/VLC
-        // counters.
-        bool finishFrameOnAdjust = processVAdjust && (nextACounter == vAdjust);
-        bool finishFrameOnRowEnd = (nextVCounter == vTotal) && (nextRCounter == rMax);
-        finishFrameAttempt = finishFrameOnAdjust || finishFrameOnRowEnd;
-#ifdef DEBUGCRTC
-        if (finishFrameOnAdjust) {
-            cout << "Attempt finish frame (adjust) at VCC=" << static_cast<uint32_t>(vCounter);
-            cout << " VLC=" << static_cast<uint32_t>(rCounter);
-            cout << " Adjust=" << static_cast<uint32_t>(vAdjust) << endl;
-        }
-        if (finishFrameOnRowEnd) {
-            cout << "Attempt finish frame (row end) at VCC=" << static_cast<uint32_t>(vCounter);
-            cout << " VLC=" << static_cast<uint32_t>(rCounter);
-            cout << " Adjust=" << static_cast<uint32_t>(vAdjust) << endl;
-        }
-#endif
-        finishRow = (nextRCounter == rMax);
-    }
-
-    // On HCC=2 the conditions for entering Vertical Adjustment are checked.
-    if (hCounter == 2) {
-        enterVAdjust = (vCounter == vTotal - 1) && (rCounter == rMax - 1) && (vAdjust != 0);
-#ifdef DEBUGCRTC
-        if (enterVAdjust) {
-            cout << "Entering vAdjust at VCC=" << static_cast<uint32_t>(vCounter);
-            cout << " VLC=" << static_cast<uint32_t>(rCounter) << endl;
-        }
-#endif
-        finishFrame = finishFrameAttempt && !enterVAdjust;
-    }
-
-    // I'm going to leave this here for the moment. If there are no further cases
-    // where endOfScan out of sequence is needed, I'll merge this condition with
-    // the following if block.
+    // If Horizontal Character Counter (HCC, C0) matches Horizontal Total (R0),
+    // it returns to 0. Otherwise, it is incremented.
     if (hCounter == hTotal) {
-        endOfScan = true;
+        hCounter = 0;
+    } else {
+        ++hCounter;
     }
 
-    if (endOfScan) {    // Horizontal Total marks the end of a scan.
-        hCounter = 0;               // Reset Horizontal Counter.
-        hDisplay = true;            // Start drawing screen.
+    // Some processing occurs on different values of HCC/C0.
+    if (hCounter == 0) {
+        // Image is displayed again for this line.
+        hDisplay = true;
 
-        if (processVAdjust) {
-            vaCounter = (vaCounter + 1) & 0x1F;
-        } else {
-            if (vTotalUpdated || rMaxUpdated) {
-                // Abort end of frame on VLC=0 if vTotal is set so VCC!=VTotal.
-                if (vCounter == 0) {
-                    if (rCounter == 0 && nextVCounter != vTotal) {
-                        finishFrame = false;
-                    } else if (rCounter != 0 && nextVCounter == vTotal) {
-                        finishFrame = true;
+        // Check C9 == R9.
+        bool lastLineInCharRowBefore = (rCounter == rMax);
+        bool lastLineInCharRowAfter = (rCounter == regs[9]);
+        bool lastLineInCharRow = lastLineInCharRowBefore || lastLineInCharRowAfter;
+        // Check C4 == R4.
+        bool lastCharRow = (vCounter == vTotal);
+
+        if (!processVAdjust) {
+            switch (type) {
+                case 0: // CRTC Type 0:
+                    if (lastCharRow) { // C4 == R4
+                        if (lastLineInCharRowBefore) {
+                            // C9 and C4 go to 0.
+                            // Video offset is updated.
+                            // This is the "last line" case, hence if C5 != 0
+                            // the vertical adjustment phase is entered.
+                            rCounter = 0;
+                            if (vAdjust) {
+                                vCounter = (vCounter + 1) & 0x7F;
+                                processVAdjust = true;
+                            } else {
+                                vCounter = 0;
+                                updateVideoOffset = true;
+                            }
+                        } else if (lastLineInCharRowAfter) {
+                            // C9 goes to 0, C4 is incremented and overflows.
+                            vCounter = (vCounter + 1) & 0x7F;
+                            rCounter = 0;
+                        } else {
+                            // C9 is incremented.
+                            // Video offset is not updated.
+                            rCounter = (rCounter + 1) & 0x1F;
+                        }
+                    } else { // General behaviour (C4 != R4)
+                        if (lastLineInCharRowAfter) {
+                            // This covers C9 = R9 after the update.
+                            vCounter = (vCounter + 1) & 0x7F;
+                            rCounter = 0;
+                        } else {
+                            // This covers C9 == R9 before the update. (No update
+                            // happened).
+                            rCounter = (rCounter + 1) & 0x1F;
+                        }
                     }
-                }
-                // Updated R4 or R9 may trigger a frame end.
-                if (nextVCounter == vTotal && (finishRow || nextRCounter == rMax)) {
-                    finishFrame = true;
-                }
-                // If frame is not finished, maybe row is...
-                if (!finishFrame) {
-                    finishRow = (nextRCounter == rMax);
-                }
+                    break;
+
+                case 1: // CRTC Type 1:
+                    if (lastCharRow) { // C4 == R4
+                        if (lastLineInCharRowAfter) {
+                            // C9 goes to 0.
+                            // This is the "last line" case, hence if C5 != 0
+                            // the vertical adjustment phase is entered.
+                            rCounter = 0;
+                            if (vAdjust) {
+                                // Set C5=0, increment C4.
+                                vaCounter = 0;
+                                vCounter = (vCounter + 1) & 0x7F;
+                                processVAdjust = true;
+                            } else {
+                                // C4 goes to 0.
+                                // Video offset is updated.
+                                vCounter = 0;
+                                updateVideoOffset = true;
+                            }
+                        } else {
+                            // C9 is incremented.
+                            // Video offset is updated if C4 == 0.
+                            rCounter = (rCounter + 1) & 0x1F;
+                            updateVideoOffset = (vCounter == 0);
+                        }
+                    } else { // General behaviour (C4 != R4)
+                        if (lastLineInCharRowAfter) {
+                            // This covers C9 = R9 after the update.
+                            rCounter = 0;
+                            vCounter = (vCounter + 1) & 0x7F;
+                        } else {
+                            // This covers C9 == R9 before the update. (No update
+                            // happened).
+                            rCounter = (rCounter + 1) & 0x1F;
+                            updateVideoOffset = (vCounter == 0);
+                        }
+                    }
+                    break;
+
+                case 2: // CRTC Type 2:
+                    if (lastCharRow) { // C4 == R4
+                        if (vAdjust) {
+                            // CRTC 0,1,2 increment VCC/C4. CRTC 3,4 dont.
+                            vCounter = (vCounter + 1) & 0x7F;
+                            processVAdjust = true;
+                        } else if (lastLineInCharRow) {
+                            // C9 and C4 go to 0.
+                            // Video offset is updated if C0 <= R1.
+                            // This is the "last line" case, hence if C5 != 0
+                            // the vertical adjustment phase is entered.
+                            rCounter = 0;
+                            if (vAdjust) {
+                                // Set C5=0, increment C4.
+                                vaCounter = 0;
+                                vCounter = (vCounter + 1) & 0x7F;
+                                processVAdjust = true;
+                            } else {
+                                vCounter = 0;
+                                updateVideoOffset = (hCounter <= hDisplayed);
+                            }
+                            // TODO: Check for HSYNC cancellation.
+                            // It applies to the BEFORE case, when C4 == R4 == 0.
+                        } else {
+                            // C9 is incremented.
+                            // Video offset is not updated.
+                            rCounter = (rCounter + 1) & 0x1F;
+                        }
+                    } else { // General behaviour (C4 != R4)
+                        if (lastLineInCharRowAfter) {
+                            // This covers C9 = R9 after the update.
+                            rCounter = 0;
+                            vCounter = (vCounter + 1) & 0x7F;
+                        } else {
+                            // This covers C9 == R9 before the update. (No update
+                            // happened).
+                            rCounter = (rCounter + 1) & 0x1F;
+                        }
+                    }
+                    break;
+
+                default: // CRTC 3 & 4.
+                    if (lastCharRow) { // C4 == R4
+                        if (rCounter >= regs[9]) {
+                            rCounter = 0;
+                            if (vAdjust) {
+                                vaCounter = 0;
+                                processVAdjust = true;
+                            } else {
+                                vCounter = 0; 
+                                updateVideoOffset = true;
+                            }
+                        } else {
+                            // C9 is incremented.
+                            // Video offset is not updated.
+                            rCounter = (rCounter + 1) & 0x1F;
+                        } 
+                    } else { // General behaviour (C4 != R4).
+                        if (rCounter >= regs[9]) {
+                            // This covers C9 = R9 after the update.
+                            rCounter = 0;
+                            vCounter = (vCounter + 1) & 0x7F;
+                        } else {
+                            // This covers C9 == R9 before the update. (No update
+                            // happened).
+                            rCounter = (rCounter + 1) & 0x1F;
+                        }
+                    }
+                    break;
+            }
+        } else { // processVAdjust == true
+            // Check C9 == R5.
+            bool lastLineInVAdjustRC = (rCounter == vAdjust);
+            bool lastLineInVAdjustAC = (vaCounter == vAdjust);
+
+            switch (type) {
+                case 0: // CRTC 0.
+                    if (lastLineInVAdjustRC) {
+                        // Last line of the screen.
+                        rCounter = vCounter = 0;
+                        processVAdjust = false;
+                        updateVideoOffset = true;
+                    } else {
+                        rCounter = (rCounter + 1) & 0x1F;
+                    }
+                    break;
+
+                case 1: // CRTC 1, 2.
+                case 2: // fall-through
+                    if (!vAdjust) {
+                        rCounter = 0;
+                        processVAdjust = false;
+                    } else if (lastLineInVAdjustAC) {
+                        // Last line of the screen.
+                        rCounter = vCounter = 0;
+                        processVAdjust = false;
+                        updateVideoOffset = true;
+                    } else if (lastLineInCharRowAfter) {
+                        // This covers C9 = R9 after the update.
+                        rCounter = 0;
+                        vaCounter = (vaCounter + 1) & 0x1F;
+                        vCounter = (vCounter + 1) & 0x7F;
+                    } else {
+                        // This covers C9 == R9 before the update. (No update
+                        // happened).
+                        rCounter = (rCounter + 1) & 0x1F;
+                        vaCounter = (vaCounter + 1) & 0x1F;
+                    }
+                    break;
+
+                default: // CRTC 3, 4.
+                    if (lastLineInVAdjustAC) {
+                        rCounter = vCounter = 0;
+                        processVAdjust = false;
+                        updateVideoOffset = true;
+                    } else if (rCounter >= regs[9]) {
+                        // This covers C9 = R9 after the update.
+                        rCounter = 0;
+                        vaCounter = (vaCounter + 1) & 0x1F;
+                    } else {
+                        // This covers C9 == R9 before the update. (No update
+                        // happened).
+                        rCounter = (rCounter + 1) & 0x1F;
+                        vaCounter = (vaCounter + 1) & 0x1F;
+                    }
+                    break;
             }
         }
+    } else if (hCounter == 1) {
+    } else if (hCounter == 2) {
+    }
 
-        rCounter = (rCounter + 1) & 0x1F;   // Increment raster counter.
+    if (hCounter == hDisplayed) {   // Horizontal Displayed
+        hDisplay = false;                   // Drawing border
 
-        if (enterVAdjust) {
-            processVAdjust = true;
+        if (rCounter == rMax) {
+            lineAddress += hDisplayed;
         }
-        // finishRow marks the end of row at the end of this scan, from HCC == 1.
-        // endOfRow marks the actual end of this scan, on HCC == HTotal.
-        endOfFrame = finishFrame;
-        endOfRow = finishRow && !endOfFrame;
-        finishRow = finishFrame = vTotalUpdated = rMaxUpdated = false;
 
-#ifdef DEBUGCRTC
-        if (rCounter > rMax) {
-            cout << "rCounter out of limit at VCC=" << static_cast<uint32_t>(vCounter);
-            cout << " VLC=" << static_cast<uint32_t>(rCounter) << endl;
-        }
-#endif
         // Base address is updated on VCC=0 (CRTC 1) or VCC=0 and VLC=0 (other)
-        if (updateLineAddress) {
+        if (updateVideoOffset) {
             lineAddress = ((regs[12] & 0x3F) << 8) | regs[13];
-            updateLineAddress = false;
 #ifdef DEBUGCRTC
             cout << "Updated line address on top area: " << lineAddress << endl;
-#endif
-        }
-    }
-
-    if (endOfRow) { // Maximum Raster Address
-        rCounter = 0;           // Reset Raster Counter
-        vaCounter = 0;
-
-        vCounter = (vCounter + 1) & 0x7F;
-#ifdef DEBUGCRTC
-        if (vCounter > vTotal) {
-            cout << "VCC out of range VCC=" << static_cast<uint32_t>(vCounter) << endl;
-        }
-#endif
-        vDispOff = (vCounter == vDisplayed);
-        oddField = !oddField;
-    }
-
-    if (endOfFrame) {
-#ifdef DEBUGCRTC
-        cout << "Finish frame at VCC=" << static_cast<uint32_t>(vCounter);
-        cout << " VLC=" << static_cast<uint32_t>(rCounter) << endl;
-#endif
-        vCounter = 0;
-        rCounter = 0;
-        vaCounter = 0;
-        processVAdjust = false;
-
-        vDisplay = true;
-        if (vDisplayed == 0) vDispOff = true;
-        // Vertical Total marks the end of a frame, but we also must
-        // account for Vertical Total Adjustment
-        interlace = regs[8] & 0x3;
-        if (interlace & 0x1) {
-            oddField = !oddField;
-            vSyncOffset = !oddField ? (regs[0] / 2 + 1) : 0;
-        } else {
-            oddField = true;
-            vSyncOffset = 0;
-        }
-
-        if (oddField) {
-            lineAddress = ((regs[12] & 0x3F) << 8) | regs[13];
-#ifdef DEBUGCRTC
-            cout << "Updated line address on end of frame: " << lineAddress << endl;
 #endif
         }
     }
@@ -430,10 +482,6 @@ void CRTC::clock() {
         vDispOff = false;
         vDisplay = false;
     }
-
-    endOfScan = false;
-    endOfRow = false;
-    endOfFrame = false;
 
     if (hCounter == hDisplayed) {
         hDispOff = true;
@@ -495,6 +543,7 @@ void CRTC::clock() {
     byteAddress = pageAddress | ((rCounter & 7) << 11) | ((charAddress & 0x3FF) << 1);
     dispEn = hDisplay && vDisplay;
 
+    rMax = regs[9];
 }
 
 void CRTC::reset() {
