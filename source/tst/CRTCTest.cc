@@ -192,6 +192,32 @@ BOOST_AUTO_TEST_CASE(crtc0_r9update_case4) {
 }
 
 /**
+ * CRTC type 0. Case 5 (Table 5, on page 75).
+ * Preconditions: C4 = R4. Previous R9 = 7.
+ * Test: Set R9 = 2 when C0 = 0, C9 = 0.
+ * Outcomes:
+ * C9 = 0, C4 = R4 => C9 = 1, C4 = R4. Video Offset not updated.
+ */
+BOOST_AUTO_TEST_CASE(crtc0_r9update_case5) {
+
+    CRTC crtc;
+    setDefaults(crtc);
+    crtc.type = 0;
+
+    crtc.rCounter = 0;
+    crtc.vCounter = crtc.regs[4];
+    crtc.hCounter = crtc.regs[0] - 1;
+    crtc.clock();
+
+    crtc.wrAddress(9); crtc.wrRegister(2);
+    crtc.clock();
+
+    BOOST_CHECK_EQUAL(crtc.rCounter, 1);
+    BOOST_CHECK_EQUAL(crtc.vCounter, crtc.regs[4]);
+    BOOST_CHECK_EQUAL(crtc.updateVideoOffset, false);
+}
+
+/**
  * CRTC type 1. Case 1 (Table 1, on page 74).
  * Preconditions: C4 = R4. Previous R9 = 7.
  * Test: Set R9 = 0 when C0 = 0.
@@ -323,6 +349,32 @@ BOOST_AUTO_TEST_CASE(crtc1_r9update_case4) {
         BOOST_CHECK_EQUAL(crtc.vCounter, crtc.regs[4]);
         BOOST_CHECK_EQUAL(crtc.updateVideoOffset, false);
     }
+}
+
+/**
+ * CRTC type 1. Case 5 (Table 5, on page 75).
+ * Preconditions: C4 = R4. Previous R9 = 7.
+ * Test: Set R9 = 2 when C0 = 0, C9 = 0.
+ * Outcomes:
+ * C9 = 0, C4 = R4 => C9 = 1, C4 = R4. Video Offset not updated.
+ */
+BOOST_AUTO_TEST_CASE(crtc1_r9update_case5) {
+
+    CRTC crtc;
+    setDefaults(crtc);
+    crtc.type = 1;
+
+    crtc.rCounter = 0;
+    crtc.vCounter = crtc.regs[4];
+    crtc.hCounter = crtc.regs[0] - 1;
+    crtc.clock();
+
+    crtc.wrAddress(9); crtc.wrRegister(2);
+    crtc.clock();
+
+    BOOST_CHECK_EQUAL(crtc.rCounter, 1);
+    BOOST_CHECK_EQUAL(crtc.vCounter, crtc.regs[4]);
+    BOOST_CHECK_EQUAL(crtc.updateVideoOffset, false);
 }
 
 /**
@@ -462,6 +514,32 @@ BOOST_AUTO_TEST_CASE(crtc2_r9update_case4) {
 }
 
 /**
+ * CRTC type 2. Case 5 (Table 5, on page 75).
+ * Preconditions: C4 = R4. Previous R9 = 7.
+ * Test: Set R9 = 2 when C0 = 0, C9 = 0.
+ * Outcomes:
+ * C9 = 0, C4 = R4 => C9 = 1, C4 = R4. Video Offset not updated.
+ */
+BOOST_AUTO_TEST_CASE(crtc2_r9update_case5) {
+
+    CRTC crtc;
+    setDefaults(crtc);
+    crtc.type = 2;
+
+    crtc.rCounter = 0;
+    crtc.vCounter = crtc.regs[4];
+    crtc.hCounter = crtc.regs[0] - 1;
+    crtc.clock();
+
+    crtc.wrAddress(9); crtc.wrRegister(2);
+    crtc.clock();
+
+    BOOST_CHECK_EQUAL(crtc.rCounter, 1);
+    BOOST_CHECK_EQUAL(crtc.vCounter, crtc.regs[4]);
+    BOOST_CHECK_EQUAL(crtc.updateVideoOffset, false);
+}
+
+/**
  * CRTC type 3, 4. Case 1 (Table 1, on page 74).
  * Preconditions: C4 = R4. Previous R9 = 7.
  * Test: Set R9 = 0 when C0 = 0.
@@ -573,6 +651,32 @@ BOOST_AUTO_TEST_CASE(crtc34_r9update_case4) {
         BOOST_CHECK_EQUAL(crtc.vCounter, crtc.regs[4]);
         BOOST_CHECK_EQUAL(crtc.updateVideoOffset, false);
     }
+}
+
+/**
+ * CRTC type 3, 4. Case 5 (Table 5, on page 75).
+ * Preconditions: C4 = R4. Previous R9 = 7.
+ * Test: Set R9 = 2 when C0 = 0, C9 = 5.
+ * Outcomes:
+ * C9 = 5, C4 = R4 => C9 = 1, C4 = R4. Video Offset not updated.
+ */
+BOOST_AUTO_TEST_CASE(crtc34_r9update_case5) {
+
+    CRTC crtc;
+    setDefaults(crtc);
+    crtc.type = 4;
+
+    crtc.rCounter = 5;
+    crtc.vCounter = crtc.regs[4];
+    crtc.hCounter = crtc.regs[0] - 1;
+    crtc.clock();
+
+    crtc.wrAddress(9); crtc.wrRegister(2);
+    crtc.clock();
+
+    BOOST_CHECK_EQUAL(crtc.rCounter, 0);
+    BOOST_CHECK_EQUAL(crtc.vCounter, 0);
+    BOOST_CHECK_EQUAL(crtc.updateVideoOffset, true);
 }
 
 // EOF
