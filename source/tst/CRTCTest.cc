@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(constructors_test) {
 }
 
 /**
- * CRTC type 0. Case 1 (Table 1, on page 74).
+ * CRTC type 0. R9 Update, Case 1 (Table 1, on page 74).
  * Preconditions: C4 = R4. Previous R9 = 7.
  * Test: Set R9 = 0 when C0 = 0.
  * Outcomes:
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(crtc0_r9update_case1) {
 }
 
 /**
- * CRTC type 0. Case 2 (Table 2, on page 74).
+ * CRTC type 0. R9 Update, Case 2 (Table 2, on page 74).
  * Preconditions: C4 != R4. Previous R9 = 7.
  * Test: Set R9 = 0 when C0 = 0.
  * Outcomes:
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(crtc0_r9update_case2) {
 }
 
 /**
- * CRTC type 0. Case 3 (Table 3, on page 74).
+ * CRTC type 0. R9 Update, Case 3 (Table 3, on page 74).
  * Preconditions: C4 = R4. Previous R9 = 7.
  * Test: Set R9 = 0..R9 when C0 = 0.
  * Outcomes:
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(crtc0_r9update_case3) {
 }
 
 /**
- * CRTC type 0. Case 4 (Table 4, on page 75).
+ * CRTC type 0. R9 Update, Case 4 (Table 4, on page 75).
  * Preconditions: C4 != R4. Previous R9 = 7.
  * Test: Set R9 = 0..R9 when C0 = 0.
  * Outcomes:
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(crtc0_r9update_case4) {
 }
 
 /**
- * CRTC type 0. Case 5 (Table 5, on page 75).
+ * CRTC type 0. R9 Update, Case 5 (Table 5, on page 75).
  * Preconditions: C4 = R4. Previous R9 = 7.
  * Test: Set R9 = 2 when C0 = 0, C9 = 0.
  * Outcomes:
@@ -218,7 +218,37 @@ BOOST_AUTO_TEST_CASE(crtc0_r9update_case5) {
 }
 
 /**
- * CRTC type 1. Case 1 (Table 1, on page 74).
+ * CRTC type 0. R9 Update, Case 6 (Table 6, on page 75).
+ * Preconditions: C4 = 0. Previous R9 = 0.
+ * Test: Set R9 = 0..R9 when C0 = 0.
+ * Outcomes:
+ * C9 = 0, C4 = 0 => C9 = 0, C4 = 0. Video Offset updated.
+ */
+BOOST_AUTO_TEST_CASE(crtc0_r9update_case6) {
+
+    for (uint_fast8_t ii = 0; ii < 8; ii++) {
+        CRTC crtc;
+        setDefaults(crtc);
+        crtc.type = 0;
+
+        crtc.rCounter = 0;
+        crtc.rMax = crtc.regs[9] = 0;
+        crtc.vCounter = 0;
+        crtc.vTotal = crtc.regs[4] = 0;
+        crtc.hCounter = crtc.regs[0] - 1;
+        crtc.clock();
+
+        crtc.wrAddress(9); crtc.wrRegister(ii);
+        crtc.clock();
+
+        BOOST_CHECK_EQUAL(crtc.rCounter, 0);
+        BOOST_CHECK_EQUAL(crtc.vCounter, 0);
+        BOOST_CHECK_EQUAL(crtc.updateVideoOffset, true);
+    }
+}
+
+/**
+ * CRTC type 1. R9 Update, Case 1 (Table 1, on page 74).
  * Preconditions: C4 = R4. Previous R9 = 7.
  * Test: Set R9 = 0 when C0 = 0.
  * Outcomes:
@@ -257,7 +287,7 @@ BOOST_AUTO_TEST_CASE(crtc1_r9update_case1) {
 }
 
 /**
- * CRTC type 1. Case 2 (Table 2, on page 74).
+ * CRTC type 1. R9 Update, Case 2 (Table 2, on page 74).
  * Preconditions: C4 != R4. Previous R9 = 7.
  * Test: Set R9 = 0 when C0 = 0.
  * Outcomes:
@@ -296,7 +326,7 @@ BOOST_AUTO_TEST_CASE(crtc1_r9update_case2) {
 }
 
 /**
- * CRTC type 1. Case 3 (Table 3, on page 74).
+ * CRTC type 1. R9 Update, Case 3 (Table 3, on page 74).
  * Preconditions: C4 = R4. Previous R9 = 7.
  * Test: Set R9 = 0..R9 when C0 = 0.
  * Outcomes:
@@ -324,7 +354,7 @@ BOOST_AUTO_TEST_CASE(crtc1_r9update_case3) {
 }
 
 /**
- * CRTC type 1. Case 4 (Table 4, on page 75).
+ * CRTC type 1. R9 Update, Case 4 (Table 4, on page 75).
  * Preconditions: C4 != R4. Previous R9 = 7.
  * Test: Set R9 = 0..R9 when C0 = 0.
  * Outcomes:
@@ -352,7 +382,7 @@ BOOST_AUTO_TEST_CASE(crtc1_r9update_case4) {
 }
 
 /**
- * CRTC type 1. Case 5 (Table 5, on page 75).
+ * CRTC type 1. R9 Update, Case 5 (Table 5, on page 75).
  * Preconditions: C4 = R4. Previous R9 = 7.
  * Test: Set R9 = 2 when C0 = 0, C9 = 0.
  * Outcomes:
@@ -378,7 +408,50 @@ BOOST_AUTO_TEST_CASE(crtc1_r9update_case5) {
 }
 
 /**
- * CRTC type 2. Case 1 (Table 1, on page 74).
+ * CRTC type 1. R9 Update, Case 6 (Table 6, on page 75).
+ * Preconditions: C4 = 0. Previous R9 = 0.
+ * Test: Set R9 = 0..R9 when C0 = 0.
+ * Outcomes:
+ * For n = 0:
+ *  C9 = 0, C4 = 0 => C9 = 0, C4 = 0. Video Offset updated.
+ * For n = 1..7:
+ *  C9 = 0, C4 = 0 => C9 = 1, C4 = 0. Video Offset updated (C4 = 1).
+ */
+BOOST_AUTO_TEST_CASE(crtc1_r9update_case6) {
+
+    for (uint_fast8_t ii = 0; ii < 8; ii++) {
+        CRTC crtc;
+        setDefaults(crtc);
+        crtc.type = 1;
+
+        crtc.rCounter = 0;
+        crtc.rMax = crtc.regs[9] = 0;
+        crtc.vCounter = 0;
+        crtc.vTotal = crtc.regs[4] = 0;
+        crtc.hCounter = crtc.regs[0] - 1;
+        crtc.clock();
+
+        crtc.wrAddress(9); crtc.wrRegister(ii);
+        crtc.clock();
+
+        switch (ii) {
+            case 0:
+                BOOST_CHECK_EQUAL(crtc.rCounter, 0);
+                BOOST_CHECK_EQUAL(crtc.vCounter, 0);
+                BOOST_CHECK_EQUAL(crtc.updateVideoOffset, true);
+                break;
+
+            default:
+                BOOST_CHECK_EQUAL(crtc.rCounter, 1);
+                BOOST_CHECK_EQUAL(crtc.vCounter, 0);
+                BOOST_CHECK_EQUAL(crtc.updateVideoOffset, true);
+                break;
+        }
+    }
+}
+
+/**
+ * CRTC type 2. R9 Update, Case 1 (Table 1, on page 74).
  * Preconditions: C4 = R4. Previous R9 = 7.
  * Test: Set R9 = 0 when C0 = 0.
  * Outcomes:
@@ -419,7 +492,7 @@ BOOST_AUTO_TEST_CASE(crtc2_r9update_case1) {
 }
 
 /**
- * CRTC type 2. Case 2 (Table 2, on page 74).
+ * CRTC type 2. R9 Update, Case 2 (Table 2, on page 74).
  * Preconditions: C4 != R4. Previous R9 = 7.
  * Test: Set R9 = 0 when C0 = 0.
  * Outcomes:
@@ -458,7 +531,7 @@ BOOST_AUTO_TEST_CASE(crtc2_r9update_case2) {
 }
 
 /**
- * CRTC type 2. Case 3 (Table 3, on page 74).
+ * CRTC type 2. R9 Update, Case 3 (Table 3, on page 74).
  * Preconditions: C4 = R4. Previous R9 = 7.
  * Test: Set R9 = 0..R9 when C0 = 0.
  * Outcomes:
@@ -486,7 +559,7 @@ BOOST_AUTO_TEST_CASE(crtc2_r9update_case3) {
 }
 
 /**
- * CRTC type 2. Case 4 (Table 4, on page 75).
+ * CRTC type 2. R9 Update, Case 4 (Table 4, on page 75).
  * Preconditions: C4 != R4. Previous R9 = 7.
  * Test: Set R9 = 0..R9 when C0 = 0.
  * Outcomes:
@@ -514,7 +587,7 @@ BOOST_AUTO_TEST_CASE(crtc2_r9update_case4) {
 }
 
 /**
- * CRTC type 2. Case 5 (Table 5, on page 75).
+ * CRTC type 2. R9 Update, Case 5 (Table 5, on page 75).
  * Preconditions: C4 = R4. Previous R9 = 7.
  * Test: Set R9 = 2 when C0 = 0, C9 = 0.
  * Outcomes:
@@ -540,7 +613,50 @@ BOOST_AUTO_TEST_CASE(crtc2_r9update_case5) {
 }
 
 /**
- * CRTC type 3, 4. Case 1 (Table 1, on page 74).
+ * CRTC type 2. R9 Update, Case 6 (Table 6, on page 75).
+ * Preconditions: C4 = 0. Previous R9 = 0.
+ * Test: Set R9 = 0..R9 when C0 = 0.
+ * Outcomes:
+ * For n = 0:
+ *  C9 = 0, C4 = 0 => C9 = 0, C4 = 0. Video Offset updated.
+ * For n = 1..7:
+ *  C9 = 0, C4 = 0 => C9 = 1, C4 = 0. Video Offset updated (C4 = 1).
+ */
+BOOST_AUTO_TEST_CASE(crtc2_r9update_case6) {
+
+    for (uint_fast8_t ii = 0; ii < 8; ii++) {
+        CRTC crtc;
+        setDefaults(crtc);
+        crtc.type = 2;
+
+        crtc.rCounter = 0;
+        crtc.rMax = crtc.regs[9] = 0;
+        crtc.vCounter = 0;
+        crtc.vTotal = crtc.regs[4] = 0;
+        crtc.hCounter = crtc.regs[0] - 1;
+        crtc.clock();
+
+        crtc.wrAddress(9); crtc.wrRegister(ii);
+        crtc.clock();
+
+        switch (ii) {
+            case 0:
+                BOOST_CHECK_EQUAL(crtc.rCounter, 0);
+                BOOST_CHECK_EQUAL(crtc.vCounter, 0);
+                BOOST_CHECK_EQUAL(crtc.updateVideoOffset, true);
+                break;
+
+            default:
+                BOOST_CHECK_EQUAL(crtc.rCounter, 0);
+                BOOST_CHECK_EQUAL(crtc.vCounter, 0);
+                BOOST_CHECK_EQUAL(crtc.updateVideoOffset, true);
+                break;
+        }
+    }
+}
+
+/**
+ * CRTC type 3, 4. R9 Update, Case 1 (Table 1, on page 74).
  * Preconditions: C4 = R4. Previous R9 = 7.
  * Test: Set R9 = 0 when C0 = 0.
  * Outcomes:
@@ -569,7 +685,7 @@ BOOST_AUTO_TEST_CASE(crtc34_r9update_case1) {
 }
 
 /**
- * CRTC type 3, 4. Case 2 (Table 2, on page 74).
+ * CRTC type 3, 4. R9 Update, Case 2 (Table 2, on page 74).
  * Preconditions: C4 = R4-1. Previous R9 = 7.
  * Test: Set R9 = 0 when C0 = 0.
  * Outcomes:
@@ -598,7 +714,7 @@ BOOST_AUTO_TEST_CASE(crtc34_r9update_case2) {
 }
 
 /**
- * CRTC type 3, 4. Case 3 (Table 3, on page 74).
+ * CRTC type 3, 4. R9 Update, Case 3 (Table 3, on page 74).
  * Preconditions: C4 = R4. Previous R9 = 7.
  * Test: Set R9 = 0..R9 when C0 = 0.
  * Outcomes:
@@ -626,7 +742,7 @@ BOOST_AUTO_TEST_CASE(crtc34_r9update_case3) {
 }
 
 /**
- * CRTC type 3, 4. Case 4 (Table 4, on page 75).
+ * CRTC type 3, 4. R9 Update, Case 4 (Table 4, on page 75).
  * Preconditions: C4 != R4. Previous R9 = 7.
  * Test: Set R9 = 0..R9 when C0 = 0.
  * Outcomes:
@@ -654,7 +770,7 @@ BOOST_AUTO_TEST_CASE(crtc34_r9update_case4) {
 }
 
 /**
- * CRTC type 3, 4. Case 5 (Table 5, on page 75).
+ * CRTC type 3, 4. R9 Update, Case 5 (Table 5, on page 75).
  * Preconditions: C4 = R4. Previous R9 = 7.
  * Test: Set R9 = 2 when C0 = 0, C9 = 5.
  * Outcomes:
@@ -679,5 +795,47 @@ BOOST_AUTO_TEST_CASE(crtc34_r9update_case5) {
     BOOST_CHECK_EQUAL(crtc.updateVideoOffset, true);
 }
 
+/**
+ * CRTC type 3, 4. R9 Update, Case 6 (Table 6, on page 75).
+ * Preconditions: C4 = 0. Previous R9 = 0.
+ * Test: Set R9 = 0..R9 when C0 = 0.
+ * Outcomes:
+ * For n = 0:
+ *  C9 = 0, C4 = 0 => C9 = 0, C4 = 0. Video Offset updated.
+ * For n = 1..7:
+ *  C9 = 0, C4 = 0 => C9 = 1, C4 = 0. Video Offset not updated.
+ */
+BOOST_AUTO_TEST_CASE(crtc34_r9update_case6) {
+
+    for (uint_fast8_t ii = 0; ii < 8; ii++) {
+        CRTC crtc;
+        setDefaults(crtc);
+        crtc.type = 4;
+
+        crtc.rCounter = 0;
+        crtc.rMax = crtc.regs[9] = 0;
+        crtc.vCounter = 0;
+        crtc.vTotal = crtc.regs[4] = 0;
+        crtc.hCounter = crtc.regs[0] - 1;
+        crtc.clock();
+
+        crtc.wrAddress(9); crtc.wrRegister(ii);
+        crtc.clock();
+
+        switch (ii) {
+            case 0:
+                BOOST_CHECK_EQUAL(crtc.rCounter, 0);
+                BOOST_CHECK_EQUAL(crtc.vCounter, 0);
+                BOOST_CHECK_EQUAL(crtc.updateVideoOffset, true);
+                break;
+
+            default:
+                BOOST_CHECK_EQUAL(crtc.rCounter, 1);
+                BOOST_CHECK_EQUAL(crtc.vCounter, 0);
+                BOOST_CHECK_EQUAL(crtc.updateVideoOffset, false);
+                break;
+        }
+    }
+}
 // EOF
 // vim: et:sw=4:ts=4
