@@ -221,27 +221,6 @@ void CPC::clock() {
             }
         }
 
-        // CRTC.
-        // &BCxx, &BDxx, &BExx, &BFxx are CRTC ports.
-        if ((z80.rd || z80.wr) && !(z80.a & 0x4000)) {
-            switch (z80.a & 0x0300) {
-                case 0x0000:    // CRTC Register Select (WO) at &BC00.
-                    ga.crtc.wrAddress(z80.d);
-                    break;
-                case 0x0100:    // CRTC Register Write (WO) at &BD00.
-                    ga.crtc.wrRegister(z80.d);
-                    break;
-                case 0x0200:    // CRTC Status Register Read (type 1) at &BE00.
-                    ga.crtc.rdStatus(ga.d);
-                    break;
-                case 0x0300:    // CRTC Register Read (RO) at &BF00.
-                    ga.crtc.rdRegister(ga.d);
-                    break;
-                default:
-                    break;
-            }
-        }
-
         // 8255 PPI.
         // &F4xx, &F5xx, &F6xx, &F7xx are 8255 ports.
         if (!(z80.a & 0x0800)) {
@@ -308,7 +287,7 @@ void CPC::clock() {
         }
     }
 
-    if (io_ || ga.blockIorq()) {
+    if ((io_ && z80.access) || ga.blockIorq()) {
         ga.d = ram[ga.crtc.byteAddress | ga.cClkOffset()];
     } else {
         ga.d = z80.d;
@@ -359,51 +338,74 @@ void CPC::clock() {
         filter[index] += (ppi.portC & 0x20) ? SAVE_VOLUME : 0;
         index = (index + 1) % FILTER_BZZ_SIZE;
 
-        if (!io_) {
-            // Peripherals
-            if ((z80.a & 0x0400) == 0x0000) {
-
-                // FDC
-                if (cpcDisk && !(z80.a & 0x0480)) {
-                    switch (z80.a & 0x0101) {
-                        case 0x0100:    // FDC main status register (&FB7E)
-                            if (z80.rd) {
-                                z80.d = fdc765.status();
-                            }
+        if (z80.access) {
+            if (!io_) {
+                // CRTC.
+                // &BCxx, &BDxx, &BExx, &BFxx are CRTC ports.
+                if ((z80.rd || z80.wr) && !(z80.a & 0x4000)) {
+                    switch (z80.a & 0x0300) {
+                        case 0x0000:    // CRTC Register Select (WO) at &BC00.
+                            ga.crtc.wrAddress(z80.d);
                             break;
-                        case 0x0101:    // FDC data register (&FB7F)
-                            if (z80.wr) {
-                                fdc765.write(z80.d);
-                            } else if (z80.rd) {
-                                z80.d = fdc765.read();
-                            }
+                        case 0x0100:    // CRTC Register Write (WO) at &BD00.
+                            ga.crtc.wrRegister(z80.d);
                             break;
-                        case 0x0000:    // fall-through
-                        case 0x0001:    // FDC motor (&FA7E/&FA7F)
-                            if (z80.wr) {
-                                fdc765.motor((z80.d & 0x01) == 0x01);
-                            }
+                        case 0x0200:    // CRTC Status Register Read (type 1) at &BE00.
+                            ga.crtc.rdStatus(ga.d);
+                            break;
+                        case 0x0300:    // CRTC Register Read (RO) at &BF00.
+                            ga.crtc.rdRegister(ga.d);
                             break;
                         default:
                             break;
                     }
                 }
-            }
-        } else if (!as_) {
-            if (z80.rd) {
-                switch (memArea) {
-                    case 0:
-                        z80.d = ga.lowerRom ? loRom[z80.a & 0x3FFF] : mem[0][z80.a & 0x3FFF];
-                        break;
-                    case 3:
-                        z80.d = ga.upperRom ? hiRom[z80.a & 0x3FFF] : mem[3][z80.a & 0x3FFF];
-                        break;
-                    default:
-                        z80.d = mem[memArea][z80.a & 0x3FFF];
-                        break;
+
+                // Peripherals
+                if ((z80.a & 0x0400) == 0x0000) {
+
+                    // FDC
+                    if (cpcDisk && !(z80.a & 0x0480)) {
+                        switch (z80.a & 0x0101) {
+                            case 0x0100:    // FDC main status register (&FB7E)
+                                if (z80.rd) {
+                                    z80.d = fdc765.status();
+                                }
+                                break;
+                            case 0x0101:    // FDC data register (&FB7F)
+                                if (z80.wr) {
+                                    fdc765.write(z80.d);
+                                } else if (z80.rd) {
+                                    z80.d = fdc765.read();
+                                }
+                                break;
+                            case 0x0000:    // fall-through
+                            case 0x0001:    // FDC motor (&FA7E/&FA7F)
+                                if (z80.wr) {
+                                    fdc765.motor((z80.d & 0x01) == 0x01);
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
                 }
-            } else if (z80.wr) {
-                mem[memArea][z80.a & 0x3FFF] = z80.d;
+            } else if (!as_) {
+                if (z80.rd) {
+                    switch (memArea) {
+                        case 0:
+                            z80.d = ga.lowerRom ? loRom[z80.a & 0x3FFF] : mem[0][z80.a & 0x3FFF];
+                            break;
+                        case 3:
+                            z80.d = ga.upperRom ? hiRom[z80.a & 0x3FFF] : mem[3][z80.a & 0x3FFF];
+                            break;
+                        default:
+                            z80.d = mem[memArea][z80.a & 0x3FFF];
+                            break;
+                    }
+                } else if (z80.wr) {
+                    mem[memArea][z80.a & 0x3FFF] = z80.d;
+                }
             }
         }
 
