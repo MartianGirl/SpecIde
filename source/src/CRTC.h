@@ -32,51 +32,60 @@ class CRTC {
 
         /** CRTC type. Numbers as in Amstrad CPC community. */
         uint_fast32_t type;
+        /** Index of the selected CRTC register. The selected register can
+         * be read or written to. */
         uint_fast8_t index;
+        /** CRTC registers. */
         uint_fast8_t regs[32];
+        /** CRTC bitmasks for CRTC registers. */
         uint_fast8_t mask[32];
+        /** Access type for CRTC registers. */
         AccessType dirs[32];
 
-        /** Horizontal counter. */
-        uint_fast8_t hCounter = 0;
         /** Horizontal total (R0). */
-        uint_fast8_t hTotal = 0;
+        uint_fast8_t r0_hTotal = 0;
         /** Horizontal displayed (R1). */
-        uint_fast8_t hDisplayed = 0;
+        uint_fast8_t r1_hDisplayed = 0;
         /** HSync position (R2). */
-        uint_fast8_t hsPos = 0;
-
-        /** HSync width counter. */
-        uint_fast8_t hswCounter = 0;
+        uint_fast8_t r2_hSyncPos = 0;
         /** HSync max width (R3, b3-b0). */
-        uint_fast8_t hswMax = 0;
-
-        /** Vertical counter. */
-        uint_fast8_t vCounter = 0;
-        /** Vertical total (R4). */
-        uint_fast8_t vTotal = 0;
-        /** Vertical displayed (R6). */
-        uint_fast8_t vDisplayed = 0;
-
-        /** VSync position (R7). */
-        uint_fast8_t vsPos = 0;
-        /** VSync width counter. */
-        uint_fast8_t vswCounter = 0;
+        uint_fast8_t r3l_hSyncWidth = 0;
         /** VSync max width (R3, b7-b4). */
-        uint_fast8_t vswMax = 0;
-
-        /** Raster counter. */
-        uint_fast8_t rCounter = 0;
-        /** Raster max address (R9). */
-        uint_fast8_t rMax = 0;
-
-        /** Adjust counter. */
-        uint_fast8_t vaCounter = 0;
+        uint_fast8_t r3h_vSyncWidth = 0;
+        /** Vertical total (R4). */
+        uint_fast8_t r4_vTotal = 0;
         /** Vertical adjust (R5). */
-        uint_fast8_t vAdjust = 0;
-
+        uint_fast8_t r5_vAdjust = 0;
+        /** Vertical displayed (R6). */
+        uint_fast8_t r6_vDisplayed = 0;
+        /** VSync position (R7). */
+        uint_fast8_t r7_vSyncPos = 0;
         /** Interlace mode. */
-        uint_fast8_t interlace = 0;
+        uint_fast8_t r8_interlaceMode = 0;
+        /** Raster max address (R9). */
+        uint_fast8_t r9_rMaxAddress = 0;
+
+        /** Horizontal counter (C0). */
+        uint_fast8_t c0_hCounter = 0;
+        /** HSync width counter (C3 Low). */
+        uint_fast8_t c3l_hSyncWidth = 0;
+        /** VSync width counter (C3H). */
+        uint_fast8_t c3h_vSyncWidth = 0;
+        /** Vertical counter (C4). */
+        uint_fast8_t c4_vCounter = 0;
+        /** Adjust counter (C5). */
+        uint_fast8_t c5_aCounter = 0;
+        /** Raster counter (C9). */
+        uint_fast8_t c9_rCounter = 0;
+
+        /** Next value for c0_hCounter. */
+        uint_fast8_t c0_hCounterNext = 0;
+        /** Next value for c4_vCounter. */
+        uint_fast8_t c4_vCounterNext = 0;
+        /** Next value for c5_aCounter. */
+        uint_fast8_t c5_aCounterNext = 0;
+        /** Next value for c9_rCounter. */
+        uint_fast8_t c9_rCounterNext = 0;
         /** Odd field indicator. */
         bool oddField = true;
         /** Horizontal position where VSync pulse starts. */
@@ -94,8 +103,11 @@ class CRTC {
         /** Address of current mem page. */
         uint_fast16_t pageAddress = 0;
 
-        /** Update video offset from R12/R13, not from VMA'. */
-        bool updateVideoOffset = false;
+        /** Updated video offset from R12/R13, not from VMA'. */
+        bool videoOffsetUpdated = false;
+        bool updateVideoPointer = false;
+        /** Raster counter is checked only once per line. */
+        bool enableRasterCounter = true;
 
         bool hDisplay = false;
         bool vDisplay = false;
@@ -113,9 +125,6 @@ class CRTC {
         /** Processing vertical adjustment lines. */
         bool processVAdjust = false;
 
-        bool vTotalUpdated = false;
-        bool rMaxUpdated = false;
-
         void wrAddress(uint_fast8_t byte);
         void wrRegister(uint_fast8_t byte);
         void rdStatus(uint_fast8_t &byte);
@@ -123,6 +132,14 @@ class CRTC {
         
         void clock();
         void reset();
+
+        void incrementC4();
+        void resetC4();
+        void incrementC9();
+        void resetC9();
+        void incrementC5();
+        void resetC5();
+        void updateVideoOffset();
 };
 
 

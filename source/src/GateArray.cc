@@ -325,7 +325,7 @@ void GateArray::updateBeam() {
     blanking = crtc.hSync || hCounter < 0x1c;
 
     // Accept HSync only if longer than 2.
-    if (crtc.hswCounter == 3 && charsFromHSync > 62) {
+    if (crtc.c3l_hSyncWidth == 3 && charsFromHSync > 62) {
         hSyncAccepted = true;
         charsFromHSync = 0;
     }
@@ -334,7 +334,7 @@ void GateArray::updateBeam() {
     // frequency range. CRTC::vSyncSeparation is the number of scans for this
     // to happen.
     // The separation-between-VSyncs counter is reset when a VSync is accepted.
-    if (crtc.vswCounter == 3 && rastersFromVSync >= crtc.vSyncSeparation) {
+    if (crtc.c3h_vSyncWidth == 3 && rastersFromVSync >= crtc.vSyncSeparation) {
         vSyncAccepted = true;
         rastersFromVSync = 0;
     }
@@ -364,7 +364,7 @@ void GateArray::updateBeam() {
         // Vertical position (and scans-from-frame-start counter) are increased
         // only if HSync happens outside of a VSync pulse.
         // (This is regarding geommetry, not time!)
-        if (!crtc.vSync || crtc.vswCounter < 2 || crtc.vswCounter > 5) {
+        if (!crtc.vSync || crtc.c3h_vSyncWidth < 2 || crtc.c3h_vSyncWidth > 5) {
             yPos += yInc;
         }
 

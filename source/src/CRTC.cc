@@ -23,9 +23,9 @@ CRTC::CRTC(uint_fast8_t type) :
     type(type),
     index(0),
     regs{
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, static_cast<uint_fast8_t>((type == 1) ? 0xFF : 0x00)},
     mask{
         0xFF, 0xFF, 0xFF, 0xFF, 0x7F, 0x1F, 0x7F, 0x7F,
@@ -71,7 +71,7 @@ void CRTC::rdStatus(uint_fast8_t &byte) {
     switch (type) {
         case 1:
             // Status reg on CRTC type 1 reflects VDisplayed.
-            byte = vDisplayed ? 0x20 : 0x00;
+            byte = r6_vDisplayed ? 0x20 : 0x00;
             break;
         case 3: // fall-through
         case 4:
@@ -117,7 +117,7 @@ void CRTC::rdRegister(uint_fast8_t &byte) {
                     byte = vSync ? 0x20 : 0x00;
                 } else if (address == 11) {
                     // R11 reflects VCC.
-                    byte = vCounter;
+                    byte = c4_vCounter;
                 }
             default:
                 break;
@@ -141,155 +141,172 @@ void CRTC::wrRegister(uint_fast8_t byte) {
                 if (type == 0 && regs[0] == 0) {
                     regs[0] = 1;
                 }
-                hTotal = regs[0];
+                r0_hTotal = regs[0];
                 break;
             case 1: // Horizontal Displayed.
-                hDisplayed = regs[1];
+                r1_hDisplayed = regs[1];
 #ifdef DEBUGCRTC
-                cout << "Update HDisp(" << static_cast<uint32_t>(hDisplayed)
-                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
-                    << " VLC=" << static_cast<uint32_t>(rCounter)
-                    << " VAD=" << static_cast<uint32_t>(vaCounter)
-                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
+                cout << "Update HDisp(" << static_cast<uint32_t>(r1_hDisplayed)
+                    << ") at VCC=" << static_cast<uint32_t>(c4_vCounter)
+                    << " VLC=" << static_cast<uint32_t>(c9_rCounter)
+                    << " VAD=" << static_cast<uint32_t>(c5_aCounter)
+                    << " HCC=" << static_cast<uint32_t>(c0_hCounter) << endl;
 #endif
                 break;
             case 2: // Horizontal Sync Position.
-                hsPos = regs[2];
+                r2_hSyncPos = regs[2];
                 break;
             case 3: // Horizontal & Vertical Sync Width.
-                vswMax = (regs[3] & 0xF0) >> 4;
-                hswMax = (regs[3] & 0x0F);
+                r3h_vSyncWidth = (regs[3] & 0xF0) >> 4;
+                r3l_hSyncWidth = (regs[3] & 0x0F);
                 switch (type) {
                     case 1: // Type 1 (UM6845R):
                         // VSW is ignored. VSYNC is fixed to 16 lines.
-                        vswMax = 0x0;
+                        r3h_vSyncWidth = 0x0;
                         break;
                     case 2: // Type 2 (MC6845):
                         // VSW is ignored. VSYNC is fixed to 16 lines.
-                        vswMax = 0x0;
+                        r3h_vSyncWidth = 0x0;
                         break;
                     default:
                         break;
                 }
                 break;
             case 4: // Vertical total.
-                vTotal = regs[4];
-                vTotalUpdated = true;
+                r4_vTotal = regs[4];
 #ifdef DEBUGCRTC
-                cout << "Update VTotal(" << static_cast<uint32_t>(vTotal)
-                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
-                    << " VLC=" << static_cast<uint32_t>(rCounter)
-                    << " VAD=" << static_cast<uint32_t>(vaCounter)
-                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
+                cout << "Update VTotal(" << static_cast<uint32_t>(r4_vTotal)
+                    << ") at VCC=" << static_cast<uint32_t>(c4_vCounter)
+                    << " VLC=" << static_cast<uint32_t>(c9_rCounter)
+                    << " VAD=" << static_cast<uint32_t>(c5_aCounter)
+                    << " HCC=" << static_cast<uint32_t>(c0_hCounter) << endl;
 #endif
                 break;
             case 5: // Vertical adjust.
-                vAdjust = regs[5];
+                r5_vAdjust = regs[5];
 #ifdef DEBUGCRTC
-                cout << "Update VAdjust(" << static_cast<uint32_t>(vAdjust)
-                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
-                    << " VLC=" << static_cast<uint32_t>(rCounter)
-                    << " VAD=" << static_cast<uint32_t>(vaCounter)
-                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
+                cout << "Update VAdjust(" << static_cast<uint32_t>(r5_vAdjust)
+                    << ") at VCC=" << static_cast<uint32_t>(c4_vCounter)
+                    << " VLC=" << static_cast<uint32_t>(c9_rCounter)
+                    << " VAD=" << static_cast<uint32_t>(c5_aCounter)
+                    << " HCC=" << static_cast<uint32_t>(c0_hCounter) << endl;
 #endif
                 break;
             case 6: // Vertical displayed.
-                vDisplayed = regs[6];
+                r6_vDisplayed = regs[6];
 #ifdef DEBUGCRTC
-                cout << "Update VDisplayed(" << static_cast<uint32_t>(vDisplayed)
-                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
-                    << " VLC=" << static_cast<uint32_t>(rCounter)
-                    << " VAD=" << static_cast<uint32_t>(vaCounter)
-                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
+                cout << "Update VDisplayed(" << static_cast<uint32_t>(r6_Displayed)
+                    << ") at VCC=" << static_cast<uint32_t>(c4_vCounter)
+                    << " VLC=" << static_cast<uint32_t>(c9_rCounter)
+                    << " VAD=" << static_cast<uint32_t>(c5_aCounter)
+                    << " HCC=" << static_cast<uint32_t>(c0_hCounter) << endl;
 #endif
                 break;
             case 7: // Vertical Sync Position.
-                vsPos = regs[7];
-                if (vCounter == vsPos) {
+                r7_vSyncPos = regs[7];
+                if (c4_vCounter == r7_vSyncPos) {
                     vSync = true;
-                    vswCounter = 0;
+                    c3h_vSyncWidth = 0;
                 }
                 break;
             case 12:    // fall-through
             case 13:
 #ifdef DEBUGCRTC
                 cout << "Update base address(" << regs[13] + (regs[12] & 0x3F) * 0x100
-                    << ") at VCC=" << static_cast<uint32_t>(vCounter)
-                    << " VLC=" << static_cast<uint32_t>(rCounter)
-                    << " VAD=" << static_cast<uint32_t>(vaCounter)
-                    << " HCC=" << static_cast<uint32_t>(hCounter) << endl;
-                break;
+                    << ") at VCC=" << static_cast<uint32_t>(c4_vCounter)
+                    << " VLC=" << static_cast<uint32_t>(c9_rCounter)
+                    << " VAD=" << static_cast<uint32_t>(c5_aCounter)
+                    << " HCC=" << static_cast<uint32_t>(c0_hCounter) << endl;
 #endif
+                break;
             default:
                 break;
         }
     }
 
     double base = (1000000.0 / 57.5);
-    vSyncSeparation = base / (hTotal ? hTotal : 64);
+    vSyncSeparation = base / (r0_hTotal ? r0_hTotal : 64);
 }
 
 void CRTC::clock() {
 
-    updateVideoOffset = false;
+    videoOffsetUpdated = false;
 
     // If Horizontal Character Counter (HCC, C0) matches Horizontal Total (R0),
     // it returns to 0. Otherwise, it is incremented.
-    if (hCounter == hTotal) {
-        hCounter = 0;
+    if (c0_hCounter == r0_hTotal) {
+        c0_hCounter = 0;
     } else {
-        ++hCounter;
+        ++c0_hCounter;
     }
 
     // Some processing occurs on different values of HCC/C0.
-    if (hCounter == 0) {
+    if (c0_hCounter == 0) {
         // Image is displayed again for this line.
         hDisplay = true;
 
+#ifdef DEBUGCRTC
+        cout << " C0: " << static_cast<uint32_t>(c0_hCounter)
+            << " C4: " << static_cast<uint32_t>(c4_vCounter)
+            << " C9: " << static_cast<uint32_t>(c9_rCounter)
+            << " C5: " << static_cast<uint32_t>(c5_aCounter)
+            << " VP: " << static_cast<uint32_t>(lineAddress)
+            << endl;
+#endif
+
+        // This handles updates on C9 = 0, C4 = 0, C0 = R0.
+        if ((type == 0 || type == 1 || type == 2) && c4_vCounter == 0 && c9_rCounter == 0) {
+            updateVideoOffset();
+        }
+
         // Check C9 == R9.
-        bool lastLineInCharRowBefore = (rCounter == rMax);
-        bool lastLineInCharRowAfter = (rCounter == regs[9]);
+        bool lastLineInCharRowBefore = (c9_rCounter == r9_rMaxAddress);
+        bool lastLineInCharRowAfter = (c9_rCounter == regs[9]);
         bool lastLineInCharRow = lastLineInCharRowBefore || lastLineInCharRowAfter;
         // Check C4 == R4.
-        bool lastCharRow = (vCounter == vTotal);
+        bool lastCharRow = (c4_vCounter == r4_vTotal);
 
         if (!processVAdjust) {
             switch (type) {
                 case 0: // CRTC Type 0:
-                    if (lastCharRow) { // C4 == R4
-                        if (lastLineInCharRowBefore) {
-                            // C9 and C4 go to 0.
-                            // Video offset is updated.
-                            // This is the "last line" case, hence if C5 != 0
-                            // the vertical adjustment phase is entered.
-                            rCounter = 0;
-                            if (vAdjust) {
-                                vCounter = (vCounter + 1) & 0x7F;
-                                processVAdjust = true;
+                    if (enableRasterCounter) {
+                        if (lastCharRow) { // C4 == R4
+                            if (lastLineInCharRowBefore) {
+                                // C9 and C4 go to 0.
+                                // Video offset is updated.
+                                // This is the "last line" case, hence if C5 != 0
+                                // the vertical adjustment phase is entered.
+                                if (r5_vAdjust) {
+                                    resetC9();
+                                    incrementC4();
+                                    processVAdjust = true;
+                                } else {
+                                    resetC9();
+                                    resetC4();
+                                    updateVideoOffset();
+                                }
+                            } else if (lastLineInCharRowAfter) {
+                                // C9 goes to 0, C4 is incremented and overflows.
+                                resetC9();
+                                incrementC4();
                             } else {
-                                vCounter = 0;
-                                updateVideoOffset = true;
+                                // C9 is incremented.
+                                // Video offset is not updated.
+                                incrementC9();
                             }
-                        } else if (lastLineInCharRowAfter) {
-                            // C9 goes to 0, C4 is incremented and overflows.
-                            vCounter = (vCounter + 1) & 0x7F;
-                            rCounter = 0;
-                        } else {
-                            // C9 is incremented.
-                            // Video offset is not updated.
-                            rCounter = (rCounter + 1) & 0x1F;
-                        }
-                    } else { // General behaviour (C4 != R4)
-                        if (lastLineInCharRowAfter) {
-                            // This covers C9 = R9 after the update.
-                            vCounter = (vCounter + 1) & 0x7F;
-                            rCounter = 0;
-                        } else {
-                            // This covers C9 == R9 before the update. (No update
-                            // happened).
-                            rCounter = (rCounter + 1) & 0x1F;
+                        } else { // General behaviour (C4 != R4)
+                            if (lastLineInCharRowAfter) {
+                                // This covers C9 = R9 after the update.
+                                resetC9();
+                                incrementC4();
+                            } else {
+                                // This covers C9 == R9 before the update. (No update
+                                // happened).
+                                incrementC9();
+                            }
                         }
                     }
+                    enableRasterCounter = false;
                     break;
 
                 case 1: // CRTC Type 1:
@@ -298,252 +315,299 @@ void CRTC::clock() {
                             // C9 goes to 0.
                             // This is the "last line" case, hence if C5 != 0
                             // the vertical adjustment phase is entered.
-                            rCounter = 0;
-                            if (vAdjust) {
+                            resetC9();
+                            if (r5_vAdjust) {
                                 // Set C5=0, increment C4.
-                                vaCounter = 0;
-                                vCounter = (vCounter + 1) & 0x7F;
+                                resetC5();
+                                incrementC4();
                                 processVAdjust = true;
                             } else {
                                 // C4 goes to 0.
                                 // Video offset is updated.
-                                vCounter = 0;
-                                updateVideoOffset = true;
+                                resetC4();
+                                updateVideoOffset();
                             }
                         } else {
                             // C9 is incremented.
                             // Video offset is updated if C4 == 0.
-                            rCounter = (rCounter + 1) & 0x1F;
-                            updateVideoOffset = (vCounter == 0);
+                            incrementC9();
+                            if (!c4_vCounter) updateVideoOffset();
                         }
                     } else { // General behaviour (C4 != R4)
                         if (lastLineInCharRowAfter) {
                             // This covers C9 = R9 after the update.
-                            rCounter = 0;
-                            vCounter = (vCounter + 1) & 0x7F;
+                            resetC9();
+                            incrementC4();
                         } else {
                             // This covers C9 == R9 before the update. (No update
                             // happened).
-                            rCounter = (rCounter + 1) & 0x1F;
-                            updateVideoOffset = (vCounter == 0);
+                            incrementC9();
+                            if (!c4_vCounter) updateVideoOffset();
                         }
                     }
                     break;
 
                 case 2: // CRTC Type 2:
                     if (lastCharRow) { // C4 == R4
-                        if (vAdjust) {
-                            // CRTC 0,1,2 increment VCC/C4. CRTC 3,4 dont.
-                            vCounter = (vCounter + 1) & 0x7F;
-                            processVAdjust = true;
-                        } else if (lastLineInCharRow) {
+                        if (lastLineInCharRow) {
                             // C9 and C4 go to 0.
                             // Video offset is updated if C0 <= R1.
                             // This is the "last line" case, hence if C5 != 0
                             // the vertical adjustment phase is entered.
-                            rCounter = 0;
-                            if (vAdjust) {
+                            resetC9();
+                            if (r5_vAdjust) {
                                 // Set C5=0, increment C4.
-                                vaCounter = 0;
-                                vCounter = (vCounter + 1) & 0x7F;
+                                resetC5();
+                                incrementC4();
                                 processVAdjust = true;
                             } else {
-                                vCounter = 0;
-                                updateVideoOffset = (hCounter <= hDisplayed);
+                                resetC4();
+                                if (c0_hCounter <= r1_hDisplayed) updateVideoOffset();
                             }
                             // TODO: Check for HSYNC cancellation.
                             // It applies to the BEFORE case, when C4 == R4 == 0.
                         } else {
                             // C9 is incremented.
                             // Video offset is not updated.
-                            rCounter = (rCounter + 1) & 0x1F;
+                            incrementC9();
                         }
                     } else { // General behaviour (C4 != R4)
                         if (lastLineInCharRowAfter) {
                             // This covers C9 = R9 after the update.
-                            rCounter = 0;
-                            vCounter = (vCounter + 1) & 0x7F;
+                            resetC9();
+                            incrementC4();
                         } else {
                             // This covers C9 == R9 before the update. (No update
                             // happened).
-                            rCounter = (rCounter + 1) & 0x1F;
+                            incrementC9();
                         }
                     }
                     break;
 
                 default: // CRTC 3 & 4.
                     if (lastCharRow) { // C4 == R4
-                        if (rCounter >= regs[9]) {
-                            rCounter = 0;
-                            if (vAdjust) {
-                                vaCounter = 0;
+                        if (c9_rCounter >= regs[9]) {
+                            resetC9();
+                            if (r5_vAdjust) {
+                                resetC5();
                                 processVAdjust = true;
                             } else {
-                                vCounter = 0; 
-                                updateVideoOffset = true;
+                                resetC4();
+                                updateVideoOffset();
                             }
                         } else {
                             // C9 is incremented.
                             // Video offset is not updated.
-                            rCounter = (rCounter + 1) & 0x1F;
-                        } 
+                            incrementC9();
+                        }
                     } else { // General behaviour (C4 != R4).
-                        if (rCounter >= regs[9]) {
+                        if (c9_rCounter >= regs[9]) {
                             // This covers C9 = R9 after the update.
-                            rCounter = 0;
-                            vCounter = (vCounter + 1) & 0x7F;
+                            resetC9();
+                            incrementC4();
                         } else {
                             // This covers C9 == R9 before the update. (No update
                             // happened).
-                            rCounter = (rCounter + 1) & 0x1F;
+                            incrementC9();
                         }
                     }
                     break;
             }
         } else { // processVAdjust == true
             // Check C9 == R5.
-            bool lastLineInVAdjustRC = (rCounter == vAdjust);
-            bool lastLineInVAdjustAC = (vaCounter == vAdjust);
+            bool lastLineInVAdjust = c5_aCounter == r5_vAdjust - 1;
 
             switch (type) {
                 case 0: // CRTC 0.
-                    if (lastLineInVAdjustRC) {
-                        // Last line of the screen.
-                        rCounter = vCounter = 0;
+                    incrementC9();
+                    if (c9_rCounter == r5_vAdjust) {
+                        // Limit is r5_vAdjust - 1, but we've already incremented.
+                        // In this case, the line is corrected.
+                        resetC9();
+                        resetC4();
+                        updateVideoOffset();
                         processVAdjust = false;
-                        updateVideoOffset = true;
-                    } else {
-                        rCounter = (rCounter + 1) & 0x1F;
                     }
                     break;
 
                 case 1: // CRTC 1, 2.
                 case 2: // fall-through
-                    if (!vAdjust) {
-                        rCounter = 0;
+                    if (!r5_vAdjust) {
+                        resetC9();
                         processVAdjust = false;
-                    } else if (lastLineInVAdjustAC) {
+                    } else if (lastLineInVAdjust) {
                         // Last line of the screen.
-                        rCounter = vCounter = 0;
+                        resetC9();
+                        resetC4();
+                        updateVideoOffset();
                         processVAdjust = false;
-                        updateVideoOffset = true;
                     } else if (lastLineInCharRowAfter) {
                         // This covers C9 = R9 after the update.
-                        rCounter = 0;
-                        vaCounter = (vaCounter + 1) & 0x1F;
-                        vCounter = (vCounter + 1) & 0x7F;
+                        resetC9();
+                        incrementC5();
+                        incrementC4();
                     } else {
                         // This covers C9 == R9 before the update. (No update
                         // happened).
-                        rCounter = (rCounter + 1) & 0x1F;
-                        vaCounter = (vaCounter + 1) & 0x1F;
+                        incrementC5();
+                        incrementC9();
                     }
                     break;
 
                 default: // CRTC 3, 4.
-                    if (lastLineInVAdjustAC) {
-                        rCounter = vCounter = 0;
+                    if (!r5_vAdjust) {
+                        resetC9();
                         processVAdjust = false;
-                        updateVideoOffset = true;
-                    } else if (rCounter >= regs[9]) {
+                    } else if (lastLineInVAdjust) {
+                        resetC9();
+                        resetC4();
+                        updateVideoOffset();
+                        processVAdjust = false;
+                    } else if (c9_rCounter >= regs[9]) {
                         // This covers C9 = R9 after the update.
-                        rCounter = 0;
-                        vaCounter = (vaCounter + 1) & 0x1F;
+                        incrementC5();
+                        resetC9();
                     } else {
                         // This covers C9 == R9 before the update. (No update
                         // happened).
-                        rCounter = (rCounter + 1) & 0x1F;
-                        vaCounter = (vaCounter + 1) & 0x1F;
+                        incrementC5();
+                        incrementC9();
                     }
                     break;
             }
         }
-    } else if (hCounter == 1) {
-    } else if (hCounter == 2) {
-    }
 
-    if (hCounter == hDisplayed) {   // Horizontal Displayed
-        hDisplay = false;                   // Drawing border
-
-        if (rCounter == rMax) {
-            lineAddress += hDisplayed;
+        charAddress = lineAddress;
+    } else if (c0_hCounter == 1) {
+        enableRasterCounter = true;
+    } else if (c0_hCounter == 2) {
+        switch (type) {
+            case 0: // CRTC 0
+                // When C0=2, the CRTC determines whether additional line management
+                // should take place. If this additional management is activated,
+                // then C4 will be incremented whatever the value of R4 for the next
+                // C0=0. Otherwise, C4 and C9 will return to 0.
+                if (processVAdjust) {
+                    if (!r5_vAdjust) {
+                        resetC9();
+                        processVAdjust = false;
+                        updateVideoOffset();
+                    }
+                }
+                break;
+            default:
+                break;
         }
 
-        // Base address is updated on VCC=0 (CRTC 1) or VCC=0 and VLC=0 (other)
-        if (updateVideoOffset) {
-            lineAddress = ((regs[12] & 0x3F) << 8) | regs[13];
-#ifdef DEBUGCRTC
-            cout << "Updated line address on top area: " << lineAddress << endl;
-#endif
-        }
     }
 
-    if (vDispOff) {  // Vertical Displayed
-        vDispOff = false;
-        vDisplay = false;
-    }
 
-    if (hCounter == hDisplayed) {
-        hDispOff = true;
-    }
-
-    if (hDispOff) {   // Horizontal Displayed
-        hDispOff = false;
+    if (c0_hCounter == r1_hDisplayed) {
         hDisplay = false;                   // Drawing border
 
-        if (rCounter == rMax - 1) {
-            lineAddress += hDisplayed;
+        if (c9_rCounter == regs[9]) {
+            lineAddress += r1_hDisplayed;
         }
     }
 
     // CRTC type 2, 3, 4: HSW in range 1..16. This block checks 1, 2, 3...
     // HSW = 0 gives 16 chars.
     if (hSync && type > 1) {
-        hswCounter = (hswCounter + 1) & 0xF;
-        if (hswCounter == hswMax) {
+        c3l_hSyncWidth = (c3l_hSyncWidth + 1) & 0xF;
+        if (c3l_hSyncWidth == r3l_hSyncWidth) {
             hSync = false;
-            hswCounter = 0;
+            c3l_hSyncWidth = 0;
         }
     }
 
-    if (hCounter == hsPos) {   // Horizontal Sync Position
+    if (c0_hCounter == r2_hSyncPos) {   // Horizontal Sync Position
         hSync = true;                       // HSYNC pulse
-        hswCounter = 0;
+        c3l_hSyncWidth = 0;
     }
 
     // CRTC type 0, 1: HSW in range 0..15. This block checks 0, 1, 2...
     // HSW = 0 gives no HSYNC.
     if (hSync && type < 2) {
-        if (hswCounter == hswMax) {
+        if (c3l_hSyncWidth == r3l_hSyncWidth) {
             hSync = false;
-            hswCounter = 0;
+            c3l_hSyncWidth = 0;
+        } else if (type == 1 && r3l_hSyncWidth == 0) {
+            hSync = false;
+            c3l_hSyncWidth = 0;
         } else {
-            hswCounter = (hswCounter + 1) & 0xF;
+            c3l_hSyncWidth = (c3l_hSyncWidth + 1) & 0xF;
         }
     }
 
     // All CRTC types consider 1, 2, 3... 16.
     // CRTC types 1 and 2 have this setting fixed to 16 lines.
     // This block must be placed here so VSW = 1 actually does 1 line.
-    if (vSync && (hCounter == vSyncOffset)) {
-        vswCounter = (vswCounter + 1) & 0xF;
-        if (vswCounter == vswMax) {
+    if (vSync && (c0_hCounter == vSyncOffset)) {
+        c3h_vSyncWidth = (c3h_vSyncWidth + 1) & 0xF;
+        if (c3h_vSyncWidth == r3h_vSyncWidth) {
             vSync = false;
-            vswCounter = 0;
+            c3h_vSyncWidth = 0;
         }
     }
 
-    if ((vCounter == vsPos) && (rCounter == 0) && (hCounter == vSyncOffset)) {  // Vertical Sync Position
+    if ((c4_vCounter == r7_vSyncPos)
+            && (c9_rCounter == 0) && (c0_hCounter == vSyncOffset)) {  // Vertical Sync Position
         vSync = true;
-        vswCounter = 0;
+        c3h_vSyncWidth = 0;
     }
 
-    charAddress = lineAddress + hCounter;
+    if (c0_hCounter) charAddress++;
     pageAddress = (charAddress & 0x3000) << 2;
-    byteAddress = pageAddress | ((rCounter & 7) << 11) | ((charAddress & 0x3FF) << 1);
+    byteAddress = pageAddress | ((c9_rCounter & 7) << 11) | ((charAddress & 0x3FF) << 1);
     dispEn = hDisplay && vDisplay;
 
-    rMax = regs[9];
+    r9_rMaxAddress = regs[9];
+}
+
+void CRTC::incrementC4() {
+
+    c4_vCounter = (c4_vCounter + 1) & 0x7F;
+
+    if (!c4_vCounter) {
+        vDisplay = true;
+        updateVideoOffset();
+    }
+
+    if (c4_vCounter == r6_vDisplayed) {
+        vDisplay = false;
+    }
+}
+
+void CRTC::resetC4() {
+
+    c4_vCounter = 0;
+    vDisplay = true;
+}
+
+void CRTC::incrementC9() {
+
+    c9_rCounter = (c9_rCounter + 1) & 0x1F;
+}
+
+void CRTC::resetC9() {
+
+    c9_rCounter = 0;
+}
+
+void CRTC::incrementC5() {
+
+    c5_aCounter = (c5_aCounter + 1) & 0x1F;
+}
+
+void CRTC::resetC5() {
+
+    c5_aCounter = 0;
+}
+
+void CRTC::updateVideoOffset() {
+
+    lineAddress = (regs[12] & 0x3F) << 8 | regs[13];
+    videoOffsetUpdated = true;
 }
 
 void CRTC::reset() {
