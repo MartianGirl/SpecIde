@@ -195,7 +195,7 @@ void CRTC::wrRegister(uint_fast8_t byte) {
             case 6: // Vertical displayed.
                 r6_vDisplayed = regs[6];
 #ifdef DEBUGCRTC
-                cout << "Update VDisplayed(" << static_cast<uint32_t>(r6_Displayed)
+                cout << "Update VDisplayed(" << static_cast<uint32_t>(r6_vDisplayed)
                     << ") at VCC=" << static_cast<uint32_t>(c4_vCounter)
                     << " VLC=" << static_cast<uint32_t>(c9_rCounter)
                     << " VAD=" << static_cast<uint32_t>(c5_aCounter)
@@ -244,6 +244,9 @@ void CRTC::clock() {
     if (c0_hCounter == 0) {
         // Image is displayed again for this line.
         hDisplay = true;
+        updateC4();
+        updateC5();
+        updateC9();
 
 #ifdef DEBUGCRTC
         cout << " C0: " << static_cast<uint32_t>(c0_hCounter)
@@ -253,12 +256,6 @@ void CRTC::clock() {
             << " VP: " << static_cast<uint32_t>(lineAddress)
             << endl;
 #endif
-
-        // This handles updates on C9 = 0, C4 = 0, C0 = R0.
-        if ((type == 0 || type == 1 || type == 2) && c4_vCounter == 0 && c9_rCounter == 0) {
-            updateVideoOffset();
-        }
-
         // Check C9 == R9.
         bool lastLineInCharRowBefore = (c9_rCounter == r9_rMaxAddress);
         bool lastLineInCharRowAfter = (c9_rCounter == regs[9]);
@@ -277,32 +274,31 @@ void CRTC::clock() {
                                 // This is the "last line" case, hence if C5 != 0
                                 // the vertical adjustment phase is entered.
                                 if (r5_vAdjust) {
-                                    resetC9();
-                                    incrementC4();
+                                    c9Update = UpdateMode::RESET;
+                                    c4Update = UpdateMode::INCREMENT;
                                     processVAdjust = true;
                                 } else {
-                                    resetC9();
-                                    resetC4();
-                                    updateVideoOffset();
+                                    c9Update = UpdateMode::RESET;
+                                    c4Update = UpdateMode::RESET;
                                 }
                             } else if (lastLineInCharRowAfter) {
                                 // C9 goes to 0, C4 is incremented and overflows.
-                                resetC9();
-                                incrementC4();
+                                c9Update = UpdateMode::RESET;
+                                c4Update = UpdateMode::INCREMENT;
                             } else {
                                 // C9 is incremented.
                                 // Video offset is not updated.
-                                incrementC9();
+                                c9Update = UpdateMode::INCREMENT;
                             }
                         } else { // General behaviour (C4 != R4)
                             if (lastLineInCharRowAfter) {
                                 // This covers C9 = R9 after the update.
-                                resetC9();
-                                incrementC4();
+                                c9Update = UpdateMode::RESET;
+                                c4Update = UpdateMode::INCREMENT;
                             } else {
                                 // This covers C9 == R9 before the update. (No update
                                 // happened).
-                                incrementC9();
+                                c9Update = UpdateMode::INCREMENT;
                             }
                         }
                     }
@@ -315,34 +311,35 @@ void CRTC::clock() {
                             // C9 goes to 0.
                             // This is the "last line" case, hence if C5 != 0
                             // the vertical adjustment phase is entered.
-                            resetC9();
                             if (r5_vAdjust) {
                                 // Set C5=0, increment C4.
-                                resetC5();
-                                incrementC4();
+                                c9Update = UpdateMode::RESET;
+                                c5Update = UpdateMode::RESET;
+                                c4Update = UpdateMode::INCREMENT;
                                 processVAdjust = true;
                             } else {
                                 // C4 goes to 0.
                                 // Video offset is updated.
-                                resetC4();
-                                updateVideoOffset();
+                                c9Update = UpdateMode::RESET;
+                                c4Update = UpdateMode::RESET;
+                                //updateVideoOffset();
                             }
                         } else {
                             // C9 is incremented.
                             // Video offset is updated if C4 == 0.
-                            incrementC9();
-                            if (!c4_vCounter) updateVideoOffset();
+                            c9Update = UpdateMode::INCREMENT;
+                            //if (!c4_vCounter) updateVideoOffset();
                         }
                     } else { // General behaviour (C4 != R4)
                         if (lastLineInCharRowAfter) {
                             // This covers C9 = R9 after the update.
-                            resetC9();
-                            incrementC4();
+                            c9Update = UpdateMode::RESET;
+                            c4Update = UpdateMode::INCREMENT;
                         } else {
                             // This covers C9 == R9 before the update. (No update
                             // happened).
-                            incrementC9();
-                            if (!c4_vCounter) updateVideoOffset();
+                            c9Update = UpdateMode::INCREMENT;
+                            //if (!c4_vCounter) updateVideoOffset();
                         }
                     }
                     break;
@@ -354,14 +351,16 @@ void CRTC::clock() {
                             // Video offset is updated if C0 <= R1.
                             // This is the "last line" case, hence if C5 != 0
                             // the vertical adjustment phase is entered.
-                            resetC9();
+                            c9Update = UpdateMode::RESET;
                             if (r5_vAdjust) {
                                 // Set C5=0, increment C4.
-                                resetC5();
-                                incrementC4();
+                                c9Update = UpdateMode::RESET;
+                                c5Update = UpdateMode::RESET;
+                                c4Update = UpdateMode::INCREMENT;
                                 processVAdjust = true;
                             } else {
-                                resetC4();
+                                c9Update = UpdateMode::RESET;
+                                c4Update = UpdateMode::RESET;
                                 if (c0_hCounter <= r1_hDisplayed) updateVideoOffset();
                             }
                             // TODO: Check for HSYNC cancellation.
@@ -369,17 +368,17 @@ void CRTC::clock() {
                         } else {
                             // C9 is incremented.
                             // Video offset is not updated.
-                            incrementC9();
+                            c9Update = UpdateMode::INCREMENT;
                         }
                     } else { // General behaviour (C4 != R4)
                         if (lastLineInCharRowAfter) {
                             // This covers C9 = R9 after the update.
-                            resetC9();
-                            incrementC4();
+                            c9Update = UpdateMode::RESET;
+                            c4Update = UpdateMode::INCREMENT;
                         } else {
                             // This covers C9 == R9 before the update. (No update
                             // happened).
-                            incrementC9();
+                            c9Update = UpdateMode::INCREMENT;
                         }
                     }
                     break;
@@ -387,28 +386,29 @@ void CRTC::clock() {
                 default: // CRTC 3 & 4.
                     if (lastCharRow) { // C4 == R4
                         if (c9_rCounter >= regs[9]) {
-                            resetC9();
                             if (r5_vAdjust) {
-                                resetC5();
+                                c9Update = UpdateMode::RESET;
+                                c5Update = UpdateMode::RESET;
                                 processVAdjust = true;
                             } else {
-                                resetC4();
-                                updateVideoOffset();
+                                c9Update = UpdateMode::RESET;
+                                c4Update = UpdateMode::RESET;
+                                //updateVideoOffset();
                             }
                         } else {
                             // C9 is incremented.
                             // Video offset is not updated.
-                            incrementC9();
+                            c9Update = UpdateMode::INCREMENT;
                         }
                     } else { // General behaviour (C4 != R4).
                         if (c9_rCounter >= regs[9]) {
                             // This covers C9 = R9 after the update.
-                            resetC9();
-                            incrementC4();
+                            c9Update = UpdateMode::RESET;
+                            c4Update = UpdateMode::INCREMENT;
                         } else {
                             // This covers C9 == R9 before the update. (No update
                             // happened).
-                            incrementC9();
+                            c9Update = UpdateMode::INCREMENT;
                         }
                     }
                     break;
@@ -419,65 +419,71 @@ void CRTC::clock() {
 
             switch (type) {
                 case 0: // CRTC 0.
-                    incrementC9();
-                    if (c9_rCounter == r5_vAdjust) {
+                    if (c9_rCounter == r5_vAdjust - 1) {
                         // Limit is r5_vAdjust - 1, but we've already incremented.
                         // In this case, the line is corrected.
-                        resetC9();
-                        resetC4();
-                        updateVideoOffset();
+                        c9Update = UpdateMode::RESET;
+                        c4Update = UpdateMode::RESET;
                         processVAdjust = false;
+                    } else {
+                        c9Update = UpdateMode::INCREMENT;
                     }
                     break;
 
                 case 1: // CRTC 1, 2.
                 case 2: // fall-through
                     if (!r5_vAdjust) {
-                        resetC9();
+                        c9Update = UpdateMode::RESET;
                         processVAdjust = false;
                     } else if (lastLineInVAdjust) {
                         // Last line of the screen.
-                        resetC9();
-                        resetC4();
-                        updateVideoOffset();
+                        c9Update = UpdateMode::RESET;
+                        c4Update = UpdateMode::RESET;
+                        //updateVideoOffset();
                         processVAdjust = false;
                     } else if (lastLineInCharRowAfter) {
                         // This covers C9 = R9 after the update.
-                        resetC9();
-                        incrementC5();
-                        incrementC4();
+                        c9Update = UpdateMode::RESET;
+                        c5Update = UpdateMode::INCREMENT;
+                        c4Update = UpdateMode::INCREMENT;
                     } else {
                         // This covers C9 == R9 before the update. (No update
                         // happened).
-                        incrementC5();
-                        incrementC9();
+                        c9Update = UpdateMode::INCREMENT;
+                        c5Update = UpdateMode::INCREMENT;
                     }
                     break;
 
                 default: // CRTC 3, 4.
                     if (!r5_vAdjust) {
-                        resetC9();
+                        c9Update = UpdateMode::RESET;
                         processVAdjust = false;
                     } else if (lastLineInVAdjust) {
-                        resetC9();
-                        resetC4();
-                        updateVideoOffset();
+                        c9Update = UpdateMode::RESET;
+                        c4Update = UpdateMode::RESET;
+                        //updateVideoOffset();
                         processVAdjust = false;
                     } else if (c9_rCounter >= regs[9]) {
                         // This covers C9 = R9 after the update.
-                        incrementC5();
-                        resetC9();
+                        c5Update = UpdateMode::INCREMENT;
+                        c9Update = UpdateMode::RESET;
                     } else {
                         // This covers C9 == R9 before the update. (No update
                         // happened).
-                        incrementC5();
-                        incrementC9();
+                        c5Update = UpdateMode::INCREMENT;
+                        c9Update = UpdateMode::INCREMENT;
                     }
                     break;
             }
         }
 
         charAddress = lineAddress;
+
+        if ((c4_vCounter == r7_vSyncPos) && (c9_rCounter == 0)) {  // Vertical Sync Position
+            vSync = true;
+            c3h_vSyncWidth = 0;
+        }
+
     } else if (c0_hCounter == 1) {
         enableRasterCounter = true;
     } else if (c0_hCounter == 2) {
@@ -489,9 +495,8 @@ void CRTC::clock() {
                 // C0=0. Otherwise, C4 and C9 will return to 0.
                 if (processVAdjust) {
                     if (!r5_vAdjust) {
-                        resetC9();
+                        c9Update = UpdateMode::RESET;
                         processVAdjust = false;
-                        updateVideoOffset();
                     }
                 }
                 break;
@@ -564,44 +569,66 @@ void CRTC::clock() {
     r9_rMaxAddress = regs[9];
 }
 
-void CRTC::incrementC4() {
+void CRTC::updateC4() {
 
-    c4_vCounter = (c4_vCounter + 1) & 0x7F;
+    switch (c4Update) {
+        case UpdateMode::RESET:
+            c4_vCounter = 0;
+            vDisplay = true;
+            updateVideoOffset();
+            break;
 
-    if (!c4_vCounter) {
-        vDisplay = true;
+        case UpdateMode::INCREMENT:
+            c4_vCounter = (c4_vCounter + 1) & 0x7F;
+            if (!c4_vCounter) {
+                vDisplay = true;
+                updateVideoOffset();
+            }
+            if (c4_vCounter == r6_vDisplayed) {
+                vDisplay = false;
+            }
+            break;
+        default:
+            break;
+    }
+
+    if (c4_vCounter == 0 && type == 1) {
         updateVideoOffset();
     }
 
-    if (c4_vCounter == r6_vDisplayed) {
-        vDisplay = false;
+    c4Update = UpdateMode::KEEP;
+}
+
+void CRTC::updateC9() {
+
+    switch (c9Update) {
+        case UpdateMode::RESET:
+            c9_rCounter = 0;
+            break;
+        case UpdateMode::INCREMENT:
+            c9_rCounter = (c9_rCounter + 1) & 0x1F;
+            break;
+        default:
+            break;
     }
+
+    c9Update = UpdateMode::KEEP;
 }
 
-void CRTC::resetC4() {
+void CRTC::updateC5() {
 
-    c4_vCounter = 0;
-    vDisplay = true;
-}
+    switch (c5Update) {
+        case UpdateMode::RESET:
+            c5_aCounter = 0;
+            break;
+        case UpdateMode::INCREMENT:
+            c5_aCounter = (c5_aCounter + 1) & 0x1F;
+            break;
+        default:
+            break;
+    }
 
-void CRTC::incrementC9() {
-
-    c9_rCounter = (c9_rCounter + 1) & 0x1F;
-}
-
-void CRTC::resetC9() {
-
-    c9_rCounter = 0;
-}
-
-void CRTC::incrementC5() {
-
-    c5_aCounter = (c5_aCounter + 1) & 0x1F;
-}
-
-void CRTC::resetC5() {
-
-    c5_aCounter = 0;
+    c5Update = UpdateMode::KEEP;
 }
 
 void CRTC::updateVideoOffset() {

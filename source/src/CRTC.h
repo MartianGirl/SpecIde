@@ -18,13 +18,20 @@
 #include <cstdint>
 #include <cstddef>
 
-enum class AccessType
-{
+enum class AccessType {
     CRTC_NA,
     CRTC_RO = 1,
     CRTC_WO,
     CRTC_RW
 };
+
+enum class UpdateMode {
+    RESET,
+    INCREMENT,
+    KEEP
+};
+
+#define DEBUGCRTC
 
 class CRTC {
     public:
@@ -78,14 +85,12 @@ class CRTC {
         /** Raster counter (C9). */
         uint_fast8_t c9_rCounter = 0;
 
-        /** Next value for c0_hCounter. */
-        uint_fast8_t c0_hCounterNext = 0;
-        /** Next value for c4_vCounter. */
-        uint_fast8_t c4_vCounterNext = 0;
-        /** Next value for c5_aCounter. */
-        uint_fast8_t c5_aCounterNext = 0;
-        /** Next value for c9_rCounter. */
-        uint_fast8_t c9_rCounterNext = 0;
+        /** Programmed update for c4_vCounter. */
+        UpdateMode c4Update = UpdateMode::KEEP;
+        /** Programmed update for c5_aCounter. */
+        UpdateMode c5Update = UpdateMode::KEEP;
+        /** Programmed update for c9_rCounter. */
+        UpdateMode c9Update = UpdateMode::KEEP;
         /** Odd field indicator. */
         bool oddField = true;
         /** Horizontal position where VSync pulse starts. */
@@ -105,7 +110,6 @@ class CRTC {
 
         /** Updated video offset from R12/R13, not from VMA'. */
         bool videoOffsetUpdated = false;
-        bool updateVideoPointer = false;
         /** Raster counter is checked only once per line. */
         bool enableRasterCounter = true;
 
@@ -116,6 +120,7 @@ class CRTC {
         bool vSync = false;
         bool dispEn = false;
         bool vSyncForced = false;
+        bool vSyncAuthorized = false;
 
         /** End of horizontal displayed area. C0 == R1. */
         bool hDispOff = false;
@@ -133,12 +138,9 @@ class CRTC {
         void clock();
         void reset();
 
-        void incrementC4();
-        void resetC4();
-        void incrementC9();
-        void resetC9();
-        void incrementC5();
-        void resetC5();
+        void updateC4();
+        void updateC9();
+        void updateC5();
         void updateVideoOffset();
 };
 
