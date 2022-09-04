@@ -68,7 +68,7 @@ ULA::ULA() :
                 ((i & 0x02) >> 1) | ((i & 0x04) << 6) | ((i & 0x01) << 16) :
                 ((i & 0x10) >> 4) | ((i & 0x20) << 3) | ((i & 0x08) << 13);
 #endif
-            colour *= (i & 0x40) ? 0xF0 : 0xC0;
+            colour *= (i & 0x40) ? 0xFF : 0xC0;
 #if SPECIDE_BYTE_ORDER == 1
             colour |= 0xFF;
 #else
