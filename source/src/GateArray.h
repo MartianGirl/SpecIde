@@ -65,9 +65,9 @@ class GateArray {
         uint_fast32_t yInc = 0;
          
         /** Delayed hSync from CRTC. */
-        bool hSync_1 = false;
+        bool hSync[2];
         /** Delayed vSync from CRTC. */
-        bool vSync_1 = false;
+        bool vSync[2];
         bool sync = false;
         bool hSyncGA = false;
         bool vSyncGA = false;

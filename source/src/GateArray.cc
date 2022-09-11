@@ -246,17 +246,10 @@ void GateArray::clock() {
             // DISPEN only changes once per CRTC clock, but there are two
             // video bytes per CRTC clock. This is why DISPEN is shifted once,
             // but video data is shifted twice.
-            dispen[1] = dispen[0];
-            dispen[0] = crtc.dispEn;
-            videoByte[2] = videoByte[1];
-            videoByte[1] = videoByte[0];
-            videoByte[0] = d;
+            dispen[1] = dispen[0]; dispen[0] = crtc.dispEn;
+            videoByte[2] = videoByte[1]; videoByte[1] = videoByte[0]; videoByte[0] = d;
             break;
         case 0xb:   // CAS_ and S3 rising edge. CRTC is clocked here.
-            videoByte[2] = videoByte[1];
-            videoByte[1] = videoByte[0];
-            videoByte[0] = d;
-
             // CRTC is clocked. Some values have updated.
             crtc.clock();
 
@@ -264,8 +257,10 @@ void GateArray::clock() {
             updateBeam();
             updateVideoMode();
 
-            hSync_1 = crtc.hSync;
-            vSync_1 = crtc.vSync;
+            hSync[1] = hSync[0]; hSync[0] = crtc.hSync;
+            vSync[1] = vSync[0]; vSync[0] = crtc.vSync;
+
+            videoByte[2] = videoByte[1]; videoByte[1] = videoByte[0]; videoByte[0] = d;
             break;
         default:
             break;
@@ -339,7 +334,7 @@ void GateArray::updateBeam() {
 
     // Blanking should also be activated if hCounter < 28, but the picture
     // fits better the screen this way...
-    blanking = hSync_1 || hCounterHi < 0x7;
+    blanking = hSync[0] || hCounterHi < 0x7;
 
     // Accept HSync only if longer than 2.
     if (hSyncGA && charsFromHSync > 62) {
@@ -413,14 +408,14 @@ void GateArray::updateBeam() {
 
 void GateArray::generateInterrupts() {
 
-    if (crtc.vSync && !vSync_1) {
+    if (vSync[0] && !vSync[1]) {
         hCounterHi = 0x0;
         hCounterLo &= 0x1;
     }
     // In HSYNC falling edges, intCounter and hCounter are increased.
     // If intCounter reaches 52, an INT is generated and the counter
     // is reset.
-    if (!crtc.hSync && hSync_1) {
+    if (!hSync[0] && hSync[1]) {
         uint_fast32_t oldCounter = intCounter;
 
         if (++intCounter == 52) {
