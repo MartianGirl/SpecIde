@@ -51,12 +51,12 @@ class GateArray {
         /** Select ink, as oppossed to border. */
         bool inksel = false;
         /** Latched display enable signal. */
-        bool dispen[2];
+        bool dispen;
 
         /** Current video data byte. */
         uint_fast8_t colour = 0x00;
         /** Latched video data bytes. */
-        uint_fast8_t videoByte[3];
+        uint_fast8_t videoByte;
         bool blanking = true;
 
         uint_fast32_t xPos = 0;
@@ -65,9 +65,9 @@ class GateArray {
         uint_fast32_t yInc = 0;
          
         /** Delayed hSync from CRTC. */
-        bool hSync[2];
+        bool hSync_1;
         /** Delayed vSync from CRTC. */
-        bool vSync[2];
+        bool vSync_1;
         bool sync = false;
         bool hSyncGA = false;
         bool vSyncGA = false;

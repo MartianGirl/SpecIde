@@ -246,21 +246,22 @@ void GateArray::clock() {
             // DISPEN only changes once per CRTC clock, but there are two
             // video bytes per CRTC clock. This is why DISPEN is shifted once,
             // but video data is shifted twice.
-            dispen[1] = dispen[0]; dispen[0] = crtc.dispEn;
-            videoByte[2] = videoByte[1]; videoByte[1] = videoByte[0]; videoByte[0] = d;
+            dispen = crtc.dispEn;
+            videoByte = d;
             break;
         case 0xb:   // CAS_ and S3 rising edge. CRTC is clocked here.
             // CRTC is clocked. Some values have updated.
+
             crtc.clock();
 
-            generateInterrupts();
             updateBeam();
             updateVideoMode();
+            generateInterrupts();
 
-            hSync[1] = hSync[0]; hSync[0] = crtc.hSync;
-            vSync[1] = vSync[0]; vSync[0] = crtc.vSync;
+            hSync_1 = crtc.hSync;
+            vSync_1 = crtc.vSync;
 
-            videoByte[2] = videoByte[1]; videoByte[1] = videoByte[0]; videoByte[0] = d;
+            videoByte = d;
             break;
         default:
             break;
@@ -291,11 +292,6 @@ void GateArray::updateVideoMode() {
     // and it counts up to 8. When it reaches 8, it stops and keeps
     // its value until HSYNC falls.
     // If cClkEdge is 0-3, the mode selection clock is high.
-    static bool trigger = false;
-    if (trigger) {
-        trigger = false;
-        actMode = newMode;
-    }
 
     if (crtc.hSync) {
         if (cClkCounterHi < 0x2) {
@@ -307,7 +303,7 @@ void GateArray::updateVideoMode() {
                         cClkCounterLo = 0x0;
                         cClkCounterHi &= 0x2;
                     }
-                    trigger = true;
+                    actMode = newMode;
                 }
             }
         }
@@ -315,7 +311,7 @@ void GateArray::updateVideoMode() {
         // Mode is updated on the falling edge of bit 4 of this counter.
         // If cClkCounter was already 8, we don't enter the if above.
         if (cClkCounterHi & 0x1) {
-            trigger = true;
+            actMode = newMode;
         }
         cClkCounterLo = 0;
         cClkCounterHi = 0;
@@ -334,7 +330,7 @@ void GateArray::updateBeam() {
 
     // Blanking should also be activated if hCounter < 28, but the picture
     // fits better the screen this way...
-    blanking = hSync[0] || hCounterHi < 0x7;
+    blanking = crtc.hSync || hCounterHi < 0x7;
 
     // Accept HSync only if longer than 2.
     if (hSyncGA && charsFromHSync > 62) {
@@ -408,14 +404,14 @@ void GateArray::updateBeam() {
 
 void GateArray::generateInterrupts() {
 
-    if (vSync[0] && !vSync[1]) {
+    if (crtc.vSync && !vSync_1) {
         hCounterHi = 0x0;
         hCounterLo &= 0x1;
     }
     // In HSYNC falling edges, intCounter and hCounter are increased.
     // If intCounter reaches 52, an INT is generated and the counter
     // is reset.
-    if (!hSync[0] && hSync[1]) {
+    if (!crtc.hSync && hSync_1) {
         uint_fast32_t oldCounter = intCounter;
 
         if (++intCounter == 52) {
@@ -456,7 +452,7 @@ void GateArray::paint() {
         case MOVE:
             colour = (colour << 1) & 0xFF; break;
         case LOAD:
-            colour = videoByte[2]; inksel = dispen[1]; break;
+            colour = videoByte; inksel = dispen; break;
         default: break;
     }
     xPos += xInc;
