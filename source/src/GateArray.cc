@@ -243,22 +243,29 @@ void GateArray::clock() {
 
         case 0x6:   // CAS_ and S3 rising edge. Right after CPU state change.
             intAcknowledge();
-            dispen = crtc.dispEn;
-            videoByte = d;
+            // DISPEN only changes once per CRTC clock, but there are two
+            // video bytes per CRTC clock. This is why DISPEN is shifted once,
+            // but video data is shifted twice.
+            dispen[1] = dispen[0];
+            dispen[0] = crtc.dispEn;
+            videoByte[2] = videoByte[1];
+            videoByte[1] = videoByte[0];
+            videoByte[0] = d;
             break;
         case 0xb:   // CAS_ and S3 rising edge. CRTC is clocked here.
-            dispen = crtc.dispEn;
-            videoByte = d;
+            videoByte[2] = videoByte[1];
+            videoByte[1] = videoByte[0];
+            videoByte[0] = d;
 
             // CRTC is clocked. Some values have updated.
             crtc.clock();
 
             generateInterrupts();
-            updateVideoMode();
             updateBeam();
+            updateVideoMode();
 
-            hSync_d = crtc.hSync;
-            vSync_d = crtc.vSync;
+            hSync_1 = crtc.hSync;
+            vSync_1 = crtc.vSync;
             break;
         default:
             break;
@@ -289,28 +296,38 @@ void GateArray::updateVideoMode() {
     // and it counts up to 8. When it reaches 8, it stops and keeps
     // its value until HSYNC falls.
     // If cClkEdge is 0-3, the mode selection clock is high.
-    static uint_fast32_t cClkCounter = 2;
     static bool trigger = false;
-
     if (trigger) {
-        actMode = newMode;
         trigger = false;
+        actMode = newMode;
     }
 
     if (crtc.hSync) {
-        if (cClkCounter < 8) {
-            if (++cClkCounter == 8) {
-                trigger = true;
+        if (cClkCounterHi < 0x2) {
+            cClkCounterLo = (cClkCounterLo + 1) & 0x3;
+            if (cClkCounterLo == 2) {
+                cClkCounterHi = (cClkCounterHi + 1) & 0x3;
+                if ((cClkCounterHi & 0x1) == 0x0) {
+                    if (cClkCounterHi == 0x2) {
+                        cClkCounterLo = 0x0;
+                        cClkCounterHi &= 0x2;
+                    }
+                    trigger = true;
+                }
             }
         }
     } else {
         // Mode is updated on the falling edge of bit 4 of this counter.
         // If cClkCounter was already 8, we don't enter the if above.
-        if (cClkCounter & 4) {
+        if (cClkCounterHi & 0x1) {
             trigger = true;
         }
-        cClkCounter = 2;
+        cClkCounterLo = 0;
+        cClkCounterHi = 0;
     }
+
+    hSyncGA = (cClkCounterHi == 0x1);
+    vSyncGA = (hCounterHi == 0x1) && (cClkCounterHi != 0x1);
 }
 
 void GateArray::updateBeam() {
@@ -322,10 +339,10 @@ void GateArray::updateBeam() {
 
     // Blanking should also be activated if hCounter < 28, but the picture
     // fits better the screen this way...
-    blanking = crtc.hSync || hCounter < 0x1c;
+    blanking = hSync_1 || hCounterHi < 0x7;
 
     // Accept HSync only if longer than 2.
-    if (crtc.c3l_hSyncWidth == 3 && charsFromHSync > 62) {
+    if (hSyncGA && charsFromHSync > 62) {
         hSyncAccepted = true;
         charsFromHSync = 0;
     }
@@ -334,7 +351,7 @@ void GateArray::updateBeam() {
     // frequency range. CRTC::vSyncSeparation is the number of scans for this
     // to happen.
     // The separation-between-VSyncs counter is reset when a VSync is accepted.
-    if (crtc.c3h_vSyncWidth == 3 && rastersFromVSync >= crtc.vSyncSeparation) {
+    if (vSyncGA && rastersFromVSync >= crtc.vSyncSeparation) {
         vSyncAccepted = true;
         rastersFromVSync = 0;
     }
@@ -364,7 +381,7 @@ void GateArray::updateBeam() {
         // Vertical position (and scans-from-frame-start counter) are increased
         // only if HSync happens outside of a VSync pulse.
         // (This is regarding geommetry, not time!)
-        if (!crtc.vSync || crtc.c3h_vSyncWidth < 2 || crtc.c3h_vSyncWidth > 5) {
+        if (!vSyncGA) {
             yPos += yInc;
         }
 
@@ -396,23 +413,30 @@ void GateArray::updateBeam() {
 
 void GateArray::generateInterrupts() {
 
-    if (crtc.vSync && !vSync_d) {
-        hCounter = 0x2;
+    if (crtc.vSync && !vSync_1) {
+        hCounterHi = 0x0;
+        hCounterLo &= 0x1;
     }
     // In HSYNC falling edges, intCounter and hCounter are increased.
     // If intCounter reaches 52, an INT is generated and the counter
     // is reset.
-    if (!crtc.hSync && hSync_d) {
+    if (!crtc.hSync && hSync_1) {
         uint_fast32_t oldCounter = intCounter;
 
         if (++intCounter == 52) {
             intCounter = 0;
         }
 
-        if (hCounter < 0x1c) {
-            if (++hCounter == 0x4) {
-                intCounter = 0;
+        if (hCounterHi < 0x7) {
+            hCounterLo = (hCounterLo + 1) & 0x3;
+            if (hCounterLo == 0x2) {
+                hCounterHi = (hCounterHi + 1) & 0x7;
+                if (hCounterHi == 0x1) {
+                    intCounter = 0;
+                }
             }
+        } else {
+            hCounterLo &= 0x2;
         }
 
         if (intCounter == 0 && (oldCounter & 0x20)) {
@@ -426,19 +450,19 @@ void GateArray::paint() {
     if (!blanking) {
         pixelsX1[(yPos * X_SIZE) + xPos]
             = colours[inksel ? pens[pixelTable[actMode][colour]] : border];
-        switch (modeTable[actMode][counter & 0x7]) {
-            case MOVE:
-                colour = (colour << 1) & 0xFF; break;
-            case LOAD:
-                colour = videoByte; inksel = dispen; break;
-            default: break;
-        }
     } else {
 #if SPECIDE_BYTE_ORDER == 1
         pixelsX1[(yPos * X_SIZE) + xPos] = 0x000000FF;
 #else
         pixelsX1[(yPos * X_SIZE) + xPos] = 0xFF000000;
 #endif
+    }
+    switch (modeTable[actMode][counter & 0x7]) {
+        case MOVE:
+            colour = (colour << 1) & 0xFF; break;
+        case LOAD:
+            colour = videoByte[2]; inksel = dispen[1]; break;
+        default: break;
     }
     xPos += xInc;
 }
@@ -451,7 +475,8 @@ void GateArray::reset() {
     border = 0x10;
     z80_c = ~SIGNAL_RESET_;
     counter = 0;
-    hCounter = 0;
+    hCounterLo = 0;
+    hCounterHi = 0;
     intCounter = 0;
 }
 // vim: et:sw=4:ts=4

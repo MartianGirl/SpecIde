@@ -50,12 +50,13 @@ class GateArray {
 
         /** Select ink, as oppossed to border. */
         bool inksel = false;
-        /** Display enable signal. */
-        bool dispen = false;
+        /** Latched display enable signal. */
+        bool dispen[2];
+
         /** Current video data byte. */
         uint_fast8_t colour = 0x00;
-        /** Latched video data byte. */
-        uint_fast8_t videoByte = 0x00;
+        /** Latched video data bytes. */
+        uint_fast8_t videoByte[3];
         bool blanking = true;
 
         uint_fast32_t xPos = 0;
@@ -63,9 +64,13 @@ class GateArray {
         uint_fast32_t xInc = 0;
         uint_fast32_t yInc = 0;
          
-        bool hSync_d = false;
-        bool vSync_d = false;
+        /** Delayed hSync from CRTC. */
+        bool hSync_1 = false;
+        /** Delayed vSync from CRTC. */
+        bool vSync_1 = false;
         bool sync = false;
+        bool hSyncGA = false;
+        bool vSyncGA = false;
 
         bool hSyncAccepted = false;
         bool vSyncAccepted = false;
@@ -79,7 +84,11 @@ class GateArray {
         /** HSYNC counter for INT generation. */
         uint_fast32_t intCounter = 0;
         /** HSYNC counter for upper border delay. */
-        uint_fast32_t hCounter = 0;
+        uint_fast32_t hCounterHi = 0;
+        uint_fast32_t hCounterLo = 0;
+
+        uint_fast32_t cClkCounterLo = 0;
+        uint_fast32_t cClkCounterHi = 0;
 
         uint_fast32_t scanlines = 0;
 
@@ -270,7 +279,7 @@ class GateArray {
         static uint_fast32_t constexpr modeTable[4][8] = {
             { KEEP, KEEP, LOAD, KEEP, KEEP, KEEP, MOVE, KEEP },
             { MOVE, KEEP, LOAD, KEEP, MOVE, KEEP, MOVE, KEEP },
-            { MOVE, MOVE, LOAD, MOVE, MOVE, MOVE, MOVE, MOVE },
+            { MOVE, LOAD, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE },
             { KEEP, KEEP, LOAD, KEEP, KEEP, KEEP, MOVE, KEEP }
         };
 
