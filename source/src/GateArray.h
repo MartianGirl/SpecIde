@@ -30,6 +30,8 @@ class GateArray {
 
         /** Gate Array data bus. */
         uint_fast8_t d; 
+        /** Gate Array video address. */
+        uint_fast16_t a;
         /** CPU control bus. */
         uint_fast16_t z80_c = 0xFFFF;
 
@@ -43,6 +45,9 @@ class GateArray {
         uint_fast8_t newMode = 1;
         /** Actual video mode. */
         uint_fast8_t actMode = 1;
+        /** Video mode change triggered. */
+        bool modeUpdate = false;
+
         /** Lower ROM readable at $0000-$3FFF. */
         bool lowerRom = true;
         /** Upper ROM readable at $C000-$FFFF. */
@@ -114,6 +119,8 @@ class GateArray {
          */
         void updateVideoMode();
 
+        void changeVideoMode() { if (modeUpdate) { actMode = newMode; modeUpdate = false; }}
+
         /**
          * Generate interrupts.
          */
@@ -129,7 +136,7 @@ class GateArray {
         bool fdcClock() const { return (counter & 3) == 1; }
         bool crtcClock() const { return counter == 0xb; }
         bool cpuReady() const { return readyTable[counter]; }
-        uint_fast16_t cClkOffset() const { return cClkBit[counter]; }
+        uint_fast16_t cClkOffset() const { return (cClkTable[counter] ? 1 : 0); }
         bool muxVideo() const { return muxTable[counter]; }
         bool blockIorq() const { return e244Table[counter]; }
 
@@ -238,9 +245,6 @@ class GateArray {
             true, true, true, false, false, false, false, false
         };
 
-        static uint_fast16_t constexpr cClkBit[16] = {
-            0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 };
-
         /**
          * Gate Array READY signal.
          *
@@ -273,14 +277,14 @@ class GateArray {
          * Paint loop stages.
          *
          * These constants are synchronized with the counter, so the load
-         * happens at 0x2/0xa, and the first pixel is painted at 0x3/0xb.
+         * happens at 0x2/0xa, and the first pixel is painted at 0x2/0xa.
          * This seems to give the best results.
          */
         static uint_fast32_t constexpr modeTable[4][8] = {
-            { KEEP, KEEP, LOAD, KEEP, KEEP, KEEP, MOVE, KEEP },
-            { MOVE, KEEP, LOAD, KEEP, MOVE, KEEP, MOVE, KEEP },
-            { MOVE, LOAD, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE },
-            { KEEP, KEEP, LOAD, KEEP, KEEP, KEEP, MOVE, KEEP }
+            { KEEP, LOAD, KEEP, KEEP, KEEP, MOVE, KEEP, KEEP },
+            { KEEP, LOAD, KEEP, MOVE, KEEP, MOVE, KEEP, MOVE },
+            { LOAD, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE },
+            { KEEP, LOAD, KEEP, KEEP, KEEP, MOVE, KEEP, KEEP }
         };
 
         /**

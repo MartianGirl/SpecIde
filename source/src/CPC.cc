@@ -194,6 +194,16 @@ void CPC::clock() {
     bool io_ = z80.c & SIGNAL_IORQ_;
     size_t memArea = z80.a >> 14;
 
+    if (io_ || ga.blockIorq()) {
+        ga.d = ram[ga.a];
+    } else {
+        ga.d = z80.d;
+    }
+
+    // First we clock the Gate Array. Further clocks will be generated here.
+    ga.clock();
+    z80.c = ga.z80_c;
+
     if (!io_) {
         // PAL & Gate Array.
         // PAL is selected when address is 0xxxxxxx xxxxxxxx.
@@ -220,81 +230,7 @@ void CPC::clock() {
                 hiRom = &rom[0x4000];
             }
         }
-
-        // 8255 PPI.
-        // &F4xx, &F5xx, &F6xx, &F7xx are 8255 ports.
-        if (!(z80.a & 0x0800)) {
-            switch (z80.a & 0x0300) {
-                case 0x0000:    // Port A: &F4xx
-                    if (z80.rd) {
-                        z80.d = ppi.readPortA();
-                    } else if (z80.wr) {
-                        ppi.writePortA(z80.d);
-                    }
-                    break;
-                case 0x0100:    // Port B: &F5xx
-                    if (z80.rd) {
-                        uint_fast8_t brand = 0x07 << 1;
-                        ppi.portB = tapeLevel
-                            | 0x50 | brand
-                            | (expBit ? 0x20 : 0x00)
-                            | ((ga.crtc.vSync || ga.crtc.vSyncForced) ? 0x1 : 0x0);
-                        z80.d = ppi.readPortB();
-                    } else if (z80.wr) {
-                        ppi.writePortB(z80.d);
-                        ga.crtc.vSyncForced = ppi.portB & 0x1;
-                    }
-                    break;
-                case 0x0200:    // Port C: &F6xx
-                    if (z80.rd) {
-                        ppi.portC = 0x2F;
-                        z80.d = ppi.readPortC();
-                    } else if (z80.wr) {
-                        ppi.writePortC(z80.d);
-                    }
-                    break;
-                case 0x0300:    // Control port: &F7xx
-                    if (z80.wr) {
-                        ppi.writeControlPort(z80.d);
-                    }
-                    break;
-                default:
-                    break;
-            }
-
-            if (!ppi.inputLoC) {
-                psg.setPortA(keys[ppi.portC & 0x0F]);
-            }
-
-            if (!ppi.inputHiC) {
-                relay = ppi.portC & 0x10;
-
-                // Execute PSG command.
-                switch (ppi.portC & 0xC0) {
-                    case 0x40:
-                        ppi.portA = psg.read();
-                        break;
-                    case 0x80:
-                        psg.write(ppi.portA);
-                        break;
-                    case 0xC0:
-                        psg.addr(ppi.portA);
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
     }
-
-    if ((io_ && z80.access) || ga.blockIorq()) {
-        ga.d = ram[ga.crtc.byteAddress | ga.cClkOffset()];
-    } else {
-        ga.d = z80.d;
-    }
-
-    // First we clock the Gate Array. Further clocks will be generated here.
-    ga.clock();
 
     if (ga.psgClock()) {
         psg.clock();
@@ -308,7 +244,73 @@ void CPC::clock() {
     // Z80 gets data from the ULA or memory, only when reading.
     // Z80 is clocked at 4MHz, but acts on both rising and falling edges.
     if (ga.cpuClock()) {
-        z80.c = ga.z80_c;
+
+        if (!io_) {
+            // 8255 PPI.
+            // &F4xx, &F5xx, &F6xx, &F7xx are 8255 ports.
+            if (!(z80.a & 0x0800)) {
+                switch (z80.a & 0x0300) {
+                    case 0x0000:    // Port A: &F4xx
+                        if (z80.rd) {
+                            z80.d = ppi.readPortA();
+                        } else if (z80.wr) {
+                            ppi.writePortA(z80.d);
+                        }
+                        break;
+                    case 0x0100:    // Port B: &F5xx
+                        if (z80.rd) {
+                            uint_fast8_t brand = 0x07 << 1;
+                            ppi.portB = tapeLevel
+                                | 0x50 | brand
+                                | (expBit ? 0x20 : 0x00)
+                                | ((ga.crtc.vSync || ga.crtc.vSyncForced) ? 0x1 : 0x0);
+                            z80.d = ppi.readPortB();
+                        } else if (z80.wr) {
+                            ppi.writePortB(z80.d);
+                            ga.crtc.vSyncForced = ppi.portB & 0x1;
+                        }
+                        break;
+                    case 0x0200:    // Port C: &F6xx
+                        if (z80.rd) {
+                            ppi.portC = 0x2F;
+                            z80.d = ppi.readPortC();
+                        } else if (z80.wr) {
+                            ppi.writePortC(z80.d);
+                        }
+                        break;
+                    case 0x0300:    // Control port: &F7xx
+                        if (z80.wr) {
+                            ppi.writeControlPort(z80.d);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
+                if (!ppi.inputLoC) {
+                    psg.setPortA(keys[ppi.portC & 0x0F]);
+                }
+
+                if (!ppi.inputHiC) {
+                    relay = ppi.portC & 0x10;
+
+                    // Execute PSG command.
+                    switch (ppi.portC & 0xC0) {
+                        case 0x40:
+                            ppi.portA = psg.read();
+                            break;
+                        case 0x80:
+                            psg.write(ppi.portA);
+                            break;
+                        case 0xC0:
+                            psg.addr(ppi.portA);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
 
         // Tape mechanism delays.
         if (relay) {
