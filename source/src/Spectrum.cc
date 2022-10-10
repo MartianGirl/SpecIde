@@ -214,7 +214,7 @@ void Spectrum::setPlus3(RomVariant variant) {
     loadRoms(variant);
     setSoundRate(SoundRate::SOUNDRATE_128K, sync);
 
-    fdc765.clockFrequency = 0.875;  // Relative to 1MHz
+    fdc765.clockFrequency = 1.0;  // Relative to 1MHz
 
     reset();
 }
@@ -343,11 +343,11 @@ void Spectrum::clock() {
         psgClock();
         filter[index] = covox;
         index = (index + 1) % FILTER_BZZ_SIZE;
+    }
 
-        if (!(count & 0x07)) {
-            if (plus3Disk) fdc765.clock();
-            //if (betaDisk128) fd1793.clock();
-        }
+    if (!(count % 0x07)) {
+        if (plus3Disk) fdc765.clock();
+        //if (betaDisk128) fd1793.clock();
     }
 
     // Switch pages only if the ULA is not accessing memory.
