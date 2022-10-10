@@ -31,7 +31,7 @@ enum class UpdateMode {
     KEEP
 };
 
-#define DEBUGCRTC
+//#define DEBUGCRTC
 
 class CRTC {
     public:

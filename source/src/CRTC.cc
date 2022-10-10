@@ -209,6 +209,16 @@ void CRTC::wrRegister(uint_fast8_t byte) {
                     c3h_vSyncWidth = 0;
                 }
                 break;
+            case 9:
+                //r9_rMaxAddress = regs[9];
+#ifdef DEBUGCRTC
+                cout << "Update RMax(" << static_cast<uint32_t>(regs[9])
+                    << ") at VCC=" << static_cast<uint32_t>(c4_vCounter)
+                    << " VLC=" << static_cast<uint32_t>(c9_rCounter)
+                    << " VAD=" << static_cast<uint32_t>(c5_aCounter)
+                    << " HCC=" << static_cast<uint32_t>(c0_hCounter) << endl;
+#endif
+                break;
             case 12:    // fall-through
             case 13:
 #ifdef DEBUGCRTC
@@ -234,14 +244,13 @@ void CRTC::clock() {
 
     // If Horizontal Character Counter (HCC, C0) matches Horizontal Total (R0),
     // it returns to 0. Otherwise, it is incremented.
-    if (c0_hCounter == r0_hTotal) {
-        c0_hCounter = 0;
-    } else {
+    if (c0_hCounter != r0_hTotal) {
         ++c0_hCounter;
-    }
-
+        ++charAddress;
+    } else {
     // Some processing occurs on different values of HCC/C0.
-    if (c0_hCounter == 0) {
+        c0_hCounter = 0;
+
         // Image is displayed again for this line.
         hDisplay = true;
         updateC4();
@@ -484,7 +493,9 @@ void CRTC::clock() {
             c3h_vSyncWidth = 0;
         }
 
-    } else if (c0_hCounter == 1) {
+    }
+
+    if (c0_hCounter == 1) {
         enableRasterCounter = true;
     } else if (c0_hCounter == 2) {
         switch (type) {
@@ -511,7 +522,7 @@ void CRTC::clock() {
         hDisplay = false;                   // Drawing border
 
         if (c9_rCounter == regs[9]) {
-            lineAddress += r1_hDisplayed;
+            lineAddress = charAddress;
         }
     }
 
@@ -561,7 +572,6 @@ void CRTC::clock() {
         c3h_vSyncWidth = 0;
     }
 
-    if (c0_hCounter) charAddress++;
     pageAddress = (charAddress & 0x3000) << 2;
     byteAddress = pageAddress | ((c9_rCounter & 7) << 11) | ((charAddress & 0x3FF) << 1);
     dispEn = hDisplay && vDisplay;
