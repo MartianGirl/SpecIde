@@ -80,6 +80,8 @@ class Screen {
         sf::Sprite scrSprite;
         /** ZX Spectrum font for drawing the menus. */
         sf::Font zxFont;
+        /** Vector of available video modes. */
+        std::vector<sf::VideoMode> modes;
 #endif
         /** Window width. */
         uint32_t w = 704;
@@ -93,8 +95,6 @@ class Screen {
         uint_fast32_t tBorder = 0;
         uint_fast32_t bBorder = 0;
 
-        /** Vector of available video modes. */
-        std::vector<sf::VideoMode> modes;
         /** Suggested drawable scans for better fit on single scan modes. */
         uint32_t suggestedScansSingle;
         /** Suggested drawable scans for better fit on double scan modes. */
