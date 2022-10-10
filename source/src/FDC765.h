@@ -27,38 +27,34 @@
 
 #include "Plus3Disk.h"
 
-enum class FDC765State
-{
-    FDC765_STATE_IDLE,
-    FDC765_STATE_COMMAND,
-    FDC765_STATE_EXECUTION,
-    FDC765_STATE_RECEIVE,
-    FDC765_STATE_TRANSMIT,
-    FDC765_STATE_RESULT
+enum class FDC765State {
+    IDLE,
+    COMMAND,
+    EXECUTION,
+    RECEIVE,
+    TRANSMIT,
+    RESULT
 };
 
-enum class FDC765Mode
-{
-    FDC765_MODE_NONE,
-    FDC765_MODE_READ,
-    FDC765_MODE_WRITE
+enum class FDC765Mode {
+    NONE,
+    READ,
+    WRITE
 };
 
-enum class FDC765Access
-{
-    FDC765_ACCESS_LOAD,
-    FDC765_ACCESS_SEEK,
-    FDC765_ACCESS_DATA,
-    FDC765_ACCESS_UNLOAD,
-    FDC765_ACCESS_NONE
+enum class FDC765Access {
+    LOAD,
+    SEEK,
+    DATA,
+    UNLOAD,
+    NONE
 };
 
-enum class FDC765Scan
-{
-    FDC765_SCAN_EQUAL,
-    FDC765_SCAN_LOW,
-    FDC765_SCAN_HIGH,
-    FDC765_SCAN_ERROR
+enum class FDC765Scan {
+    EQUAL,
+    LOW,
+    HIGH,
+    ERROR
 };
 
 uint_fast8_t constexpr SREG_DB0 = 1 << 0;
@@ -112,8 +108,10 @@ class FDC765 {
         uint32_t dataBytes;
 
 
-        /** Byte ready flag. */
-        bool byte = false;
+        /** Input latch has byte. */
+        bool inputByteReady = false;
+        /** Output latch has byte. */
+        bool outputByteReady = false;
         /** Interrupt flag. */
         bool interrupt = false;
 

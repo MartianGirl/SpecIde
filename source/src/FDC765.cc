@@ -26,19 +26,19 @@ void FDC765::clock() {
     updateHeadUnload();
 
     switch (state) {
-        case FDC765State::FDC765_STATE_IDLE:
-            mode = FDC765Mode::FDC765_MODE_NONE;
+        case FDC765State::IDLE:
+            mode = FDC765Mode::NONE;
             statusReg = SREG_RQM;
-            if (byte) {
+            if (inputByteReady) {
                 checkCommand();
             }
             break;
 
-        case FDC765State::FDC765_STATE_COMMAND:
-            mode = FDC765Mode::FDC765_MODE_NONE;
+        case FDC765State::COMMAND:
+            mode = FDC765Mode::NONE;
             statusReg = SREG_RQM | SREG_CB;
-            if (byte) {
-                byte = false;
+            if (inputByteReady) {
+                inputByteReady = false;
                 if (cmdIndex == cmdBytes) {
                     setup();
                 } else if (cmdIndex > cmdBytes) {
@@ -47,24 +47,24 @@ void FDC765::clock() {
             }
             break;
 
-        case FDC765State::FDC765_STATE_EXECUTION:
-            mode = FDC765Mode::FDC765_MODE_WRITE;
+        case FDC765State::EXECUTION:
+            mode = FDC765Mode::WRITE;
             statusReg = SREG_EXM | SREG_CB;
             execute();
             break;
 
-        case FDC765State::FDC765_STATE_RECEIVE:
+        case FDC765State::RECEIVE:
             // Send data from CPU to FDC.
-            mode = FDC765Mode::FDC765_MODE_WRITE;
+            mode = FDC765Mode::WRITE;
             statusReg = SREG_RQM | SREG_CB | SREG_EXM;
 
-            if (byte) {
-                byte = false;
+            if (inputByteReady) {
+                inputByteReady = false;
                 transfer = true;
                 serviceTimer = clockFrequency * ((mfmModeBit) ? SERVICE_MFM : SERVICE_FM);
                 if (dataIndex >= dataBytes) {
                     transfer = false;
-                    state = FDC765State::FDC765_STATE_EXECUTION;
+                    state = FDC765State::EXECUTION;
                 }
             }
 
@@ -74,22 +74,23 @@ void FDC765::clock() {
                 sReg[1] |= 0x10;    // OR
                 sReg[0] |= 0x40;    // AT
                 interrupt = true;
-                state = FDC765State::FDC765_STATE_RESULT;
+                state = FDC765State::RESULT;
+                outputByteReady = true;
             }
             break;
 
-        case FDC765State::FDC765_STATE_TRANSMIT:
+        case FDC765State::TRANSMIT:
             // Send data from FDC to CPU.
-            mode = FDC765Mode::FDC765_MODE_READ;
+            mode = FDC765Mode::READ;
             statusReg = SREG_RQM | SREG_DIO | SREG_CB | SREG_EXM;
 
-            if (byte) {
-                byte = false;
+            if (!outputByteReady) {
+                outputByteReady = true;
                 transfer = true;
                 serviceTimer = clockFrequency * ((mfmModeBit) ? SERVICE_MFM : SERVICE_FM);
                 if (dataIndex >= dataBytes) {
                     transfer = false;
-                    state = FDC765State::FDC765_STATE_RESULT;
+                    state = FDC765State::RESULT;
                 }
             }
 
@@ -99,19 +100,19 @@ void FDC765::clock() {
                 sReg[1] |= 0x10;    // OR
                 sReg[0] |= 0x40;    // AT
                 interrupt = true;
-                state = FDC765State::FDC765_STATE_RESULT;
+                state = FDC765State::RESULT;
 #ifdef DEBUGFDC765
                 cout << "Overrun!" << endl;
 #endif
             }
             break;
 
-        case FDC765State::FDC765_STATE_RESULT:
+        case FDC765State::RESULT:
             // Send result bytes from FDC to CPU.
-            mode = FDC765Mode::FDC765_MODE_NONE;
+            mode = FDC765Mode::NONE;
             statusReg = SREG_RQM | SREG_DIO | SREG_CB;
-            if (byte) {
-                byte = false;
+            if (!outputByteReady) {
+                outputByteReady = true;
                 if (resIndex >= resBytes) {
                     reset();
                 }
@@ -130,7 +131,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 9;   // 02+MF+SK    HU TR HD SC SZ NM GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD NM SZ
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         case 0x03:  // Specify SPD/DMA
@@ -139,7 +140,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 3;   // 03          XX YY
             resBytes = 0;   //
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         case 0x04:  // Sense drive status
@@ -148,7 +149,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 2;   // 04          HU
             resBytes = 1;   //             S3
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         case 0x05:  // Write sector(s)
@@ -157,7 +158,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 9;   // 05+MT+MF    HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         case 0x06:  // Read sector(s)
@@ -166,7 +167,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 9;   // 06+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         case 0x07:  // Recalibrate and seek physical track 0
@@ -175,7 +176,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 2;   // 07          HU
             resBytes = 0;
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         case 0x08:  // Sense interrupt status
@@ -184,7 +185,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 1;   // 08
             resBytes = 2;   //             S0 TP
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         case 0x09:  // Write deleted sector(s)
@@ -193,7 +194,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 9;   // 09+MT+MF    HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         case 0x0A:  // Read ID
@@ -202,7 +203,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 2;   // 0A+MF       HU
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         case 0x0C:  // Read deleted sector(s)
@@ -211,7 +212,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 9;   // 0C+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         case 0x0D:  // Format track
@@ -220,7 +221,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 6;   // 0D+MF       HU SZ NM GP FB
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         case 0x0F:  // Seek track N
@@ -229,7 +230,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 3;   // 0F          HU TP
             resBytes = 0;
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         case 0x10:  // Version
@@ -238,7 +239,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 1;
             resBytes = 1;
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         case 0x11:  // Scan equal
@@ -247,7 +248,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 9;   // 11+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         case 0x19:  // Scan low or equal
@@ -256,7 +257,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 9;   // 19+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         case 0x1D:  // Scan high or equal
@@ -265,7 +266,7 @@ void FDC765::checkCommand() {
 #endif
             cmdBytes = 9;   // 1D+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
-            state = FDC765State::FDC765_STATE_COMMAND;
+            state = FDC765State::COMMAND;
             break;
 
         default:
@@ -273,7 +274,8 @@ void FDC765::checkCommand() {
             resBytes = 1;   //             S0 (80)
             sReg[0] = 0x80;
             resBuffer[0] = sReg[0];
-            state = FDC765State::FDC765_STATE_RESULT;
+            state = FDC765State::RESULT;
+            outputByteReady = true;
             break;
     }
 }
@@ -300,8 +302,8 @@ void FDC765::setup() {
             firstSector = cmdBuffer[4];
             lastSector = cmdBuffer[6];
             currSector = 0;
-            stage = FDC765Access::FDC765_ACCESS_LOAD;
-            state = FDC765State::FDC765_STATE_EXECUTION;
+            stage = FDC765Access::LOAD;
+            state = FDC765State::EXECUTION;
             break;
 
         case 0x0A:  // Read ID
@@ -309,8 +311,8 @@ void FDC765::setup() {
             ddmFound = false;
             eocFound = false;
             drive[cmdDrive()].hole = 0;
-            stage = FDC765Access::FDC765_ACCESS_DATA;
-            state = FDC765State::FDC765_STATE_EXECUTION;
+            stage = FDC765Access::DATA;
+            state = FDC765State::EXECUTION;
             break;
 
         case 0x06:  // Read sector(s)
@@ -320,8 +322,8 @@ void FDC765::setup() {
             firstSector = cmdBuffer[4];
             lastSector = cmdBuffer[6];
             useDeletedDAM = ((cmdBuffer[0] & 0x1F) == 0x0C);
-            stage = FDC765Access::FDC765_ACCESS_LOAD;
-            state = FDC765State::FDC765_STATE_EXECUTION;
+            stage = FDC765Access::LOAD;
+            state = FDC765State::EXECUTION;
             break;
 
         case 0x05:  // Write sector(s)
@@ -331,8 +333,8 @@ void FDC765::setup() {
             firstSector = cmdBuffer[4];
             lastSector = cmdBuffer[6];
             useDeletedDAM = ((cmdBuffer[0] & 0x1F) == 0x09);
-            stage = FDC765Access::FDC765_ACCESS_LOAD;
-            state = FDC765State::FDC765_STATE_RECEIVE;
+            stage = FDC765Access::LOAD;
+            state = FDC765State::RECEIVE;
             break;
 
         case 0x03:  // Specify SPD/DMA
@@ -341,7 +343,7 @@ void FDC765::setup() {
         case 0x08:  // Sense interrupt status
         case 0x0F:  // Seek track N
         case 0x10:  // Version
-            state = FDC765State::FDC765_STATE_EXECUTION;
+            state = FDC765State::EXECUTION;
             break;
 
         case 0x0D:  // Format track
@@ -351,8 +353,8 @@ void FDC765::setup() {
             drive[cmdDrive()].formatTrack(cmdHead(),
                     presCylNum[cmdDrive()], cmdHead(),
                     cmdBuffer[2], cmdBuffer[3], cmdBuffer[4], cmdBuffer[5]);
-            stage = FDC765Access::FDC765_ACCESS_LOAD;
-            state = FDC765State::FDC765_STATE_RECEIVE;
+            stage = FDC765Access::LOAD;
+            state = FDC765State::RECEIVE;
             break;
 
         case 0x11:  // Scan equal
@@ -364,8 +366,8 @@ void FDC765::setup() {
             firstSector = cmdBuffer[4];
             lastSector = cmdBuffer[6];
             stepSector = cmdBuffer[8];
-            stage = FDC765Access::FDC765_ACCESS_LOAD;
-            state = FDC765State::FDC765_STATE_RECEIVE;
+            stage = FDC765Access::LOAD;
+            state = FDC765State::RECEIVE;
             break;
 
         default:
@@ -389,7 +391,8 @@ void FDC765::execute() {
             sReg[3] = cmdBuffer[1] & 0x07;
             sReg[3] |= drive[cmdDrive()].senseStatus();
             resBuffer[0] = sReg[3];
-            state = FDC765State::FDC765_STATE_RESULT;
+            state = FDC765State::RESULT;
+            outputByteReady = true;
             break;
 
         case 0x05:  // Write sector(s)
@@ -426,7 +429,8 @@ void FDC765::execute() {
             resBuffer[1] = presCylNum[lastDrive];
             interrupt = false;
             statusReg &= ~(SREG_DB0 | SREG_DB1 | SREG_DB2 | SREG_DB3);
-            state = FDC765State::FDC765_STATE_RESULT;
+            state = FDC765State::RESULT;
+            outputByteReady = true;
             break;
 
         case 0x0A:  // Read ID
@@ -462,7 +466,8 @@ void FDC765::execute() {
 
         case 0x10:  // Version
             resBuffer[0] = 0x80;
-            state = FDC765State::FDC765_STATE_RESULT;
+            state = FDC765State::RESULT;
+            outputByteReady = true;
             break;
 
         case 0x11:  // Scan equal
@@ -480,22 +485,22 @@ void FDC765::execute() {
 void FDC765::formatCmd() {
 
     switch (stage) {
-        case FDC765Access::FDC765_ACCESS_LOAD:
+        case FDC765Access::LOAD:
             if (headLoadOp()) {
-                stage = FDC765Access::FDC765_ACCESS_SEEK;
+                stage = FDC765Access::SEEK;
             }
             break;
 
-        case FDC765Access::FDC765_ACCESS_SEEK:
+        case FDC765Access::SEEK:
             // Seek stage. Here we try to find the disk hole.
             if (findHoleOp()) {
-                stage = FDC765Access::FDC765_ACCESS_DATA;
+                stage = FDC765Access::DATA;
             }
             // If we don't find the hole, the diskette is weird or
             // the LED is broken...
             break;
 
-        case FDC765Access::FDC765_ACCESS_DATA:
+        case FDC765Access::DATA:
             // Get four id bytes for each sector
             if (currSector < cmdBuffer[3]) {
                 uint_fast8_t fmtTrack = dataBuffer[4 * currSector];
@@ -515,11 +520,11 @@ void FDC765::formatCmd() {
                 resHead = dataBuffer[dataBytes - 3];
                 resSector = dataBuffer[dataBytes - 2] + 1;
                 resSize = dataBuffer[dataBytes - 1];
-                stage = FDC765Access::FDC765_ACCESS_UNLOAD;
+                stage = FDC765Access::UNLOAD;
             }
             break;
 
-        case FDC765Access::FDC765_ACCESS_UNLOAD:
+        case FDC765Access::UNLOAD:
             resBuffer[0] = sReg[0];
             resBuffer[1] = sReg[1];
             resBuffer[2] = sReg[2];
@@ -529,7 +534,8 @@ void FDC765::formatCmd() {
             resBuffer[6] = resSize;
             unload = true;
             interrupt = true;
-            state = FDC765State::FDC765_STATE_RESULT;
+            state = FDC765State::RESULT;
+            outputByteReady = true;
             break;
 
         default:
@@ -715,14 +721,14 @@ bool FDC765::readDeletedDataOp() {
 void FDC765::readCmd() {
 
     switch (stage) {
-        case FDC765Access::FDC765_ACCESS_LOAD:
+        case FDC765Access::LOAD:
             if (headLoadOp()) {
                 sReg[0] &= 0x3F;
-                stage = FDC765Access::FDC765_ACCESS_SEEK;
+                stage = FDC765Access::SEEK;
             }
             break;
 
-        case FDC765Access::FDC765_ACCESS_SEEK:
+        case FDC765Access::SEEK:
             // Seek stage. Here we read all the sectors in the track,
             // until we find one whose ID matches command parameter R.
             // If during the seek we find the hole mark twice, this means
@@ -730,31 +736,31 @@ void FDC765::readCmd() {
             // end the operation with an error.
             if (seekForReadOp()) {
                 if ((sReg[0] & 0xC0) == 0x00) {
-                    stage = FDC765Access::FDC765_ACCESS_DATA;
+                    stage = FDC765Access::DATA;
                 } else {
                     dataBytes = 0;
-                    stage = FDC765Access::FDC765_ACCESS_UNLOAD;
+                    stage = FDC765Access::UNLOAD;
                 }
             } else if (drive[cmdDrive()].hole > 1) {
                 dataBytes = 0;
                 sReg[1] |= 0x05;    // xxxxx1x1 - ND - MAD
                 sReg[0] |= 0x40;    // 01000HUU - AT
-                stage = FDC765Access::FDC765_ACCESS_UNLOAD;
+                stage = FDC765Access::UNLOAD;
             }
             break;
 
-        case FDC765Access::FDC765_ACCESS_DATA:
+        case FDC765Access::DATA:
             if (readOp()) {
-                stage = FDC765Access::FDC765_ACCESS_UNLOAD;
+                stage = FDC765Access::UNLOAD;
             } else {
                 // Sectors can be unordered.
                 drive[cmdDrive()].hole = 0;
                 ++firstSector;
-                stage = FDC765Access::FDC765_ACCESS_SEEK;
+                stage = FDC765Access::SEEK;
             }
             break;
 
-        case FDC765Access::FDC765_ACCESS_UNLOAD:
+        case FDC765Access::UNLOAD:
             resBuffer[0] = sReg[0];
             resBuffer[1] = sReg[1];
             resBuffer[2] = sReg[2];
@@ -765,14 +771,15 @@ void FDC765::readCmd() {
             interrupt = true;
             unload = true;
             state = dataBytes ?
-                FDC765State::FDC765_STATE_TRANSMIT : FDC765State::FDC765_STATE_RESULT;
+                FDC765State::TRANSMIT : FDC765State::RESULT;
+            outputByteReady = true;
 #ifdef DEBUGFDC765
             printBytes("<-", dataBytes, dataBuffer);
             printBytes("<-", resBytes, resBuffer);
 #endif
             break;
 
-        case FDC765Access::FDC765_ACCESS_NONE:
+        case FDC765Access::NONE:
             reset();
             break;
     }
@@ -781,13 +788,13 @@ void FDC765::readCmd() {
 void FDC765::readIdCmd() {
 
     switch (stage) {
-        case FDC765Access::FDC765_ACCESS_DATA:
+        case FDC765Access::DATA:
             if (readIdOp()) {
-                stage = FDC765Access::FDC765_ACCESS_UNLOAD;
+                stage = FDC765Access::UNLOAD;
             }
             break;
 
-        case FDC765Access::FDC765_ACCESS_UNLOAD:
+        case FDC765Access::UNLOAD:
             resBuffer[0] = sReg[0];
             resBuffer[1] = sReg[1];
             resBuffer[2] = sReg[2];
@@ -797,7 +804,8 @@ void FDC765::readIdCmd() {
             resBuffer[6] = resSize;
             interrupt = true;
             unload = true;
-            state = FDC765State::FDC765_STATE_RESULT;
+            state = FDC765State::RESULT;
+            outputByteReady = true;
 #ifdef DEBUGFDC765
             printBytes("<-", resBytes, resBuffer);
 #endif
@@ -869,28 +877,28 @@ void FDC765::updateHeadUnload() {
 void FDC765::readTrackCmd() {
 
     switch (stage) {
-        case FDC765Access::FDC765_ACCESS_LOAD:
+        case FDC765Access::LOAD:
             if (headLoadOp()) {
-                stage = FDC765Access::FDC765_ACCESS_SEEK;
+                stage = FDC765Access::SEEK;
             }
             break;
 
-        case FDC765Access::FDC765_ACCESS_SEEK:
+        case FDC765Access::SEEK:
             // Seek stage. Here we try to find the disk hole.
             if (findHoleOp()) {
-                stage = FDC765Access::FDC765_ACCESS_DATA;
+                stage = FDC765Access::DATA;
             }
             // If we don't find the hole, the diskette is weird or
             // the LED is broken...
             break;
 
-        case FDC765Access::FDC765_ACCESS_DATA:
+        case FDC765Access::DATA:
             if (readTrackOp()) {
-                stage = FDC765Access::FDC765_ACCESS_UNLOAD;
+                stage = FDC765Access::UNLOAD;
             }
             break;
 
-        case FDC765Access::FDC765_ACCESS_UNLOAD:
+        case FDC765Access::UNLOAD:
             if (!idmFound) {
                 sReg[0] |= 0x40;
                 sReg[1] |= 0x01;
@@ -920,7 +928,8 @@ void FDC765::readTrackCmd() {
             unload = true;
             interrupt = true;
             state = dataBytes ?
-                FDC765State::FDC765_STATE_TRANSMIT : FDC765State::FDC765_STATE_RESULT;
+                FDC765State::TRANSMIT : FDC765State::RESULT;
+            outputByteReady = true;
             break;
 
         default:
@@ -1019,13 +1028,13 @@ bool FDC765::seekForWriteOp() {
 void FDC765::writeCmd() {
 
     switch (stage) {
-        case FDC765Access::FDC765_ACCESS_LOAD:
+        case FDC765Access::LOAD:
             if (headLoadOp()) {
-                stage = FDC765Access::FDC765_ACCESS_SEEK;
+                stage = FDC765Access::SEEK;
             }
             break;
 
-        case FDC765Access::FDC765_ACCESS_SEEK:
+        case FDC765Access::SEEK:
             // Seek stage. Here we read all the sectors in the track,
             // until we find one whose coordinates (C, H, R, N) match
             // the ones given in the command.
@@ -1035,21 +1044,21 @@ void FDC765::writeCmd() {
             if (seekForWriteOp()) {
                 if ((sReg[0] & 0xC0) == 0x00) {
                     dataBytes = cmdBuffer[5] ? (0x80 << cmdBuffer[5]) : cmdBuffer[8];
-                    stage = FDC765Access::FDC765_ACCESS_DATA;
-                    state = FDC765State::FDC765_STATE_RECEIVE;
+                    stage = FDC765Access::DATA;
+                    state = FDC765State::RECEIVE;
                 } else {
                     dataBytes = 0;
-                    stage = FDC765Access::FDC765_ACCESS_UNLOAD;
+                    stage = FDC765Access::UNLOAD;
                 }
             } else if (drive[cmdDrive()].hole > 1) {
                 dataBytes = 0;
                 sReg[1] |= 0x05;    // xxxxx1x1 - ND - MAD
                 sReg[0] |= 0x40;    // 01000HUU - AT
-                stage = FDC765Access::FDC765_ACCESS_UNLOAD;
+                stage = FDC765Access::UNLOAD;
             }
             break;
 
-        case FDC765Access::FDC765_ACCESS_DATA:
+        case FDC765Access::DATA:
             {
                 vector<uint8_t> buffer = drive[cmdDrive()].buffer;
                 buffer.resize(dataBytes, 0);
@@ -1075,16 +1084,16 @@ void FDC765::writeCmd() {
             if (((sReg[0] & 0xC0) != 0x00) || currSector == lastSector) {
                 eocFound = true;
                 setResultBytesOp();
-                stage = FDC765Access::FDC765_ACCESS_UNLOAD;
+                stage = FDC765Access::UNLOAD;
             } else {
                 // Sectors can be unordered.
                 drive[cmdDrive()].hole = 0;
                 ++firstSector;
-                stage = FDC765Access::FDC765_ACCESS_SEEK;
+                stage = FDC765Access::SEEK;
             }
             break;
 
-        case FDC765Access::FDC765_ACCESS_UNLOAD:
+        case FDC765Access::UNLOAD:
             resBuffer[0] = sReg[0];
             resBuffer[1] = sReg[1];
             resBuffer[2] = sReg[2];
@@ -1094,10 +1103,11 @@ void FDC765::writeCmd() {
             resBuffer[6] = resSize;
             interrupt = true;
             unload = true;
-            state = FDC765State::FDC765_STATE_RESULT;
+            state = FDC765State::RESULT;
+            outputByteReady = true;
             break;
 
-        case FDC765Access::FDC765_ACCESS_NONE:
+        case FDC765Access::NONE:
             reset();
             break;
     }
@@ -1132,13 +1142,13 @@ void FDC765::specifyCmd() {
 void FDC765::scanCmd() {
 
     switch (stage) {
-        case FDC765Access::FDC765_ACCESS_LOAD:
+        case FDC765Access::LOAD:
             if (headLoadOp()) {
-                stage = FDC765Access::FDC765_ACCESS_SEEK;
+                stage = FDC765Access::SEEK;
             }
             break;
 
-        case FDC765Access::FDC765_ACCESS_SEEK:
+        case FDC765Access::SEEK:
             // Seek stage. Here we read all the sectors in the track,
             // until we find one whose coordinates (C, H, R, N) match
             // the ones given in the command.
@@ -1148,21 +1158,21 @@ void FDC765::scanCmd() {
             if (seekForReadOp()) {
                 if ((sReg[0] & 0xC0) == 0x00) {
                     dataBytes = 0x80 << cmdBuffer[5];
-                    stage = FDC765Access::FDC765_ACCESS_DATA;
-                    state = FDC765State::FDC765_STATE_RECEIVE;
+                    stage = FDC765Access::DATA;
+                    state = FDC765State::RECEIVE;
                 } else {
                     dataBytes = 0;
-                    stage = FDC765Access::FDC765_ACCESS_UNLOAD;
+                    stage = FDC765Access::UNLOAD;
                 }
             } else if (drive[cmdDrive()].hole > 1) {
                 dataBytes = 0;
                 sReg[1] |= 0x05;    // xxxxx1x1 - ND - MAD
                 sReg[0] |= 0x40;    // 01000HUU - AT
-                stage = FDC765Access::FDC765_ACCESS_UNLOAD;
+                stage = FDC765Access::UNLOAD;
             }
             break;
 
-        case FDC765Access::FDC765_ACCESS_DATA:
+        case FDC765Access::DATA:
             {
                 bool done = false;
 
@@ -1206,16 +1216,16 @@ void FDC765::scanCmd() {
             if (((sReg[0] & 0xC0) != 0x00) || currSector == lastSector) {
                 eocFound = true;
                 setResultBytesOp();
-                stage = FDC765Access::FDC765_ACCESS_UNLOAD;
+                stage = FDC765Access::UNLOAD;
             } else {
                 // Sectors can be unordered.
                 drive[cmdDrive()].hole = 0;
                 ++firstSector;
-                stage = FDC765Access::FDC765_ACCESS_SEEK;
+                stage = FDC765Access::SEEK;
             }
             break;
 
-        case FDC765Access::FDC765_ACCESS_UNLOAD:
+        case FDC765Access::UNLOAD:
             resBuffer[0] = sReg[0];
             resBuffer[1] = sReg[1];
             resBuffer[2] = sReg[2];
@@ -1225,10 +1235,11 @@ void FDC765::scanCmd() {
             resBuffer[6] = resSize;
             interrupt = true;
             unload = true;
-            state = FDC765State::FDC765_STATE_RESULT;
+            state = FDC765State::RESULT;
+            outputByteReady = true;
             break;
 
-        case FDC765Access::FDC765_ACCESS_NONE:
+        case FDC765Access::NONE:
             reset();
             break;
     }
@@ -1236,10 +1247,11 @@ void FDC765::scanCmd() {
 
 void FDC765::reset() {
 
-    state = FDC765State::FDC765_STATE_IDLE;
-    stage = FDC765Access::FDC765_ACCESS_NONE;
-    mode = FDC765Mode::FDC765_MODE_NONE;
-    byte = false;
+    state = FDC765State::IDLE;
+    stage = FDC765Access::NONE;
+    mode = FDC765Mode::NONE;
+    outputByteReady = false;
+    inputByteReady = false;
     cmdIndex = resIndex = dataIndex = 0;
     cmdBytes = resBytes = dataBytes = 0;
     statusReg = SREG_RQM;
@@ -1249,35 +1261,50 @@ uint_fast8_t FDC765::read() {
 
     static uint_fast8_t retval = 0x00;
 
-    if (!byte) {
-        if (mode == FDC765Mode::FDC765_MODE_READ) {
+#ifdef DEBUGFDC765
+    cout << "Attempt FDC data reg: ";
+#endif
+    if (outputByteReady) {
+        if (mode == FDC765Mode::READ) {
             retval = dataBuffer[dataIndex++];
             dataIndex %= DATABUFFER_SIZE;
+#ifdef DEBUGFDC765
+            cout << "Read FDC data reg (data): ";
+            cout << hex << setw(2) << setfill('0') << static_cast<uint32_t>(retval) << endl;
+#endif
         } else {
             retval = resBuffer[resIndex++];
             resIndex %= RESBUFFER_SIZE;
+#ifdef DEBUGFDC765
+            cout << "Read FDC data reg (result): ";
+            cout << hex << setw(2) << setfill('0') << static_cast<uint32_t>(retval) << endl;
+#endif
         }
-        byte = true;
+        outputByteReady = false;
     }
     return retval;
 }
 
 void FDC765::write(uint_fast8_t value) {
 
-    if (!byte) {
-        if (mode == FDC765Mode::FDC765_MODE_WRITE) {
+    if (!inputByteReady) {
+        if (mode == FDC765Mode::WRITE) {
             dataBuffer[dataIndex++] = value;
             dataIndex %= DATABUFFER_SIZE;
         } else {
             cmdBuffer[cmdIndex++] = value;
             cmdIndex %= CMDBUFFER_SIZE;
         }
-        byte = true;
+        inputByteReady = true;
     }
 }
 
 uint_fast8_t FDC765::status() {
 
+#ifdef DEBUGFDC765
+    cout << "FDC status reg: ";
+    cout << hex << setw(2) << setfill('0') << static_cast<uint32_t>(statusReg) << endl;
+#endif
     return statusReg;
 }
 
@@ -1286,7 +1313,7 @@ void FDC765::checkDrive() {
     if (cmdDrive() > 1 || cmdHead() > 0) {
         sReg[0] = cmdBuffer[0];
         sReg[0] |= 0xC4;    // 01..1HUU: AT, NR
-        stage = FDC765Access::FDC765_ACCESS_UNLOAD;
+        stage = FDC765Access::UNLOAD;
     }
 }
 
