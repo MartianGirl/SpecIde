@@ -67,9 +67,8 @@ uint_fast8_t constexpr SREG_DIO = 1 << 6;
 uint_fast8_t constexpr SREG_RQM = 1 << 7;
 
 uint32_t constexpr DELAY_1ms = 1000;     // Clocking at 1.000MHz
-uint32_t constexpr SERVICE_MFM = 53;
-uint32_t constexpr SERVICE_FM = 104;
-uint32_t constexpr BYTE_DELAY = 114;
+uint32_t constexpr SERVICE_MFM = 54;
+uint32_t constexpr SERVICE_FM = 108;
 
 uint32_t constexpr DATABUFFER_SIZE = 65536;
 uint32_t constexpr RESBUFFER_SIZE = 16;
@@ -82,7 +81,7 @@ class FDC765 {
 
     public:
         /** Clock frequency in MHz. */
-        float clockFrequency = 1;
+        float clockFrequency = 1.0;
         /** Status register. */
         uint_fast8_t statusReg = 0x00;
 

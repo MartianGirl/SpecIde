@@ -117,7 +117,7 @@ void CPC::set664() {
     cpc128K = false;
     cpcDisk = true;
     expBit = false;
-    fdc765.clockFrequency = 4;
+    fdc765.clockFrequency = 4.0;
 
     ext[0x07] = ExpansionRom("amsdos.rom");
 
@@ -131,7 +131,7 @@ void CPC::set6128() {
     cpc128K = true;
     cpcDisk = true;
     expBit = false;
-    fdc765.clockFrequency = 4;
+    fdc765.clockFrequency = 4.0;
 
     ext[0x07] = ExpansionRom("amsdos.rom");
 

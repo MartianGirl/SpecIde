@@ -1126,13 +1126,12 @@ void FDC765::specifyCmd() {
     // to 4MHz (mini-floppy application) then all time intervals are increased
     // by a factor of 2.
     // Since the base frequency I'm using here is 1MHz (FDC clock in the ZX
-    // Spectrum is 1MHz, but I'm clocking at 7/8, that is, 0.875MHz and I'm
-    // scaling), I've got to multiply all intervals times 8:
+    // Spectrum is 1MHz), I've got to multiply all intervals times 8:
     // 16ms * 8 = 128ms.
     // 2ms * 8 = 16ms.
-    headUnloadTime = (cmdBuffer[1] & 0x0F) * 128 * DELAY_1ms * clockFrequency;
-    stepRateTime = (0x10 - ((cmdBuffer[1] & 0xF0) >> 4)) * 128 * DELAY_1ms * clockFrequency;
-    headLoadTime = (cmdBuffer[2] >> 1) * 16 * DELAY_1ms * clockFrequency;
+    headUnloadTime = (cmdBuffer[1] & 0x0F) * 16 * DELAY_1ms;
+    stepRateTime = (0x10 - ((cmdBuffer[1] & 0xF0) >> 4)) * 128 * DELAY_1ms;
+    headLoadTime = (cmdBuffer[2] >> 1) * 2 * DELAY_1ms;
     useDma = ((cmdBuffer[2] & 0x01) == 0x00);
     loadTimer = headLoadTime;
     unloadTimer = headUnloadTime;
