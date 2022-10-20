@@ -215,11 +215,26 @@ class CPC {
          */
         void setPage(uint_fast8_t page, uint_fast8_t bank);
 
+        /**
+         * Reset the PSG.
+         */
         void psgReset();
-        void psgSample();
+
+        /**
+         * Select PSG type.
+         *
+         * @param aychip PSG type. (false = AY-8912-3, true = YM-2149)
+         */
         void psgChip(bool play);
+
+        /**
+         * Mute or unmute the PSG.
+         */
         void psgPlaySound(bool play);
 
+        /**
+         * Mix and sample sound from all sources (Tape, PSG)
+         */
         void sample();
 
         void setSoundRate(uint_fast32_t frame, bool syncToVideo);

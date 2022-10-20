@@ -87,6 +87,10 @@ void CpcScreen::setup() {
     }
     cout << "Stereo type: " << options["stereo"] << endl;
 
+    aychip = (options["psgtype"] != "ym");
+    cpc.psgChip(aychip);
+    cout << "PSG chip: " << options["psgtype"] << endl;
+
     cpc.z80.zeroByte = options["z80type"] == "cmos" ? 0xFF : 0x00;
     cout << "Z80 type: " << options["z80type"] << endl;
 
