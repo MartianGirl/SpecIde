@@ -317,24 +317,22 @@ void Spectrum::clock() {
     static uint_fast16_t snowaddr = ula.a;
     if (!ula.mem) {
         // Snow effect. ULA::snow is always false for +2A/+3/Pentagon
-        if (contendedPage[memArea] && !as_) {
+        if (contendedPage[memArea] && z80.state == Z80State::ST_OCF_T3L_RFSH1) {
             switch (ula.snow) {
                 case SNOW:  // 1st ULA burst: CAS loads R register
-                    snowaddr = ((ula.a & 0x3F80) | (z80.a & 0x007F));
-                    bus = (memArea == 1) ? scr[snowaddr] : sno[snowaddr];
+                    snowaddr = (ula.a & 0x3F80) | (z80.a & 0x007F);
                     break;
                 case DUPL:  // 2nd ULA burst: CAS loads previous column address
-                    snowaddr = (ula.a | 1);
-                    bus = (memArea == 1) ? scr[snowaddr] : sno[snowaddr];
+                    snowaddr = ula.a - 1;
                     break;
                 case HOLD:  // Attribute byte keeps previous column address
-                    snowaddr = ((ula.a & 0x3F80) | (snowaddr & 0x007F));
-                    bus = (memArea == 1) ? scr[snowaddr] : sno[snowaddr];
+                    snowaddr = (ula.a & 0x3F80) | (snowaddr & 0x007F);
                     break;
                 default:
-                    bus = scr[ula.a];
+                    snowaddr = ula.a;
                     break;
             }
+            bus = (memArea == 1) ? scr[snowaddr] : sno[snowaddr];
         } else {
             bus = scr[ula.a];
         }

@@ -44,7 +44,7 @@ bool ULA::memTable[16] = {
 
 uint_fast32_t ULA::snowTable[16] = {
     NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE,
-    DUPL, NONE, HOLD, NONE, SNOW, NONE, HOLD, NONE
+    DUPL, DUPL, HOLD, HOLD, SNOW, SNOW, HOLD, HOLD
 };
 
 uint32_t ULA::colourTable[0x100];
