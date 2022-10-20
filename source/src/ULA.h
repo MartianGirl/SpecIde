@@ -29,9 +29,14 @@
 
 using namespace std;
 
-constexpr int SOUND_VOLUME = 0x19FF;
-constexpr int SAVE_VOLUME = 0x03FF;
-constexpr int LOAD_VOLUME = 0x01FF;
+int constexpr SOUND_VOLUME = 0x19FF;
+int constexpr SAVE_VOLUME = 0x03FF;
+int constexpr LOAD_VOLUME = 0x01FF;
+
+uint_fast32_t constexpr HOLD = 3;
+uint_fast32_t constexpr DUPL = 2;
+uint_fast32_t constexpr SNOW = 1;
+uint_fast32_t constexpr NONE = 0;
 
 class ULA {
 
@@ -83,7 +88,7 @@ class ULA {
         static bool delayTable[16];
         static bool idleTable[16];
         static bool memTable[16];
-        static bool snowTable[16];
+        static uint_fast32_t snowTable[16];
 
         static uint32_t colourTable[0x100];
         uint32_t colour[2];
@@ -137,7 +142,7 @@ class ULA {
         bool contendedBank = false;
         bool cpuClock = true;
         bool ulaReset = true;
-        bool snow = false;
+        uint_fast32_t snow = NONE;
 
         // Video signals
         uint32_t rgba;

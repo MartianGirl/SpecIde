@@ -42,9 +42,9 @@ bool ULA::memTable[16] = {
     false, false, false, false, false, false, false, true
 };
 
-bool ULA::snowTable[16] = {
-    false, false, false, false, false, false, false, false,
-    false, false, true, true, true, true, false, false
+uint_fast32_t ULA::snowTable[16] = {
+    NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE,
+    DUPL, NONE, HOLD, NONE, SNOW, NONE, HOLD, NONE
 };
 
 uint32_t ULA::colourTable[0x100];
@@ -266,7 +266,7 @@ void ULA::generateVideoDataPentagon() {
 
 void ULA::updateAttributes() {
 
-    if ((pixel++ & 0x07) == paintPixel) {
+    if ((pixel & 0x07) == paintPixel) {
         data = video ? dataReg : 0xFF;
         attr = video ? attrReg : borderAttr;
         colour[0] = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
@@ -451,6 +451,7 @@ void ULA::clock() {
 
     updateAttributes();
     paint();
+    ++pixel;
 
     if (ulaReset) {
         start();
