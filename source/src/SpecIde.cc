@@ -70,7 +70,11 @@ map<string, Option> arguments = {
     {"--mono",          {"stereo", "mono"}},
     {"--ay",            {"psgtype", "ay"}},
     {"--ym",            {"psgtype", "ym"}},
-    {"--covox",         {"covox", "yes"}},
+    {"--covox",         {"covox", "mono"}},
+    {"--covox2",        {"covox", "stereo"}},
+    {"--covox3",        {"covox", "czech"}},
+    {"--soundrive1",    {"covox", "soundrive1"}},
+    {"--soundrive2",    {"covox", "soundrive2"}},
     {"--nocovox",       {"covox", "no"}},
 
     // Screen options

@@ -135,8 +135,20 @@ void SpeccyScreen::setup() {
     spectrum.psgChip(aychip);
     cout << "PSG chip: " << options["psgtype"] << endl;
 
-    spectrum.hasCovox = (options["covox"] == "yes");
-    cout << "Covox on port $FB: " << options["covox"] << endl;
+    if (options["covox"] == "mono") {
+        spectrum.covoxMode = Covox::MONO;
+    } else if (options["covox"] == "stereo") {
+        spectrum.covoxMode = Covox::STEREO;
+    } else if (options["covox"] == "czech") {
+        spectrum.covoxMode = Covox::CZECH;
+    } else if (options["covox"] == "soundrive1") {
+        spectrum.covoxMode = Covox::SOUNDRIVE1;
+    } else if (options["covox"] == "soundrive2") {
+        spectrum.covoxMode = Covox::SOUNDRIVE2;
+    } else {
+        spectrum.covoxMode = Covox::NONE;
+    }
+    cout << "Covox type: " << options["covox"] << endl;
 
     // Other stuff.
     spectrum.flashTap = (options["flashtap"] == "yes");

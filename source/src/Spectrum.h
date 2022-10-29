@@ -35,6 +35,15 @@
 
 using namespace std;
 
+enum class Covox {
+    MONO,
+    STEREO,
+    CZECH,
+    SOUNDRIVE1,
+    SOUNDRIVE2,
+    NONE
+};
+
 /**
  * A ZX Spectrum computer.
  *
@@ -123,11 +132,11 @@ class Spectrum {
         /** Counter of cycles before next sound sample. */
         uint_fast32_t skipCycles = 0;
         /** Emulate Covox on port $FB. */
-        bool hasCovox = false;
-        /** Sound byte in Covox port. */
-        int covox = 0;
+        Covox covoxMode = Covox::NONE;
+        /** Sound bytes in Covox port. */
+        int covox[4];
         /** Array of samples sent to the Covox. */
-        int filter[FILTER_BZZ_SIZE];
+        int filter[4][FILTER_BZZ_SIZE];
         /** Current index in filter array. */
         size_t index = 0;
         /** Sync frame rate to monitor's 50Hz frame rate. */
@@ -366,8 +375,10 @@ class Spectrum {
 
         /**
          * Sample the Covox.
+         *
+         * @param Covox channel to be sampled.
          */
-        int dac();
+        int dac(size_t i);
 
         /**
          * Check if ZX Spectrum is about to execute ROM tape routines.

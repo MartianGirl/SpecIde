@@ -355,7 +355,9 @@ void Spectrum::clock() {
     if (!(count & 0x03)) {
         ula.beeper();
         psgClock();
-        filter[index] = covox;
+        for (int i = 0; i < 4; ++i) {
+            filter[i][index] = covox[i];
+        }
         index = (index + 1) % FILTER_BZZ_SIZE;
     }
 
@@ -480,10 +482,61 @@ void Spectrum::clock() {
                     }
                 }
 
-                if (hasCovox && !(z80.a & 0x0004)) {
-                    if (z80.wr) {
-                        covox = z80.d * 0x40;
-                    }
+                switch (covoxMode) {
+                    case Covox::MONO:
+                        if (z80.wr && ((z80.a & 0x00FF) == 0x00FB)) {
+                            covox[0] = covox[1] = covox[2] = covox[3] = z80.d * 0x20;
+                        }
+                        break;
+
+                    case Covox::STEREO:
+                        if (z80.wr) {
+                           if ((z80.a & 0x00FF) == 0xFB) {
+                               covox[0] = covox[1] = z80.d * 0x20;
+                           }
+                           if ((z80.a & 0x00FF) == 0x4F) {
+                               covox[2] = covox[3] = z80.d * 0x20;
+                           }
+                        }
+                        break;
+
+                    case Covox::CZECH:
+                        if (z80.wr && ((z80.a & 0x009F) == 0x1F)) {
+                            switch (z80.a & 0x60) {
+                                case 0x00: covox[0] = z80.d * 0x20; break;
+                                case 0x02: covox[3] = z80.d * 0x20; break;
+                                case 0x04: covox[1] = covox[2] = z80.d * 0x20; break;
+                                default: break;
+                            }
+                        }
+                        break;
+
+                    case Covox::SOUNDRIVE1:
+                        if (z80.wr && ((z80.a & 0x00AF) == 0x000F)) {
+                            switch (z80.a & 0x0050) {
+                                case 0x00: covox[0] = z80.d * 0x20; break;
+                                case 0x10: covox[1] = z80.d * 0x20; break;
+                                case 0x40: covox[2] = z80.d * 0x20; break;
+                                case 0x50: covox[3] = z80.d * 0x20; break;
+                                default: break;
+                            }
+                        }
+                        break;
+
+                    case Covox::SOUNDRIVE2:
+                        if (z80.wr && ((z80.a & 0x00F1) == 0x00F1)) {
+                            switch (z80.a & 0x000A) {
+                                case 0x0: covox[0] = z80.d * 0x20; break;
+                                case 0x2: covox[1] = z80.d * 0x20; break;
+                                case 0x8: covox[2] = z80.d * 0x20; break;
+                                case 0xA: covox[3] = z80.d * 0x20; break;
+                                default: break;
+                            }
+                        }
+                        break;
+
+                    default:
+                        break;
                 }
 
                 if (!(z80.a & 0x0001)) {         // ULA port
@@ -592,7 +645,7 @@ void Spectrum::reset() {
     psgReset();
     fdc765.reset();
 
-    covox = 0;
+    covox[0] = covox[1] = covox[2] = covox[3] = 0;
     romBank = 0;
     ramBank = 0;
     setPage(0, 0, true, false);
@@ -681,8 +734,10 @@ void Spectrum::psgChip(bool aychip) {
 
 void Spectrum::sample() {
 
-    int l = ula.sample() + dac();
+    int l = ula.sample();
     int r = l;
+    l += dac(0) + dac(1);
+    r += dac(2) + dac(3);
     psgSample();
 
     switch (stereo) {
@@ -770,11 +825,11 @@ void Spectrum::sample() {
     channel.push(l, r);
 }
 
-int Spectrum::dac() {
+int Spectrum::dac(size_t c) {
 
     int sound = 0;
     for (size_t i = 0; i < FILTER_BZZ_SIZE; ++i) {
-        sound += filter[i];
+        sound += filter[c][i];
     }
     sound /= FILTER_BZZ_SIZE;
     return sound;
