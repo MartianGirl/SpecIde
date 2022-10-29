@@ -504,8 +504,8 @@ void Spectrum::clock() {
                         if (z80.wr && ((z80.a & 0x009F) == 0x1F)) {
                             switch (z80.a & 0x60) {
                                 case 0x00: covox[0] = z80.d * 0x20; break;
-                                case 0x02: covox[3] = z80.d * 0x20; break;
-                                case 0x04: covox[1] = covox[2] = z80.d * 0x20; break;
+                                case 0x20: covox[3] = z80.d * 0x20; break;
+                                case 0x40: covox[1] = covox[2] = z80.d * 0x20; break;
                                 default: break;
                             }
                         }
