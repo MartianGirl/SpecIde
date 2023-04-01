@@ -314,25 +314,42 @@ void Spectrum::clock() {
     // Speccies.
     bus_1 = bus;
 
-    static uint_fast16_t snowaddr = ula.a;
+    switch (ula.snow) {
+        case SNOW:  // 1st ULA burst: CAS loads R register
+            if (contendedPage[memArea] && z80.state == Z80State::ST_OCF_T3L_RFSH1) {
+                snowmode = SNOW;
+                snowhigh = (memArea == 3);
+                snowaddr = z80.a & 0x007f;
+            }
+            break;
+        case DUPL:  // 2nd ULA burst: CAS loads previous column address
+            if (contendedPage[memArea] && z80.state == Z80State::ST_OCF_T3L_RFSH1) {
+                snowmode = DUPL;
+                snowhigh = (memArea == 3);
+                snowaddr = ula.a & 0x007e;
+            }
+            break;
+        case ENDS:  // End of the SNOW cycle.
+            if (snowmode == SNOW) {
+                snowmode = NONE;
+                snowhigh = false;
+                snowaddr = ula.a & 0x007f;
+            }
+            break;
+        case ENDD:  // End of the DUPL cycle.
+            if (snowmode == DUPL) {
+                snowmode = NONE;
+                snowhigh = false;
+                snowaddr = ula.a & 0x007f;
+            }
+            break;
+    }
+
     if (!ula.mem) {
         // Snow effect. ULA::snow is always false for +2A/+3/Pentagon
-        if (contendedPage[memArea] && z80.state == Z80State::ST_OCF_T3L_RFSH1) {
-            switch (ula.snow) {
-                case SNOW:  // 1st ULA burst: CAS loads R register
-                    snowaddr = (ula.a & 0x3F80) | (z80.a & 0x007F);
-                    break;
-                case DUPL:  // 2nd ULA burst: CAS loads previous column address
-                    snowaddr = ula.a - 1;
-                    break;
-                case HOLD:  // Attribute byte keeps previous column address
-                    snowaddr = (ula.a & 0x3F80) | (snowaddr & 0x007F);
-                    break;
-                default:
-                    snowaddr = ula.a;
-                    break;
-            }
-            bus = (memArea == 1) ? scr[snowaddr] : sno[snowaddr];
+        if (snowmode) {
+            snowaddr = (ula.a & 0x3F80) | (snowaddr & 0x007F);
+            bus = (!snowhigh) ? scr[snowaddr] : sno[snowaddr];
         } else {
             bus = scr[ula.a];
         }
@@ -663,6 +680,10 @@ void Spectrum::reset() {
         tape.is48K = set48 = true;
         rom48 = true;
     }
+
+    snowmode = NONE;
+    snowaddr = 0x0000;
+    snowhigh = false;
 }
 
 void Spectrum::psgSelect() {

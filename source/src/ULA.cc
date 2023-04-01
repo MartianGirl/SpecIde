@@ -38,13 +38,13 @@ bool ULA::idleTable[16] = {
 };
 
 bool ULA::memTable[16] = {
-    true, true, true, true, true, true, true, false,
-    false, false, false, false, false, false, false, true
+    true, true, true, true, true, true, true, true,
+    false, false, false, true, false, false, false, true
 };
 
 uint_fast32_t ULA::snowTable[16] = {
-    NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE,
-    DUPL, DUPL, HOLD, HOLD, SNOW, SNOW, HOLD, HOLD
+    NONE, NONE, NONE, NONE, SNOW, NONE, NONE, NONE,
+    DUPL, NONE, NONE, NONE, ENDS, NONE, NONE, ENDD
 };
 
 uint32_t ULA::colourTable[0x100];
