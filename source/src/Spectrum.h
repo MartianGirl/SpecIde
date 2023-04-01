@@ -170,8 +170,6 @@ class Spectrum {
         uint_fast16_t snowaddr = 0x0000;
         /** Snow effect type. */
         uint_fast32_t snowmode = NONE;
-        /** Snow effect affects high RAM. */
-        bool snowhigh = false;
 
         /** True if 48K mode is active. This disables pagination. */
         bool set48 = true;

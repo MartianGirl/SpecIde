@@ -318,27 +318,23 @@ void Spectrum::clock() {
         case SNOW:  // 1st ULA burst: CAS loads R register
             if (contendedPage[memArea] && z80.state == Z80State::ST_OCF_T3L_RFSH1) {
                 snowmode = SNOW;
-                snowhigh = (memArea == 3);
                 snowaddr = z80.a & 0x007f;
             }
             break;
         case DUPL:  // 2nd ULA burst: CAS loads previous column address
             if (contendedPage[memArea] && z80.state == Z80State::ST_OCF_T3L_RFSH1) {
                 snowmode = DUPL;
-                snowhigh = (memArea == 3);
                 snowaddr = ula.a & 0x007e;
             }
             break;
         case ENDS:  // End of the SNOW cycle.
             if (snowmode == SNOW) {
                 snowmode = NONE;
-                snowhigh = false;
                 snowaddr = ula.a & 0x007f;
             }
             break;
         case ENDD:  // End of the DUPL cycle.
             snowmode = NONE;
-            snowhigh = false;
             snowaddr = ula.a & 0x007f;
             break;
     }
@@ -347,7 +343,7 @@ void Spectrum::clock() {
         // Snow effect. ULA::snow is always false for +2A/+3/Pentagon
         if (snowmode) {
             snowaddr = (ula.a & 0x3F80) | (snowaddr & 0x007F);
-            bus = (!snowhigh) ? scr[snowaddr] : sno[snowaddr];
+            bus = (memArea != 3) ? scr[snowaddr] : sno[snowaddr];
         } else {
             bus = scr[ula.a];
         }
@@ -668,6 +664,7 @@ void Spectrum::reset() {
     setPage(2, 2, false, false);
     setPage(3, 0, false, false);
     setScreenPage(5);
+    setSnowPage(5);
 
     if (spectrum128K || spectrumPlus2A) {
         pageRegs = 0x0000;
@@ -681,7 +678,6 @@ void Spectrum::reset() {
 
     snowmode = NONE;
     snowaddr = 0x0000;
-    snowhigh = false;
 }
 
 void Spectrum::psgSelect() {
