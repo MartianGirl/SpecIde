@@ -337,11 +337,9 @@ void Spectrum::clock() {
             }
             break;
         case ENDD:  // End of the DUPL cycle.
-            if (snowmode == DUPL) {
-                snowmode = NONE;
-                snowhigh = false;
-                snowaddr = ula.a & 0x007f;
-            }
+            snowmode = NONE;
+            snowhigh = false;
+            snowaddr = ula.a & 0x007f;
             break;
     }
 
