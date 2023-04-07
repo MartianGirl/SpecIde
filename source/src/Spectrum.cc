@@ -317,33 +317,35 @@ void Spectrum::clock() {
     switch (ula.snow) {
         case SNOW:  // 1st ULA burst: CAS loads R register
             if (contendedPage[memArea] && z80.state == Z80State::ST_OCF_T3L_RFSH1) {
-                snowmode = SNOW;
-                snowaddr = z80.a & 0x007f;
+                snowMode = SNOW;
+                snowAddr = z80.a & 0x007f;
+                snowArea = memArea;
             }
             break;
         case DUPL:  // 2nd ULA burst: CAS loads previous column address
             if (contendedPage[memArea] && z80.state == Z80State::ST_OCF_T3L_RFSH1) {
-                snowmode = DUPL;
-                snowaddr = ula.a & 0x007e;
+                snowMode = DUPL;
+                snowAddr = ula.a & 0x007e;
+                snowArea = memArea;
             }
             break;
         case ENDS:  // End of the SNOW cycle.
-            if (snowmode == SNOW) {
-                snowmode = NONE;
-                snowaddr = ula.a & 0x007f;
+            if (snowMode == SNOW) {
+                snowMode = NONE;
+                snowAddr = ula.a & 0x007f;
             }
             break;
         case ENDD:  // End of the DUPL cycle.
-            snowmode = NONE;
-            snowaddr = ula.a & 0x007f;
+            snowMode = NONE;
+            snowAddr = ula.a & 0x007f;
             break;
     }
 
     if (!ula.mem) {
         // Snow effect. ULA::snow is always false for +2A/+3/Pentagon
-        if (snowmode) {
-            snowaddr = (ula.a & 0x3F80) | (snowaddr & 0x007F);
-            bus = (memArea != 3) ? scr[snowaddr] : sno[snowaddr];
+        if (snowMode) {
+            snowAddr = (ula.a & 0x3F80) | (snowAddr & 0x007F);
+            bus = (snowArea != 3) ? scr[snowAddr] : sno[snowAddr];
         } else {
             bus = scr[ula.a];
         }
@@ -602,8 +604,9 @@ void Spectrum::selectPage(uint_fast8_t reg) {
 void Spectrum::updatePage() {
 
     // Select screen to display.
-    setScreenPage(((pageRegs & 0x0008) >> 2) | 0x05);
-    setSnowPage(pageRegs & 0x0005);
+    uint_fast16_t screen = (pageRegs & 0x8) >> 2;
+    setScreenPage(screen | 0x05);
+    setSnowPage((pageRegs & 0x0005) | screen);
 
     if (pageRegs & 0x0100) {      // Special pagination mode.
         switch (pageRegs & 0x0600) {
@@ -676,8 +679,8 @@ void Spectrum::reset() {
         rom48 = true;
     }
 
-    snowmode = NONE;
-    snowaddr = 0x0000;
+    snowMode = NONE;
+    snowAddr = 0x0000;
 }
 
 void Spectrum::psgSelect() {
