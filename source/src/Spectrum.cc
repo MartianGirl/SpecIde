@@ -345,7 +345,7 @@ void Spectrum::clock() {
         // Snow effect. ULA::snow is always false for +2A/+3/Pentagon
         if (snowMode) {
             snowAddr = (ula.a & 0x3F80) | (snowAddr & 0x007F);
-            bus = (snowArea != 3) ? scr[snowAddr] : sno[snowAddr];
+            bus = (snowArea != 3 || snowMode == DUPL) ? scr[snowAddr] : sno[snowAddr];
         } else {
             bus = scr[ula.a];
         }
