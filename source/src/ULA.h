@@ -84,8 +84,12 @@ class ULA {
 
         uint_fast16_t paintPixel = 0x004;
 
-        uint_fast32_t voltage[4];
-        static uint_fast32_t voltages[4][4];
+        float voltage[4];
+        static float voltages[4][4];
+        float vEnd = 0.0;
+        float vInc = 0.0;
+        float vCap = 0.0;
+
         static bool delayTable[16];
         static bool idleTable[16];
         static bool memTable[16];
@@ -125,7 +129,7 @@ class ULA {
         uint_fast8_t attrReg;
         uint_fast8_t latch;
 
-        uint_fast32_t ear = 0;
+        double ear = 0;
 
         // Audio and tape signals
         int filter[FILTER_BZZ_SIZE];

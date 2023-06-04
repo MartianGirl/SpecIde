@@ -20,11 +20,11 @@
 
 using namespace std;
 
-uint_fast32_t ULA::voltages[4][4] = {
-    {391, 728, 3653, 3790}, // ULA 5C (Issue 2)
-    {342, 652, 3591, 3753}, // ULA 6C (Issue 3)
-    {342, 652, 3591, 3753}, // ULA 7C (128K)
-    {342, 652, 3591, 3753}  // GA40085 (+2A/+3)
+float ULA::voltages[4][4] = {
+    {0.391, 0.728, 3.653, 3.790}, // ULA 5C (Issue 2)
+    {0.342, 0.652, 3.591, 3.753}, // ULA 6C (Issue 3)
+    {0.342, 0.652, 3.591, 3.753}, // ULA 7C (128K)
+    {0.342, 0.652, 3.591, 3.753}  // GA40085 (+2A/+3)
 };
 
 bool ULA::delayTable[16] = {
@@ -304,34 +304,15 @@ void ULA::paint() {
 
 void ULA::tapeEarMic() {
 
-    // First attempt at MIC/EAR feedback loop.
-    // Let's keep this here for the moment.
-    static uint_fast32_t capacitor = 0;
-    static uint_fast32_t chargeDelay = 0;
-
-    // 128K has MIC and EAR connected together, so the capacitor loop applies.
     if (ulaVersion < 3) {
-        uint_fast32_t v = voltage[soundBits];
-
-        if (v > 3000) {
-            ear = v;
-            if (chargeDelay < 86400) {
-                capacitor = 368 + (chargeDelay / 16);
-                ++chargeDelay;
-            }
-        } else {
-            chargeDelay = 0;
-            if (!capacitor) {
-                ear = v;
-            } else {
-                --capacitor;
-            }
-        }
+        vCap = vEnd - vInc;
+        vInc *=  0.999280;
+        ear = vCap;
     }
 
     // Tape input forces values on EAR pin.
-    if ((tapeIn & 0xC0) == 0x80) ear = 342;
-    if ((tapeIn & 0xC0) == 0xC0) ear = 3790;
+    if ((tapeIn & 0xC0) == 0x80) ear = 0.250;
+    if ((tapeIn & 0xC0) == 0xC0) ear = 4.000;
 }
 
 void ULA::scanKeys() {
@@ -378,7 +359,7 @@ void ULA::scanKeys() {
 uint_fast8_t ULA::ioRead() {
 
     uint_fast8_t byte = inMask;
-    byte |= (ear < 700) ? 0x00 : 0x40;
+    byte |= (ear < 0.700) ? 0x00 : 0x40;
 
     for (uint_fast8_t ii = 0; ii < 8; ++ii) {
         if (!(z80_a & (0x8000 >> ii))) {
@@ -392,6 +373,8 @@ uint_fast8_t ULA::ioRead() {
 void ULA::ioWrite(uint_fast8_t byte) {
 
     soundBits = (byte & 0x18) >> 3;
+    vEnd = voltage[soundBits];
+    vInc = vEnd - vCap;
 
     borderAttr = byte & 0x07;
     if (ulaVersion == 5) {
