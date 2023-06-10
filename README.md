@@ -86,8 +86,6 @@ SpecIde is invoked from the command line. To run SpecIde, type:
 
 Supported formats are TAP, TZX and DSK.
 
-Make sure that the libraries, ROM files and 
-
 ### Command line options
 The following command line options are available:
 
@@ -95,6 +93,7 @@ The following command line options are available:
 Model selection options:
 --issue2               Spectrum 48K, issue 2.
 --issue3 | --48        Spectrum 48K, issue 3. (Default)
+--48sp                 Spectrum + 48K. (Spanish ROM)
 --128                  Spectrum 128K.
 --128sp                Spectrum 128K. (Spanish ROM)
 --plus2                Spectrum +2.
@@ -121,8 +120,17 @@ PSG options:
 --turboacb|--turboabc  Select TurboSound with 2 PSGs. (stereo ACB/ABC)
 --turbonext            Select Next-style TurboSound with 4 PSGs.
 
+Covox options:
+--covox                LPT Covox on port 0xFB (Mono)
+--covox2               Stereo Covox (ports 0xFB and 0x4F)
+--covox3               Czech Covox (ports 0x1F, 0x3F, 0x5F)
+--soundrive1           Soundrive on ports 0x0F, 0x1F, 0x4F, 0x5F.
+--soundrive2           Soundrive on ports 0xF1, 0xF3, 0xF9, 0xFB.
+--nocovox              No Covox present.
+
 Misc hardware options:
 --sd1                  Emulate Dinamic SD1 hardware protection.
+--cmos|--nmos          Emulate CMOS/NMOS Z80. (Affects OUT(C),0 instruction)
 
 Video options:
 --fullscreen           Start SpecIde in full screen mode.
@@ -130,8 +138,7 @@ Video options:
 --scanlines            Render PAL double scan mode.
 --average              Render PAL double scan mode, averaging scanlines.
 --nodoublescan         Single scan mode. (Default)
---sync                 Sync emulation to PC video refresh rate.
---antialias            Turn antialiasing on.
+--sync                 Sync emulation to PC video refresh rate (only 50Hz)
 
 Sound options (add prefix 'no' to disable. Eg. --nosound):
 --sound                Enable buzzer/PSG sound. (Default)
@@ -148,8 +155,8 @@ When the emulator is running, pressing F1 displays help about the function keys.
 | --- | -------- |
 | F1        | Display help. |
 | F2        | Switch between fullscreen and windowed mode. |
-| Shift-F2  | Toggle antialiasing on/off. |
 | F3        | Save DSK file to disk. |
+| Shift-F3  | Create blank DSK file. |
 | F4        | Select next disk image. |
 | Shift-F4  | Select previous disk image. |
 | F5        | Reset the Spectrum. |
@@ -230,3 +237,5 @@ After I had the ZX Spectrum working, I thought I could try to emulate the Amstra
 + Ast_A_Moore: For all his help with the +2A timings and port 0x0FFD.
 + César Hernández Bañó: For his help with the initial values for IR register, his comments, and his own emulator ZesarUX.
 + Miguel Mesa: For pointing out that the FLASH attribute was running at half speed.
++ Weiv (for his tests), ICEknight (for his videos), and all the people who helped describing the ULA Snow Effect on 48K/128K/+2 machines.
++ People from the #emulation discord for their ongoing testing efforts to discover every detail on the ZX Spectrum machines.

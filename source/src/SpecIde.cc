@@ -83,7 +83,6 @@ map<string, Option> arguments = {
     {"--nodoublescan",  {"scanmode", "normal"}},
     {"--window",        {"fullscreen", "no"}},
     {"--fullscreen",    {"fullscreen", "yes"}},
-    {"--antialias",     {"antialias", "yes"}},
     {"--sync",          {"sync", "yes"}},
     {"--nosync",        {"sync", "no"}},
     {"--cmos",          {"z80type", "cmos"}},
@@ -232,7 +231,6 @@ void readOptions(map<string, string>& options) {
     options["psgtype"] = "ay";
     options["scanmode"] = "normal";
     options["fullscreen"] = "no";
-    options["antialias"] = "no";
     options["flashtap"] = "no";
     options["sync"] = "no";
     options["sd1"] = "no";
