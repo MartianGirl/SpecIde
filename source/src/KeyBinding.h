@@ -18,25 +18,20 @@
 #include <SFML/Window/Keyboard.hpp>
 
 #include <cstdint>
+#include <map>
 
 using namespace sf;
 
-struct KeyBinding {
+/** ZX Spectrum key binding: Keys that generate a single key press. */
+extern std::map<Keyboard::Scancode, InputMatrixPosition> zxSingleKeys;
+/** ZX Spectrum key binding: Keys that generate Caps Shift + keypress. */
+extern std::map<Keyboard::Scancode, InputMatrixPosition> zxCapsKeys;
+/** ZX Spectrum key binding: Keys that generate Symbol Shift + keypress. */
+extern std::map<Keyboard::Scancode, InputMatrixPosition> zxSymbolKeys;
+/** Amstrad CPC key binding. */
+extern std::map<Keyboard::Scancode, InputMatrixPosition> cpcKeys;
 
-    Keyboard::Key keyName;
-    uint8_t row;
-    uint8_t key;
-};
-
-struct JoystickKeyBinding {
-
-    uint8_t row;
-    uint8_t key;
-};
-
-extern KeyBinding singleKeys[42];
-extern KeyBinding capsKeys[11];
-extern KeyBinding symbolKeys[3];
-extern KeyBinding cpcKeys[73];
-extern JoystickKeyBinding spectrumKeyJoystick[12];
-extern JoystickKeyBinding cpcJoystick[2][6];
+/** ZX Spectrum key binding for joystick Sinclair 1. */
+extern InputMatrixPosition spectrumKeyJoystick[12];
+/** Amstrad CPC key binding for joysticks. */
+extern InputMatrixPosition cpcJoystick[2][6];

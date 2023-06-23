@@ -57,7 +57,6 @@ class ULA {
         int sample();
         void start();
         void updateAttributes();
-        void scanKeys();
 
         void generateVideoDataUla();
         void generateVideoDataGa();
@@ -168,8 +167,7 @@ class ULA {
 
         // Keyboard polling
         uint_fast8_t keys[8];
-        bool pollKeys = true;
-        uint_fast32_t sinclairData = 0;
+        uint_fast8_t keyData[8];
 
         // ULA interrupt
         uint_fast16_t c;

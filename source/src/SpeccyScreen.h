@@ -83,13 +83,6 @@ class SpeccyScreen : public Screen {
         void reset();
 
         /**
-         * Give or remove focus to the emulator.
-         *
-         * @param hasFocus New focus status.
-         */
-        void focus(bool hasFocus);
-
-        /**
          * Load tape and disk files.
          */
         void loadFiles();
@@ -207,6 +200,20 @@ class SpeccyScreen : public Screen {
          * @param button Joystick button to release.
          */
         void joystickButtonRelease(uint_fast32_t button);
+
+        /**
+         * Press key.
+         *
+         * @param key Key to press.
+         */
+        void keyPress(sf::Keyboard::Scancode key);
+
+        /**
+         * Release key.
+         *
+         * @param key Key to release.
+         */
+        void keyRelease(sf::Keyboard::Scancode key);
 
         /**
          * Get pixel clock.

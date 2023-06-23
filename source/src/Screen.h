@@ -193,13 +193,6 @@ class Screen {
         virtual void reset() = 0;
 
         /**
-         * Give or remove focus to the emulator.
-         *
-         * @param hasFocus New focus status.
-         */
-        virtual void focus(bool hasFocus) = 0;
-
-        /**
          * Create empty disk.
          */
         virtual void createEmptyDisk() = 0;
@@ -302,6 +295,20 @@ class Screen {
          * @param button Joystick button to release.
          */
         virtual void joystickButtonRelease(uint_fast32_t button) = 0;
+
+        /**
+         * Press key.
+         *
+         * @param key Key to press.
+         */
+        virtual void keyPress(sf::Keyboard::Scancode key) = 0;
+
+        /**
+         * Release key.
+         *
+         * @param key Key to release.
+         */
+        virtual void keyRelease(sf::Keyboard::Scancode key) = 0;
 
         /**
          * Guess file type based on the extension.

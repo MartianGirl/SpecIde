@@ -14,7 +14,6 @@
  */
 
 #include "ULA.h"
-#include "KeyBinding.h"
 
 #include <cmath>
 
@@ -54,6 +53,7 @@ uint32_t ULA::pixelsX2[X_SIZE * Y_SIZE];
 
 ULA::ULA() :
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+    keyData{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF) {
 
         for (uint_fast32_t i = 0; i < 0x100; ++i) {
@@ -148,7 +148,8 @@ void ULA::generateInterrupt() {
 
     if (scan == vSyncStart) {
         if (pixel == interruptStart && scan == vSyncStart) {
-            scanKeys();
+            // Keyboard is updated here to avoid split double keys.
+            for (size_t ii = 0; ii < 8; ++ii) keyData[ii] = keys[ii];
             z80_c &= ~SIGNAL_INT_;
         } else if (pixel == interruptEnd && scan == vSyncStart) {
             z80_c |= SIGNAL_INT_;
@@ -315,47 +316,6 @@ void ULA::tapeEarMic() {
     if ((tapeIn & 0xC0) == 0xC0) ear = 4.000;
 }
 
-void ULA::scanKeys() {
-
-    if (!pollKeys) return;
-
-    for (size_t ii = 0; ii < 8; ++ii) {
-        keys[ii] = 0xFF;
-    }
-
-    for (size_t ii = 0; ii < sizeof(singleKeys) / sizeof(KeyBinding); ++ii) {
-        if (Keyboard::isKeyPressed(singleKeys[ii].keyName)) {
-            keys[singleKeys[ii].row] &= ~singleKeys[ii].key;
-        }
-    }
-
-    for (size_t ii = 0; ii < sizeof(capsKeys) / sizeof(KeyBinding); ++ii) {
-        if (Keyboard::isKeyPressed(capsKeys[ii].keyName)) {
-            keys[capsKeys[ii].row] &= ~capsKeys[ii].key;
-            keys[7] &= 0xFE;    // Press Caps Shift
-        }
-    }
-
-    for (size_t ii = 0; ii < sizeof(symbolKeys) / sizeof(KeyBinding); ++ii) {
-        if (Keyboard::isKeyPressed(symbolKeys[ii].keyName)) {
-            keys[symbolKeys[ii].row] &= ~symbolKeys[ii].key;
-            keys[0] &= 0xFD;    // Press Symbol Shift
-        }
-    }
-
-    for (size_t ii = 0; ii < sizeof(spectrumKeyJoystick) / sizeof(JoystickKeyBinding); ++ii) {
-        if (sinclairData & (1 << ii)) {
-            keys[spectrumKeyJoystick[ii].row] &= ~spectrumKeyJoystick[ii].key;
-        }
-    }
-
-    // Activate Caps Lock (Caps Shift + 2) when both Shifts are presseda.
-    if (Keyboard::isKeyPressed(Keyboard::LShift) && Keyboard::isKeyPressed(Keyboard::RShift)) {
-        keys[7] &= 0xFE;    // Press Caps Shift
-        keys[4] &= 0xFD;    // Press 2
-    }
-}
-
 uint_fast8_t ULA::ioRead() {
 
     uint_fast8_t byte = inMask;
@@ -363,7 +323,7 @@ uint_fast8_t ULA::ioRead() {
 
     for (uint_fast8_t ii = 0; ii < 8; ++ii) {
         if (!(z80_a & (0x8000 >> ii))) {
-            byte &= keys[ii];
+            byte &= keyData[ii];
         }
     }
 

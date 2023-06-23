@@ -81,14 +81,13 @@ class CPC {
         /** Tape drive. */
         Tape tape;
         /** Keyboard matrix. */
-        uint_fast8_t keys[16];
+        uint_fast8_t keys[10];
 
         /** Sound channel object. */
         SoundChannel channel;
 
         uint_fast8_t bus = 0xFF;
 
-        uint_fast8_t joystick[2] = { 0x00, 0x00 };
         uint_fast16_t pageRegs = 0x00;
 
         bool cpc128K = true;
@@ -96,7 +95,6 @@ class CPC {
         bool expBit = false;
 
         bool tapeSound = false;
-        bool pollKeys = true;
 
         /** Tape signal level. */
         uint_fast8_t tapeLevel = 0;
@@ -161,7 +159,6 @@ class CPC {
         void clock();
         void reset();
 
-        void scanKeys();
         /**
          * Load internal ROM for each Amstrad CPC model.
          *

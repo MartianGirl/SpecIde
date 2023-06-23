@@ -268,74 +268,69 @@ void Screen::pollEvents() {
                 close();
                 break;
 
-            case Event::GainedFocus:
-            case Event::LostFocus:
-                focus(window.hasFocus());
-                break;
-
             case Event::KeyPressed:
-                switch (event.key.code) {
-                    case Keyboard::Menu:    // fall-through
-                    case Keyboard::F1:      // Show menu
+                switch (event.key.scancode) {
+                    case Keyboard::Scan::Menu:  // fall-through
+                    case Keyboard::Scan::F1:    // Show menu
                         menu = true;
                         break;
-                    case Keyboard::F2:  // Window/Fullscreen
+                    case Keyboard::Scan::F2:    // Window/Fullscreen
                         fullscreen = !fullscreen;
                         reopenWindow(fullscreen);
                         setFullScreen(fullscreen);
                         break;
-                    case Keyboard::F3:  // Save DSK to disk
+                    case Keyboard::Scan::F3:    // Save DSK to disk
                         if (event.key.shift) {
                             createEmptyDisk();
                         } else {
                             saveDisk();
                         }
                         break;
-                    case Keyboard::F4:  // Select DSK from list
+                    case Keyboard::Scan::F4:    // Select DSK from list
                         if (event.key.shift) {
                             selectPreviousDisk();
                         } else {
                             selectNextDisk();
                         }
                         break;
-                    case Keyboard::F5:  // Reset Spectrum
+                    case Keyboard::Scan::F5:    // Reset Computer
                         reset();
                         break;
-                    case Keyboard::F6:  // Clear save data
+                    case Keyboard::Scan::F6:    // Clear save data
                         if (event.key.shift) {
                             appendLoadTape();
                         } else {
                             clearSaveTape();
                         }
                         break;
-                    case Keyboard::F7:  // Write save data
+                    case Keyboard::Scan::F7:    // Write save data
                         if (event.key.shift) {
                             selectSaveTape();
                         } else {
                             writeSaveTape();
                         }
                         break;
-                    case Keyboard::F8:  // PSG chip type
+                    case Keyboard::Scan::F8:    // PSG chip type
                         togglePsgType();
                         break;
-                    case Keyboard::F9:  // Toggle sound ON/OFF
+                    case Keyboard::Scan::F9:    // Toggle sound ON/OFF
                         if (event.key.shift) {
                             toggleTapeSound();
                         } else {
                             toggleSound();
                         }
                         break;
-                    case Keyboard::F10: // Quit
+                    case Keyboard::Scan::F10:   // Quit
                         done = true;
                         break;
-                    case Keyboard::F11: // Play/Stop tape
+                    case Keyboard::Scan::F11:   // Play/Stop tape
                         if (event.key.shift) {
                             resetTapeCounter();
                         } else {
                             startStopTape();
                         }
                         break;
-                    case Keyboard::F12:
+                    case Keyboard::Scan::F12:
                         if (event.key.shift) {
                             rewindTape(true);
                         } else {
@@ -344,8 +339,13 @@ void Screen::pollEvents() {
                         break;
 
                     default:
+                        keyPress(event.key.scancode);
                         break;
                 }
+                break;
+
+            case Event::KeyReleased:
+                keyRelease(event.key.scancode);
                 break;
 
             case Event::JoystickMoved:

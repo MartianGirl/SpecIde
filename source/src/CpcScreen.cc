@@ -15,6 +15,7 @@
 
 #include "CpcScreen.h"
 #include "config.h"
+#include "KeyBinding.h"
 
 #ifdef USE_BOOST_THREADS
 #include <boost/chrono/include.hpp>
@@ -174,7 +175,6 @@ void CpcScreen::run() {
             start = high_resolution_clock::now();
 
             // Run until either we get a new frame, or we get 20ms of emulation.
-            cpc.scanKeys();
             pollEvents();
             pollCommands();
 
@@ -253,11 +253,6 @@ void CpcScreen::close() {
     done = true;
 }
 
-void CpcScreen::focus(bool hasFocus) {
-
-    cpc.pollKeys = hasFocus;
-}
-
 void CpcScreen::createEmptyDisk() {
 
     cpc.fdc765.drive[0].emptyDisk();
@@ -330,21 +325,21 @@ void CpcScreen::togglePsgType() {
 
 void CpcScreen::joystickHorizontalAxis(bool l, bool r) {
 
-    cpc.joystick[0] &= 0xFC;
+    cpc.keys[9] |= 0x0C;
     if (l) {
-        cpc.joystick[0] |= 0x02;
+        cpc.keys[9] &= 0xFB;
     } else if (r) {
-        cpc.joystick[0] |= 0x01;
+        cpc.keys[9] &= 0xF7;
     }
 }
 
 void CpcScreen::joystickVerticalAxis(bool u, bool d) {
 
-    cpc.joystick[0] &= 0xF3;
+    cpc.keys[9] |= 0x03;
     if (u) {
-        cpc.joystick[0] |= 0x08;
+        cpc.keys[9] &= 0xFE;
     } else if (d) {
-        cpc.joystick[0] |= 0x04;
+        cpc.keys[9] &= 0xFD;
     }
 }
 
@@ -352,7 +347,7 @@ void CpcScreen::joystickButtonPress(uint_fast32_t button) {
 
     button += 4;
     if (button < 6) {
-        cpc.joystick[0] |= 1 << button;
+        cpc.keys[9] &= ~(1 << button);
     }
 }
 
@@ -360,7 +355,26 @@ void CpcScreen::joystickButtonRelease(uint_fast32_t button) {
 
     button += 4;
     if (button < 6) {
-        cpc.joystick[0] &= ~(1 << button);
+        cpc.keys[9] |= (1 << button);
+    }
+}
+
+
+void CpcScreen::keyPress(Keyboard::Scancode key) {
+
+    map<Keyboard::Scancode, InputMatrixPosition>::iterator pos;
+
+    if ((pos = cpcKeys.find(key)) != cpcKeys.end()) {
+        cpc.keys[(pos->second).row] &= ~(pos->second).key;
+    }
+}
+
+void CpcScreen::keyRelease(Keyboard::Scancode key) {
+
+    map<Keyboard::Scancode, InputMatrixPosition>::iterator pos;
+
+    if ((pos = cpcKeys.find(key)) != cpcKeys.end()) {
+        cpc.keys[(pos->second).row] |= (pos->second).key;
     }
 }
 

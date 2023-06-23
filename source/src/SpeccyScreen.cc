@@ -15,6 +15,7 @@
 
 #include "SpeccyScreen.h"
 #include "config.h"
+#include "KeyBinding.h"
 
 #ifdef USE_BOOST_THREADS
 #include <boost/chrono/include.hpp>
@@ -396,11 +397,6 @@ void SpeccyScreen::close() {
     done = true;
 }
 
-void SpeccyScreen::focus(bool hasFocus) {
-
-    spectrum.ula.pollKeys = hasFocus;
-}
-
 void SpeccyScreen::createEmptyDisk() {
 
     spectrum.fdc765.drive[0].emptyDisk();
@@ -490,11 +486,11 @@ void SpeccyScreen::joystickHorizontalAxis(bool l, bool r) {
             spectrum.kempstonData |= 0x01;
         }
     } else {
-        spectrum.ula.sinclairData &= 0xFC;
+        spectrum.ula.keys[3] |= 0x18;
         if (l) {
-            spectrum.ula.sinclairData |= 0x01;
+            spectrum.ula.keys[3] &= 0xEF;
         } else if (r) {
-            spectrum.ula.sinclairData |= 0x02;
+            spectrum.ula.keys[3] &= 0xF7;
         }
     }
 }
@@ -509,11 +505,11 @@ void SpeccyScreen::joystickVerticalAxis(bool u, bool d) {
             spectrum.kempstonData |= 0x04;
         }
     } else {
-        spectrum.ula.sinclairData &= 0xF3;
+        spectrum.ula.keys[3] |= 0x06;
         if (u) {
-            spectrum.ula.sinclairData |= 0x08;
+            spectrum.ula.keys[3] &= 0xFB;
         } else if (d) {
-            spectrum.ula.sinclairData |= 0x04;
+            spectrum.ula.keys[3] &= 0xFD;
         }
     }
 }
@@ -529,7 +525,8 @@ void SpeccyScreen::joystickButtonPress(uint_fast32_t button) {
     if (spectrum.kempston && button < 5) {
         spectrum.kempstonData |= 1 << button;
     } else {
-        spectrum.ula.sinclairData |= 1 << button;
+        spectrum.ula.keys[spectrumKeyJoystick[button].row] &=
+            ~spectrumKeyJoystick[button].key;
     }
 }
 
@@ -544,7 +541,38 @@ void SpeccyScreen::joystickButtonRelease(uint_fast32_t button) {
     if (spectrum.kempston && button < 5) {
         spectrum.kempstonData &= ~(1 << button);
     } else {
-        spectrum.ula.sinclairData &= ~(1 << button);
+        spectrum.ula.keys[spectrumKeyJoystick[button].row] |=
+            spectrumKeyJoystick[button].key;
+    }
+}
+
+void SpeccyScreen::keyPress(Keyboard::Scancode key) {
+
+    map<Keyboard::Scancode, InputMatrixPosition>::iterator pos;
+
+    if ((pos = zxSingleKeys.find(key)) != zxSingleKeys.end()) {
+        spectrum.ula.keys[(pos->second).row] &= ~(pos->second).key;
+    } else if ((pos = zxCapsKeys.find(key)) != zxCapsKeys.end()) {
+        spectrum.ula.keys[(pos->second).row] &= ~(pos->second).key;
+        spectrum.ula.keys[7] &= 0xFE;   // Press Caps Shift
+    } else if ((pos = zxSymbolKeys.find(key)) != zxSymbolKeys.end()) {
+        spectrum.ula.keys[(pos->second).row] &= ~(pos->second).key;
+        spectrum.ula.keys[0] &= 0xFD;   // Press Symbol Shift
+    }
+}
+
+void SpeccyScreen::keyRelease(Keyboard::Scancode key) {
+
+    map<Keyboard::Scancode, InputMatrixPosition>::iterator pos;
+
+    if ((pos = zxSingleKeys.find(key)) != zxSingleKeys.end()) {
+        spectrum.ula.keys[(pos->second).row] |= (pos->second).key;
+    } else if ((pos = zxCapsKeys.find(key)) != zxCapsKeys.end()) {
+        spectrum.ula.keys[(pos->second).row] |= (pos->second).key;
+        spectrum.ula.keys[7] |= 0x01;   // Release Caps Shift
+    } else if ((pos = zxSymbolKeys.find(key)) != zxSymbolKeys.end()) {
+        spectrum.ula.keys[(pos->second).row] |= (pos->second).key;
+        spectrum.ula.keys[0] |= 0x02;   // Release Symbol Shift
     }
 }
 

@@ -14,7 +14,6 @@
  */
 
 #include "CPC.h"
-#include "KeyBinding.h"
 #include "SpecIde.h"
 
 #include <cstdlib>
@@ -23,16 +22,13 @@
 int constexpr SAVE_VOLUME = 0x01FF;
 int constexpr LOAD_VOLUME = 0x01FF;
 
-CPC::CPC() {
+CPC::CPC() :
+    keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF} {
 
     setPage(0, 0);
     setPage(1, 1);
     setPage(2, 2);
     setPage(3, 3);
-
-    for (size_t ii = 0; ii < 10; ++ii) {
-        keys[ii] = 0xFF;
-    }
 
     channel.open(2, SAMPLE_RATE);
 }
@@ -534,29 +530,6 @@ void CPC::setPage(uint_fast8_t page, uint_fast8_t bank) {
 
     size_t addr = bank * (1 << 14);
     mem[page] = &ram[addr];
-}
-
-void CPC::scanKeys() {
-
-    if (!pollKeys) return;
-
-    for (size_t ii = 0; ii < 16; ++ii) {
-        keys[ii] = 0xFF;
-    }
-
-    for (size_t ii = 0; ii < sizeof(cpcKeys) / sizeof(KeyBinding); ++ii) {
-        if (Keyboard::isKeyPressed(cpcKeys[ii].keyName)) {
-            keys[cpcKeys[ii].row] &= ~cpcKeys[ii].key;
-        }
-    }
-
-    for (size_t jj = 0; jj < 2; ++jj) {
-        for (size_t ii = 0; ii < 6; ++ii) {
-            if (joystick[jj] & (1 << ii)) {
-                keys[cpcJoystick[jj][ii].row] &= ~cpcJoystick[jj][ii].key;
-            }
-        }
-    }
 }
 
 void CPC::setBrand(uint_fast8_t brandNumber) {
