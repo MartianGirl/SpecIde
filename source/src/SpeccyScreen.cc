@@ -548,32 +548,46 @@ void SpeccyScreen::joystickButtonRelease(uint_fast32_t button) {
 
 void SpeccyScreen::keyPress(Keyboard::Scancode key) {
 
-    map<Keyboard::Scancode, InputMatrixPosition>::iterator pos;
+    try {
+        InputMatrixPosition pos = zxSingleKeys.at(key);
+        spectrum.ula.keys[pos.row] &= ~pos.key;
+        return;
+    } catch (out_of_range const& oor) {}
 
-    if ((pos = zxSingleKeys.find(key)) != zxSingleKeys.end()) {
-        spectrum.ula.keys[(pos->second).row] &= ~(pos->second).key;
-    } else if ((pos = zxCapsKeys.find(key)) != zxCapsKeys.end()) {
-        spectrum.ula.keys[(pos->second).row] &= ~(pos->second).key;
+    try {
+        InputMatrixPosition pos = zxCapsKeys.at(key);
+        spectrum.ula.keys[pos.row] &= ~pos.key;
         spectrum.ula.keys[7] &= 0xFE;   // Press Caps Shift
-    } else if ((pos = zxSymbolKeys.find(key)) != zxSymbolKeys.end()) {
-        spectrum.ula.keys[(pos->second).row] &= ~(pos->second).key;
+        return;
+    } catch (out_of_range const& oor) {}
+
+    try {
+        InputMatrixPosition pos = zxSymbolKeys.at(key);
+        spectrum.ula.keys[pos.row] &= ~pos.key;
         spectrum.ula.keys[0] &= 0xFD;   // Press Symbol Shift
-    }
+    } catch (out_of_range const& oor) {}
 }
 
 void SpeccyScreen::keyRelease(Keyboard::Scancode key) {
 
-    map<Keyboard::Scancode, InputMatrixPosition>::iterator pos;
+    try {
+        InputMatrixPosition pos = zxSingleKeys.at(key);
+        spectrum.ula.keys[pos.row] |= pos.key;
+        return;
+    } catch (out_of_range const& oor) {}
 
-    if ((pos = zxSingleKeys.find(key)) != zxSingleKeys.end()) {
-        spectrum.ula.keys[(pos->second).row] |= (pos->second).key;
-    } else if ((pos = zxCapsKeys.find(key)) != zxCapsKeys.end()) {
-        spectrum.ula.keys[(pos->second).row] |= (pos->second).key;
-        spectrum.ula.keys[7] |= 0x01;   // Release Caps Shift
-    } else if ((pos = zxSymbolKeys.find(key)) != zxSymbolKeys.end()) {
-        spectrum.ula.keys[(pos->second).row] |= (pos->second).key;
-        spectrum.ula.keys[0] |= 0x02;   // Release Symbol Shift
-    }
+    try {
+        InputMatrixPosition pos = zxCapsKeys.at(key);
+        spectrum.ula.keys[pos.row] |= pos.key;
+        spectrum.ula.keys[7] |= 0x01;   // Press Caps Shift
+        return;
+    } catch (out_of_range const& oor) {}
+
+    try {
+        InputMatrixPosition pos = zxSymbolKeys.at(key);
+        spectrum.ula.keys[pos.row] |= pos.key;
+        spectrum.ula.keys[0] |= 0x02;   // Press Symbol Shift
+    } catch (out_of_range const& oor) {}
 }
 
 float SpeccyScreen::getPixelClock() {

@@ -362,20 +362,18 @@ void CpcScreen::joystickButtonRelease(uint_fast32_t button) {
 
 void CpcScreen::keyPress(Keyboard::Scancode key) {
 
-    map<Keyboard::Scancode, InputMatrixPosition>::iterator pos;
-
-    if ((pos = cpcKeys.find(key)) != cpcKeys.end()) {
-        cpc.keys[(pos->second).row] &= ~(pos->second).key;
-    }
+    try {
+        InputMatrixPosition pos = cpcKeys.at(key);
+        cpc.keys[pos.row] &= ~pos.key;
+    } catch (out_of_range const& oor) {}
 }
 
 void CpcScreen::keyRelease(Keyboard::Scancode key) {
 
-    map<Keyboard::Scancode, InputMatrixPosition>::iterator pos;
-
-    if ((pos = cpcKeys.find(key)) != cpcKeys.end()) {
-        cpc.keys[(pos->second).row] |= (pos->second).key;
-    }
+    try {
+        InputMatrixPosition pos = cpcKeys.at(key);
+        cpc.keys[pos.row] |= pos.key;
+    } catch (out_of_range const& oor) {}
 }
 
 float CpcScreen::getPixelClock() {
