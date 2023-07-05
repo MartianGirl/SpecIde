@@ -333,14 +333,12 @@ uint_fast8_t ULA::ioRead() {
 void ULA::ioWrite(uint_fast8_t byte) {
 
     soundBits = (byte & 0x18) >> 3;
-    vEnd = voltage[soundBits];
-    vInc = vEnd - vCap;
-
     borderAttr = byte & 0x07;
-    if (ulaVersion == 5) {
-        if (!video) {
-            colour[1] = colourTable[0x80 | borderAttr];
-        }
+    if (ulaVersion < 3) {
+        vEnd = voltage[soundBits];
+        vInc = vEnd - vCap;
+    } else if (ulaVersion == 5 && !video) {
+        colour[1] = colourTable[0x80 | borderAttr];
     }
 }
 
