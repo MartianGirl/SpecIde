@@ -447,6 +447,14 @@ void Spectrum::clock() {
                     }
                 }
 
+                if (!(z80.a & 0x0001)) {         // ULA port
+                    if (z80.wr) {
+                        ula.ioWrite(z80.d);
+                    } else if (z80.rd) {
+                        z80.d = ula.ioRead();
+                    }
+                }
+
                 // AY-3-8912 ports.
                 if (psgChips) {
                     switch (z80.a & 0xC002) {
@@ -550,14 +558,6 @@ void Spectrum::clock() {
 
                     default:
                         break;
-                }
-
-                if (!(z80.a & 0x0001)) {         // ULA port
-                    if (z80.wr) {
-                        ula.ioWrite(z80.d);
-                    } else if (z80.rd) {
-                        z80.d = ula.ioRead();
-                    }
                 }
             } else if (!as_) {
                 // BetaDisk128 pages TR-DOS ROM when the PC is in the range
