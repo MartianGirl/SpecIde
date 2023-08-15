@@ -89,8 +89,8 @@ class Spectrum {
 
         /** Byte in bus. Used in floating bus effects. */
         uint_fast8_t bus = 0xFF;
-        /** Byte in bus, delayed 1 clock. */
-        uint_fast8_t bus_1 = 0xFF;
+        /** Byte in gate array latch. Used in +2A/+3 "floating bus". */
+        uint_fast8_t gateArrayByte = 0xFF;
         /** Byte in Kempston joystick port. */
         uint_fast8_t kempstonData = 0x00;
 
@@ -170,6 +170,7 @@ class Spectrum {
         uint_fast16_t snowAddr = 0x0000;
         /** Snow effect type. */
         uint_fast32_t snowMode = NONE;
+        /** Bank affected for snow access. */
         uint_fast32_t snowArea = 0;
 
         /** True if 48K mode is active. This disables pagination. */

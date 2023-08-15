@@ -312,7 +312,7 @@ void Spectrum::clock() {
     // ULA gets the data from memory or Z80, or outputs data to Z80.
     // I've found that separating both data buses is helpful for all
     // Speccies.
-    bus_1 = bus;
+    gateArrayByte = bus;
 
     switch (ula.snow) {
         case SNOW:  // 1st ULA burst: CAS loads R register
@@ -390,10 +390,16 @@ void Spectrum::clock() {
         // Z80 gets data from the ULA or memory, only when reading.
         if (z80.access) {
             if (!io_) {
-                // 48K/128K/Plus2 floating bus. Return idle status by default,
-                // or screen data, if the ULA is working.
                 if (z80.rd) {
-                    z80.d = (ula.idle) ? idle : bus & idle;
+                    if (!(z80.a & 0x0001)) {
+                        // ULA port read returns keypresses and EAR status.
+                        z80.d = ula.ioRead();
+                    } else {
+                        // Unattached port read. On 48K/128K/Plus2, floating bus.
+                        // Returns idle bus value by default, or video data,
+                        // if the ULA is reading.
+                        z80.d = ula.idle ? idle : bus & idle;
+                    }
                 }
 
                 // 128K only ports (pagination, disk)
@@ -408,7 +414,7 @@ void Spectrum::clock() {
                         case 0x0000:    // In +2A/+3 this is the floating bus port.
                             if (z80.rd) {
                                 if (!(pageRegs & 0x0020)) {
-                                    z80.d = (bus_1 & idle) | 0x01;
+                                    z80.d = (gateArrayByte & idle) | 0x01;
                                 }
                             }
                             break;
@@ -444,14 +450,6 @@ void Spectrum::clock() {
 
                         default:
                             break;
-                    }
-                }
-
-                if (!(z80.a & 0x0001)) {         // ULA port
-                    if (z80.wr) {
-                        ula.ioWrite(z80.d);
-                    } else if (z80.rd) {
-                        z80.d = ula.ioRead();
                     }
                 }
 
@@ -558,6 +556,13 @@ void Spectrum::clock() {
 
                     default:
                         break;
+                }
+
+                // Writes to ULA go last, to account for the case where a
+                // peripheral responds both to reads and writes, and uses
+                // an even address.
+                if (z80.wr && !(z80.a & 0x0001)) {
+                    ula.ioWrite(z80.d);
                 }
             } else if (!as_) {
                 // BetaDisk128 pages TR-DOS ROM when the PC is in the range
