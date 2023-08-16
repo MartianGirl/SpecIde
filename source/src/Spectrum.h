@@ -84,7 +84,7 @@ class Spectrum {
         /** ULA. Supports Sinclair ULAs, Amstrad Gate Array, and Pentagon ULA. */
         ULA ula;
         /** PSG instances. (AY-8912-3, YM-2149) */
-        PSG psg[4];
+        PSG psg[5];
         /** ZX Spectrum +3 floppy disk controller. (NEC765 or compatible.) */
         FDC765 fdc765;
         /** BetaDisk 128 floppy disk controller. (WD1793 or compatible.) */

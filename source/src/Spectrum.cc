@@ -512,9 +512,19 @@ void Spectrum::clock() {
                             switch (z80.a & 0x00F0) {
                                 case 0x0030:
                                     // Port 0x003F, Fuller AY control port
+                                    if (z80.wr) {
+                                        psg[4].addr(z80.d);
+                                    } else if (z80.rd) {
+                                        z80.d = psg[4].read();
+                                    }
                                     break;
                                 case 0x0050:
                                     // Port 0x005F, Fuller AY data port
+                                    if (z80.wr) {
+                                        psg[4].write(z80.d);
+                                    } else if (z80.rd) {
+                                        z80.d = psg[4].read();
+                                    }
                                     break;
                                 case 0x0070:
                                     // Port 0x007F, Fuller joystick port
@@ -769,6 +779,10 @@ void Spectrum::psgPlaySound(bool play) {
     for (size_t ii = 0; ii < psgChips; ++ii) {
         psg[ii].playSound = play;
     }
+
+    if (joystick == JoystickType::FULLER) {
+        psg[4].playSound = play;
+    }
 }
 
 void Spectrum::psgSample() {
@@ -844,6 +858,12 @@ void Spectrum::sample() {
             l += psg[0].channelA + psg[0].channelB + psg[0].channelC;
             r += psg[0].channelA + psg[0].channelB + psg[0].channelC;
             break;
+    }
+
+    if (joystick == JoystickType::FULLER) {
+        psg[4].sample();
+        l += psg[4].channelA + psg[4].channelB + psg[4].channelC;
+        r += psg[4].channelA + psg[4].channelB + psg[4].channelC;
     }
 
     l = 2 * (l - 0x4000);
