@@ -115,21 +115,43 @@ map<Keyboard::Scancode, InputMatrixPosition> zxSymbolKeys = {
 
 /**
  * Mapping from joystick data to keys, for
- * Sinclair Port 1 joystick and extra buttons.
+ * Sinclair Port 1/2 and Cursor joystick and extra buttons.
  */
-InputMatrixPosition spectrumKeyJoystick[12] = {
-    {3, 0x10},  // Sinclair Port 1 Left: 6
-    {3, 0x08},  // Sinclair Port 1 Right: 7
-    {3, 0x04},  // Sinclair Port 1 Up: 8
-    {3, 0x02},  // Sinclair Port 1 Down: 9
-    {3, 0x01},  // Sinclair Port 1 Fire: 0
-    {0, 0x10},  // Pad button 1: B
-    {0, 0x08},  // Pad button 2: N
-    {7, 0x10},  // Pad button 3: V
-    {7, 0x08},  // Pad button 4: C
-    {7, 0x04},  // Pad button 5: X
-    {6, 0x10},  // Pad button 6: G
-    {1, 0x10}   // Pad button 7: H
+InputMatrixPosition spectrumKeyJoystick[3][10] = {
+    {
+        {3, 0x10},  // Sinclair Port 1 Left: 6
+        {3, 0x08},  // Sinclair Port 1 Right: 7
+        {3, 0x04},  // Sinclair Port 1 Down: 8
+        {3, 0x02},  // Sinclair Port 1 Up: 9
+        {3, 0x01},  // Sinclair Port 1 Fire: 0
+        {7, 0x01},  // Pad button 1: Caps Shift
+        {7, 0x02},  // Pad button 2: Z
+        {7, 0x04},  // Pad button 3: X
+        {6, 0x10},  // Pad button 6: G
+        {1, 0x10}   // Pad button 7: H
+    }, {
+        {4, 0x01},  // Sinclair Port 2 Left: 1
+        {4, 0x02},  // Sinclair Port 2 Right: 2
+        {4, 0x04},  // Sinclair Port 2 Down: 3
+        {4, 0x08},  // Sinclair Port 2 Up: 4
+        {4, 0x10},  // Sinclair Port 2 Fire: 5
+        {0, 0x01},  // Pad button 1: Space
+        {0, 0x02},  // Pad button 2: Symbol Shift
+        {0, 0x04},  // Pad button 3: M
+        {6, 0x10},  // Pad button 6: G
+        {1, 0x10}   // Pad button 7: H
+    }, {
+        {4, 0x10},  // Cursor Left: 5
+        {3, 0x04},  // Cursor Right: 8
+        {3, 0x10},  // Cursor Down: 6
+        {3, 0x08},  // Cursor Up: 7
+        {3, 0x01},  // Cursor Fire: 0
+        {7, 0x01},  // Pad button 1: Caps Shift
+        {7, 0x02},  // Pad button 2: Z
+        {7, 0x04},  // Pad button 3: X
+        {6, 0x10},  // Pad button 6: G
+        {1, 0x10}   // Pad button 7: H
+    }
 };
 
 /**
@@ -223,19 +245,19 @@ map<Keyboard::Scancode, InputMatrixPosition> cpcKeys = {
 
 InputMatrixPosition cpcJoystick[2][6] = {
     {
-        {9, 0x08},  // Joystick 1 Right
         {9, 0x04},  // Joystick 1 Left
+        {9, 0x08},  // Joystick 1 Right
         {9, 0x02},  // Joystick 1 Down
         {9, 0x01},  // Joystick 1 Up
-        {9, 0x10},  // Joystick 1 Fire 2
-        {9, 0x20}   // Joystick 1 Fire 1
+        {9, 0x20},  // Joystick 1 Fire 1
+        {9, 0x10}   // Joystick 1 Fire 2
     }, {
-        {6, 0x08},  // Joystick 2 Right (T)
         {6, 0x04},  // Joystick 2 Left (R)
+        {6, 0x08},  // Joystick 2 Right (T)
         {6, 0x02},  // Joystick 2 Down (5)
         {6, 0x01},  // Joystick 2 Up (6)
-        {6, 0x10},  // Joystick 2 Fire 2
-        {6, 0x20}   // Joystick 2 Fire 1
+        {6, 0x20},  // Joystick 2 Fire 1
+        {6, 0x10}   // Joystick 2 Fire 2
     }
 };
 // vim: et:sw=4:ts=4:

@@ -354,11 +354,11 @@ void Screen::pollEvents() {
                     case Joystick::U:
                     case Joystick::PovX:
                         if (event.joystickMove.position < -34.0) {
-                            joystickHorizontalAxis(true, false);
+                            joystickHorizontalAxis(event.joystickMove.joystickId, true, false);
                         } else if (event.joystickMove.position > 34.0) {
-                            joystickHorizontalAxis(false, true);
+                            joystickHorizontalAxis(event.joystickMove.joystickId, false, true);
                         } else {
-                            joystickHorizontalAxis(false, false);
+                            joystickHorizontalAxis(event.joystickMove.joystickId, false, false);
                         }
                         break;
 
@@ -366,11 +366,11 @@ void Screen::pollEvents() {
                     case Joystick::V:
                     case Joystick::PovY:
                         if (event.joystickMove.position < -34.0) {
-                            joystickVerticalAxis(true, false);
+                            joystickVerticalAxis(event.joystickMove.joystickId, true, false);
                         } else if (event.joystickMove.position > 34.0) {
-                            joystickVerticalAxis(false, true);
+                            joystickVerticalAxis(event.joystickMove.joystickId, false, true);
                         } else {
-                            joystickVerticalAxis(false, false);
+                            joystickVerticalAxis(event.joystickMove.joystickId, false, false);
                         }
                         break;
 
@@ -380,11 +380,11 @@ void Screen::pollEvents() {
                 break;
 
             case Event::JoystickButtonPressed:
-                joystickButtonPress(event.joystickButton.button);
+                joystickButtonPress(event.joystickButton.joystickId, event.joystickButton.button);
                 break;
 
             case Event::JoystickButtonReleased:
-                joystickButtonRelease(event.joystickButton.button);
+                joystickButtonRelease(event.joystickButton.joystickId, event.joystickButton.button);
                 break;
 
             default:

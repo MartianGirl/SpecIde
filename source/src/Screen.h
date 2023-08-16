@@ -269,32 +269,36 @@ class Screen {
         /**
          * Move joystick horizontal axis.
          *
+         * @param id Joystick that emits the event.
          * @param l Activate left bit.
          * @param r Activate right bit.
          */
-        virtual void joystickHorizontalAxis(bool l, bool r) = 0;
+        virtual void joystickHorizontalAxis(uint_fast32_t id, bool l, bool r) = 0;
 
         /**
          * Move joystick vertical axis.
          *
+         * @param id Joystick that emits the event.
          * @param u Activate up bit.
          * @param d Activate down bit.
          */
-        virtual void joystickVerticalAxis(bool u, bool d) = 0;
+        virtual void joystickVerticalAxis(uint_fast32_t id, bool u, bool d) = 0;
 
         /**
          * Press joystick button.
          *
+         * @param id Joystick that emits the event.
          * @param button Joystick button to press.
          */
-        virtual void joystickButtonPress(uint_fast32_t button) = 0;
+        virtual void joystickButtonPress(uint_fast32_t id, uint_fast32_t button) = 0;
 
         /**
          * Release joystick button.
          *
+         * @param id Joystick that emits the event.
          * @param button Joystick button to release.
          */
-        virtual void joystickButtonRelease(uint_fast32_t button) = 0;
+        virtual void joystickButtonRelease(uint_fast32_t id, uint_fast32_t button) = 0;
 
         /**
          * Press key.

@@ -323,39 +323,37 @@ void CpcScreen::togglePsgType() {
     cpc.psgChip(aychip);
 }
 
-void CpcScreen::joystickHorizontalAxis(bool l, bool r) {
+void CpcScreen::joystickHorizontalAxis(uint_fast32_t id, bool l, bool r) {
 
-    cpc.keys[9] |= 0x0C;
-    if (l) {
-        cpc.keys[9] &= 0xFB;
-    } else if (r) {
-        cpc.keys[9] &= 0xF7;
+    if (id < 2) {
+        mapKeyJoystickAxis(id, MOVE_L, MOVE_R, l, r);
     }
 }
 
-void CpcScreen::joystickVerticalAxis(bool u, bool d) {
+void CpcScreen::joystickVerticalAxis(uint_fast32_t id, bool u, bool d) {
 
-    cpc.keys[9] |= 0x03;
-    if (u) {
-        cpc.keys[9] &= 0xFE;
-    } else if (d) {
-        cpc.keys[9] &= 0xFD;
+    if (id < 2) {
+        mapKeyJoystickAxis(id, MOVE_U, MOVE_D, u, d);
     }
 }
 
-void CpcScreen::joystickButtonPress(uint_fast32_t button) {
+void CpcScreen::joystickButtonPress(uint_fast32_t id, uint_fast32_t button) {
 
-    button += 4;
-    if (button < 6) {
-        cpc.keys[9] &= ~(1 << button);
+    if (id < 2) {
+        button += 4;
+        if (button < 6) {
+            pressKeyJoystickButton(id, button);
+        }
     }
 }
 
-void CpcScreen::joystickButtonRelease(uint_fast32_t button) {
+void CpcScreen::joystickButtonRelease(uint_fast32_t id, uint_fast32_t button) {
 
-    button += 4;
-    if (button < 6) {
-        cpc.keys[9] |= (1 << button);
+    if (id < 2) {
+        button += 4;
+        if (button < 6) {
+            releaseKeyJoystickButton(id, button);
+        }
     }
 }
 
@@ -379,5 +377,24 @@ void CpcScreen::keyRelease(Keyboard::Scancode key) {
 float CpcScreen::getPixelClock() {
 
     return static_cast<float>(BASE_CLOCK_CPC) / 1000000.0;
+}
+
+void CpcScreen::mapKeyJoystickAxis(uint_fast32_t id,
+        uint_fast32_t indexA, uint_fast32_t indexB, bool a, bool b) {
+    cpc.keys[cpcJoystick[id][indexA].row] |= cpcJoystick[id][indexA].key;
+    cpc.keys[cpcJoystick[id][indexB].row] |= cpcJoystick[id][indexB].key;
+    if (a) {
+        cpc.keys[cpcJoystick[id][indexA].row] &= ~cpcJoystick[id][indexA].key;
+    } else if (b) {
+        cpc.keys[cpcJoystick[id][indexB].row] &= ~cpcJoystick[id][indexB].key;
+    }
+}
+
+void CpcScreen::pressKeyJoystickButton(uint_fast32_t id, uint_fast32_t button) {
+    cpc.keys[cpcJoystick[id][button].row] &= ~cpcJoystick[id][button].key;
+}
+
+void CpcScreen::releaseKeyJoystickButton(uint_fast32_t id, uint_fast32_t button) {
+    cpc.keys[cpcJoystick[id][button].row] |= cpcJoystick[id][button].key;
 }
 // vim: et:sw=4:ts=4

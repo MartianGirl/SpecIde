@@ -50,6 +50,9 @@ map<string, Option> arguments = {
 
     // Joystick options
     {"--kempston",      {"joystick", "kempston"}},
+    {"--kempstonnew",   {"joystick", "kempstonnew"}},
+    {"--fuller",        {"joystick", "fuller"}},
+    {"--cursor",        {"joystick", "cursor"}},
     {"--sinclair",      {"joystick", "sinclair"}},
     {"--pad",           {"pad", "yes"}},
     {"--nopad",         {"pad", "no"}},
@@ -190,8 +193,11 @@ void displayHelp() {
     cout << "--plus3sp              Spectrum +3. (Spanish ROM)" << endl;
     cout << endl;
     cout << "Hardware options:" << endl;
-    cout << "--kempston             Map joystick to Kempston interface." << endl;
-    cout << "--sinclair             Map joystick to Sinclair interface. (Default)" << endl;
+    cout << "--kempston             Map joystick 1 to Kempston interface. Joystick 2 maps to SJS1." << endl;
+    cout << "--kempstonnew          Map joystick 1 to Kempston interface. Joystick 2 maps to SJS1." << endl;
+    cout << "--fuller               Map joystick 1 to Fuller interface. Joystick 2 maps to SJS1." << endl;
+    cout << "--cursor               Map joystick 1 to Protek/AGF interface. Joystick 2 maps to Kempston." << endl;
+    cout << "--sinclair             Map joystick 1 to SJS1 interface. Joystick 2 maps to SJS2 (Default)" << endl;
     cout << "--pad|--nopad          Map pad extra buttons to keys." << endl;
     cout << "--psg|--nopsg          Emulate AY chip in 48K Spectrum." << endl;
     cout << "--abc|--acb|--mono     Select stereo mode." << endl;

@@ -79,8 +79,28 @@ void SpeccyScreen::setup() {
     cout << "Model: " << options["model"] << endl;
 
     // Select joystick interface.
-    spectrum.kempston = (options["joystick"] == "kempston");
-    cout << "Joystick type: " << options["joystick"] << endl;
+    cout << "Joystick interface: ";
+    if (options["joystick"] == "kempston_new") {
+        spectrum.joystick = JoystickType::KEMPSTON_NEW;
+        cout << "Kempston Joystick (New, address mask 0x00E0)" << endl;
+        cout << "   (Second joystick is mapped to Sinclair 1)" << endl;
+    } else if (options["joystick"] == "kempston") {
+        spectrum.joystick = JoystickType::KEMPSTON_OLD;
+        cout << "Kempston Joystick (Old, address mask 0x0020)" << endl;
+        cout << "   (Second joystick is mapped to Sinclair 1)" << endl;
+    } else if (options["joystick"] == "fuller") {
+        spectrum.joystick = JoystickType::FULLER;
+        cout << "Fuller Joystick" << endl;
+        cout << "   (Second joystick is mapped to Sinclair 1)" << endl;
+    } else if (options["joystick"] == "cursor") {
+        spectrum.joystick = JoystickType::CURSOR;
+        cout << "Protek/AGF Cursor Joystick" << endl;
+        cout << "   (Second joystick is mapped to Kempston)" << endl;
+    } else {
+        spectrum.joystick = JoystickType::SINCLAIR;
+        cout << "Sinclair/SJS1 Joystick" << endl;
+        cout << "   (Second joystick is mapped to Sinclair/SJS2)" << endl;
+    }
     pad = (options["pad"] == "yes");
     cout << "Map game pad extra buttons to keys: " << options["pad"] << endl;
 
@@ -476,73 +496,235 @@ void SpeccyScreen::togglePsgType() {
     spectrum.psgChip(aychip);
 }
 
-void SpeccyScreen::joystickHorizontalAxis(bool l, bool r) {
+void SpeccyScreen::joystickHorizontalAxis(uint_fast32_t id, bool l, bool r) {
 
-    if (spectrum.kempston) {
-        spectrum.kempstonData &= 0xFC;
-        if (l) {
-            spectrum.kempstonData |= 0x02;
-        } else if (r) {
-            spectrum.kempstonData |= 0x01;
-        }
-    } else {
-        spectrum.ula.keys[3] |= 0x18;
-        if (l) {
-            spectrum.ula.keys[3] &= 0xEF;
-        } else if (r) {
-            spectrum.ula.keys[3] &= 0xF7;
-        }
+    switch (id) {
+        case 0:
+            // Joystick #0 is mapped to Kempston/Fuller/Cursor/Sinclair 
+            switch (spectrum.joystick) {
+                case JoystickType::KEMPSTON_OLD:
+                case JoystickType::KEMPSTON_NEW:
+                    spectrum.kempstonData &= 0xFC;
+                    if (l) {
+                        spectrum.kempstonData |= 0x02;
+                    } else if (r) {
+                        spectrum.kempstonData |= 0x01;
+                    }
+                    break;
+                case JoystickType::FULLER:
+                    spectrum.fullerData |= 0x0C;
+                    if (l) {
+                        spectrum.fullerData &= 0xFB;
+                    } else if (r) {
+                        spectrum.fullerData &= 0xF7;
+                    }
+                    break;
+                case JoystickType::CURSOR:
+                    mapKeyJoystickAxis(CURS, MOVE_L, MOVE_R, l, r);
+                    break;
+                default:
+                    mapKeyJoystickAxis(SJS1, MOVE_L, MOVE_R, l, r);
+                    break;
+            }
+            break;
+        case 1:
+            switch (spectrum.joystick) {
+                case JoystickType::KEMPSTON_OLD:
+                case JoystickType::KEMPSTON_NEW:
+                case JoystickType::FULLER:
+                    // Map secondary joystick to Sinclair/SJS1.
+                    mapKeyJoystickAxis(SJS1, MOVE_L, MOVE_R, l, r);
+                    break;
+                case JoystickType::CURSOR:
+                    // Map secondary joystick to Kempston.
+                    spectrum.kempstonData &= 0xFC;
+                    if (l) {
+                        spectrum.kempstonData |= 0x02;
+                    } else if (r) {
+                        spectrum.kempstonData |= 0x01;
+                    }
+                    break;
+                default:
+                    // Map secondary joystick to Sinclair/SJS2.
+                    mapKeyJoystickAxis(SJS2, MOVE_L, MOVE_R, l, r);
+                    break;
+            }
+            break;
+        default:
+            break;
     }
 }
 
-void SpeccyScreen::joystickVerticalAxis(bool u, bool d) {
+void SpeccyScreen::joystickVerticalAxis(uint_fast32_t id, bool u, bool d) {
 
-    if (spectrum.kempston) {
-        spectrum.kempstonData &= 0xF3;
-        if (u) {
-            spectrum.kempstonData |= 0x08;
-        } else if (d) {
-            spectrum.kempstonData |= 0x04;
-        }
-    } else {
-        spectrum.ula.keys[3] |= 0x06;
-        if (u) {
-            spectrum.ula.keys[3] &= 0xFB;
-        } else if (d) {
-            spectrum.ula.keys[3] &= 0xFD;
-        }
+    switch (id) {
+        case 0:
+            // Joystick #0 is mapped to Kempston/Fuller/Cursor/Sinclair 
+            switch (spectrum.joystick) {
+                case JoystickType::KEMPSTON_OLD:
+                case JoystickType::KEMPSTON_NEW:
+                    spectrum.kempstonData &= 0xF3;
+                    if (u) {
+                        spectrum.kempstonData |= 0x08;
+                    } else if (d) {
+                        spectrum.kempstonData |= 0x04;
+                    }
+                    break;
+                case JoystickType::FULLER:
+                    spectrum.fullerData |= 0x03;
+                    if (u) {
+                        spectrum.fullerData &= 0xFE;
+                    } else if (d) {
+                        spectrum.fullerData &= 0xFD;
+                    }
+                    break;
+                case JoystickType::CURSOR:
+                    mapKeyJoystickAxis(CURS, MOVE_U, MOVE_D, u, d);
+                    break;
+                default:
+                    mapKeyJoystickAxis(SJS1, MOVE_U, MOVE_D, u, d);
+                    break;
+            }
+            break;
+        case 1:
+            switch (spectrum.joystick) {
+                case JoystickType::KEMPSTON_OLD:
+                case JoystickType::KEMPSTON_NEW:
+                case JoystickType::FULLER:
+                    // Map secondary joystick to Sinclair/SJS1.
+                    mapKeyJoystickAxis(SJS1, MOVE_U, MOVE_D, u, d);
+                    break;
+                case JoystickType::CURSOR:
+                    // Map secondary joystick to Kempston.
+                    spectrum.kempstonData &= 0xF3;
+                    if (u) {
+                        spectrum.kempstonData |= 0x08;
+                    } else if (d) {
+                        spectrum.kempstonData |= 0x04;
+                    }
+                    break;
+                default:
+                    // Map secondary joystick to Sinclair/SJS2.
+                    mapKeyJoystickAxis(SJS2, MOVE_U, MOVE_D, u, d);
+                    break;
+            }
+            break;
+        default:
+            break;
     }
 }
 
-void SpeccyScreen::joystickButtonPress(uint_fast32_t button) {
+void SpeccyScreen::joystickButtonPress(uint_fast32_t id, uint_fast32_t button) {
 
     if (pad) {
         button += 4;
+        while (button > 9) {
+            button -= 2;
+        }
     } else {
         button = 4;  // Interpret every button as default.
     }
 
-    if (spectrum.kempston && button < 5) {
-        spectrum.kempstonData |= 1 << button;
-    } else {
-        spectrum.ula.keys[spectrumKeyJoystick[button].row] &=
-            ~spectrumKeyJoystick[button].key;
+    switch (id) {
+        case 0:
+            if (button < FIRE_1) {
+                switch (spectrum.joystick) {
+                    case JoystickType::KEMPSTON_NEW:
+                    case JoystickType::KEMPSTON_OLD:
+                        spectrum.kempstonData |= 0x10;
+                        break;
+                    case JoystickType::FULLER:
+                        spectrum.fullerData &= 0x7F;
+                        break;
+                    case JoystickType::CURSOR:
+                        pressKeyJoystickButton(CURS, FIRE_0);
+                        break;
+                    default:
+                        pressKeyJoystickButton(SJS1, FIRE_0);
+                        break;
+                }
+            } else {
+                pressKeyJoystickButton(SJS1, button);
+            }
+            break;
+        case 1:
+            if (button < FIRE_1) {
+                switch (spectrum.joystick) {
+                    case JoystickType::KEMPSTON_NEW:
+                    case JoystickType::KEMPSTON_OLD:
+                    case JoystickType::FULLER:
+                        pressKeyJoystickButton(SJS1, FIRE_0);
+                        break;
+                    case JoystickType::CURSOR:
+                        spectrum.kempstonData |= 0x10;
+                        break;
+                    default:
+                        pressKeyJoystickButton(SJS2, FIRE_0);
+                        break;
+                }
+            } else {
+                pressKeyJoystickButton(SJS2, button);
+            }
+            break;
+        default:
+            break;
     }
 }
 
-void SpeccyScreen::joystickButtonRelease(uint_fast32_t button) {
+void SpeccyScreen::joystickButtonRelease(uint_fast32_t id, uint_fast32_t button) {
 
     if (pad) {
         button += 4;
+        while (button > 9) {
+            button -= 2;
+        }
     } else {
         button = 4;  // Interpret every button as default.
     }
 
-    if (spectrum.kempston && button < 5) {
-        spectrum.kempstonData &= ~(1 << button);
-    } else {
-        spectrum.ula.keys[spectrumKeyJoystick[button].row] |=
-            spectrumKeyJoystick[button].key;
+    switch (id) {
+        case 0:
+            if (button < FIRE_1) {
+                switch (spectrum.joystick) {
+                    case JoystickType::KEMPSTON_NEW:
+                    case JoystickType::KEMPSTON_OLD:
+                        spectrum.kempstonData &= 0xEF;
+                        break;
+                    case JoystickType::FULLER:
+                        spectrum.fullerData |= 0x80;
+                        break;
+                    case JoystickType::CURSOR:
+                        releaseKeyJoystickButton(CURS, FIRE_0);
+                        break;
+                    default:
+                        releaseKeyJoystickButton(SJS1, FIRE_0);
+                        break;
+                }
+            } else {
+                releaseKeyJoystickButton(SJS1, button);
+            }
+            break;
+        case 1:
+            if (button < FIRE_1) {
+                switch (spectrum.joystick) {
+                    case JoystickType::KEMPSTON_NEW:
+                    case JoystickType::KEMPSTON_OLD:
+                    case JoystickType::FULLER:
+                        releaseKeyJoystickButton(SJS1, FIRE_0);
+                        break;
+                    case JoystickType::CURSOR:
+                        spectrum.kempstonData &= 0xEF;
+                        break;
+                    default:
+                        releaseKeyJoystickButton(SJS2, FIRE_0);
+                        break;
+                }
+            } else {
+                releaseKeyJoystickButton(SJS2, button);
+            }
+            break;
+        default:
+            break;
     }
 }
 
@@ -595,5 +777,24 @@ float SpeccyScreen::getPixelClock() {
     float baseClock = (spectrum.ula.ulaVersion >= 2 && spectrum.ula.ulaVersion <= 4)
         ? BASE_CLOCK_128 : BASE_CLOCK_48;
     return 2 * baseClock / 1000000.0;
+}
+
+void SpeccyScreen::mapKeyJoystickAxis(uint_fast32_t type,
+        uint_fast32_t indexA, uint_fast32_t indexB, bool a, bool b) {
+    spectrum.ula.keys[spectrumKeyJoystick[type][indexA].row] |= spectrumKeyJoystick[type][indexA].key;
+    spectrum.ula.keys[spectrumKeyJoystick[type][indexB].row] |= spectrumKeyJoystick[type][indexB].key;
+    if (a) {
+        spectrum.ula.keys[spectrumKeyJoystick[type][indexA].row] &= ~spectrumKeyJoystick[type][indexA].key;
+    } else if (b) {
+        spectrum.ula.keys[spectrumKeyJoystick[type][indexB].row] &= ~spectrumKeyJoystick[type][indexB].key;
+    }
+}
+
+void SpeccyScreen::pressKeyJoystickButton(uint_fast32_t type, uint_fast32_t button) {
+    spectrum.ula.keys[spectrumKeyJoystick[type][button].row] &= ~spectrumKeyJoystick[type][button].key;
+}
+
+void SpeccyScreen::releaseKeyJoystickButton(uint_fast32_t type, uint_fast32_t button) {
+    spectrum.ula.keys[spectrumKeyJoystick[type][button].row] |= spectrumKeyJoystick[type][button].key;
 }
 // vim: et:sw=4:ts=4

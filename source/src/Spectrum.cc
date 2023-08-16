@@ -456,15 +456,16 @@ void Spectrum::clock() {
                 // AY-3-8912 ports.
                 if (psgChips) {
                     switch (z80.a & 0xC002) {
-                        case 0x8000:    // 0xBFFD
+                        case 0x8000:
+                            // 128K AY Data Port
                             if (z80.wr) {
                                 psgWrite();
                             } else if (z80.rd && spectrumPlus2A) {
                                 psgRead();
                             }
                             break;
-
-                        case 0xC000:    // 0xFFFD
+                        case 0xC000:
+                            // 128K AY Control Port
                             if (z80.wr) {
                                 if ((z80.d & 0x98) == 0x98) {
                                     psgSelect();
@@ -475,7 +476,6 @@ void Spectrum::clock() {
                                 psgRead();
                             }
                             break;
-
                         default:
                             break;
                     }
@@ -494,10 +494,40 @@ void Spectrum::clock() {
                         // }
                     }
                 } else {
-                    if (kempston && !(z80.a & 0x0020)) {    // Kempston joystick.
-                        if (z80.rd) {
-                            z80.d = kempstonData;
-                        }
+                    switch (joystick) {
+                        case JoystickType::KEMPSTON_OLD:
+                        case JoystickType::CURSOR:  // fall-through
+                            // If the joystick type is CURSOR, the second
+                            // joystick is mapped to KEMPSTON.
+                            if ((z80.rd || z80.wr) && !(z80.a & 0x0020)) {
+                                z80.d = kempstonData;
+                            }
+                            break;
+                        case JoystickType::KEMPSTON_NEW:
+                            if (z80.rd && !(z80.a & 0x00E0)) {
+                                z80.d = kempstonData;
+                            }
+                            break;
+                        case JoystickType::FULLER:
+                            switch (z80.a & 0x00F0) {
+                                case 0x0030:
+                                    // Port 0x003F, Fuller AY control port
+                                    break;
+                                case 0x0050:
+                                    // Port 0x005F, Fuller AY data port
+                                    break;
+                                case 0x0070:
+                                    // Port 0x007F, Fuller joystick port
+                                    if (z80.rd) {
+                                        z80.d = fullerData;
+                                    }
+                                    break;
+                                default:
+                                    break;
+                                }
+                            break;
+                        default:
+                            break;
                     }
                 }
 
@@ -765,57 +795,34 @@ void Spectrum::sample() {
 
     switch (stereo) {
         case StereoMode::STEREO_ACB: // ACB
-            l += psg[0].channelA;
-            l += psg[0].channelC;
-            r += psg[0].channelB;
-            r += psg[0].channelC;
+            l += psg[0].channelA + psg[0].channelC;
+            r += psg[0].channelB + psg[0].channelC;
             break;
 
         case StereoMode::STEREO_ABC: // ABC
-            l += psg[0].channelA;
-            l += psg[0].channelB;
-            r += psg[0].channelB;
-            r += psg[0].channelC;
+            l += psg[0].channelA + psg[0].channelB;
+            r += psg[0].channelB + psg[0].channelC;
             break;
 
         case StereoMode::STEREO_TURBO_MONO: // TurboSound with 2 PSGs, mono.
-            l += psg[0].channelA;
-            l += psg[0].channelB;
-            l += psg[0].channelC;
-            r += psg[0].channelA;
-            r += psg[0].channelB;
-            r += psg[0].channelC;
-
-            l += psg[1].channelA;
-            l += psg[1].channelB;
-            l += psg[1].channelC;
-            r += psg[1].channelA;
-            r += psg[1].channelB;
-            r += psg[1].channelC;
+            l += psg[0].channelA + psg[0].channelB + psg[0].channelC;
+            l += psg[1].channelA + psg[1].channelB + psg[1].channelC;
+            r += psg[0].channelA + psg[0].channelB + psg[0].channelC;
+            r += psg[1].channelA + psg[1].channelB + psg[1].channelC;
             break;
 
         case StereoMode::STEREO_TURBO_ACB:  // TurboSound with 2 PSGs, ACB
-            l += psg[0].channelA;
-            l += psg[0].channelC;
-            r += psg[0].channelB;
-            r += psg[0].channelC;
-
-            l += psg[1].channelA;
-            l += psg[1].channelC;
-            r += psg[1].channelB;
-            r += psg[1].channelC;
+            l += psg[0].channelA + psg[0].channelC;
+            l += psg[1].channelA + psg[1].channelC;
+            r += psg[0].channelB + psg[0].channelC;
+            r += psg[1].channelB + psg[1].channelC;
             break;
 
         case StereoMode::STEREO_TURBO_ABC: // TurboSound with 2 PSGs, ABC
-            l += psg[0].channelA;
-            l += psg[0].channelB;
-            r += psg[0].channelB;
-            r += psg[0].channelC;
-
-            l += psg[1].channelA;
-            l += psg[1].channelB;
-            r += psg[1].channelB;
-            r += psg[1].channelC;
+            l += psg[0].channelA + psg[0].channelB;
+            l += psg[1].channelA + psg[1].channelB;
+            r += psg[0].channelB + psg[0].channelC;
+            r += psg[1].channelB + psg[1].channelC;
             break;
 
         case StereoMode::STEREO_NEXT:
@@ -834,12 +841,8 @@ void Spectrum::sample() {
             break;
 
         default:    // mono, all channels go through both sides.
-            l += psg[0].channelA;
-            l += psg[0].channelB;
-            l += psg[0].channelC;
-            r += psg[0].channelA;
-            r += psg[0].channelB;
-            r += psg[0].channelC;
+            l += psg[0].channelA + psg[0].channelB + psg[0].channelC;
+            r += psg[0].channelA + psg[0].channelB + psg[0].channelC;
             break;
     }
 

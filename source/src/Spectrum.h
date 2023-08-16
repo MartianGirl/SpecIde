@@ -44,6 +44,14 @@ enum class Covox {
     NONE
 };
 
+enum class JoystickType {
+    KEMPSTON_OLD,
+    KEMPSTON_NEW,
+    FULLER,
+    CURSOR,
+    SINCLAIR
+};
+
 /**
  * A ZX Spectrum computer.
  *
@@ -93,9 +101,11 @@ class Spectrum {
         uint_fast8_t gateArrayByte = 0xFF;
         /** Byte in Kempston joystick port. */
         uint_fast8_t kempstonData = 0x00;
+        /** Byte in Fuller joystick port. */
+        uint_fast8_t fullerData = 0xFF;
 
-        /** Kempston interface present. If false, Sinclair joystick is emulated. */
-        bool kempston = false;
+        /** Joystick interface present. By default, Sinclair joystick is emulated. */
+        JoystickType joystick = JoystickType::SINCLAIR;
         /** Emulate a 128K spectrum (128K, +2, +2A, +3, Pentagon). */
         bool spectrum128K = false;
         /** Emulate a Gate Array based Spectrum (+2A, +3). */
