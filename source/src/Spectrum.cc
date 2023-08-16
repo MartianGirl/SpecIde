@@ -387,6 +387,12 @@ void Spectrum::clock() {
 
     // We clock the Z80 if the ULA allows.
     if (ula.cpuClock) {
+        if (joystick == JoystickType::FULLER && ula.z80Clock) {
+            fullerClock = !fullerClock;
+            if (fullerClock) {
+                psg[4].clock();
+            }
+        }
         // Z80 gets data from the ULA or memory, only when reading.
         if (z80.access) {
             if (!io_) {
@@ -547,7 +553,6 @@ void Spectrum::clock() {
                             covox[0] = covox[1] = covox[2] = covox[3] = z80.d * 0x20;
                         }
                         break;
-
                     case Covox::STEREO:
                         if (z80.wr) {
                            if ((z80.a & 0x00FF) == 0xFB) {
@@ -558,7 +563,6 @@ void Spectrum::clock() {
                            }
                         }
                         break;
-
                     case Covox::CZECH:
                         if (z80.wr && ((z80.a & 0x009F) == 0x1F)) {
                             switch (z80.a & 0x60) {
@@ -569,7 +573,6 @@ void Spectrum::clock() {
                             }
                         }
                         break;
-
                     case Covox::SOUNDRIVE1:
                         if (z80.wr && ((z80.a & 0x00AF) == 0x000F)) {
                             switch (z80.a & 0x0050) {
@@ -581,7 +584,6 @@ void Spectrum::clock() {
                             }
                         }
                         break;
-
                     case Covox::SOUNDRIVE2:
                         if (z80.wr && ((z80.a & 0x00F1) == 0x00F1)) {
                             switch (z80.a & 0x000A) {
@@ -764,6 +766,11 @@ void Spectrum::psgReset() {
     for (size_t ii = 0; ii < psgChips; ++ii) {
         psg[ii].reset();
         psg[ii].seed = 0xFFFF - (ii * 0x1111);
+    }
+
+    if (joystick == JoystickType::FULLER) {
+        psg[4].reset();
+        psg[4].seed = 0xFFFF - (4 * 0x1111);
     }
 }
 

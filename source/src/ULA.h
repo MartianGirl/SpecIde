@@ -114,7 +114,7 @@ class ULA {
         uint_fast16_t pixel = 0;
         uint_fast16_t scan = 0;
         uint_fast8_t flash = 0;
-        bool z80Clk = false;
+        bool z80Clock = false;
 
         uint_fast16_t z80_c_1 = 0xFFFF;
         uint_fast16_t z80_c_2 = 0xFFFF;

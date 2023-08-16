@@ -170,7 +170,7 @@ void ULA::generateVideoDataUla() {
     // We only delay T1H until the ULA has finished reading. The rest of
     // states are not contended. We do this by checking MREQ is low.
     // We contend T-States, which means we only consider high clock phase.
-    bool memContention = contendedBank && z80Clk;
+    bool memContention = contendedBank && z80Clock;
     bool memContentionOff = !(z80_c & SIGNAL_MREQ_);
 
     // I/O Contention
@@ -180,7 +180,7 @@ void ULA::generateVideoDataUla() {
     bool ioUlaPort = !(z80_a & 0x0001);
     bool iorqLow = !(z80_c & SIGNAL_IORQ_);                     // T2 TW T3
     bool iorqLow_d = !(z80_c_2 & SIGNAL_IORQ_);                 // TW T3 T1
-    bool ioContention = ioUlaPort && iorqLow && z80Clk;         // T2 TW T3
+    bool ioContention = ioUlaPort && iorqLow && z80Clock;       // T2 TW T3
     bool ioContentionOff = ioUlaPort && iorqLow_d;              // TW T3 NN
 
     // Now, we have two different contention schemes in accesses
@@ -387,7 +387,7 @@ void ULA::clock() {
     if (cpuClock && (z80_c & SIGNAL_WAIT_)) {
         z80_c_2 = z80_c_1;
         z80_c_1 = z80_c;
-        z80Clk = !z80Clk;
+        z80Clock = !z80Clock;
     }
 
     updateAttributes();
@@ -406,7 +406,7 @@ void ULA::start() {
     xPos = 0;
     yPos = 0;
     ulaReset = false;
-    z80Clk = false;
+    z80Clock = false;
     cpuClock = true;
     video = true;
     border = false;
