@@ -50,7 +50,7 @@ map<string, Option> arguments = {
 
     // Joystick options
     {"--kempston",      {"joystick", "kempston"}},
-    {"--kempstonnew",   {"joystick", "kempstonnew"}},
+    {"--kempstonnew",   {"joystick", "kempston_new"}},
     {"--fuller",        {"joystick", "fuller"}},
     {"--cursor",        {"joystick", "cursor"}},
     {"--sinclair",      {"joystick", "sinclair"}},
