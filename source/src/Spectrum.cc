@@ -387,9 +387,8 @@ void Spectrum::clock() {
 
     // We clock the Z80 if the ULA allows.
     if (ula.cpuClock) {
-        if (joystick == JoystickType::FULLER && ula.z80Clock) {
-            fullerClock = !fullerClock;
-            if (fullerClock) {
+        if (joystick == JoystickType::FULLER) {
+            if (!(++fullerCount & 0x03)) {
                 psg[4].clock();
             }
         }
@@ -797,12 +796,20 @@ void Spectrum::psgSample() {
     for (size_t ii = 0; ii < psgChips; ++ii) {
         psg[ii].sample();
     }
+
+    if (joystick == JoystickType::FULLER) {
+        psg[4].sample();
+    }
 }
 
 void Spectrum::psgChip(bool aychip) {
 
     for (size_t ii = 0; ii < psgChips; ++ii) {
         psg[ii].setVolumeLevels(aychip);
+    }
+
+    if (joystick == JoystickType::FULLER) {
+        psg[4].setVolumeLevels(aychip);
     }
 }
 
@@ -813,6 +820,11 @@ void Spectrum::sample() {
     l += dac(0) + dac(1);
     r += dac(2) + dac(3);
     psgSample();
+
+    if (joystick == JoystickType::FULLER) {
+        l += psg[4].channelA + psg[4].channelB + psg[4].channelC;
+        r += psg[4].channelA + psg[4].channelB + psg[4].channelC;
+    }
 
     switch (stereo) {
         case StereoMode::STEREO_ACB: // ACB
@@ -865,12 +877,6 @@ void Spectrum::sample() {
             l += psg[0].channelA + psg[0].channelB + psg[0].channelC;
             r += psg[0].channelA + psg[0].channelB + psg[0].channelC;
             break;
-    }
-
-    if (joystick == JoystickType::FULLER) {
-        psg[4].sample();
-        l += psg[4].channelA + psg[4].channelB + psg[4].channelC;
-        r += psg[4].channelA + psg[4].channelB + psg[4].channelC;
     }
 
     l = 2 * (l - 0x4000);

@@ -103,8 +103,8 @@ class Spectrum {
         uint_fast8_t kempstonData = 0x00;
         /** Byte in Fuller joystick port. */
         uint_fast8_t fullerData = 0xFF;
-        /** Fuller AY clock. */
-        bool fullerClock = false;
+        /** Fuller AY clock counter. */
+        uint_fast32_t fullerCount = 0;
 
         /** Joystick interface present. By default, Sinclair joystick is emulated. */
         JoystickType joystick = JoystickType::SINCLAIR;

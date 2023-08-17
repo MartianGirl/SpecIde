@@ -78,6 +78,33 @@ void SpeccyScreen::setup() {
     }
     cout << "Model: " << options["model"] << endl;
 
+    // Select joystick interface.
+    cout << "Joystick interface: ";
+    if (options["joystick"] == "kempston_new") {
+        spectrum.joystick = JoystickType::KEMPSTON_NEW;
+        cout << "Kempston Joystick (New, address mask 0x00E0)" << endl;
+        cout << "   (Second joystick is mapped to Sinclair 1)" << endl;
+    } else if (options["joystick"] == "kempston") {
+        spectrum.joystick = JoystickType::KEMPSTON_OLD;
+        cout << "Kempston Joystick (Old, address mask 0x0020)" << endl;
+        cout << "   (Second joystick is mapped to Sinclair 1)" << endl;
+    } else if (options["joystick"] == "fuller") {
+        spectrum.joystick = JoystickType::FULLER;
+        psgSound = true;
+        cout << "Fuller Joystick" << endl;
+        cout << "   (Second joystick is mapped to Sinclair 1)" << endl;
+    } else if (options["joystick"] == "cursor") {
+        spectrum.joystick = JoystickType::CURSOR;
+        cout << "Protek/AGF Cursor Joystick" << endl;
+        cout << "   (Second joystick is mapped to Kempston)" << endl;
+    } else {
+        spectrum.joystick = JoystickType::SINCLAIR;
+        cout << "Sinclair/SJS1 Joystick" << endl;
+        cout << "   (Second joystick is mapped to Sinclair/SJS2)" << endl;
+    }
+    pad = (options["pad"] == "yes");
+    cout << "Map game pad extra buttons to keys: " << options["pad"] << endl;
+
     // Sound settings.
     tapeSound = (options["tapesound"] != "no");
     cout << "Play tape sound: " << options["tapesound"] << endl;
@@ -144,34 +171,6 @@ void SpeccyScreen::setup() {
         spectrum.covoxMode = Covox::NONE;
     }
     cout << "Covox type: " << options["covox"] << endl;
-
-    // Select joystick interface.
-    cout << "Joystick interface: ";
-    if (options["joystick"] == "kempston_new") {
-        spectrum.joystick = JoystickType::KEMPSTON_NEW;
-        cout << "Kempston Joystick (New, address mask 0x00E0)" << endl;
-        cout << "   (Second joystick is mapped to Sinclair 1)" << endl;
-    } else if (options["joystick"] == "kempston") {
-        spectrum.joystick = JoystickType::KEMPSTON_OLD;
-        cout << "Kempston Joystick (Old, address mask 0x0020)" << endl;
-        cout << "   (Second joystick is mapped to Sinclair 1)" << endl;
-    } else if (options["joystick"] == "fuller") {
-        spectrum.joystick = JoystickType::FULLER;
-        psgSound = true;
-        cout << "Fuller Joystick" << endl;
-        cout << "   (Second joystick is mapped to Sinclair 1)" << endl;
-    } else if (options["joystick"] == "cursor") {
-        spectrum.joystick = JoystickType::CURSOR;
-        cout << "Protek/AGF Cursor Joystick" << endl;
-        cout << "   (Second joystick is mapped to Kempston)" << endl;
-    } else {
-        spectrum.joystick = JoystickType::SINCLAIR;
-        cout << "Sinclair/SJS1 Joystick" << endl;
-        cout << "   (Second joystick is mapped to Sinclair/SJS2)" << endl;
-    }
-    pad = (options["pad"] == "yes");
-    cout << "Map game pad extra buttons to keys: " << options["pad"] << endl;
-
     // Other stuff.
     spectrum.flashTap = (options["flashtap"] == "yes");
     cout << "FlashTAP: " << options["flashtap"] << endl;
@@ -775,9 +774,15 @@ void SpeccyScreen::keyRelease(Keyboard::Scancode key) {
 
 float SpeccyScreen::getPixelClock() {
 
-    float baseClock = (spectrum.ula.ulaVersion >= 2 && spectrum.ula.ulaVersion <= 4)
-        ? BASE_CLOCK_128 : BASE_CLOCK_48;
-    return 2 * baseClock / 1000000.0;
+    static float baseClocks[6] {
+        BASE_CLOCK_48,  // 48K issue 2 (ULA 5C)
+        BASE_CLOCK_48,  // 48K issue 3 (ULA 6C)
+        BASE_CLOCK_128, // 128K toastrack (ULA 7K)
+        BASE_CLOCK_128, // 128K +2 (Amstrad 40056)
+        BASE_CLOCK_128, // 128K +2A/+3 (Amstrad 40057)
+        BASE_CLOCK_48   // Pentagon
+    };
+    return 2 * baseClocks[spectrum.ula.ulaVersion] / 1000000.0;
 }
 
 void SpeccyScreen::mapKeyJoystickAxis(uint_fast32_t type,
