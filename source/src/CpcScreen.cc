@@ -341,7 +341,7 @@ void CpcScreen::joystickButtonPress(uint_fast32_t id, uint_fast32_t button) {
 
     if (id < 2) {
         button += 4;
-        if (button < 6) {
+        if (button < FIRE_3) {
             pressKeyJoystickButton(id, button);
         }
     }
@@ -351,7 +351,7 @@ void CpcScreen::joystickButtonRelease(uint_fast32_t id, uint_fast32_t button) {
 
     if (id < 2) {
         button += 4;
-        if (button < 6) {
+        if (button < FIRE_3) {
             releaseKeyJoystickButton(id, button);
         }
     }

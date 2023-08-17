@@ -243,21 +243,23 @@ map<Keyboard::Scancode, InputMatrixPosition> cpcKeys = {
     {Keyboard::Scan::Backspace, {9, 0x80}}
 };
 
-InputMatrixPosition cpcJoystick[2][6] = {
+InputMatrixPosition cpcJoystick[2][7] = {
     {
         {9, 0x04},  // Joystick 1 Left
         {9, 0x08},  // Joystick 1 Right
         {9, 0x02},  // Joystick 1 Down
         {9, 0x01},  // Joystick 1 Up
-        {9, 0x20},  // Joystick 1 Fire 1
-        {9, 0x10}   // Joystick 1 Fire 2
+        {9, 0x10},  // Joystick 1 Fire 1
+        {9, 0x20},  // Joystick 1 Fire 2
+        {9, 0x40}   // Joystick 1 Fire 3
     }, {
         {6, 0x04},  // Joystick 2 Left (R)
         {6, 0x08},  // Joystick 2 Right (T)
         {6, 0x02},  // Joystick 2 Down (5)
         {6, 0x01},  // Joystick 2 Up (6)
-        {6, 0x20},  // Joystick 2 Fire 1
-        {6, 0x10}   // Joystick 2 Fire 2
+        {6, 0x10},  // Joystick 2 Fire 1 (G)
+        {6, 0x20},  // Joystick 2 Fire 2 (F)
+        {6, 0x40}   // Joystick 2 Fire 3 (B)
     }
 };
 // vim: et:sw=4:ts=4:

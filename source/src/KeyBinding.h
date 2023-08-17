@@ -51,4 +51,4 @@ extern std::map<Keyboard::Scancode, InputMatrixPosition> cpcKeys;
 /** ZX Spectrum key binding for Sinclair Joysticks. */
 extern InputMatrixPosition spectrumKeyJoystick[3][10];
 /** Amstrad CPC key binding for joysticks. */
-extern InputMatrixPosition cpcJoystick[2][6];
+extern InputMatrixPosition cpcJoystick[2][7];
