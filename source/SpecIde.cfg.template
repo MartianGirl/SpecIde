@@ -5,8 +5,10 @@
 # 1. ./SpecIde.cfg
 # 2.a. $HOME/.SpecIde/SpecIde.cfg (on UNIX systems)
 #      e.g. /home/jane/.SpecIde/SpecIde.cfg
-# 2.b. %APPDATA%/SpecIde/SpecIde.cfg (on Windows systems)
+# 2.b. %APPDATA%/SpecIde/SpecIde.cfg (on Windows)
 #      e.g. C:\Users\Jane\AppData\Roaming\SpecIde\SpecIde.cfg
+# 2.c. $HOME/Library/Application Support/SpecIde/SpecIde.cfg (on MacOS)
+#      e.g. /home/jane/Library/Application Support/SpecIde/SpecIde.cfg
 #
 # Each line should contain an option in the form: "key=value".
 # Supported options are listed below.
@@ -16,19 +18,43 @@
 # symbol is dismissed.
 
 # Option: model
-# Selects the ZX Spectrum model SpecIde will emulate.
-# Values: issue2, issue3, 128, 128sp, plus2, plus2sp,
-#         plus2a, plus2asp
+# Selects the computer model SpecIde will emulate.
+# Values:
+#       issue2:     ZX Spectrum 48K (Issue 2)
+#       issue3:     ZX Spectrum 48K (Issue 3)
+#       48sp:       ZX Spectrum + (Spanish ROM)
+#       128:        ZX Spectrum 128K
+#       plus2:      ZX Spectrum +2
+#       plus3:      ZX Spectrum +3
+#       plus2a:     ZX Spectrum +2A
+#       128sp:      ZX Spectrum 128K (Spanish ROM)
+#       plus2sp:    ZX Spectrum +2 (Spanish ROM)
+#       plus3sp:    ZX Spectrum +3 (Spanish ROM)
+#       plus2asp:   ZX Spectrum +2A (Spanish ROM)
+#       pentagon:   Pentagon 128K
+#       cpc464:     Amstrad CPC 464/472
+#       cpc664:     Amstrad CPC 664
+#       cpc6128:    Amstrad CPC 6128
+#
 model=plus2a
 
 # Option: joystick
 # Selects the emulated joystick interface.
-# Values: kempston, sinclair
+# Note: Fuller Box also adds a sound interface on ports 63 and 95.
+# Default: sinclair.
+# Values:
+#       kempston:       J1: Kempston (Port 31, Old) - J2: Sinclair Port 1.
+#       kempston_new:   J1: Kempston (Port 31, New) - J2: Sinclair Port 1.
+#       fuller:         J1: Fuller Box (port 127)   - J2: Sinclair Port 1.
+#       cursor:         J1: Protek/AGF (Cursor)     - J2: Kempston (Old)
+#       sinclair:       J1: Sinclair Port 1         - J2: Sinclair Port 2.
 joystick=sinclair
 
 # Option: pad
 # If using a joystick with more than 1 fire button, this
 # maps extra buttons to keys.
+# J1 maps to Caps Shift row (CS Z X C V)
+# J2 maps to Space row (Space SS M N B)
 # Values: yes, no
 pad=yes
 
@@ -63,7 +89,16 @@ pad=yes
 
 # Option: stereo
 # Selects the stereo configuration used.
-# Values: none, acb, abc
+# Default: none
+# Values:
+#       none:       One AY chip, Mono sound.
+#       mono:       One AY chip, Mono sound.
+#       acb:        One AY chip, Stereo sound (ACB mode)
+#       abc:        One AY chip, Stereo sound (ABC mode)
+#       turbo:      Two AY chips, Mono sound (ZX only)
+#       turboacb:   Two AY chips, Stereo sound (ACB mode) (ZX only)
+#       turboabc:   Two AY chips, Stereo sound (ABC mode) (ZX only)
+#       turbonext:  Four AY chips. (ZX only)
 # stereo=none
 
 # Option: psgtype
@@ -72,16 +107,23 @@ pad=yes
 # Values: ay, ym
 # psgtype=ay
 
+# Option: covox
+# Selects the type of Covox interface (Digital sound interface)
+# Default is none
+# Values:
+#       none:       No Covox interface.
+#       mono:       Mono Covox interface on port $FB
+#       stereo:     Stereo Covox on ports $FB and $4F
+#       czech:      Triple Covox interface on ports $1F, $3F and $5F
+#       soundrive1: SounDrive on ports $0F, $1F, $4F and $5F
+#       soundrive2: SounDrive on prts $F1, $F3, $F9 and $FB
+# covox=none
+
 # Option: fullscreen
 # Selects fullscreen or windowed mode.
 # Default is windowed mode.
 # Values: yes, no
 fullscreen=no
-
-# Option: antialias
-# Enables antialiasing
-# Values: yes, no
-antialias=no
 
 # Option: scale
 # Selects scale factor for windowed mode.
@@ -116,3 +158,8 @@ scanmode=normal
 # Enables tape traps for ROM LOAD and SAVE routines.
 # Values: yes, no
 flashtap=yes
+
+# Option: crtc
+# Selects the CRTC type (only CPC)
+# Default is 0.
+# Values: 0, 1, 2, 3, 4.
