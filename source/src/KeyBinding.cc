@@ -177,6 +177,7 @@ map<Keyboard::Scancode, InputMatrixPosition> cpcKeys = {
     {Keyboard::Scan::Left, {1, 0x01}},
 
     {Keyboard::Scan::LControl, {2, 0x80}},
+    {Keyboard::Scan::RControl, {2, 0x80}},
     {Keyboard::Scan::Grave, {2, 0x40}},
     {Keyboard::Scan::LShift, {2, 0x20}},
     {Keyboard::Scan::RShift, {2, 0x20}},
