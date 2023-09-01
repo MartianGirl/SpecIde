@@ -48,12 +48,20 @@ void CpcScreen::setup() {
     cout << "Initialising Amstrad CPC..." << endl;
     // Select model and ROMs.
     if (options["model"] == "cpc464") {
-        cpc.set464();
+        cpc.set464(RomVariant::ROM_CPC464_EN);
+    } else if (options["model"] == "cpc464sp") {
+        cpc.set464(RomVariant::ROM_CPC464_ES);
+    } else if (options["model"] == "cpc464fr") {
+        cpc.set464(RomVariant::ROM_CPC464_FR);
     } else if (options["model"] == "cpc664") {
-        cpc.set664();
+        cpc.set664(RomVariant::ROM_CPC664_EN);
     } else if (options["model"] == "cpc6128") {
-        cpc.set6128();
-    } // Default model is ZX Spectrum 48K Issue 3...
+        cpc.set6128(RomVariant::ROM_CPC6128_EN);
+    } else if (options["model"] == "cpc6128sp") {
+        cpc.set6128(RomVariant::ROM_CPC6128_ES);
+    } else if (options["model"] == "cpc6128fr") {
+        cpc.set6128(RomVariant::ROM_CPC6128_FR);
+    }
 
     uint_fast32_t crtc = 0;
     if (!options["crtc"].empty()) {

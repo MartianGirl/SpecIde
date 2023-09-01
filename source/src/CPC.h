@@ -173,18 +173,24 @@ class CPC {
 
         /**
          * Configure an Amstrad CPC 464 computer.
+         *
+         * @param model The Amstrad CPC model.
          */
-        void set464();
+        void set464(RomVariant model);
 
         /**
          * Configure an Amstrad CPC 664 computer.
+         *
+         * @param model The Amstrad CPC model.
          */
-        void set664();
+        void set664(RomVariant model);
 
         /**
          * Configure an Amstrad CPC 6128 computer.
+         *
+         * @param model The Amstrad CPC model.
          */
-        void set6128();
+        void set6128(RomVariant model);
 
         /**
          * Configure model brand.

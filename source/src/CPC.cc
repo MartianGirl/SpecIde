@@ -37,21 +37,33 @@ void CPC::loadRoms(RomVariant model) {
 
     string romName;
     switch (model) {
-        case RomVariant::ROM_CPC464:
-        romName = "cpc464.rom";
-        break;
+        case RomVariant::ROM_CPC464_EN:
+            romName = "cpc464.rom";
+            break;
+        case RomVariant::ROM_CPC464_ES:
+            romName = "cpc464-spanish.rom";
+            break;
+        case RomVariant::ROM_CPC464_FR:
+            romName = "cpc464-french.rom";
+            break;
 
-        case RomVariant::ROM_CPC664:
-        romName = "cpc664.rom";
-        break;
+        case RomVariant::ROM_CPC664_EN:
+            romName = "cpc664.rom";
+            break;
 
-        case RomVariant::ROM_CPC6128:
-        romName = "cpc6128.rom";
-        break;
+        case RomVariant::ROM_CPC6128_EN:
+            romName = "cpc6128.rom";
+            break;
+        case RomVariant::ROM_CPC6128_ES:
+            romName = "cpc6128-spanish.rom";
+            break;
+        case RomVariant::ROM_CPC6128_FR:
+            romName = "cpc6128-french.rom";
+            break;
 
         default:
-        romName = "cpc464.rom";
-        break;
+            romName = "cpc464.rom";
+            break;
     }
 
     vector<string> romDirs = getRomDirs();
@@ -97,18 +109,18 @@ void CPC::loadExpansionRoms() {
     }
 }
 
-void CPC::set464() {
+void CPC::set464(RomVariant model) {
 
     cpc128K = false;
     cpcDisk = false;
     expBit = false;
 
-    loadRoms(RomVariant::ROM_CPC464);
+    loadRoms(model);
     loadExpansionRoms();
     reset();
 }
 
-void CPC::set664() {
+void CPC::set664(RomVariant model) {
 
     cpc128K = false;
     cpcDisk = true;
@@ -117,12 +129,12 @@ void CPC::set664() {
 
     ext[0x07] = ExpansionRom("amsdos.rom");
 
-    loadRoms(RomVariant::ROM_CPC664);
+    loadRoms(model);
     loadExpansionRoms();
     reset();
 }
 
-void CPC::set6128() {
+void CPC::set6128(RomVariant model) {
 
     cpc128K = true;
     cpcDisk = true;
@@ -131,7 +143,7 @@ void CPC::set6128() {
 
     ext[0x07] = ExpansionRom("amsdos.rom");
 
-    loadRoms(RomVariant::ROM_CPC6128);
+    loadRoms(model);
     loadExpansionRoms();
     reset();
 }

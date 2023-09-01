@@ -43,10 +43,11 @@ map<string, Option> arguments = {
     {"--pentagon",      {"model", "pentagon"}},
     {"--cpc464",        {"model", "cpc464"}},
     {"--cpc464sp",      {"model", "cpc464sp"}},
+    {"--cpc464fr",      {"model", "cpc464fr"}},
     {"--cpc664",        {"model", "cpc664"}},
-    {"--cpc664sp",      {"model", "cpc664sp"}},
     {"--cpc6128",       {"model", "cpc6128"}},
     {"--cpc6128sp",     {"model", "cpc6128sp"}},
+    {"--cpc6128fr",     {"model", "cpc6128fr"}},
 
     // Joystick options
     {"--kempston",      {"joystick", "kempston"}},
@@ -191,6 +192,14 @@ void displayHelp() {
     cout << "--plus2asp             Spectrum +2A. (Spanish ROM)" << endl;
     cout << "--plus3                Spectrum +3." << endl;
     cout << "--plus3sp              Spectrum +3. (Spanish ROM)" << endl;
+    cout << "--pentagon             Pentagon." << endl;
+    cout << "--cpc464               Amstrad CPC 464." << endl;
+    cout << "--cpc464sp             Amstrad CPC 464. (Spanish ROM)" << endl;
+    cout << "--cpc464fr             Amstrad CPC 464. (French ROM)" << endl;
+    cout << "--cpc664               Amstrad CPC 664." << endl;
+    cout << "--cpc6128              Amstrad CPC 6128." << endl;
+    cout << "--cpc6128sp            Amstrad CPC 6128. (Spanish ROM)" << endl;
+    cout << "--cpc6128fr            Amstrad CPC 6128. (French ROM)" << endl;
     cout << endl;
     cout << "Hardware options:" << endl;
     cout << "--kempston             Map joystick 1 to Kempston interface. Joystick 2 maps to SJS1." << endl;
@@ -306,7 +315,8 @@ void readOptions(map<string, string>& options) {
 
 bool isSpectrum(string const& model) {
 
-    set<string> models = {"issue2", "issue3", "128", "plus2", "plus2a", "plus3",
+    set<string> models = {
+        "issue2", "issue3", "128", "plus2", "plus2a", "plus3",
         "48sp", "128sp", "plus2sp", "plus2asp", "plus3sp", "pentagon"};
 
     return (models.find(model) != models.end());
@@ -314,7 +324,10 @@ bool isSpectrum(string const& model) {
 
 bool isCpc(string const& model) {
 
-    set<string> models = {"cpc464", "cpc664", "cpc6128", "cpc464sp", "cpc664sp", "cpc6128sp"};
+    set<string> models = {
+        "cpc464", "cpc664", "cpc6128",
+        "cpc464sp", "cpc664sp", "cpc6128sp",
+        "cpc464fr", "cpc6128fr"};
 
     return (models.find(model) != models.end());
 }
