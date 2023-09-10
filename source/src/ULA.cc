@@ -14,17 +14,16 @@
  */
 
 #include "ULA.h"
-#include "KeyBinding.h"
 
 #include <cmath>
 
 using namespace std;
 
-uint_fast32_t ULA::voltages[4][4] = {
-    {391, 728, 3653, 3790}, // ULA 5C (Issue 2)
-    {342, 652, 3591, 3753}, // ULA 6C (Issue 3)
-    {342, 652, 3591, 3753}, // ULA 7C (128K)
-    {342, 652, 3591, 3753}  // GA40085 (+2A/+3)
+float ULA::voltages[4][4] = {
+    {0.391, 0.728, 3.653, 3.790}, // ULA 5C (Issue 2)
+    {0.342, 0.652, 3.591, 3.753}, // ULA 6C (Issue 3)
+    {0.342, 0.652, 3.591, 3.753}, // ULA 7C (128K)
+    {0.342, 0.652, 3.591, 3.753}  // GA40085 (+2A/+3)
 };
 
 bool ULA::delayTable[16] = {
@@ -38,13 +37,13 @@ bool ULA::idleTable[16] = {
 };
 
 bool ULA::memTable[16] = {
-    true, true, true, true, true, true, true, false,
-    false, false, false, false, false, false, false, true
+    true, true, true, true, true, true, true, true,
+    false, true, false, true, false, true, false, true
 };
 
-bool ULA::snowTable[16] = {
-    false, false, false, false, false, false, false, false,
-    false, false, true, true, true, true, false, false
+uint_fast32_t ULA::snowTable[16] = {
+    NONE, NONE, NONE, NONE, SNOW, NONE, NONE, NONE,
+    DUPL, NONE, NONE, NONE, ENDS, NONE, NONE, ENDD
 };
 
 uint32_t ULA::colourTable[0x100];
@@ -54,6 +53,7 @@ uint32_t ULA::pixelsX2[X_SIZE * Y_SIZE];
 
 ULA::ULA() :
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+    keyData{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     c(0xFFFF) {
 
         for (uint_fast32_t i = 0; i < 0x100; ++i) {
@@ -68,7 +68,7 @@ ULA::ULA() :
                 ((i & 0x02) >> 1) | ((i & 0x04) << 6) | ((i & 0x01) << 16) :
                 ((i & 0x10) >> 4) | ((i & 0x20) << 3) | ((i & 0x08) << 13);
 #endif
-            colour *= (i & 0x40) ? 0xF0 : 0xC0;
+            colour *= (i & 0x40) ? 0xFF : 0xC0;
 #if SPECIDE_BYTE_ORDER == 1
             colour |= 0xFF;
 #else
@@ -148,7 +148,8 @@ void ULA::generateInterrupt() {
 
     if (scan == vSyncStart) {
         if (pixel == interruptStart && scan == vSyncStart) {
-            scanKeys();
+            // Keyboard is updated here to avoid split double keys.
+            for (size_t ii = 0; ii < 8; ++ii) keyData[ii] = keys[ii];
             z80_c &= ~SIGNAL_INT_;
         } else if (pixel == interruptEnd && scan == vSyncStart) {
             z80_c |= SIGNAL_INT_;
@@ -169,7 +170,7 @@ void ULA::generateVideoDataUla() {
     // We only delay T1H until the ULA has finished reading. The rest of
     // states are not contended. We do this by checking MREQ is low.
     // We contend T-States, which means we only consider high clock phase.
-    bool memContention = contendedBank && z80Clk;
+    bool memContention = contendedBank && z80Clock;
     bool memContentionOff = !(z80_c & SIGNAL_MREQ_);
 
     // I/O Contention
@@ -179,7 +180,7 @@ void ULA::generateVideoDataUla() {
     bool ioUlaPort = !(z80_a & 0x0001);
     bool iorqLow = !(z80_c & SIGNAL_IORQ_);                     // T2 TW T3
     bool iorqLow_d = !(z80_c_2 & SIGNAL_IORQ_);                 // TW T3 T1
-    bool ioContention = ioUlaPort && iorqLow && z80Clk;         // T2 TW T3
+    bool ioContention = ioUlaPort && iorqLow && z80Clock;       // T2 TW T3
     bool ioContentionOff = ioUlaPort && iorqLow_d;              // TW T3 NN
 
     // Now, we have two different contention schemes in accesses
@@ -266,7 +267,7 @@ void ULA::generateVideoDataPentagon() {
 
 void ULA::updateAttributes() {
 
-    if ((pixel++ & 0x07) == paintPixel) {
+    if ((pixel & 0x07) == paintPixel) {
         data = video ? dataReg : 0xFF;
         attr = video ? attrReg : borderAttr;
         colour[0] = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
@@ -304,84 +305,27 @@ void ULA::paint() {
 
 void ULA::tapeEarMic() {
 
-    // First attempt at MIC/EAR feedback loop.
-    // Let's keep this here for the moment.
-    static uint_fast32_t capacitor = 0;
-    static uint_fast32_t chargeDelay = 0;
-
-    if (ulaVersion < 2) {
-        uint_fast32_t v = voltage[soundBits];
-
-        if (v > 3000) {
-            ear = v;
-            if (chargeDelay < 86400) {
-                capacitor = 368 + (chargeDelay / 16);
-                ++chargeDelay;
-            }
-        } else {
-            chargeDelay = 0;
-            if (!capacitor) {
-                ear = v;
-            } else {
-                --capacitor;
-            }
-        }
+    // These operations are too costly to do them every cycle.
+    static uint_fast32_t count = 0;
+    if (ulaVersion < 3 && !(++count & 0x3F)) {
+        vInc *= 0.954949;
+        vCap = vEnd - vInc;
+        ear = vCap;
     }
 
     // Tape input forces values on EAR pin.
-    if ((tapeIn & 0xC0) == 0x80) ear = 342;
-    if ((tapeIn & 0xC0) == 0xC0) ear = 3790;
-}
-
-void ULA::scanKeys() {
-
-    if (!pollKeys) return;
-
-    for (size_t ii = 0; ii < 8; ++ii) {
-        keys[ii] = 0xFF;
-    }
-
-    for (size_t ii = 0; ii < sizeof(singleKeys) / sizeof(KeyBinding); ++ii) {
-        if (Keyboard::isKeyPressed(singleKeys[ii].keyName)) {
-            keys[singleKeys[ii].row] &= ~singleKeys[ii].key;
-        }
-    }
-
-    for (size_t ii = 0; ii < sizeof(capsKeys) / sizeof(KeyBinding); ++ii) {
-        if (Keyboard::isKeyPressed(capsKeys[ii].keyName)) {
-            keys[capsKeys[ii].row] &= ~capsKeys[ii].key;
-            keys[7] &= 0xFE;    // Press Caps Shift
-        }
-    }
-
-    for (size_t ii = 0; ii < sizeof(symbolKeys) / sizeof(KeyBinding); ++ii) {
-        if (Keyboard::isKeyPressed(symbolKeys[ii].keyName)) {
-            keys[symbolKeys[ii].row] &= ~symbolKeys[ii].key;
-            keys[0] &= 0xFD;    // Press Symbol Shift
-        }
-    }
-
-    for (size_t ii = 0; ii < sizeof(spectrumKeyJoystick) / sizeof(JoystickKeyBinding); ++ii) {
-        if (sinclairData & (1 << ii)) {
-            keys[spectrumKeyJoystick[ii].row] &= ~spectrumKeyJoystick[ii].key;
-        }
-    }
-
-    // Activate Caps Lock (Caps Shift + 2) when both Shifts are presseda.
-    if (Keyboard::isKeyPressed(Keyboard::LShift) && Keyboard::isKeyPressed(Keyboard::RShift)) {
-        keys[7] &= 0xFE;    // Press Caps Shift
-        keys[4] &= 0xFD;    // Press 2
-    }
+    if ((tapeIn & 0xC0) == 0x80) ear = 0.250;
+    if ((tapeIn & 0xC0) == 0xC0) ear = 4.000;
 }
 
 uint_fast8_t ULA::ioRead() {
 
     uint_fast8_t byte = inMask;
-    byte |= (ear < 700) ? 0x00 : 0x40;
+    byte |= (ear < 0.700) ? 0x00 : 0x40;
 
     for (uint_fast8_t ii = 0; ii < 8; ++ii) {
         if (!(z80_a & (0x8000 >> ii))) {
-            byte &= keys[ii];
+            byte &= keyData[ii];
         }
     }
 
@@ -391,12 +335,12 @@ uint_fast8_t ULA::ioRead() {
 void ULA::ioWrite(uint_fast8_t byte) {
 
     soundBits = (byte & 0x18) >> 3;
-
     borderAttr = byte & 0x07;
-    if (ulaVersion == 5) {
-        if (!video) {
-            colour[1] = colourTable[0x80 | borderAttr];
-        }
+    if (ulaVersion < 3) {
+        vEnd = voltage[soundBits];
+        vInc = vEnd - vCap;
+    } else if (ulaVersion == 5 && !video) {
+        colour[1] = colourTable[0x80 | borderAttr];
     }
 }
 
@@ -445,11 +389,12 @@ void ULA::clock() {
     if (cpuClock && (z80_c & SIGNAL_WAIT_)) {
         z80_c_2 = z80_c_1;
         z80_c_1 = z80_c;
-        z80Clk = !z80Clk;
+        z80Clock = !z80Clock;
     }
 
     updateAttributes();
     paint();
+    ++pixel;
 
     if (ulaReset) {
         start();
@@ -463,7 +408,7 @@ void ULA::start() {
     xPos = 0;
     yPos = 0;
     ulaReset = false;
-    z80Clk = false;
+    z80Clock = false;
     cpuClock = true;
     video = true;
     border = false;
@@ -537,7 +482,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             maxScan = 0x137;
             cpuClock = true;
             micMask = 0x01;
-            snow = false;
+            snow = NONE;
             idle = true;
             generateVideoData = &ULA::generateVideoDataGa;
             break;
@@ -554,7 +499,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             cpuClock = true;
             interruptStart = 0x140;
             interruptEnd = 0x180;
-            snow = false;
+            snow = NONE;
             idle = true;
             mem = false;
             generateVideoData = &ULA::generateVideoDataPentagon;
@@ -582,7 +527,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
     };
     bool memUla[16] = {
         true, true, true, true, true, true, true, true,
-        false, false, false, true, false, false, false, true
+        false, true, false, true, false, true, false, true
     };
 
     // Cycle states for Gate Array based Spectrums (+2A/+3)
@@ -592,7 +537,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
     };
     bool memGa[16] = {
         true, true, true, true, true, true, true, true,
-        false, false, false, true, false, false, false, true
+        false, true, false, true, false, true, false, true
     };
 
     for (uint_fast8_t ii = 0; ii < 16; ++ii) {

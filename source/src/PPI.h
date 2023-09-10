@@ -49,9 +49,11 @@ class PPI {
     /** Port C mode. */
     uint_fast8_t modeC = 0;
 
-    /** Port C mask. */
-    uint_fast8_t maskCPort = 0x00;
-    uint_fast8_t maskCReg = 0x00;
+    /** Port C mask for writes. */
+    uint_fast8_t maskCWr = 0x00;
+    /** Port C mask for reads. */
+    uint_fast8_t maskCRd = 0x00;
+    /** Port C mask for bit set/clear mode. */
     uint_fast8_t maskCPin = 0x00;
 
     /** Port A direction. */
@@ -109,13 +111,13 @@ class PPI {
         // as control pins for ports A & B.
         // On output, reading portC returns the latched value.
         if (inputLoC) {
-            value |= portC & maskCPort & 0x0F;
+            value |= portC & maskCRd & 0x0F;
         } else {
             value |= regC & 0x0F;
         }
 
         if (inputHiC) {
-            value |= portC & maskCPort & 0xF0;
+            value |= portC & maskCRd & 0xF0;
         } else {
             value |= regC & 0xF0;
         }
@@ -155,7 +157,8 @@ class PPI {
      * Write Port C from the data bus.
      *
      * Writes a byte to port C. The value is output if the port is outbound,
-     * but it is always latched, except for the pins set as control pins.
+     * but it is always latched, except for the pins set as control pins or
+     * in a group with non-zero mode.
      *
      * @param byte The value for port C.
      */
@@ -163,15 +166,16 @@ class PPI {
 
         if (!inputLoC) {
             portC &= 0xF0;
-            portC |= ((byte & maskCPort) | (maskCPin & ~maskCPort)) & 0x0F;
+            portC |= ((byte & maskCWr) | (maskCPin & ~maskCWr)) & 0x0F;
         }
 
         if (!inputHiC) {
             portC &= 0x0F;
-            portC |= ((byte & maskCPort) | (maskCPin & ~maskCPort)) & 0xF0;
+            portC |= ((byte & maskCWr) | (maskCPin & ~maskCWr)) & 0xF0;
         }
 
-        regC = (maskCPin & ~maskCReg) | (byte & maskCReg);
+        // The input path is not group-limited.
+        regC = (maskCPin & ~maskCWr) | (byte & maskCWr);
     }
 
     /**
@@ -200,36 +204,39 @@ class PPI {
             regB = 0; portB = inputB ? 0xFF : 0x00;
             regC = 0; portC = 0;
 
-            maskCPort = 0;
-            maskCReg = 0;
+            maskCWr = 0;
+            maskCRd = 0;
             maskCPin = 0;
             // Mode A = 0 keeps bits PC7-PC3 for I/O.
             // Mode A = 1 (output) grabs bits PC 7,6,3 for control.
             // Mode A = 1 (input) grabs bits PC 5,4,3 for control.
             // Mode A = 2 grabs bits PC7-PC3 for control.
+            // However, only output pins in a Mode 0 group will be affected.
             switch (modeA) {
                 case 1:
-                    maskCPort |= inputA ? 0xC0 : 0x30;
-                    maskCReg |= 0x00;
+                    maskCRd |= inputA ? 0xC0 : 0x30;
+                    maskCWr |= 0x00;    // Pins PC7-PC4 are in group A, mode 1.
                     break;
                 case 2: // fall-through
                 case 3:
-                    maskCPort |= 0x00;
-                    maskCReg |= 0x00; break;
+                    maskCRd |= 0x00;
+                    maskCWr |= 0x00;
+                    break;
                 default:
-                    maskCPort |= 0xF8;
-                    maskCReg |= 0xF8;
+                    maskCWr |= 0xF8;
+                    maskCRd |= 0xF8;
                     break;
             }
 
             // Mode B = 0 keeps bits PC2-PC0 for I/O.
             // Mode B = 1 grabs bits PC2-PC0 for control.
-            maskCPort |= modeB ? 0x00 : 0x07;
-            maskCReg |= modeB ? 0x00 : 0x07;
+            maskCRd |= modeB ? 0x00 : 0x07;
+            maskCWr |= modeB ? 0x00 : 0x07;
         } else {
             uint_fast8_t mask = 1 << ((control & 0xe) >> 1);
-            maskCPin &= ~maskCPort;
+            maskCPin &= ~maskCRd;
             // Bit control mode also updates the latch and port.
+            // Input bits (including input control pins) are not affected.
             if (control & 0x1) {
                 maskCPin |= mask;
                 if (!inputLoC) { portC |= mask & 0x0F; regC |= mask & 0x0F; }

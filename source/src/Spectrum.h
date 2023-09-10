@@ -35,6 +35,23 @@
 
 using namespace std;
 
+enum class Covox {
+    MONO,
+    STEREO,
+    CZECH,
+    SOUNDRIVE1,
+    SOUNDRIVE2,
+    NONE
+};
+
+enum class JoystickType {
+    KEMPSTON_OLD,
+    KEMPSTON_NEW,
+    FULLER,
+    CURSOR,
+    SINCLAIR
+};
+
 /**
  * A ZX Spectrum computer.
  *
@@ -67,7 +84,7 @@ class Spectrum {
         /** ULA. Supports Sinclair ULAs, Amstrad Gate Array, and Pentagon ULA. */
         ULA ula;
         /** PSG instances. (AY-8912-3, YM-2149) */
-        PSG psg[4];
+        PSG psg[5];
         /** ZX Spectrum +3 floppy disk controller. (NEC765 or compatible.) */
         FDC765 fdc765;
         /** BetaDisk 128 floppy disk controller. (WD1793 or compatible.) */
@@ -80,13 +97,17 @@ class Spectrum {
 
         /** Byte in bus. Used in floating bus effects. */
         uint_fast8_t bus = 0xFF;
-        /** Byte in bus, delayed 1 clock. */
-        uint_fast8_t bus_1 = 0xFF;
+        /** Byte in gate array latch. Used in +2A/+3 "floating bus". */
+        uint_fast8_t gateArrayByte = 0xFF;
         /** Byte in Kempston joystick port. */
         uint_fast8_t kempstonData = 0x00;
+        /** Byte in Fuller joystick port. */
+        uint_fast8_t fullerData = 0xFF;
+        /** Fuller AY clock counter. */
+        uint_fast32_t fullerCount = 0;
 
-        /** Kempston interface present. If false, Sinclair joystick is emulated. */
-        bool kempston = false;
+        /** Joystick interface present. By default, Sinclair joystick is emulated. */
+        JoystickType joystick = JoystickType::SINCLAIR;
         /** Emulate a 128K spectrum (128K, +2, +2A, +3, Pentagon). */
         bool spectrum128K = false;
         /** Emulate a Gate Array based Spectrum (+2A, +3). */
@@ -123,11 +144,11 @@ class Spectrum {
         /** Counter of cycles before next sound sample. */
         uint_fast32_t skipCycles = 0;
         /** Emulate Covox on port $FB. */
-        bool hasCovox = false;
-        /** Sound byte in Covox port. */
-        int covox = 0;
+        Covox covoxMode = Covox::NONE;
+        /** Sound bytes in Covox port. */
+        int covox[4];
         /** Array of samples sent to the Covox. */
-        int filter[FILTER_BZZ_SIZE];
+        int filter[4][FILTER_BZZ_SIZE];
         /** Current index in filter array. */
         size_t index = 0;
         /** Sync frame rate to monitor's 50Hz frame rate. */
@@ -156,6 +177,13 @@ class Spectrum {
         uint8_t* scr;
         /** Memory page from which snow data is read. */
         uint8_t* sno;
+
+        /** Latched address during snow video RAM accesses. */
+        uint_fast16_t snowAddr = 0x0000;
+        /** Snow effect type. */
+        uint_fast32_t snowMode = NONE;
+        /** Bank affected for snow access. */
+        uint_fast32_t snowArea = 0;
 
         /** True if 48K mode is active. This disables pagination. */
         bool set48 = true;
@@ -366,8 +394,10 @@ class Spectrum {
 
         /**
          * Sample the Covox.
+         *
+         * @param Covox channel to be sampled.
          */
-        int dac();
+        int dac(size_t i);
 
         /**
          * Check if ZX Spectrum is about to execute ROM tape routines.

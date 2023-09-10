@@ -15,6 +15,7 @@
 
 #include "CpcScreen.h"
 #include "config.h"
+#include "KeyBinding.h"
 
 #ifdef USE_BOOST_THREADS
 #include <boost/chrono/include.hpp>
@@ -47,12 +48,20 @@ void CpcScreen::setup() {
     cout << "Initialising Amstrad CPC..." << endl;
     // Select model and ROMs.
     if (options["model"] == "cpc464") {
-        cpc.set464();
+        cpc.set464(RomVariant::ROM_CPC464_EN);
+    } else if (options["model"] == "cpc464sp") {
+        cpc.set464(RomVariant::ROM_CPC464_ES);
+    } else if (options["model"] == "cpc464fr") {
+        cpc.set464(RomVariant::ROM_CPC464_FR);
     } else if (options["model"] == "cpc664") {
-        cpc.set664();
+        cpc.set664(RomVariant::ROM_CPC664_EN);
     } else if (options["model"] == "cpc6128") {
-        cpc.set6128();
-    } // Default model is ZX Spectrum 48K Issue 3...
+        cpc.set6128(RomVariant::ROM_CPC6128_EN);
+    } else if (options["model"] == "cpc6128sp") {
+        cpc.set6128(RomVariant::ROM_CPC6128_ES);
+    } else if (options["model"] == "cpc6128fr") {
+        cpc.set6128(RomVariant::ROM_CPC6128_FR);
+    }
 
     uint_fast32_t crtc = 0;
     if (!options["crtc"].empty()) {
@@ -87,6 +96,10 @@ void CpcScreen::setup() {
     }
     cout << "Stereo type: " << options["stereo"] << endl;
 
+    aychip = (options["psgtype"] != "ym");
+    cpc.psgChip(aychip);
+    cout << "PSG chip: " << options["psgtype"] << endl;
+
     cpc.z80.zeroByte = options["z80type"] == "cmos" ? 0xFF : 0x00;
     cout << "Z80 type: " << options["z80type"] << endl;
 
@@ -110,6 +123,7 @@ void CpcScreen::setup() {
     ySize = GateArray::Y_SIZE / (doubleScanMode ? 1 : 2);
     texture(xSize, ySize);
 
+    cpc.tape.speed = 1.16;
     loadFiles();
 
     lBorder = 208;
@@ -170,7 +184,6 @@ void CpcScreen::run() {
             start = high_resolution_clock::now();
 
             // Run until either we get a new frame, or we get 20ms of emulation.
-            cpc.scanKeys();
             pollEvents();
             pollCommands();
 
@@ -244,11 +257,6 @@ void CpcScreen::close() {
     done = true;
 }
 
-void CpcScreen::focus(bool hasFocus) {
-
-    cpc.pollKeys = hasFocus;
-}
-
 void CpcScreen::createEmptyDisk() {
 
     cpc.fdc765.drive[0].emptyDisk();
@@ -319,44 +327,78 @@ void CpcScreen::togglePsgType() {
     cpc.psgChip(aychip);
 }
 
-void CpcScreen::joystickHorizontalAxis(bool l, bool r) {
+void CpcScreen::joystickHorizontalAxis(uint_fast32_t id, bool l, bool r) {
 
-    cpc.joystick[0] &= 0xFC;
-    if (l) {
-        cpc.joystick[0] |= 0x02;
-    } else if (r) {
-        cpc.joystick[0] |= 0x01;
+    if (id < 2) {
+        mapKeyJoystickAxis(id, MOVE_L, MOVE_R, l, r);
     }
 }
 
-void CpcScreen::joystickVerticalAxis(bool u, bool d) {
+void CpcScreen::joystickVerticalAxis(uint_fast32_t id, bool u, bool d) {
 
-    cpc.joystick[0] &= 0xF3;
-    if (u) {
-        cpc.joystick[0] |= 0x08;
-    } else if (d) {
-        cpc.joystick[0] |= 0x04;
+    if (id < 2) {
+        mapKeyJoystickAxis(id, MOVE_U, MOVE_D, u, d);
     }
 }
 
-void CpcScreen::joystickButtonPress(uint_fast32_t button) {
+void CpcScreen::joystickButtonPress(uint_fast32_t id, uint_fast32_t button) {
 
-    button += 4;
-    if (button < 6) {
-        cpc.joystick[0] |= 1 << button;
+    if (id < 2) {
+        button += 4;
+        if (button < FIRE_3) {
+            pressKeyJoystickButton(id, button);
+        }
     }
 }
 
-void CpcScreen::joystickButtonRelease(uint_fast32_t button) {
+void CpcScreen::joystickButtonRelease(uint_fast32_t id, uint_fast32_t button) {
 
-    button += 4;
-    if (button < 6) {
-        cpc.joystick[0] &= ~(1 << button);
+    if (id < 2) {
+        button += 4;
+        if (button < FIRE_3) {
+            releaseKeyJoystickButton(id, button);
+        }
     }
+}
+
+
+void CpcScreen::keyPress(Keyboard::Scancode key) {
+
+    try {
+        InputMatrixPosition pos = cpcKeys.at(key);
+        cpc.keys[pos.row] &= ~pos.key;
+    } catch (out_of_range const& oor) {}
+}
+
+void CpcScreen::keyRelease(Keyboard::Scancode key) {
+
+    try {
+        InputMatrixPosition pos = cpcKeys.at(key);
+        cpc.keys[pos.row] |= pos.key;
+    } catch (out_of_range const& oor) {}
 }
 
 float CpcScreen::getPixelClock() {
 
     return static_cast<float>(BASE_CLOCK_CPC) / 1000000.0;
+}
+
+void CpcScreen::mapKeyJoystickAxis(uint_fast32_t id,
+        uint_fast32_t indexA, uint_fast32_t indexB, bool a, bool b) {
+    cpc.keys[cpcJoystick[id][indexA].row] |= cpcJoystick[id][indexA].key;
+    cpc.keys[cpcJoystick[id][indexB].row] |= cpcJoystick[id][indexB].key;
+    if (a) {
+        cpc.keys[cpcJoystick[id][indexA].row] &= ~cpcJoystick[id][indexA].key;
+    } else if (b) {
+        cpc.keys[cpcJoystick[id][indexB].row] &= ~cpcJoystick[id][indexB].key;
+    }
+}
+
+void CpcScreen::pressKeyJoystickButton(uint_fast32_t id, uint_fast32_t button) {
+    cpc.keys[cpcJoystick[id][button].row] &= ~cpcJoystick[id][button].key;
+}
+
+void CpcScreen::releaseKeyJoystickButton(uint_fast32_t id, uint_fast32_t button) {
+    cpc.keys[cpcJoystick[id][button].row] |= cpcJoystick[id][button].key;
 }
 // vim: et:sw=4:ts=4

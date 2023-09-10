@@ -81,14 +81,13 @@ class CPC {
         /** Tape drive. */
         Tape tape;
         /** Keyboard matrix. */
-        uint_fast8_t keys[16];
+        uint_fast8_t keys[10];
 
         /** Sound channel object. */
         SoundChannel channel;
 
         uint_fast8_t bus = 0xFF;
 
-        uint_fast8_t joystick[2] = { 0x00, 0x00 };
         uint_fast16_t pageRegs = 0x00;
 
         bool cpc128K = true;
@@ -96,7 +95,6 @@ class CPC {
         bool expBit = false;
 
         bool tapeSound = false;
-        bool pollKeys = true;
 
         /** Tape signal level. */
         uint_fast8_t tapeLevel = 0;
@@ -161,7 +159,6 @@ class CPC {
         void clock();
         void reset();
 
-        void scanKeys();
         /**
          * Load internal ROM for each Amstrad CPC model.
          *
@@ -176,18 +173,24 @@ class CPC {
 
         /**
          * Configure an Amstrad CPC 464 computer.
+         *
+         * @param model The Amstrad CPC model.
          */
-        void set464();
+        void set464(RomVariant model);
 
         /**
          * Configure an Amstrad CPC 664 computer.
+         *
+         * @param model The Amstrad CPC model.
          */
-        void set664();
+        void set664(RomVariant model);
 
         /**
          * Configure an Amstrad CPC 6128 computer.
+         *
+         * @param model The Amstrad CPC model.
          */
-        void set6128();
+        void set6128(RomVariant model);
 
         /**
          * Configure model brand.
@@ -215,11 +218,26 @@ class CPC {
          */
         void setPage(uint_fast8_t page, uint_fast8_t bank);
 
+        /**
+         * Reset the PSG.
+         */
         void psgReset();
-        void psgSample();
+
+        /**
+         * Select PSG type.
+         *
+         * @param aychip PSG type. (false = AY-8912-3, true = YM-2149)
+         */
         void psgChip(bool play);
+
+        /**
+         * Mute or unmute the PSG.
+         */
         void psgPlaySound(bool play);
 
+        /**
+         * Mix and sample sound from all sources (Tape, PSG)
+         */
         void sample();
 
         void setSoundRate(uint_fast32_t frame, bool syncToVideo);

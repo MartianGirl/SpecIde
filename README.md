@@ -1,15 +1,19 @@
 # SpecIde
 
 ## What is it?
-SpecIde is (yet another) ZX Spectrum emulator.  Currently, the emulator is functional;
-actually, it is *very* accurate. Some of the supported features are:
+SpecIde is (yet another) ZX Spectrum (and, partially, Amstrad CPC) emulator.
+Currently, the ZX Spectrum emulation is quite accurate. The Amstrad CPC emulation
+is still a work in progress, but it is mostly enough for playing most games.
+Some of the supported features are:
 
 - Emulation of ZX Spectrum 48K (Issue 2/3), 128K, +2, +2A and +3.
-- +3 disk drive emulation. (Scan commands are missing yet)
+- Emulation of Amstrad CPC 464/664/6128. No support for Plus models yet!
+- FDC765 disk drive emulation. (Scan commands are missing yet)
 - Emulation of Spanish 128K, +2, +2A and +3.
 - Emulation of Pentagon timings (but no BetaDisk yet! Sorry for that!)
 - PSG (AY-3-8912/YM-2149) sound emulation.
 - Turbosound emulation. Supports two and four PSG modes.
+- Covox/Soundrive emulation.
 - Loading of tapes via .tap and .tzx tape images, and .csw files.
 - Loading of disks via .dsk disk images.
 - Flashloading of .tap files and .tzx that use the ROM routines.
@@ -34,6 +38,7 @@ For GNU/Linux and MacOS I'm not providing binaries, but SpecIde can be compiled 
 1. Install libboost. At least chrono, system, thread and unit_test_framework are required.
 1. Install libsfml. Audio, graphics, window and system components are required.
 1. Install cmake.
+1. Install zlib1g.
 1. Clone the repository: `git clone https://github.com/MartianGirl/SpecIde.git`
 1. Go into the 'source' directory.
 1. Run: `cmake -DCMAKE_BUILD_TYPE=Release .`
@@ -48,6 +53,7 @@ For GNU/Linux and MacOS I'm not providing binaries, but SpecIde can be compiled 
 1. Install cmake: `brew install cmake`
 1. Install boost: `brew install boost`
 1. Install sfml: `brew install sfml`
+1. Install zlib: `brew install zlib`
 1. Install pkgconfig: `brew install pkgconfig`
 1. Simlink FindSFML.cmake in cmake modules `ln -s $(brew --prefix sfml)/share/SFML/cmake/Modules/FindSFML.cmake $(brew --prefix cmake)/share/cmake/Modules/FindSFML.cmake`
 1. Clone the repository: `git clone https://github.com/MartianGirl/SpecIde.git`
@@ -64,6 +70,7 @@ I've included a script RunCMake.bat that helps in the build process.
 
 1. Install and compile boost. Add the binaries to the PATH.
 1. Install and compile sfml. Add the binaries to the PATH.
+1. Install and compile zlib. Add the binaries to the PATH.
 1. Install cmake.
 1. (Optional) Install ninja-builds. It really helps building SpecIde.
 1. Edit the RunCMake.bat script. You need to change the lines: `set BOOST_ROOT=\<Path_to_Boost_root_directory\>` and `set SFML_ROOT=\<Path_to_SFML_binaries\>`  
@@ -79,8 +86,6 @@ SpecIde is invoked from the command line. To run SpecIde, type:
 
 Supported formats are TAP, TZX and DSK.
 
-Make sure that the libraries, ROM files and 
-
 ### Command line options
 The following command line options are available:
 
@@ -88,6 +93,7 @@ The following command line options are available:
 Model selection options:
 --issue2               Spectrum 48K, issue 2.
 --issue3 | --48        Spectrum 48K, issue 3. (Default)
+--48sp                 Spectrum + 48K. (Spanish ROM)
 --128                  Spectrum 128K.
 --128sp                Spectrum 128K. (Spanish ROM)
 --plus2                Spectrum +2.
@@ -97,6 +103,9 @@ Model selection options:
 --plus3                Spectrum +3.
 --plus3sp              Spectrum +3. (Spanish ROM)
 --pentagon             Pentagon 128.
+--cpc464               Amstrad CPC 464.
+--cpc664               Amstrad CPC 664.
+--cpc6128              Amstrad CPC 6128.
 
 Joystick options:
 --kempston             Map joystick to Kempston interface.
@@ -111,8 +120,17 @@ PSG options:
 --turboacb|--turboabc  Select TurboSound with 2 PSGs. (stereo ACB/ABC)
 --turbonext            Select Next-style TurboSound with 4 PSGs.
 
+Covox options:
+--covox                LPT Covox on port 0xFB (Mono)
+--covox2               Stereo Covox (ports 0xFB and 0x4F)
+--covox3               Czech Covox (ports 0x1F, 0x3F, 0x5F)
+--soundrive1           Soundrive on ports 0x0F, 0x1F, 0x4F, 0x5F.
+--soundrive2           Soundrive on ports 0xF1, 0xF3, 0xF9, 0xFB.
+--nocovox              No Covox present.
+
 Misc hardware options:
 --sd1                  Emulate Dinamic SD1 hardware protection.
+--cmos|--nmos          Emulate CMOS/NMOS Z80. (Affects OUT(C),0 instruction)
 
 Video options:
 --fullscreen           Start SpecIde in full screen mode.
@@ -120,8 +138,7 @@ Video options:
 --scanlines            Render PAL double scan mode.
 --average              Render PAL double scan mode, averaging scanlines.
 --nodoublescan         Single scan mode. (Default)
---sync                 Sync emulation to PC video refresh rate.
---antialias            Turn antialiasing on.
+--sync                 Sync emulation to PC video refresh rate (only 50Hz)
 
 Sound options (add prefix 'no' to disable. Eg. --nosound):
 --sound                Enable buzzer/PSG sound. (Default)
@@ -138,8 +155,8 @@ When the emulator is running, pressing F1 displays help about the function keys.
 | --- | -------- |
 | F1        | Display help. |
 | F2        | Switch between fullscreen and windowed mode. |
-| Shift-F2  | Toggle antialiasing on/off. |
 | F3        | Save DSK file to disk. |
+| Shift-F3  | Create blank DSK file. |
 | F4        | Select next disk image. |
 | Shift-F4  | Select previous disk image. |
 | F5        | Reset the Spectrum. |
@@ -173,28 +190,32 @@ System ROMs can be placed also in the config directory:
 
 The following ROMs are included in the binary packages:
 
-| File Name | Model |
-|:---:|:---:|
-| 48.rom | Spectrum 48K |
-| 128-0.rom | Spectrum 128K (ROM 0) |
-| 128-1.rom | Spectrum 128K (ROM 1) |
-| plus2-0.rom | Spectrum +2 (ROM 0) |
-| plus2-1.rom | Spectrum +2 (ROM 1) |
-| plus3-0.rom | Spectrum +2A/+3 (ROM 0) |
-| plus3-1.rom | Spectrum +2A/+3 (ROM 1) |
-| plus3-2.rom | Spectrum +2A/+3 (ROM 2) |
-| plus3-3.rom | Spectrum +2A/+3 (ROM 3) |
-| 128-spanish-0.rom | Spanish Spectrum 128K (ROM 0) |
-| 128-spanish-1.rom | Spanish Spectrum 128K (ROM 1) |
-| plus2-spanish-0.rom | Spanish Spectrum +2 (ROM 0) |
-| plus2-spanish-1.rom | Spanish Spectrum +2 (ROM 1) |
-| plus3-spanish-0.rom | Spanish Spectrum +2A/+3 (ROM 0) |
-| plus3-spanish-1.rom | Spanish Spectrum +2A/+3 (ROM 1) |
-| plus3-spanish-2.rom | Spanish Spectrum +2A/+3 (ROM 2) |
-| plus3-spanish-3.rom | Spanish Spectrum +2A/+3 (ROM 3) |
-| pentagon-0.rom | Pentagon 128 (ROM 0 - 128K + TR-DOS support) |
-| pentagon-1.rom | Pentagon 128 (ROM 1 - 48K BASIC) |
-| trdos.rom | TR-DOS ROM for BetaDisk 128 |
+| File Name | Model | Size |
+|:---:|:---:|:---:|
+| 48.rom | Spectrum 48K | 16K |
+| 128-0.rom | Spectrum 128K (ROM 0) | 16K |
+| 128-1.rom | Spectrum 128K (ROM 1) | 16K |
+| plus2-0.rom | Spectrum +2 (ROM 0) | 16K |
+| plus2-1.rom | Spectrum +2 (ROM 1) | 16K |
+| plus3-0.rom | Spectrum +2A/+3 (ROM 0) | 16K |
+| plus3-1.rom | Spectrum +2A/+3 (ROM 1) | 16K |
+| plus3-2.rom | Spectrum +2A/+3 (ROM 2) | 16K |
+| plus3-3.rom | Spectrum +2A/+3 (ROM 3) | 16K |
+| 128-spanish-0.rom | Spanish Spectrum 128K (ROM 0) | 16K |
+| 128-spanish-1.rom | Spanish Spectrum 128K (ROM 1) | 16K |
+| plus2-spanish-0.rom | Spanish Spectrum +2 (ROM 0) | 16K |
+| plus2-spanish-1.rom | Spanish Spectrum +2 (ROM 1) | 16K |
+| plus3-spanish-0.rom | Spanish Spectrum +2A/+3 (ROM 0) | 16K |
+| plus3-spanish-1.rom | Spanish Spectrum +2A/+3 (ROM 1) | 16K |
+| plus3-spanish-2.rom | Spanish Spectrum +2A/+3 (ROM 2) | 16K |
+| plus3-spanish-3.rom | Spanish Spectrum +2A/+3 (ROM 3) | 16K |
+| pentagon-0.rom | Pentagon 128 (ROM 0 - 128K + TR-DOS support) | 16K |
+| pentagon-1.rom | Pentagon 128 (ROM 1 - 48K BASIC) | 16K |
+| trdos.rom | TR-DOS ROM for BetaDisk 128 | 16K |
+| amsdos.rom | AmsDOS ROM for CPC 664/6128 | 16K |
+| cpc464.rom | BASIC ROM for CPC 464 | 32K |
+| cpc664.rom | BASIC ROM for CPC 664 | 32K |
+| cpc6128.rom | BASIC ROM for CPC 6128 | 32K |
 
 Also, the font can be placed in here:
 - On GNU/Linux: $HOME/.SpecIde/font
@@ -208,6 +229,7 @@ This is an attempt at writing a ZX Spectrum emulator using SFML for video, audio
 - Reliability. The emulator should never crash.
 - Portability. The emulator should be easy to run in different platforms.
 I've been writing SpecIde mostly for learning and for trying to do a big project. So far, I am happy with the outcome!
+After I had the ZX Spectrum working, I thought I could try to emulate the Amstrad CPC series too, because many components are shared. So far, I've got the first three machines running, but there are still many details and problems to be fixed.
 
 ## Credits and acknowledgements:  
 + David Garijo: For taking the time and helping with the MacOS build process.
@@ -215,3 +237,5 @@ I've been writing SpecIde mostly for learning and for trying to do a big project
 + Ast_A_Moore: For all his help with the +2A timings and port 0x0FFD.
 + César Hernández Bañó: For his help with the initial values for IR register, his comments, and his own emulator ZesarUX.
 + Miguel Mesa: For pointing out that the FLASH attribute was running at half speed.
++ Weiv (for his tests), ICEknight (for his videos), and all the people who helped describing the ULA Snow Effect on 48K/128K/+2 machines.
++ People from the #emulation discord for their ongoing testing efforts to discover every detail on the ZX Spectrum machines.

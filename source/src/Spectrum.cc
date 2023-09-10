@@ -214,7 +214,7 @@ void Spectrum::setPlus3(RomVariant variant) {
     loadRoms(variant);
     setSoundRate(SoundRate::SOUNDRATE_128K, sync);
 
-    fdc765.clockFrequency = 0.875;  // Relative to 1MHz
+    fdc765.clockFrequency = 1.0;  // Relative to 1MHz
 
     reset();
 }
@@ -312,13 +312,40 @@ void Spectrum::clock() {
     // ULA gets the data from memory or Z80, or outputs data to Z80.
     // I've found that separating both data buses is helpful for all
     // Speccies.
-    bus_1 = bus;
+    gateArrayByte = bus;
+
+    switch (ula.snow) {
+        case SNOW:  // 1st ULA burst: CAS loads R register
+            if (contendedPage[memArea] && z80.state == Z80State::ST_OCF_T3L_RFSH1) {
+                snowMode = SNOW;
+                snowAddr = z80.a & 0x007f;
+                snowArea = memArea;
+            }
+            break;
+        case DUPL:  // 2nd ULA burst: CAS loads previous column address
+            if (contendedPage[memArea] && z80.state == Z80State::ST_OCF_T3L_RFSH1) {
+                snowMode = DUPL;
+                snowAddr = ula.a & 0x007e;
+                snowArea = memArea;
+            }
+            break;
+        case ENDS:  // End of the SNOW cycle.
+            if (snowMode == SNOW) {
+                snowMode = NONE;
+                snowAddr = ula.a & 0x007f;
+            }
+            break;
+        case ENDD:  // End of the DUPL cycle.
+            snowMode = NONE;
+            snowAddr = ula.a & 0x007f;
+            break;
+    }
 
     if (!ula.mem) {
         // Snow effect. ULA::snow is always false for +2A/+3/Pentagon
-        if (ula.snow && contendedPage[memArea] && !as_) {
-            uint_fast16_t snowaddr = (ula.a & 0x3F80) | (z80.a & 0x007F);
-            bus = (memArea == 1) ? scr[snowaddr] : sno[snowaddr];
+        if (snowMode) {
+            snowAddr = (ula.a & 0x3F80) | (snowAddr & 0x007F);
+            bus = (snowArea != 3 || snowMode == DUPL) ? scr[snowAddr] : sno[snowAddr];
         } else {
             bus = scr[ula.a];
         }
@@ -341,13 +368,15 @@ void Spectrum::clock() {
     if (!(count & 0x03)) {
         ula.beeper();
         psgClock();
-        filter[index] = covox;
-        index = (index + 1) % FILTER_BZZ_SIZE;
-
-        if (!(count & 0x07)) {
-            if (plus3Disk) fdc765.clock();
-            //if (betaDisk128) fd1793.clock();
+        for (int i = 0; i < 4; ++i) {
+            filter[i][index] = covox[i];
         }
+        index = (index + 1) % FILTER_BZZ_SIZE;
+    }
+
+    if (!(count % 0x07)) {
+        if (plus3Disk) fdc765.clock();
+        //if (betaDisk128) fd1793.clock();
     }
 
     // Switch pages only if the ULA is not accessing memory.
@@ -358,13 +387,24 @@ void Spectrum::clock() {
 
     // We clock the Z80 if the ULA allows.
     if (ula.cpuClock) {
+        if (joystick == JoystickType::FULLER) {
+            if (!(++fullerCount & 0x03)) {
+                psg[4].clock();
+            }
+        }
         // Z80 gets data from the ULA or memory, only when reading.
         if (z80.access) {
             if (!io_) {
-                // 48K/128K/Plus2 floating bus. Return idle status by default,
-                // or screen data, if the ULA is working.
                 if (z80.rd) {
-                    z80.d = (ula.idle) ? idle : bus & idle;
+                    if (!(z80.a & 0x0001)) {
+                        // ULA port read returns keypresses and EAR status.
+                        z80.d = ula.ioRead();
+                    } else {
+                        // Unattached port read. On 48K/128K/Plus2, floating bus.
+                        // Returns idle bus value by default, or video data,
+                        // if the ULA is reading.
+                        z80.d = ula.idle ? idle : bus & idle;
+                    }
                 }
 
                 // 128K only ports (pagination, disk)
@@ -379,7 +419,7 @@ void Spectrum::clock() {
                         case 0x0000:    // In +2A/+3 this is the floating bus port.
                             if (z80.rd) {
                                 if (!(pageRegs & 0x0020)) {
-                                    z80.d = (bus_1 & idle) | 0x01;
+                                    z80.d = (gateArrayByte & idle) | 0x01;
                                 }
                             }
                             break;
@@ -421,15 +461,16 @@ void Spectrum::clock() {
                 // AY-3-8912 ports.
                 if (psgChips) {
                     switch (z80.a & 0xC002) {
-                        case 0x8000:    // 0xBFFD
+                        case 0x8000:
+                            // 128K AY Data Port
                             if (z80.wr) {
                                 psgWrite();
                             } else if (z80.rd && spectrumPlus2A) {
                                 psgRead();
                             }
                             break;
-
-                        case 0xC000:    // 0xFFFD
+                        case 0xC000:
+                            // 128K AY Control Port
                             if (z80.wr) {
                                 if ((z80.d & 0x98) == 0x98) {
                                     psgSelect();
@@ -440,7 +481,6 @@ void Spectrum::clock() {
                                 psgRead();
                             }
                             break;
-
                         default:
                             break;
                     }
@@ -459,25 +499,111 @@ void Spectrum::clock() {
                         // }
                     }
                 } else {
-                    if (kempston && !(z80.a & 0x0020)) {    // Kempston joystick.
-                        if (z80.rd) {
-                            z80.d = kempstonData;
+                    switch (joystick) {
+                        case JoystickType::KEMPSTON_OLD:
+                        case JoystickType::CURSOR:  // fall-through
+                            // If the joystick type is CURSOR, the second
+                            // joystick is mapped to KEMPSTON.
+                            if ((z80.rd || z80.wr) && !(z80.a & 0x0020)) {
+                                z80.d = kempstonData;
+                            }
+                            break;
+                        case JoystickType::KEMPSTON_NEW:
+                            if (z80.rd && !(z80.a & 0x00E0)) {
+                                z80.d = kempstonData;
+                            }
+                            break;
+                        case JoystickType::FULLER:
+                            switch (z80.a & 0x00F0) {
+                                case 0x0030:
+                                    // Port 0x003F, Fuller AY control port
+                                    if (z80.wr) {
+                                        psg[4].addr(z80.d);
+                                    } else if (z80.rd) {
+                                        z80.d = psg[4].read();
+                                    }
+                                    break;
+                                case 0x0050:
+                                    // Port 0x005F, Fuller AY data port
+                                    if (z80.wr) {
+                                        psg[4].write(z80.d);
+                                    } else if (z80.rd) {
+                                        z80.d = psg[4].read();
+                                    }
+                                    break;
+                                case 0x0070:
+                                    // Port 0x007F, Fuller joystick port
+                                    if (z80.rd) {
+                                        z80.d = fullerData;
+                                    }
+                                    break;
+                                default:
+                                    break;
+                                }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                switch (covoxMode) {
+                    case Covox::MONO:
+                        if (z80.wr && ((z80.a & 0x00FF) == 0x00FB)) {
+                            covox[0] = covox[1] = covox[2] = covox[3] = z80.d * 0x20;
                         }
-                    }
+                        break;
+                    case Covox::STEREO:
+                        if (z80.wr) {
+                           if ((z80.a & 0x00FF) == 0xFB) {
+                               covox[0] = covox[1] = z80.d * 0x20;
+                           }
+                           if ((z80.a & 0x00FF) == 0x4F) {
+                               covox[2] = covox[3] = z80.d * 0x20;
+                           }
+                        }
+                        break;
+                    case Covox::CZECH:
+                        if (z80.wr && ((z80.a & 0x009F) == 0x1F)) {
+                            switch (z80.a & 0x60) {
+                                case 0x00: covox[0] = z80.d * 0x20; break;
+                                case 0x20: covox[3] = z80.d * 0x20; break;
+                                case 0x40: covox[1] = covox[2] = z80.d * 0x20; break;
+                                default: break;
+                            }
+                        }
+                        break;
+                    case Covox::SOUNDRIVE1:
+                        if (z80.wr && ((z80.a & 0x00AF) == 0x000F)) {
+                            switch (z80.a & 0x0050) {
+                                case 0x00: covox[0] = z80.d * 0x20; break;
+                                case 0x10: covox[1] = z80.d * 0x20; break;
+                                case 0x40: covox[2] = z80.d * 0x20; break;
+                                case 0x50: covox[3] = z80.d * 0x20; break;
+                                default: break;
+                            }
+                        }
+                        break;
+                    case Covox::SOUNDRIVE2:
+                        if (z80.wr && ((z80.a & 0x00F1) == 0x00F1)) {
+                            switch (z80.a & 0x000A) {
+                                case 0x0: covox[0] = z80.d * 0x20; break;
+                                case 0x2: covox[1] = z80.d * 0x20; break;
+                                case 0x8: covox[2] = z80.d * 0x20; break;
+                                case 0xA: covox[3] = z80.d * 0x20; break;
+                                default: break;
+                            }
+                        }
+                        break;
+
+                    default:
+                        break;
                 }
 
-                if (hasCovox && !(z80.a & 0x0004)) {
-                    if (z80.wr) {
-                        covox = z80.d * 0x40;
-                    }
-                }
-
-                if (!(z80.a & 0x0001)) {         // ULA port
-                    if (z80.wr) {
-                        ula.ioWrite(z80.d);
-                    } else if (z80.rd) {
-                        z80.d = ula.ioRead();
-                    }
+                // Writes to ULA go last, to account for the case where a
+                // peripheral responds both to reads and writes, and uses
+                // an even address.
+                if (z80.wr && !(z80.a & 0x0001)) {
+                    ula.ioWrite(z80.d);
                 }
             } else if (!as_) {
                 // BetaDisk128 pages TR-DOS ROM when the PC is in the range
@@ -524,8 +650,9 @@ void Spectrum::selectPage(uint_fast8_t reg) {
 void Spectrum::updatePage() {
 
     // Select screen to display.
-    setScreenPage(((pageRegs & 0x0008) >> 2) | 0x05);
-    setSnowPage(pageRegs & 0x0005);
+    uint_fast16_t screen = (pageRegs & 0x8) >> 2;
+    setScreenPage(screen | 0x05);
+    setSnowPage((pageRegs & 0x0005) | screen);
 
     if (pageRegs & 0x0100) {      // Special pagination mode.
         switch (pageRegs & 0x0600) {
@@ -578,7 +705,7 @@ void Spectrum::reset() {
     psgReset();
     fdc765.reset();
 
-    covox = 0;
+    covox[0] = covox[1] = covox[2] = covox[3] = 0;
     romBank = 0;
     ramBank = 0;
     setPage(0, 0, true, false);
@@ -586,6 +713,7 @@ void Spectrum::reset() {
     setPage(2, 2, false, false);
     setPage(3, 0, false, false);
     setScreenPage(5);
+    setSnowPage(5);
 
     if (spectrum128K || spectrumPlus2A) {
         pageRegs = 0x0000;
@@ -596,6 +724,9 @@ void Spectrum::reset() {
         tape.is48K = set48 = true;
         rom48 = true;
     }
+
+    snowMode = NONE;
+    snowAddr = 0x0000;
 }
 
 void Spectrum::psgSelect() {
@@ -635,6 +766,11 @@ void Spectrum::psgReset() {
         psg[ii].reset();
         psg[ii].seed = 0xFFFF - (ii * 0x1111);
     }
+
+    if (joystick == JoystickType::FULLER) {
+        psg[4].reset();
+        psg[4].seed = 0xFFFF - (4 * 0x1111);
+    }
 }
 
 void Spectrum::psgClock() {
@@ -649,12 +785,20 @@ void Spectrum::psgPlaySound(bool play) {
     for (size_t ii = 0; ii < psgChips; ++ii) {
         psg[ii].playSound = play;
     }
+
+    if (joystick == JoystickType::FULLER) {
+        psg[4].playSound = play;
+    }
 }
 
 void Spectrum::psgSample() {
 
     for (size_t ii = 0; ii < psgChips; ++ii) {
         psg[ii].sample();
+    }
+
+    if (joystick == JoystickType::FULLER) {
+        psg[4].sample();
     }
 }
 
@@ -663,67 +807,55 @@ void Spectrum::psgChip(bool aychip) {
     for (size_t ii = 0; ii < psgChips; ++ii) {
         psg[ii].setVolumeLevels(aychip);
     }
+
+    if (joystick == JoystickType::FULLER) {
+        psg[4].setVolumeLevels(aychip);
+    }
 }
 
 void Spectrum::sample() {
 
-    int l = ula.sample() + dac();
+    int l = ula.sample();
     int r = l;
+    l += dac(0) + dac(1);
+    r += dac(2) + dac(3);
     psgSample();
+
+    if (joystick == JoystickType::FULLER) {
+        l += psg[4].channelA + psg[4].channelB + psg[4].channelC;
+        r += psg[4].channelA + psg[4].channelB + psg[4].channelC;
+    }
 
     switch (stereo) {
         case StereoMode::STEREO_ACB: // ACB
-            l += psg[0].channelA;
-            l += psg[0].channelC;
-            r += psg[0].channelB;
-            r += psg[0].channelC;
+            l += psg[0].channelA + psg[0].channelC;
+            r += psg[0].channelB + psg[0].channelC;
             break;
 
         case StereoMode::STEREO_ABC: // ABC
-            l += psg[0].channelA;
-            l += psg[0].channelB;
-            r += psg[0].channelB;
-            r += psg[0].channelC;
+            l += psg[0].channelA + psg[0].channelB;
+            r += psg[0].channelB + psg[0].channelC;
             break;
 
         case StereoMode::STEREO_TURBO_MONO: // TurboSound with 2 PSGs, mono.
-            l += psg[0].channelA;
-            l += psg[0].channelB;
-            l += psg[0].channelC;
-            r += psg[0].channelA;
-            r += psg[0].channelB;
-            r += psg[0].channelC;
-
-            l += psg[1].channelA;
-            l += psg[1].channelB;
-            l += psg[1].channelC;
-            r += psg[1].channelA;
-            r += psg[1].channelB;
-            r += psg[1].channelC;
+            l += psg[0].channelA + psg[0].channelB + psg[0].channelC;
+            l += psg[1].channelA + psg[1].channelB + psg[1].channelC;
+            r += psg[0].channelA + psg[0].channelB + psg[0].channelC;
+            r += psg[1].channelA + psg[1].channelB + psg[1].channelC;
             break;
 
         case StereoMode::STEREO_TURBO_ACB:  // TurboSound with 2 PSGs, ACB
-            l += psg[0].channelA;
-            l += psg[0].channelC;
-            r += psg[0].channelB;
-            r += psg[0].channelC;
-
-            l += psg[1].channelA;
-            l += psg[1].channelC;
-            r += psg[1].channelB;
-            r += psg[1].channelC;
+            l += psg[0].channelA + psg[0].channelC;
+            l += psg[1].channelA + psg[1].channelC;
+            r += psg[0].channelB + psg[0].channelC;
+            r += psg[1].channelB + psg[1].channelC;
             break;
 
         case StereoMode::STEREO_TURBO_ABC: // TurboSound with 2 PSGs, ABC
-            l += psg[0].channelA;
-            l += psg[0].channelB;
-            r += psg[0].channelB;
-            r += psg[0].channelC;
-
-            l += psg[1].channelA;
-            l += psg[1].channelB;
-            r += psg[1].channelB;
-            r += psg[1].channelC;
+            l += psg[0].channelA + psg[0].channelB;
+            l += psg[1].channelA + psg[1].channelB;
+            r += psg[0].channelB + psg[0].channelC;
+            r += psg[1].channelB + psg[1].channelC;
             break;
 
         case StereoMode::STEREO_NEXT:
@@ -742,12 +874,8 @@ void Spectrum::sample() {
             break;
 
         default:    // mono, all channels go through both sides.
-            l += psg[0].channelA;
-            l += psg[0].channelB;
-            l += psg[0].channelC;
-            r += psg[0].channelA;
-            r += psg[0].channelB;
-            r += psg[0].channelC;
+            l += psg[0].channelA + psg[0].channelB + psg[0].channelC;
+            r += psg[0].channelA + psg[0].channelB + psg[0].channelC;
             break;
     }
 
@@ -756,11 +884,11 @@ void Spectrum::sample() {
     channel.push(l, r);
 }
 
-int Spectrum::dac() {
+int Spectrum::dac(size_t c) {
 
     int sound = 0;
     for (size_t i = 0; i < FILTER_BZZ_SIZE; ++i) {
-        sound += filter[i];
+        sound += filter[c][i];
     }
     sound /= FILTER_BZZ_SIZE;
     return sound;
@@ -825,29 +953,59 @@ uint_fast8_t Spectrum::readMemory(uint_fast16_t a) {
 
 void Spectrum::trapLdStart() {
 
-    // Find first block that matches flag byte (Flag is in AF')
-    while (tape.foundTapBlock(z80.af_.b.h) == false) {
-        tape.nextTapBlock();
-    }
+    // ZF = 1 means treat the flag byte as a normal byte. This is
+    // indicated by setting the number of flag bytes to zero.
+    uint16_t flagByte = (z80.af_.b.l & FLAG_Z) ? 1 : 0;
 
-    // Get parameters from CPU registers
-    uint16_t start = z80.ix.w;
-    uint16_t bytes = z80.de.w;
-    uint16_t block = tape.getBlockLength();
+    // If either there are no flag bytes or the expected flag matches the
+    // block's flag, we signal flag ok. Expected flag is in A'.
+    bool flagOk = tape.foundTapBlock(z80.af_.b.h) || flagByte;
 
-    if (block < bytes) {
-        // Load error if not enough bytes.
-        z80.af.b.l &= 0xFE;
-    } else {
-        block = bytes;
-        z80.af.b.l |= 0x01;
-    }
-    z80.ix.w = (z80.ix.w + block) & 0xFFFF;
-    z80.de.w -= block;
+    // CF = 1 means LOAD, CF = 0 means VERIFY.
+    bool verify = !(z80.af_.b.l & FLAG_C);
 
-    // Dump block to memory.
-    for (uint_fast16_t ii = 0; ii < block; ++ii) {
-        writeMemory(start + ii, tape.getBlockByte(ii + 3));
+    if (flagOk) {
+        // Get parameters from CPU registers
+        uint16_t address = z80.ix.w;
+        uint16_t bytes = z80.de.w;
+
+        uint16_t block = tape.getBlockLength() + flagByte - 1;  // Include parity
+        uint16_t offset = 3 - flagByte;
+        uint8_t parity = flagByte ? 0 : tape.getBlockByte(2);
+
+        if (verify) {
+            while (bytes && block) {
+                uint8_t byte = tape.getBlockByte(offset++);
+                uint8_t mem = readMemory(address++);
+                block--;
+                bytes--;
+                parity ^= byte;
+                if (byte != mem) break;
+            }
+        } else {
+            while (bytes && block) {
+                uint8_t byte = tape.getBlockByte(offset++);
+                writeMemory(address++, byte);
+                block--;
+                bytes--;
+                parity ^= byte;
+            }
+        }
+
+        if (block) {
+            parity ^= tape.getBlockByte(offset);
+        }
+
+        if (!bytes && block && !parity) {
+            z80.af.b.l |= FLAG_C;
+        } else {
+            z80.af.b.l &= ~FLAG_C;
+            if (!block) z80.af.b.l |= FLAG_Z;
+        }
+
+        z80.hl.b.h = parity;
+        z80.ix.w = address;
+        z80.de.w = bytes;
     }
 
     // Advance tape

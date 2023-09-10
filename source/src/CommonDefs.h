@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 enum class FileTypes {
     FILETYPE_TAP,
     FILETYPE_TZX,
@@ -23,8 +25,18 @@ enum class RomVariant {
     ROM_PLUS3_EN,
     ROM_PLUS3_ES,
     ROM_PENTAGON,
-    ROM_CPC464,
-    ROM_CPC664,
-    ROM_CPC6128
+    ROM_CPC464_EN,
+    ROM_CPC464_ES,
+    ROM_CPC464_FR,
+    ROM_CPC664_EN,
+    ROM_CPC6128_EN,
+    ROM_CPC6128_ES,
+    ROM_CPC6128_FR
+};
+
+struct InputMatrixPosition {
+
+    uint8_t row;
+    uint8_t key;
 };
 

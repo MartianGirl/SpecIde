@@ -14,25 +14,21 @@
  */
 
 #include "CPC.h"
-#include "KeyBinding.h"
 #include "SpecIde.h"
 
 #include <cstdlib>
 #include <ctime>
 
-int constexpr SAVE_VOLUME = 0x03FF;
+int constexpr SAVE_VOLUME = 0x01FF;
 int constexpr LOAD_VOLUME = 0x01FF;
 
-CPC::CPC() {
+CPC::CPC() :
+    keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF} {
 
     setPage(0, 0);
     setPage(1, 1);
     setPage(2, 2);
     setPage(3, 3);
-
-    for (size_t ii = 0; ii < 10; ++ii) {
-        keys[ii] = 0xFF;
-    }
 
     channel.open(2, SAMPLE_RATE);
 }
@@ -41,21 +37,33 @@ void CPC::loadRoms(RomVariant model) {
 
     string romName;
     switch (model) {
-        case RomVariant::ROM_CPC464:
-        romName = "cpc464.rom";
-        break;
+        case RomVariant::ROM_CPC464_EN:
+            romName = "cpc464.rom";
+            break;
+        case RomVariant::ROM_CPC464_ES:
+            romName = "cpc464-spanish.rom";
+            break;
+        case RomVariant::ROM_CPC464_FR:
+            romName = "cpc464-french.rom";
+            break;
 
-        case RomVariant::ROM_CPC664:
-        romName = "cpc664.rom";
-        break;
+        case RomVariant::ROM_CPC664_EN:
+            romName = "cpc664.rom";
+            break;
 
-        case RomVariant::ROM_CPC6128:
-        romName = "cpc6128.rom";
-        break;
+        case RomVariant::ROM_CPC6128_EN:
+            romName = "cpc6128.rom";
+            break;
+        case RomVariant::ROM_CPC6128_ES:
+            romName = "cpc6128-spanish.rom";
+            break;
+        case RomVariant::ROM_CPC6128_FR:
+            romName = "cpc6128-french.rom";
+            break;
 
         default:
-        romName = "cpc464.rom";
-        break;
+            romName = "cpc464.rom";
+            break;
     }
 
     vector<string> romDirs = getRomDirs();
@@ -101,41 +109,41 @@ void CPC::loadExpansionRoms() {
     }
 }
 
-void CPC::set464() {
+void CPC::set464(RomVariant model) {
 
     cpc128K = false;
     cpcDisk = false;
     expBit = false;
 
-    loadRoms(RomVariant::ROM_CPC464);
+    loadRoms(model);
     loadExpansionRoms();
     reset();
 }
 
-void CPC::set664() {
+void CPC::set664(RomVariant model) {
 
     cpc128K = false;
     cpcDisk = true;
     expBit = false;
-    fdc765.clockFrequency = 4;
+    fdc765.clockFrequency = 4.0;
 
     ext[0x07] = ExpansionRom("amsdos.rom");
 
-    loadRoms(RomVariant::ROM_CPC664);
+    loadRoms(model);
     loadExpansionRoms();
     reset();
 }
 
-void CPC::set6128() {
+void CPC::set6128(RomVariant model) {
 
     cpc128K = true;
     cpcDisk = true;
     expBit = false;
-    fdc765.clockFrequency = 4;
+    fdc765.clockFrequency = 4.0;
 
     ext[0x07] = ExpansionRom("amsdos.rom");
 
-    loadRoms(RomVariant::ROM_CPC6128);
+    loadRoms(model);
     loadExpansionRoms();
     reset();
 }
@@ -534,29 +542,6 @@ void CPC::setPage(uint_fast8_t page, uint_fast8_t bank) {
 
     size_t addr = bank * (1 << 14);
     mem[page] = &ram[addr];
-}
-
-void CPC::scanKeys() {
-
-    if (!pollKeys) return;
-
-    for (size_t ii = 0; ii < 16; ++ii) {
-        keys[ii] = 0xFF;
-    }
-
-    for (size_t ii = 0; ii < sizeof(cpcKeys) / sizeof(KeyBinding); ++ii) {
-        if (Keyboard::isKeyPressed(cpcKeys[ii].keyName)) {
-            keys[cpcKeys[ii].row] &= ~cpcKeys[ii].key;
-        }
-    }
-
-    for (size_t jj = 0; jj < 2; ++jj) {
-        for (size_t ii = 0; ii < 6; ++ii) {
-            if (joystick[jj] & (1 << ii)) {
-                keys[cpcJoystick[jj][ii].row] &= ~cpcJoystick[jj][ii].key;
-            }
-        }
-    }
 }
 
 void CPC::setBrand(uint_fast8_t brandNumber) {

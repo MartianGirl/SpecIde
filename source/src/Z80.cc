@@ -37,15 +37,10 @@ bool Z80::flagsReady = false;
 
 void Z80::reset() {
 
-    c &= ~SIGNAL_RESET_;
+    state = Z80State::ST_RESET;
 }
 
 void Z80::clock() {
-
-    // Process RESET signal
-    if (!(c & SIGNAL_RESET_)) {
-        state = Z80State::ST_RESET;
-    }
 
     // NMI is edge-triggered.
     // If a falling edge in NMI is detected, accept the NMI and clear
@@ -480,7 +475,6 @@ void Z80::start() {
     oReg.w = 0xFFFF;
     addr.w = 0xFFFF;
     acc.w = 0xFFFF;
-    tmp.w = 0xFFFF;
 
     flg = 0xFF;
     iff = 0x00;

@@ -32,15 +32,9 @@ using namespace std;
 class PSG
 {
     public:
-        uint_fast8_t latch_a;
-        uint_fast8_t latch_di;
-        uint_fast8_t latch_do;
-
         uint_fast8_t a;
         uint_fast8_t r[16];
         uint_fast8_t m[16];
-
-        bool wr;
 
         int filterA[FILTER_PSG_SIZE];
         int filterB[FILTER_PSG_SIZE];
@@ -87,7 +81,6 @@ class PSG
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
             m{0xFF, 0x0F, 0xFF, 0x0F, 0xFF, 0x0F, 0x1F, 0xFF,
                 0x1F, 0x1F, 0x1F, 0xFF, 0xFF, 0x0F, 0xFF, 0xFF},
-            wr(false),
             volumeA(0), volumeB(0), volumeC(0),
             waveA(1), waveB(1), waveC(1),
             out{0x000, 0x000, 0x013, 0x013, 0x049, 0x049, 0x0A4, 0x0A4,
@@ -107,93 +100,6 @@ class PSG
             int signalC = 1;
 
             ++count;
-
-            a = latch_a;
-            latch_do = r[a];
-
-            if (wr) {
-                // Write registers (on AY, take only used bits)
-                r[a] = latch_di & (psgIsAY ? m[a] : 0xFF);
-
-                wr = false;
-
-                switch (a) {
-                    case 000:
-                    case 001:
-                        // Update tone period for channel A.
-                        periodA = (r[1] & 0x0F) * 0x100 + r[0];
-                        break;
-
-                    case 002:
-                    case 003:
-                        // Update tone period for channel B.
-                        periodB = (r[3] & 0x0F) * 0x100 + r[2];
-                        break;
-
-                    case 004:
-                    case 005:
-                        // Update tone period for channel C.
-                        periodC = (r[5] & 0x0F) * 0x100 + r[4];
-                        break;
-
-                    case 006:
-                        // Update noise period.
-                        periodN = r[6] & 0x1F;
-                        break;
-
-                    case 010:
-                        // Update volume for channel A.
-                        volumeA = 2 * (r[8] & 0x0F) + 1;
-                        envA = ((r[8] & 0x10) == 0x10);
-                        break;
-
-                    case 011:
-                        // Update volume for channel B.
-                        volumeB = 2 * (r[9] & 0x0F) + 1;
-                        envB = ((r[9] & 0x10) == 0x10);
-                        break;
-
-                    case 012:
-                        // Update volume for channel C.
-                        volumeC = 2 * (r[10] & 0x0F) + 1;
-                        envC = ((r[10] & 0x10) == 0x10);
-                        break;
-
-                    case 013:
-                    case 014:
-                        // Update period for Envelope generator.
-                        periodE = r[12] * 0x100 + r[11];
-                        break;
-
-                    case 015:
-                        // Start values depend on the attack bit.
-                        // Attack = 0: Start at 1111, count down.
-                        // Attack = 1: Start at 0000, count up.
-                        if (r[13] != 0xFF) {
-                            envSlope = ((r[13] & 0x04) == 0x00) ? -1 : 1;
-                            envLevel = ((r[13] & 0x04) == 0x00) ? 0x1F : 0x00;
-                            restartEnvelope();
-                        }
-                        break;
-
-                    case 016:
-                        // I/O port A (as output).
-                        if ((r[7] & 0x40) == 0x40) {
-                            ioA = r[14];
-                        }
-                        break;
-
-                    case 017:
-                        // I/O port B (as output).
-                        if ((r[7] & 0x80) == 0x80) {
-                            ioB = r[15];
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
-            }
 
             // Because period means a complete wave cycle (high/low)
             if (!(count & 0x07)) {
@@ -281,19 +187,98 @@ class PSG
         }
 
 
-        uint_fast8_t read() { return latch_do; }
+        uint_fast8_t read() {
+
+            return (!(a & 0xF0)) ? r[a] : 0xFF; }
 
         void write(uint_fast8_t byte) {
 
-            latch_di = byte;
-            wr = true;
+            if (!(a & 0xF0)) {
+                // Write registers (on AY, take only used bits)
+                r[a] = byte & (psgIsAY ? m[a] : 0xFF);
+
+                switch (a) {
+                    case 000:
+                    case 001:
+                        // Update tone period for channel A.
+                        periodA = (r[1] & 0x0F) * 0x100 + r[0];
+                        break;
+
+                    case 002:
+                    case 003:
+                        // Update tone period for channel B.
+                        periodB = (r[3] & 0x0F) * 0x100 + r[2];
+                        break;
+
+                    case 004:
+                    case 005:
+                        // Update tone period for channel C.
+                        periodC = (r[5] & 0x0F) * 0x100 + r[4];
+                        break;
+
+                    case 006:
+                        // Update noise period.
+                        periodN = r[6] & 0x1F;
+                        break;
+
+                    case 010:
+                        // Update volume for channel A.
+                        volumeA = 2 * (r[8] & 0x0F) + 1;
+                        envA = ((r[8] & 0x10) == 0x10);
+                        break;
+
+                    case 011:
+                        // Update volume for channel B.
+                        volumeB = 2 * (r[9] & 0x0F) + 1;
+                        envB = ((r[9] & 0x10) == 0x10);
+                        break;
+
+                    case 012:
+                        // Update volume for channel C.
+                        volumeC = 2 * (r[10] & 0x0F) + 1;
+                        envC = ((r[10] & 0x10) == 0x10);
+                        break;
+
+                    case 013:
+                    case 014:
+                        // Update period for Envelope generator.
+                        periodE = r[12] * 0x100 + r[11];
+                        break;
+
+                    case 015:
+                        // Start values depend on the attack bit.
+                        // Attack = 0: Start at 1111, count down.
+                        // Attack = 1: Start at 0000, count up.
+                        if (r[13] != 0xFF) {
+                            envSlope = ((r[13] & 0x04) == 0x00) ? -1 : 1;
+                            envLevel = ((r[13] & 0x04) == 0x00) ? 0x1F : 0x00;
+                            restartEnvelope();
+                        }
+                        break;
+
+                    case 016:
+                        // I/O port A (as output).
+                        if ((r[7] & 0x40) == 0x40) {
+                            ioA = r[14];
+                        }
+                        break;
+
+                    case 017:
+                        // I/O port B (as output).
+                        if ((r[7] & 0x80) == 0x80) {
+                            ioB = r[15];
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+            }
         }
 
         void addr(uint_fast8_t byte) {
 
-            if ((byte & 0x0F) == byte) {
-                latch_a = byte;
-            }
+            a = byte;
         }
 
         void setVolumeLevels(bool ay) {

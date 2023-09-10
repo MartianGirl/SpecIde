@@ -143,7 +143,6 @@ class Z80
         Z80Register iReg;
         Z80Register oReg;
         Z80Register addr;
-        Z80Register tmp;
         Z80Register acc;
 
         uint_fast8_t flg;

@@ -453,7 +453,7 @@ void TZXFile::parse(
 
             case 0x31:
                 blockName = "Message";
-                pointer += dumpMessage() + 2;
+                pointer += dumpMessage() + 3;
                 break;
 
             case 0x32:

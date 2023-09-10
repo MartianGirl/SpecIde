@@ -27,38 +27,34 @@
 
 #include "Plus3Disk.h"
 
-enum class FDC765State
-{
-    FDC765_STATE_IDLE,
-    FDC765_STATE_COMMAND,
-    FDC765_STATE_EXECUTION,
-    FDC765_STATE_RECEIVE,
-    FDC765_STATE_TRANSMIT,
-    FDC765_STATE_RESULT
+enum class FDC765State {
+    IDLE,
+    COMMAND,
+    EXECUTION,
+    RECEIVE,
+    TRANSMIT,
+    RESULT
 };
 
-enum class FDC765Mode
-{
-    FDC765_MODE_NONE,
-    FDC765_MODE_READ,
-    FDC765_MODE_WRITE
+enum class FDC765Mode {
+    NONE,
+    READ,
+    WRITE
 };
 
-enum class FDC765Access
-{
-    FDC765_ACCESS_LOAD,
-    FDC765_ACCESS_SEEK,
-    FDC765_ACCESS_DATA,
-    FDC765_ACCESS_UNLOAD,
-    FDC765_ACCESS_NONE
+enum class FDC765Access {
+    LOAD,
+    SEEK,
+    DATA,
+    UNLOAD,
+    NONE
 };
 
-enum class FDC765Scan
-{
-    FDC765_SCAN_EQUAL,
-    FDC765_SCAN_LOW,
-    FDC765_SCAN_HIGH,
-    FDC765_SCAN_ERROR
+enum class FDC765Scan {
+    EQUAL,
+    LOW,
+    HIGH,
+    ERROR
 };
 
 uint_fast8_t constexpr SREG_DB0 = 1 << 0;
@@ -71,9 +67,8 @@ uint_fast8_t constexpr SREG_DIO = 1 << 6;
 uint_fast8_t constexpr SREG_RQM = 1 << 7;
 
 uint32_t constexpr DELAY_1ms = 1000;     // Clocking at 1.000MHz
-uint32_t constexpr SERVICE_MFM = 53;
-uint32_t constexpr SERVICE_FM = 104;
-uint32_t constexpr BYTE_DELAY = 114;
+uint32_t constexpr SERVICE_MFM = 54;
+uint32_t constexpr SERVICE_FM = 108;
 
 uint32_t constexpr DATABUFFER_SIZE = 65536;
 uint32_t constexpr RESBUFFER_SIZE = 16;
@@ -86,7 +81,7 @@ class FDC765 {
 
     public:
         /** Clock frequency in MHz. */
-        float clockFrequency = 1;
+        float clockFrequency = 1.0;
         /** Status register. */
         uint_fast8_t statusReg = 0x00;
 
@@ -112,8 +107,10 @@ class FDC765 {
         uint32_t dataBytes;
 
 
-        /** Byte ready flag. */
-        bool byte = false;
+        /** Input latch has byte. */
+        bool inputByteReady = false;
+        /** Output latch has byte. */
+        bool outputByteReady = false;
         /** Interrupt flag. */
         bool interrupt = false;
 

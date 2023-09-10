@@ -1,5 +1,5 @@
 @echo off
-set BOOST_ROOT=C:\libs\boost_1_74_0
+set BOOST_ROOT=C:\Libs\Boost
 
 if .%1.==.. goto USAGE
 

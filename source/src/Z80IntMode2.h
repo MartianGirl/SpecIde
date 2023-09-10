@@ -26,29 +26,29 @@ bool z80IntMode2()
     switch (executionStep)
     {
         case 0:
-            memRdCycles = 2;
             memWrCycles = 2;
-            memAddrMode = 0x0000AA9C;
+            memAddrMode = 0x00009CAA;
             return false;
 
         case 1:
             wz.w = (ir.b.h << 8) | d;
+            acc.w = pc.w;
+            oReg.b.l = acc.b.h;
+            oReg.b.h = acc.b.l;
             return true;
 
         case 2:
             return true;
 
         case 3:
-            wz.w = iReg.w;
-            acc.w = pc.w;
-            oReg.b.l = acc.b.h;
-            oReg.b.h = acc.b.l;
+            memRdCycles = 2;
             return true;
 
         case 4:
             return true;
 
         case 5:
+            wz.w = iReg.w;
             pc.w = wz.w;
             prefix = PREFIX_NO;
             return true;
