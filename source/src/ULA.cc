@@ -305,9 +305,11 @@ void ULA::paint() {
 
 void ULA::tapeEarMic() {
 
-    if (ulaVersion < 3) {
+    // These operations are too costly to do them every cycle.
+    static uint_fast32_t count = 0;
+    if (ulaVersion < 3 && !(++count & 0x3F)) {
+        vInc *= 0.954949;
         vCap = vEnd - vInc;
-        vInc *=  0.999280;
         ear = vCap;
     }
 
@@ -480,7 +482,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             maxScan = 0x137;
             cpuClock = true;
             micMask = 0x01;
-            snow = false;
+            snow = NONE;
             idle = true;
             generateVideoData = &ULA::generateVideoDataGa;
             break;
@@ -497,7 +499,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             cpuClock = true;
             interruptStart = 0x140;
             interruptEnd = 0x180;
-            snow = false;
+            snow = NONE;
             idle = true;
             mem = false;
             generateVideoData = &ULA::generateVideoDataPentagon;
