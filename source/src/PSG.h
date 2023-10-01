@@ -32,77 +32,117 @@ using namespace std;
 class PSG
 {
     public:
-        uint_fast8_t a;
-        uint_fast8_t r[16];
-        uint_fast8_t m[16];
+        /** Selected register address. */
+        uint_fast8_t a = 0;
+        /** PSG register bank. */
+        uint_fast8_t r[16] {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+        /** PSG register valid bits mask. */
+        uint_fast8_t m[16] {0xFF, 0x0F, 0xFF, 0x0F, 0xFF, 0x0F, 0x1F, 0xFF,
+            0x1F, 0x1F, 0x1F, 0xFF, 0xFF, 0x0F, 0xFF, 0xFF};
 
-        int filterA[FILTER_PSG_SIZE];
-        int filterB[FILTER_PSG_SIZE];
-        int filterC[FILTER_PSG_SIZE];
-        int channelA = 0;
-        int channelB = 0;
-        int channelC = 0;
-        int noise = 0;
-        int seed = 0xFFFF;
-        int volumeA;
-        int volumeB;
-        int volumeC;
-        int waveA;
-        int waveB;
-        int waveC;
+        /** Output DAC volume levels. */
+        int out[32] {0x000, 0x000, 0x013, 0x013, 0x049, 0x049, 0x0A4, 0x0A4,
+            0x124, 0x124, 0x1C7, 0x1C7, 0x290, 0x290, 0x37C, 0x37C,
+            0x48D, 0x48D, 0x5C3, 0x5C3, 0x71C, 0x71C, 0x89B, 0x89B,
+            0xA3D, 0xA3D, 0xC04, 0xC04, 0xDF0, 0xDF0, 0xFFF, 0xFFF};
 
-        int out[32];
+        /** Channel A tone counter. */
+        uint_fast16_t counterA = 0;
+        /** Channel B tone counter. */
+        uint_fast16_t counterB = 0;
+        /** Channel C tone counter. */
+        uint_fast16_t counterC = 0;
+        /** Noise generator period counter. */
+        uint_fast16_t counterN = 0;
+        /** Envelope counter. */
+        uint_fast16_t counterE = 0;
 
-        int envSlope, envLevel;
-        int envStep;
-        bool envHold;
-        bool envA;
-        bool envB;
-        bool envC;
+        /** Channel A wave period register. */
+        uint_fast16_t periodA = 0;
+        /** Channel B wave period register. */
+        uint_fast16_t periodB = 0;
+        /** Channel C wave period register. */
+        uint_fast16_t periodC = 0;
+        /** Noise generator period register. */
+        uint_fast16_t periodN = 0;
+        /** Envelope period register. */
+        uint_fast16_t periodE = 0;
 
-        uint_fast16_t counterA, counterB, counterC, counterN, counterE;
-        uint_fast16_t periodA, periodB, periodC, periodN, periodE;
+        /** Channel A tone waveform. */
+        int waveA = 1;
+        /** Channel B tone waveform. */
+        int waveB = 1;
+        /** Channel C tone waveform. */
+        int waveC = 1;
 
+        /** Channel A volume level. */
+        int volumeA = 0;
+        /** Channel B volume level. */
+        int volumeB = 0;
+        /** Channel C volume level. */
+        int volumeC = 0;
+
+        /** Envelope slope. (Ascending = 1, descending = -1) */
+        int envSlope = 1;
+        /** Envelope volume level. */
+        int envLevel = 0;
+        /** Envelope step. The envelope level is derived from this. */
+        int envStep = 0;
+        /** Hold the value of the envelope after one cycle. */
+        bool envHold = false;
+        /** Apply envelope volume to channel A. */
+        bool envA = false;
+        /** Apply envelope volume to channel B. */
+        bool envB = false;
+        /** Apply envelope volume to channel C. */
+        bool envC = false;
+
+        /** I/O port A. */
         uint_fast8_t ioA = 0xFF;
+        /** I/O port B. */
         uint_fast8_t ioB = 0xFF;
 
-        size_t count = 0;
+        /** Clock counter. */
+        uint_fast32_t count = 0;
+
+        /** Filter array index. */
         size_t index = 0;
-        size_t wait = 0;
+        /** Filter array for channel A. */
+        int filterA[FILTER_PSG_SIZE];
+        /** Filter array for channel B. */
+        int filterB[FILTER_PSG_SIZE];
+        /** Filter array for channel C. */
+        int filterC[FILTER_PSG_SIZE];
 
-        bool playSound;
-        bool lchan = false;
-        bool rchan = false;
+        /** Channel A sample. */
+        int channelA = 0;
+        /** Channel B sample. */
+        int channelB = 0;
+        /** Channel C sample. */
+        int channelC = 0;
+        /** Noise current value. */
+        int noise = 0;
+        /** Noise current seed. */
+        int seed = 0xFFFF;
 
+        /** Generate sound. */
+        bool playSound = true;
+        /** Behave as a AY-3-8912 (oppossed to a YM-2194) */
         bool psgIsAY = true;
 
-        PSG() :
-            r{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-            m{0xFF, 0x0F, 0xFF, 0x0F, 0xFF, 0x0F, 0x1F, 0xFF,
-                0x1F, 0x1F, 0x1F, 0xFF, 0xFF, 0x0F, 0xFF, 0xFF},
-            volumeA(0), volumeB(0), volumeC(0),
-            waveA(1), waveB(1), waveC(1),
-            out{0x000, 0x000, 0x013, 0x013, 0x049, 0x049, 0x0A4, 0x0A4,
-                0x124, 0x124, 0x1C7, 0x1C7, 0x290, 0x290, 0x37C, 0x37C,
-                0x48D, 0x48D, 0x5C3, 0x5C3, 0x71C, 0x71C, 0x89B, 0x89B,
-                0xA3D, 0xA3D, 0xC04, 0xC04, 0xDF0, 0xDF0, 0xFFF, 0xFFF},
-            envSlope(1), envLevel(0), envStep(0), envHold(false),
-            envA(false), envB(false), envC(false),
-            counterA(0), counterB(0), counterC(0), counterN(0), counterE(0),
-            periodA(0), periodB(0), periodC(0), periodN(0), periodE(0),
-            playSound(true) {}
+        /** Output this PSG to the left channel. Only for Next mode. */
+        bool lchan = false;
+        /** Output this PSG to the right channel. Only for Next mode. */
+        bool rchan = false;
 
         void clock() {
 
-            int signalA = 1;
-            int signalB = 1;
-            int signalC = 1;
-
-            ++count;
-
-            // Because period means a complete wave cycle (high/low)
-            if (!(count & 0x07)) {
+            // A period means a complete wave cycle (high/low)
+            // Thus, the clock is not scaled further.
+            if (!(++count & 0x07)) {
+                // Count up, so if the period changes to a lower value than
+                // current we end the pulse.
                 if (++counterA >= periodA) {
                     waveA = 1 - waveA;
                     counterA = 0;
@@ -152,6 +192,10 @@ class PSG
                     }
                 }
             }
+
+            int signalA = 1;
+            int signalB = 1;
+            int signalC = 1;
 
             if (playSound) {
                 signalA = (r[7] & 0x01) ? 1 : waveA;
