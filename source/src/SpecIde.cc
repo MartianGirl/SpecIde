@@ -202,11 +202,11 @@ void displayHelp() {
     cout << "--cpc6128fr            Amstrad CPC 6128. (French ROM)" << endl;
     cout << endl;
     cout << "Hardware options:" << endl;
-    cout << "--kempston             Map joystick 1 to Kempston interface. Joystick 2 maps to SJS1." << endl;
-    cout << "--kempstonnew          Map joystick 1 to Kempston interface. Joystick 2 maps to SJS1." << endl;
-    cout << "--fuller               Map joystick 1 to Fuller interface. Joystick 2 maps to SJS1." << endl;
-    cout << "--cursor               Map joystick 1 to Protek/AGF interface. Joystick 2 maps to Kempston." << endl;
-    cout << "--sinclair             Map joystick 1 to SJS1 interface. Joystick 2 maps to SJS2 (Default)" << endl;
+    cout << "--kempston             Map joystick 1 as Kempston, joystick 2 as Sinclair 1." << endl;
+    cout << "--kempstonnew          Map joystick 1 as Kempston, joystick 2 as Sinclair 1." << endl;
+    cout << "--fuller               Map joystick 1 as Fuller, joystick 2 as Sinclair 1." << endl;
+    cout << "--cursor               Map joystick 1 as Protek/AGF (cursor), joystick 2 as Kempston." << endl;
+    cout << "--sinclair             Map joystick 1 as Sinclair 1, joystick 2 as Sinclair 2 (Default)" << endl;
     cout << "--pad|--nopad          Map pad extra buttons to keys." << endl;
     cout << "--psg|--nopsg          Emulate AY chip in 48K Spectrum." << endl;
     cout << "--abc|--acb|--mono     Select stereo mode." << endl;

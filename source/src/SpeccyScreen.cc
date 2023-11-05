@@ -100,8 +100,8 @@ void SpeccyScreen::setup() {
         cout << "   (Second joystick is mapped to Kempston)" << endl;
     } else {
         spectrum.joystick = JoystickType::SINCLAIR;
-        cout << "Sinclair/SJS1 Joystick" << endl;
-        cout << "   (Second joystick is mapped to Sinclair/SJS2)" << endl;
+        cout << "Sinclair 1 Joystick" << endl;
+        cout << "   (Second joystick is mapped to Sinclair 2)" << endl;
     }
     pad = (options["pad"] == "yes");
     cout << "Map game pad extra buttons to keys: " << options["pad"] << endl;
@@ -500,7 +500,7 @@ void SpeccyScreen::joystickHorizontalAxis(uint_fast32_t id, bool l, bool r) {
 
     switch (id) {
         case 0:
-            // Joystick #0 is mapped to Kempston/Fuller/Cursor/Sinclair 
+            // Joystick #0 is mapped to Kempston/Fuller/Cursor/Sinclair Port 1
             switch (spectrum.joystick) {
                 case JoystickType::KEMPSTON_OLD:
                 case JoystickType::KEMPSTON_NEW:
@@ -532,7 +532,7 @@ void SpeccyScreen::joystickHorizontalAxis(uint_fast32_t id, bool l, bool r) {
                 case JoystickType::KEMPSTON_OLD:
                 case JoystickType::KEMPSTON_NEW:
                 case JoystickType::FULLER:
-                    // Map secondary joystick to Sinclair/SJS1.
+                    // Map secondary joystick to Sinclair Port 1.
                     mapKeyJoystickAxis(SJS1, MOVE_L, MOVE_R, l, r);
                     break;
                 case JoystickType::CURSOR:
@@ -545,7 +545,7 @@ void SpeccyScreen::joystickHorizontalAxis(uint_fast32_t id, bool l, bool r) {
                     }
                     break;
                 default:
-                    // Map secondary joystick to Sinclair/SJS2.
+                    // Map secondary joystick to Sinclair Port 2.
                     mapKeyJoystickAxis(SJS2, MOVE_L, MOVE_R, l, r);
                     break;
             }
@@ -559,7 +559,7 @@ void SpeccyScreen::joystickVerticalAxis(uint_fast32_t id, bool u, bool d) {
 
     switch (id) {
         case 0:
-            // Joystick #0 is mapped to Kempston/Fuller/Cursor/Sinclair 
+            // Joystick #0 is mapped to Kempston/Fuller/Cursor/Sinclair Port 1
             switch (spectrum.joystick) {
                 case JoystickType::KEMPSTON_OLD:
                 case JoystickType::KEMPSTON_NEW:
@@ -591,7 +591,7 @@ void SpeccyScreen::joystickVerticalAxis(uint_fast32_t id, bool u, bool d) {
                 case JoystickType::KEMPSTON_OLD:
                 case JoystickType::KEMPSTON_NEW:
                 case JoystickType::FULLER:
-                    // Map secondary joystick to Sinclair/SJS1.
+                    // Map secondary joystick to Sinclair Port 1.
                     mapKeyJoystickAxis(SJS1, MOVE_U, MOVE_D, u, d);
                     break;
                 case JoystickType::CURSOR:
@@ -604,7 +604,7 @@ void SpeccyScreen::joystickVerticalAxis(uint_fast32_t id, bool u, bool d) {
                     }
                     break;
                 default:
-                    // Map secondary joystick to Sinclair/SJS2.
+                    // Map secondary joystick to Sinclair Port 2.
                     mapKeyJoystickAxis(SJS2, MOVE_U, MOVE_D, u, d);
                     break;
             }
