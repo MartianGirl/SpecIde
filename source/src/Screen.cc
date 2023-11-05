@@ -48,10 +48,9 @@ Screen::~Screen() {
     window.close();
 }
 
-void Screen::loadFont() {
+void Screen::loadFont(string const& fontName) {
 
     vector<string> fontPaths;
-    string fontName("ZXSpectrum.ttf");
     char* pHome = getenv(SPECIDE_HOME_ENV);
 
     fontPaths.push_back("");
@@ -80,7 +79,7 @@ void Screen::loadFont() {
     do {
         string font = fontPaths[j] + fontName;
         cout << "Trying font: " << font << endl;
-        success = zxFont.loadFromFile(font);
+        success = guiFont.loadFromFile(font);
         ++j;
     } while (!success && j < fontPaths.size());
 
@@ -185,7 +184,6 @@ void Screen::setup() {
     w *= scale;
     h *= scale;
 
-    loadFont();
     chooseVideoMode();
 
     fullscreen = (options["fullscreen"] == "yes");

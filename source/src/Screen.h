@@ -77,8 +77,8 @@ class Screen {
         sf::Texture scrTexture;
         /** Sprite. Contains the texture to be drawn. */
         sf::Sprite scrSprite;
-        /** ZX Spectrum font for drawing the menus. */
-        sf::Font zxFont;
+        /** TrueType font for drawing the menus. */
+        sf::Font guiFont;
         /** Vector of available video modes. */
         std::vector<sf::VideoMode> modes;
 #endif
@@ -162,8 +162,10 @@ class Screen {
 
         /**
          * Load fonts for the menu.
+         *
+         * @param fontName File name of the font to load.
          */
-        void loadFont();
+        void loadFont(std::string const& fontName);
         
         /**
          * Create texture for drawing.

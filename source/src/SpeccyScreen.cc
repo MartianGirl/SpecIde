@@ -44,6 +44,7 @@ void SpeccyScreen::setup() {
 
     cout << "Initialising common settings..." << endl;
     Screen::setup();
+    loadFont("ZXSpectrum.ttf");
     spectrum.sync = syncToVideo;
 
     cout << "Initialising ZX Spectrum..." << endl;
@@ -353,7 +354,7 @@ void SpeccyScreen::updateMenu() {
     }
 
     Text text;
-    text.setFont(zxFont);
+    text.setFont(guiFont);
     text.setFillColor(Color::Black);
 
     stringstream ss;

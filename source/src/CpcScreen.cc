@@ -44,6 +44,7 @@ void CpcScreen::setup() {
 
     cout << "Initialising common settings..." << endl;
     Screen::setup();
+    loadFont("AmstradCPC.ttf");
 
     cout << "Initialising Amstrad CPC..." << endl;
     // Select model and ROMs.
@@ -218,13 +219,9 @@ void CpcScreen::run() {
         cpc.playSound(false);
 
         while (!done && menu) {
+            // Menu thingy
+            updateMenu();
 
-            Event event;
-            while (window.pollEvent(event)) {
-                if (event.type == Event::KeyPressed) {
-                    menu = false;
-                }
-            }
 #ifdef USE_BOOST_THREADS
             sleep_for(boost::chrono::microseconds(20000));
 #else
@@ -252,6 +249,76 @@ void CpcScreen::update() {
 }
 
 void CpcScreen::updateMenu() {
+
+    uint_fast32_t modifier = doubleScanMode ? 2 : 1;
+
+    RectangleShape rectangle(sf::Vector2f(100, 100));
+    rectangle.setFillColor(Color(0, 0, 255, 192));
+    rectangle.setOutlineThickness(2);
+    rectangle.setOutlineColor(Color(255, 255, 0, 192));
+    rectangle.setSize(Vector2f(324, 232));
+    if (fullscreen) {
+        rectangle.setPosition(xOffset + 6 * modifier * yScale, yOffset + 6 * modifier * yScale);
+        rectangle.setScale(Vector2f(modifier * yScale, modifier * yScale));
+    } else {
+        // Windowed mode already applies a x2 scale factor, so single scan windows are the same size
+        // as double scan ones.
+        rectangle.setPosition(12 * scale, 12 * scale);
+        rectangle.setScale(Vector2f(2 * static_cast<float>(scale), 2 * static_cast<float>(scale)));
+    }
+
+    Text text;
+    text.setFont(guiFont);
+    text.setFillColor(Color(255, 255, 0, 192));
+
+    stringstream ss;
+    ss << "Function keys:" << endl;
+    ss << "F1:    This help." << endl;
+    ss << "F2:    Fullscreen." << endl;
+    ss << "F3:    Save DSK file to disk." << endl;
+    ss << "S-F3:  Create empty DSK image." << endl;
+    ss << "F4:    Select next disk image." << endl;
+    ss << "S-F4:  Select previous disk image." << endl;
+    ss << "F5:    Reset." << endl;
+    ss << "F8:    Toggle PSG: AY-3-8912/YM-2149." << endl;
+    ss << "F9:    Sound on / off." << endl;
+    ss << "S-F9:  Tape sound on / off." << endl;
+    ss << "F10:   Exit emulator." << endl;
+    ss << "F11:   Play / stop tape." << endl;
+    ss << "S-F11: Set mark in tape." << endl;
+    ss << "F12:   Rewind tape to start." << endl;
+    ss << "S-F12: Rewind tape to mark." << endl;
+    ss << endl;
+    text.setString(ss.str());
+
+    if (fullscreen) {
+        text.setPosition(xOffset + 36, yOffset + 36);
+        text.setCharacterSize(static_cast<uint32_t>(8 * modifier * yScale));
+    } else {
+        text.setPosition(36, 36);
+        text.setCharacterSize(static_cast<uint32_t>(16 * scale));
+    }
+
+    window.clear(Color::Black);
+    window.draw(scrSprite);
+    window.draw(rectangle);
+    window.draw(text);
+    window.display();
+
+    Event event;
+    while (window.pollEvent(event)) {
+        if (event.type == Event::KeyPressed) {
+            switch (event.key.code) {
+                case Keyboard::Menu:    // fall-through
+                case Keyboard::F1:
+                    menu = false;
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
 }
 
 void CpcScreen::close() {
