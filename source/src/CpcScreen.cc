@@ -184,7 +184,6 @@ void CpcScreen::run() {
 
             // Run until either we get a new frame, or we get 20ms of emulation.
             pollEvents();
-            pollCommands();
 
             cpc.run(!syncToVideo);
             cpc.playSound(true);
@@ -193,7 +192,7 @@ void CpcScreen::run() {
 
             if (!syncToVideo) {
                 uint_fast32_t delay = cpc.cycles / 16;
-                uint_fast32_t sleep = delay - (delay % 2000);
+                uint_fast32_t sleep = delay - (delay % 1000);
 
                 // By not sleeping until the next frame is due, we get some
                 // better adjustment

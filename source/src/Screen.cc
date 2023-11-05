@@ -392,16 +392,4 @@ void Screen::pollEvents() {
         }
     }
 }
-
-void Screen::pollCommands() {
-
-    string cmd = console.console.get();
-    if (!cmd.empty()) {
-        if (cmd == "exit") {
-            done = true;
-        } else {
-            cout << "Syntax error: " << cmd << endl;
-        }
-    }
-}
 // vim: et:sw=4:ts=4

@@ -267,7 +267,6 @@ void SpeccyScreen::run() {
 
             // Run a complete frame.
             pollEvents();
-            pollCommands();
             spectrum.run();
 
             // Delay starting playing sound (if disabled) until first frame
@@ -287,10 +286,10 @@ void SpeccyScreen::run() {
                 // better adjustment
 #ifdef USE_BOOST_THREADS
                 frame = start + boost::chrono::microseconds(spectrum.frame);
-                wakeup = start + boost::chrono::microseconds(18000);
+                wakeup = start + boost::chrono::microseconds(19000);
 #else
                 frame = start + std::chrono::microseconds(spectrum.frame);
-                wakeup = start + std::chrono::microseconds(18000);
+                wakeup = start + std::chrono::microseconds(19000);
 #endif
 #ifndef DO_NOT_SLEEP
                 sleep_until(wakeup);

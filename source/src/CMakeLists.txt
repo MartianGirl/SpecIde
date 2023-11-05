@@ -39,7 +39,7 @@ find_package(ZLIB REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR} ${MEDIA_INCLUDE_DIRS})
 
-add_executable(SpecIde SpecIde.cc Console.cc
+add_executable(SpecIde SpecIde.cc
     Screen.cc KeyBinding.cc
     SpeccyScreen.cc Spectrum.cc ULA.cc
     CpcScreen.cc CPC.cc GateArray.cc CRTC.cc

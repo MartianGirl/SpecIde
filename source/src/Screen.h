@@ -29,7 +29,6 @@
  */
 
 #include "CommonDefs.h"
-#include "Console.h"
 
 #if (SPECIDE_SDL2==1)
 #else
@@ -137,9 +136,6 @@ class Screen {
         float xScale;
         /** Vertical stretch of the texture. */
         float yScale;
-
-        /** Thread for a text console. */
-        ConsoleThread console;
 
         /**
          * Initialise the Screen object with the parameters received on construction.
@@ -337,11 +333,6 @@ class Screen {
          * Poll window interface events.
          */
         void pollEvents();
-
-        /**
-         * Read commands from the text console.
-         */
-        void pollCommands();
 
         /**
          * Get pixel clock.
