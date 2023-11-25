@@ -348,13 +348,13 @@ void ULA::beeper() {
 
     // Smooth the signal directly from the ULA.
     if (playSound) {
-        filter[index] = (soundBits & 0x02) ? SOUND_VOLUME : 0;
+        filter[index] = (soundBits & 0x02) ? ULA_BEEP_VOLUME : 0;
         if (tapeSound) {
             // In Spectrum 48K, ULA.b3 only causes sound if ULA.b4 is set.
             // In Spectrum 128K, ULA.b3 causes sound on its own.
             filter[index] +=
-                + (((soundBits & micMask) == micMask) ? SAVE_VOLUME : 0)
-                + ((tapeIn & 0x40) ? LOAD_VOLUME : 0);
+                + (((soundBits & micMask) == micMask) ? ULA_SAVE_VOLUME : 0)
+                + ((tapeIn & 0x40) ? ULA_LOAD_VOLUME : 0);
         }
     } else {
         filter[index] = 0x00;

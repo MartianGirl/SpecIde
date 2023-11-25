@@ -549,25 +549,25 @@ void Spectrum::clock() {
                 switch (covoxMode) {
                     case Covox::MONO:
                         if (z80.wr && ((z80.a & 0x00FF) == 0x00FB)) {
-                            covox[0] = covox[1] = covox[2] = covox[3] = z80.d * 0x20;
+                            covox[0] = covox[1] = covox[2] = covox[3] = z80.d * COVOX_VOLUME;
                         }
                         break;
                     case Covox::STEREO:
                         if (z80.wr) {
                            if ((z80.a & 0x00FF) == 0xFB) {
-                               covox[0] = covox[1] = z80.d * 0x20;
+                               covox[0] = covox[1] = z80.d * COVOX_VOLUME;
                            }
                            if ((z80.a & 0x00FF) == 0x4F) {
-                               covox[2] = covox[3] = z80.d * 0x20;
+                               covox[2] = covox[3] = z80.d * COVOX_VOLUME;
                            }
                         }
                         break;
                     case Covox::CZECH:
                         if (z80.wr && ((z80.a & 0x009F) == 0x1F)) {
                             switch (z80.a & 0x60) {
-                                case 0x00: covox[0] = z80.d * 0x20; break;
-                                case 0x20: covox[3] = z80.d * 0x20; break;
-                                case 0x40: covox[1] = covox[2] = z80.d * 0x20; break;
+                                case 0x00: covox[0] = z80.d * COVOX_VOLUME; break;
+                                case 0x20: covox[3] = z80.d * COVOX_VOLUME; break;
+                                case 0x40: covox[1] = covox[2] = z80.d * COVOX_VOLUME; break;
                                 default: break;
                             }
                         }
@@ -575,10 +575,10 @@ void Spectrum::clock() {
                     case Covox::SOUNDRIVE1:
                         if (z80.wr && ((z80.a & 0x00AF) == 0x000F)) {
                             switch (z80.a & 0x0050) {
-                                case 0x00: covox[0] = z80.d * 0x20; break;
-                                case 0x10: covox[1] = z80.d * 0x20; break;
-                                case 0x40: covox[2] = z80.d * 0x20; break;
-                                case 0x50: covox[3] = z80.d * 0x20; break;
+                                case 0x00: covox[0] = z80.d * COVOX_VOLUME; break;
+                                case 0x10: covox[1] = z80.d * COVOX_VOLUME; break;
+                                case 0x40: covox[2] = z80.d * COVOX_VOLUME; break;
+                                case 0x50: covox[3] = z80.d * COVOX_VOLUME; break;
                                 default: break;
                             }
                         }
@@ -586,10 +586,10 @@ void Spectrum::clock() {
                     case Covox::SOUNDRIVE2:
                         if (z80.wr && ((z80.a & 0x00F1) == 0x00F1)) {
                             switch (z80.a & 0x000A) {
-                                case 0x0: covox[0] = z80.d * 0x20; break;
-                                case 0x2: covox[1] = z80.d * 0x20; break;
-                                case 0x8: covox[2] = z80.d * 0x20; break;
-                                case 0xA: covox[3] = z80.d * 0x20; break;
+                                case 0x0: covox[0] = z80.d * COVOX_VOLUME; break;
+                                case 0x2: covox[1] = z80.d * COVOX_VOLUME; break;
+                                case 0x8: covox[2] = z80.d * COVOX_VOLUME; break;
+                                case 0xA: covox[3] = z80.d * COVOX_VOLUME; break;
                                 default: break;
                             }
                         }
@@ -822,65 +822,63 @@ void Spectrum::sample() {
     psgSample();
 
     if (joystick == JoystickType::FULLER) {
-        l += psg[4].channelA + psg[4].channelB + psg[4].channelC;
-        r += psg[4].channelA + psg[4].channelB + psg[4].channelC;
+        l -= psg[4].channelA + psg[4].channelB + psg[4].channelC;
+        r -= psg[4].channelA + psg[4].channelB + psg[4].channelC;
     }
 
     switch (stereo) {
         case StereoMode::STEREO_ACB: // ACB
-            l += psg[0].channelA + psg[0].channelC;
-            r += psg[0].channelB + psg[0].channelC;
+            l -= psg[0].channelA + psg[0].channelC;
+            r -= psg[0].channelB + psg[0].channelC;
             break;
 
         case StereoMode::STEREO_ABC: // ABC
-            l += psg[0].channelA + psg[0].channelB;
-            r += psg[0].channelB + psg[0].channelC;
+            l -= psg[0].channelA + psg[0].channelB;
+            r -= psg[0].channelB + psg[0].channelC;
             break;
 
         case StereoMode::STEREO_TURBO_MONO: // TurboSound with 2 PSGs, mono.
-            l += psg[0].channelA + psg[0].channelB + psg[0].channelC;
-            l += psg[1].channelA + psg[1].channelB + psg[1].channelC;
-            r += psg[0].channelA + psg[0].channelB + psg[0].channelC;
-            r += psg[1].channelA + psg[1].channelB + psg[1].channelC;
+            l -= psg[0].channelA + psg[0].channelB + psg[0].channelC;
+            l -= psg[1].channelA + psg[1].channelB + psg[1].channelC;
+            r -= psg[0].channelA + psg[0].channelB + psg[0].channelC;
+            r -= psg[1].channelA + psg[1].channelB + psg[1].channelC;
             break;
 
         case StereoMode::STEREO_TURBO_ACB:  // TurboSound with 2 PSGs, ACB
-            l += psg[0].channelA + psg[0].channelC;
-            l += psg[1].channelA + psg[1].channelC;
-            r += psg[0].channelB + psg[0].channelC;
-            r += psg[1].channelB + psg[1].channelC;
+            l -= psg[0].channelA + psg[0].channelC;
+            l -= psg[1].channelA + psg[1].channelC;
+            r -= psg[0].channelB + psg[0].channelC;
+            r -= psg[1].channelB + psg[1].channelC;
             break;
 
         case StereoMode::STEREO_TURBO_ABC: // TurboSound with 2 PSGs, ABC
-            l += psg[0].channelA + psg[0].channelB;
-            l += psg[1].channelA + psg[1].channelB;
-            r += psg[0].channelB + psg[0].channelC;
-            r += psg[1].channelB + psg[1].channelC;
+            l -= psg[0].channelA + psg[0].channelB;
+            l -= psg[1].channelA + psg[1].channelB;
+            r -= psg[0].channelB + psg[0].channelC;
+            r -= psg[1].channelB + psg[1].channelC;
             break;
 
         case StereoMode::STEREO_NEXT:
             for (size_t ii = 0; ii < 4; ++ii) {
                 if (psg[ii].lchan) {
-                    l += psg[ii].channelA >> 1;
-                    l += psg[ii].channelB >> 1;
-                    l += psg[ii].channelC >> 1;
+                    l -= psg[ii].channelA >> 1;
+                    l -= psg[ii].channelB >> 1;
+                    l -= psg[ii].channelC >> 1;
                 }
                 if (psg[ii].rchan) {
-                    r += psg[ii].channelA >> 1;
-                    r += psg[ii].channelB >> 1;
-                    r += psg[ii].channelC >> 1;
+                    r -= psg[ii].channelA >> 1;
+                    r -= psg[ii].channelB >> 1;
+                    r -= psg[ii].channelC >> 1;
                 }
             }
             break;
 
         default:    // mono, all channels go through both sides.
-            l += psg[0].channelA + psg[0].channelB + psg[0].channelC;
-            r += psg[0].channelA + psg[0].channelB + psg[0].channelC;
+            l -= psg[0].channelA + psg[0].channelB + psg[0].channelC;
+            r -= psg[0].channelA + psg[0].channelB + psg[0].channelC;
             break;
     }
 
-    l = 2 * (l - 0x4000);
-    r = 2 * (r - 0x4000);
     channel.push(l, r);
 }
 

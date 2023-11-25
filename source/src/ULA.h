@@ -29,10 +29,6 @@
 
 using namespace std;
 
-int constexpr SOUND_VOLUME = 0x19FF;
-int constexpr SAVE_VOLUME = 0x03FF;
-int constexpr LOAD_VOLUME = 0x01FF;
-
 uint_fast32_t constexpr ENDD = 4;
 uint_fast32_t constexpr ENDS = 3;
 uint_fast32_t constexpr DUPL = 2;

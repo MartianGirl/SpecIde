@@ -28,6 +28,15 @@ int constexpr FRAME_TIME_CPC = 19968;
 
 uint32_t constexpr SAMPLE_RATE = 44100;
 
+int constexpr ULA_BEEP_VOLUME = 0x19FF;
+int constexpr ULA_SAVE_VOLUME = 0x03FF;
+int constexpr ULA_LOAD_VOLUME = 0x01FF;
+
+int constexpr COVOX_VOLUME = 0x20;
+
+int constexpr CPC_SAVE_VOLUME = 0x03FF;
+int constexpr CPC_LOAD_VOLUME = 0x01FF;
+
 enum class SoundRate {
     SOUNDRATE_48K,
     SOUNDRATE_128K,

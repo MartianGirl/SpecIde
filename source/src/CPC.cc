@@ -19,9 +19,6 @@
 #include <cstdlib>
 #include <ctime>
 
-int constexpr SAVE_VOLUME = 0x01FF;
-int constexpr LOAD_VOLUME = 0x01FF;
-
 CPC::CPC() :
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF} {
 
@@ -363,8 +360,8 @@ void CPC::clock() {
         }
 
         // Tape sounds.
-        filter[index] = (tapeLevel && tapeSound) ? LOAD_VOLUME : 0;
-        filter[index] += (ppi.portC & 0x20) ? SAVE_VOLUME : 0;
+        filter[index] = (tapeLevel && tapeSound) ? CPC_LOAD_VOLUME : 0;
+        filter[index] += (ppi.portC & 0x20) ? CPC_SAVE_VOLUME : 0;
         index = (index + 1) % FILTER_BZZ_SIZE;
 
         if (!io_) {
@@ -464,31 +461,29 @@ void CPC::sample() {
 
     switch (stereo) {
         case StereoMode::STEREO_ACB: // ACB
-            l += psg.channelA;
-            l += psg.channelC;
-            r += psg.channelB;
-            r += psg.channelC;
+            l -= psg.channelA;
+            l -= psg.channelC;
+            r -= psg.channelB;
+            r -= psg.channelC;
             break;
 
         case StereoMode::STEREO_ABC: // ABC
-            l += psg.channelA;
-            l += psg.channelB;
-            r += psg.channelB;
-            r += psg.channelC;
+            l -= psg.channelA;
+            l -= psg.channelB;
+            r -= psg.channelB;
+            r -= psg.channelC;
             break;
 
         default:    // mono, all channels go through both sides.
-            l += psg.channelA;
-            l += psg.channelB;
-            l += psg.channelC;
-            r += psg.channelA;
-            r += psg.channelB;
-            r += psg.channelC;
+            l -= psg.channelA;
+            l -= psg.channelB;
+            l -= psg.channelC;
+            r -= psg.channelA;
+            r -= psg.channelB;
+            r -= psg.channelC;
             break;
     }
 
-    l = 2 * (l - 0x4000);
-    r = 2 * (r - 0x4000);
     channel.push(l, r);
 }
 
