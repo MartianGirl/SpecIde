@@ -53,7 +53,7 @@ void TAPFile::parse(
         stopData.insert(pulseData.size());
     }
 
-    while (pointer < fileData.size()) {
+    while ((pointer + 2) < fileData.size()) {
         // Each block in the ROM loader has:
         // 1. A pilot tone.
         // 2. Two sync pulses.
@@ -61,6 +61,8 @@ void TAPFile::parse(
         // 4. A pause.
 
         dataLength = fileData[pointer + 1] * 0x100 + fileData[pointer];
+        if (pointer + 2 + dataLength > fileData.size()) break;
+
         flagByte = fileData[pointer + 2];
 
         cout << "Flag: " << static_cast<size_t>(flagByte) << "  ";
