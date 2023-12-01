@@ -86,7 +86,8 @@ bool z80Inir()
             return false;
 
         case 8:
-            pc.w -= 0x0002;
+            wz.w = pc.w - 1;
+            pc.w -= 2;
             flg = af.b.l & ~(FLAG_5 | FLAG_3);
             flg |= pc.b.h & (FLAG_5 | FLAG_3);
 

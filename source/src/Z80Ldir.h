@@ -82,7 +82,7 @@ bool z80Ldir()
 
         case 9:
             wz.w = pc.w - 1;
-            pc.w = wz.w - 1;
+            pc.w -= 2;
             flg = af.b.l & ~(FLAG_5 | FLAG_3);
             flg |= pc.b.h & (FLAG_5 | FLAG_3);
             af.b.l = flg;
