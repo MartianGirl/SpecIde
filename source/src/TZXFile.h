@@ -35,6 +35,7 @@ class TZXFile {
         TZXFile() :
             magic { 'Z', 'X', 'T', 'a', 'p', 'e', '!', 0x1A } {}
 
+        std::string name;
         uint8_t magic[8];
         bool magicIsOk = false;
         uint8_t majorVersion = 0;
@@ -71,6 +72,8 @@ class TZXFile {
         void pushSymbol(uint32_t rep, uint32_t sym,
                 std::vector<uint32_t> const& alphabet, std::vector<uint32_t>& data);
         void addPause(uint32_t pause, std::vector<uint32_t>& data);
+
+        size_t getBlockHeaderLength();
 };
 
 // vim: et:sw=4:ts=4:

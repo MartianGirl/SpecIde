@@ -45,6 +45,7 @@ class TAPFile
                 set<size_t> &stopData);
 
         size_t pointer = 0;
+        std::string name;
 };
 
 // vim: et:sw=4:ts=4:

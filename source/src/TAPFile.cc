@@ -25,6 +25,8 @@ void TAPFile::load(string const& fileName) {
             fileData.push_back(c);
         }
     }
+
+    name = fileName;
 }
 
 void TAPFile::parse(
@@ -61,7 +63,10 @@ void TAPFile::parse(
         // 4. A pause.
 
         dataLength = fileData[pointer + 1] * 0x100 + fileData[pointer];
-        if (pointer + 2 + dataLength > fileData.size()) break;
+        if (pointer + 2 + dataLength > fileData.size()) {
+            cout << "Error: Missing data in TAP block. '" << name << "' may be corrupt." << endl;
+            break;
+        }
 
         flagByte = fileData[pointer + 2];
 
