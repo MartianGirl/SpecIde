@@ -105,6 +105,8 @@ class Spectrum {
         uint_fast8_t fullerData = 0xFF;
         /** Fuller AY clock counter. */
         uint_fast32_t fullerCount = 0;
+        /** PSG clock period. */
+        uint_fast32_t psgPeriod = 0;
 
         /** Joystick interface present. By default, Sinclair joystick is emulated. */
         JoystickType joystick = JoystickType::SINCLAIR;
@@ -140,7 +142,7 @@ class Spectrum {
         /** Number of cycles before next sound sample. */
         uint_fast32_t skip;
         /** Tail of cycles before next sound sample. */
-        double tail;
+        uint_fast32_t tail;
         /** Counter of cycles before next sound sample. */
         uint_fast32_t skipCycles = 0;
         /** Emulate Covox on port $FB. */

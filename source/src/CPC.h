@@ -112,7 +112,7 @@ class CPC {
         /** Number of cycles before next sound sample. */
         uint_fast32_t skip;
         /** Tail of cycles before next sound sample. */
-        double tail;
+        uint_fast32_t tail;
         /** Counter of cycles before next sound sample. */
         uint_fast32_t skipCycles = 0;
 

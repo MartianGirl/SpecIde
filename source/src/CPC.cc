@@ -178,15 +178,15 @@ void CPC::run(bool frame) {
 
 void CPC::generateSound() {
 
-    static double remaining = 0;
+    static uint_fast32_t remaining = 0;
 
     // Generate sound. This maybe can be done using the same counter?
     if (!(--skipCycles)) {
         skipCycles = skip;
         remaining += tail;
-        if (remaining >= 1.0) {
+        if (remaining >= 1000000) {
             skipCycles++;
-            remaining -= 1.0;
+            remaining -= 1000000;
         }
         sample();
     }
@@ -553,7 +553,7 @@ void CPC::setSoundRate(uint_fast32_t frame, bool syncToVideo) {
         value /= factor;
     }
 
-    skip = static_cast<uint32_t>(value);
-    tail = value - skip;
+    skip = static_cast<uint_fast32_t>(value);
+    tail = static_cast<uint_fast32_t>((value - skip) * 1000000);
 }
 // vim: et:sw=4:ts=4

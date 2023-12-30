@@ -37,6 +37,9 @@ int constexpr COVOX_VOLUME = 0x20;
 int constexpr CPC_SAVE_VOLUME = 0x03FF;
 int constexpr CPC_LOAD_VOLUME = 0x01FF;
 
+uint_fast32_t constexpr fullerClock = 1638190;  // Credit to balford for obtaining this number.
+uint_fast32_t constexpr fullerPeriod = static_cast<uint_fast32_t>(1e14 / static_cast<double>(fullerClock));
+
 enum class SoundRate {
     SOUNDRATE_48K,
     SOUNDRATE_128K,

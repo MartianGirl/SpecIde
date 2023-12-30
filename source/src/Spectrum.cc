@@ -250,7 +250,7 @@ void Spectrum::playSound(bool play) {
 
 void Spectrum::run() {
 
-    static double remaining = 0;
+    static uint_fast32_t remaining = 0;
 
     while (!ula.vSync) {
         if (flashTap) {
@@ -271,9 +271,9 @@ void Spectrum::run() {
         if (!(--skipCycles)) {
             skipCycles = skip;
             remaining += tail;
-            if (remaining >= 1.0) {
+            if (remaining >= 1000000) {
                 ++skipCycles;
-                remaining -= 1.0;
+                remaining -= 1000000;
             }
             sample();
         }
@@ -368,10 +368,19 @@ void Spectrum::clock() {
     if (!(count & 0x03)) {
         ula.beeper();
         psgClock();
+
         for (int i = 0; i < 4; ++i) {
             filter[i][index] = covox[i];
         }
         index = (index + 1) % FILTER_BZZ_SIZE;
+
+        if (joystick == JoystickType::FULLER) {
+            fullerCount += psgPeriod;
+            if (fullerCount > fullerPeriod) {
+                fullerCount -= fullerPeriod;
+                psg[4].clock();
+            }
+        }
     }
 
     if (!(count % 0x07)) {
@@ -387,11 +396,6 @@ void Spectrum::clock() {
 
     // We clock the Z80 if the ULA allows.
     if (ula.cpuClock) {
-        if (joystick == JoystickType::FULLER) {
-            if (!(++fullerCount & 0x03)) {
-                psg[4].clock();
-            }
-        }
         // Z80 gets data from the ULA or memory, only when reading.
         if (z80.access) {
             if (!io_) {
@@ -1053,14 +1057,17 @@ void Spectrum::setSoundRate(SoundRate rate, bool syncToVideo) {
         case SoundRate::SOUNDRATE_128K:
             value = static_cast<double>(BASE_CLOCK_128) / static_cast<double>(SAMPLE_RATE);
             frame = FRAME_TIME_128;
+            psgPeriod = static_cast<uint_fast32_t>(4e14 / static_cast<double>(BASE_CLOCK_128));
             break;
         case SoundRate::SOUNDRATE_PENTAGON:
             value = static_cast<double>(BASE_CLOCK_48) / static_cast<double>(SAMPLE_RATE);
             frame = FRAME_TIME_PENTAGON;
+            psgPeriod = static_cast<uint_fast32_t>(4e14 / static_cast<double>(BASE_CLOCK_48));
             break;
         default:
             value = static_cast<double>(BASE_CLOCK_48) / static_cast<double>(SAMPLE_RATE);
             frame = FRAME_TIME_48;
+            psgPeriod = static_cast<uint_fast32_t>(4e14 / static_cast<double>(BASE_CLOCK_48));
             break;
     }
 
@@ -1069,8 +1076,8 @@ void Spectrum::setSoundRate(SoundRate rate, bool syncToVideo) {
         value /= factor;
     }
 
-    skip = static_cast<uint32_t>(value);
-    tail = value - skip;
+    skip = static_cast<uint_fast32_t>(value);
+    tail = static_cast<uint_fast32_t>((value - skip) * 1000000);
     skipCycles = skip;
 }
 
