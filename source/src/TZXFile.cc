@@ -711,30 +711,30 @@ void TZXFile::pushSymbol(uint32_t rep, uint32_t sym,
     uint32_t const* last = &alphabet[(sym + 1) * size + 1];
     last = find(first, last, 0);
 
+    bool concatenate = false;
     switch (type) {
         case 0x00:  // Edge
-            for (size_t i = 0; i < rep; ++i) {
-                data.insert(data.end(), first, last);
-            }
+            concatenate = false;
             break;
 
         case 0x01:  // Continue
-            for (size_t i = 0; i < rep; ++i) {
-                data.back() += *first;
-                data.insert(data.end(), first + 1, last);
-            }
+            concatenate = true;
             break;
+
         case 0x02:  // Force low -- fallthrough
         case 0x03:  // Force high
-            if ((data.size() % 2) == (type % 2)) {
-                data.insert(data.end(), first, last);
-            } else {
-                data.back() += *first;
-                data.insert(data.end(), first + 1, last);
-            }
+            concatenate = (data.size() % 2) != (type % 2);
             break;
         default:
             assert(false);
+    }
+
+    if (concatenate) {
+        data.back() += *first;
+        data.insert(data.end(), first + 1, last);
+    }
+    for (uint32_t ii = concatenate; ii < rep; ++ii) {
+        data.insert(data.end(), first, last);
     }
 }
 
