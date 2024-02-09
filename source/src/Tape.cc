@@ -122,6 +122,7 @@ uint_fast8_t Tape::advance() {
         cout << "End of tape." << endl;
         pointer = 0;
         sample = 0;
+        level = 0x7F;
         playing = false;
     }
 

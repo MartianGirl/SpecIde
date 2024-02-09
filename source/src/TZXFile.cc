@@ -193,7 +193,7 @@ void TZXFile::parse(
                     + fileData[pointer + 9];
                 pilotLength = fileData[pointer + 12] * 0x100
                     + fileData[pointer + 11];
-                pilotLength += pilotLength % 2;   // Pilot should be even
+                pilotLength += pilotLength % 2;   // Pilot length should be even
                 bitsInLastByte = fileData[pointer + 13];
                 pause = fileData[pointer + 15] * 0x100
                     + fileData[pointer + 14];
@@ -247,7 +247,7 @@ void TZXFile::parse(
 
                 // If this is the first segment of lead tone in a custom loader,
                 // then it should contain an odd number of pulses.
-                pilotLength += pilotLength % 2;   // Pilot should be even
+                pilotLength += pilotLength % 2;   // Pilot length should be even
 
                 // Pilot tone
                 pulseData.insert(pulseData.end(), pilotLength, pilotPulse);

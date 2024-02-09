@@ -34,14 +34,14 @@ void TAPFile::parse(
         set<size_t> &indexData,
         set<size_t> &stopData) {
 
-    static constexpr uint32_t PILOT_PULSE = 2168;
-    static constexpr uint32_t SYNC_PULSE_1 = 667;
-    static constexpr uint32_t SYNC_PULSE_2 = 735;
-    static constexpr uint32_t DATA_PULSE_0 = 855;
-    static constexpr uint32_t DATA_PULSE_1 = 1710;
-    static constexpr uint32_t PILOT_HEAD_LENGTH = 8064;
-    static constexpr uint32_t PILOT_DATA_LENGTH = 3224;
-    static constexpr uint32_t MILLISECOND_PAUSE = 3500;
+    static uint32_t constexpr PILOT_PULSE = 2168;
+    static uint32_t constexpr SYNC_PULSE_1 = 667;
+    static uint32_t constexpr SYNC_PULSE_2 = 735;
+    static uint32_t constexpr DATA_PULSE_0 = 855;
+    static uint32_t constexpr DATA_PULSE_1 = 1710;
+    static uint32_t constexpr PILOT_HEAD_LENGTH = 8064;
+    static uint32_t constexpr PILOT_DATA_LENGTH = 3224;
+    static uint32_t constexpr MILLISECOND_PAUSE = 3500;
 
     size_t dataLength;
     uint8_t flagByte;

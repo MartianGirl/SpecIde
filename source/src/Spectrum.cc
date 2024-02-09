@@ -973,41 +973,43 @@ void Spectrum::trapLdStart() {
 
         uint16_t block = tape.getBlockLength() + flagByte - 1;  // Include parity
         uint16_t offset = 3 - flagByte;
-        uint8_t parity = flagByte ? 0 : tape.getBlockByte(2);
+        z80.hl.b.h = flagByte ? 0 : tape.getBlockByte(2);
 
         if (verify) {
             while (bytes && block) {
-                uint8_t byte = tape.getBlockByte(offset++);
+                z80.hl.b.l = tape.getBlockByte(offset++);
                 uint8_t mem = readMemory(address++);
                 block--;
                 bytes--;
-                parity ^= byte;
-                if (byte != mem) break;
+                z80.hl.b.h ^= z80.hl.b.l;
+                if (z80.hl.b.l != mem) break;
             }
         } else {
             while (bytes && block) {
-                uint8_t byte = tape.getBlockByte(offset++);
-                writeMemory(address++, byte);
+                z80.hl.b.l = tape.getBlockByte(offset++);
+                writeMemory(address++, z80.hl.b.l);
                 block--;
                 bytes--;
-                parity ^= byte;
+                z80.hl.b.h ^= z80.hl.b.l;
             }
         }
 
         if (block) {
-            parity ^= tape.getBlockByte(offset);
+            z80.hl.b.l = tape.getBlockByte(offset);
+            z80.hl.b.h ^= z80.hl.b.l;
         }
 
-        if (!bytes && block && !parity) {
+        if (!bytes && block && !z80.hl.b.h) {
             z80.af.b.l |= FLAG_C;
         } else {
             z80.af.b.l &= ~FLAG_C;
             if (!block) z80.af.b.l |= FLAG_Z;
         }
 
-        z80.hl.b.h = parity;
+        z80.af.b.h = z80.hl.b.h;
         z80.ix.w = address;
         z80.de.w = bytes;
+        z80.bc.w = 0xB001;  // B is set at $5D3, C can be $01 or $21.
     }
 
     // Advance tape
