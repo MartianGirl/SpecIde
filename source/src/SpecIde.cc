@@ -153,7 +153,7 @@ void displayLicense() {
 
     cout << "SpecIde built on: " << SPECIDE_BUILD_TIME << endl;
     cout << "Built from: " << SPECIDE_BUILD_COMMIT << endl << endl;
-    cout << "(c) 2016-2019 Marta Sevillano Mancilla." << endl << endl;
+    cout << "(c) 2016-2024 Marta Sevillano Mancilla." << endl << endl;
     cout << "This program is free software: you can redistribute it and/or modify" << endl;
     cout << "it under the terms of the GNU General Public License as published by" << endl;
     cout << "the Free Software Foundation, version 3." << endl;
@@ -174,9 +174,10 @@ void displayLicense() {
 
 void displayHelp() {
 
-    cout << "Usage: SpecIde [options] [tapefiles]" << endl;
+    cout << "Usage: SpecIde [options] [tapefiles] [diskfiles]" << endl;
     cout << endl;
-    cout << "Supported formats are TAP and TZX." << endl;
+    cout << "Supported tape formats: TAP TZX CDT CSW." << endl;
+    cout << "Supported disk formats: DSK." << endl;
     cout << endl;
     cout << "Options:" << endl;
     cout << endl;
