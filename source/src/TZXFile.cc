@@ -389,7 +389,7 @@ void TZXFile::parse(
                         symbolsInPilot, maxPilotSymLen, pilotAlphabetSize);
                 loadSymbolData(pointer + 13,
                         symbolsInData, maxDataSymLen, dataAlphabetSize);
-                bitsPerDataSymbol = ceil(log10(dataAlphabetSize) / log10(10));
+                bitsPerDataSymbol = ceil(log10(dataAlphabetSize) / log10(2));
 
                 tableIndex = pointer + 19;
                 if (symbolsInPilot > 0) {
@@ -634,6 +634,9 @@ void TZXFile::loadSymbolData(size_t base,
         + fileData[base];
     maxLen = fileData[base + 4];
     alphaSize = fileData[base + 5];
+    if (0 == alphaSize) {
+        alphaSize = 0x100;
+    }
 }
 
 size_t TZXFile::loadSymbolAlphabet(size_t base, uint32_t numSym, uint32_t maxLen,
@@ -684,22 +687,36 @@ size_t TZXFile::dumpPilotStream(size_t base, uint32_t numSym,
 size_t TZXFile::dumpDataStream(size_t base, uint32_t numSym, uint32_t bps,
         vector<uint32_t> const& alphabet, vector<uint32_t>& data) {
 
-    uint32_t bit = 0;
-    uint32_t mask = (1 << bps) - 1;
-    uint32_t sym;
-    size_t index = base;
+    uint32_t symbolStart = 0;
+    uint32_t symbolEnd = bps;
+    uint32_t lastByte = base;
 
     ss << "Data: " << numSym << " " << bps << "-bit symbols ";
-    for (size_t i = 0; i < numSym; ++i) {
-        index = base + (bit >> 3);
-        sym = (fileData[index] >> (7 - (bit % 8))) & mask;
-        bit += bps;
+    for (size_t ii = 0; ii < numSym; ++ii) {
+
+        uint32_t byteStart = base + (symbolStart >> 3);
+        uint32_t byteEnd = base + ((symbolEnd - 1) >> 3);
+        uint32_t sym = 0;
+
+        for (size_t jj = byteStart; jj <= byteEnd; ++jj) {
+            uint32_t bitStart = ((jj == byteStart) ? (symbolStart & 7) : 0);
+            uint32_t bitEnd = ((jj == byteEnd) ? ((symbolEnd - 1) & 7) : 7);
+            uint32_t bitShift = bitEnd - bitStart + 1;
+            uint32_t symbolByte = fileData[jj] >> (7 - bitEnd);
+            uint32_t symbolMask = (1 << bitShift) - 1;
+            sym <<= bitShift;
+            sym |= (symbolByte & symbolMask);
+        }
 
         pushSymbol(1, sym, alphabet, data);
+
+        symbolStart += bps;
+        symbolEnd += bps;
+        lastByte = byteEnd + 1;
     }
     ss << endl;
 
-    return index - base;
+    return lastByte - base;
 }
 
 void TZXFile::pushSymbol(uint32_t rep, uint32_t sym,
