@@ -1009,7 +1009,9 @@ void Spectrum::trapLdStart() {
         z80.af.b.h = z80.hl.b.h;
         z80.ix.w = address;
         z80.de.w = bytes;
-        z80.bc.w = 0xB001;  // B is set at $5D3, C can be $01 or $21.
+        z80.bc.b.h = 0xB0;  // B is set at $5D3
+        z80.bc.b.l ^= 0x3;  // C is set at $569 as the initial EAR bit, red border.
+                            // If the number of pulses is even, C value is just C ^ 3.
     }
 
     // Advance tape

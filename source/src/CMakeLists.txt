@@ -22,8 +22,7 @@ else()
     if(APPLE)
         find_package(SFML COMPONENTS audio graphics window system)
     elseif(UNIX)
-        find_package(PkgConfig REQUIRED)
-        pkg_search_module(SFML REQUIRED sfml-all)
+        find_package(SFML COMPONENTS audio graphics window system)
     elseif(WIN32)
         find_package(SFML COMPONENTS audio graphics window system)
         set(Boost_NO_BOOST_CMAKE TRUE)
@@ -54,14 +53,14 @@ string(TIMESTAMP SpecIde_BUILD_DATE "%Y%m%d" UTC)
 # Set timestamp in config.h.
 string(TIMESTAMP SpecIde_BUILD_TIME "%Y-%m-%d %H:%M:%S UTC" UTC)
 
-find_package(Git REQUIRED)
+find_package(Git)
 execute_process(
     COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
     RESULT_VARIABLE result
     OUTPUT_VARIABLE SpecIde_BUILD_COMMIT
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 if(result)
-    set(SpecIde_BUILD_COMMIT "snapshot")
+    set(SpecIde_BUILD_COMMIT "snapcraft")
 endif()
 
 # Set endianness in config.h.
