@@ -9,8 +9,8 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Set an output directory for our binaries
-set(PROJECT_INSTALL_DIR ${PROJECT_SOURCE_DIR}/bin)
-message("Setting PROJECT_INSTALL_DIR to ${PROJECT_SOURCE_DIR}/bin")
+set(PROJECT_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+message("Setting PROJECT_INSTALL_DIR to ${CMAKE_INSTALL_PREFIX}/bin")
 
 # Bump up warning levels appropriately for clang, gcc & msvc.
 # Also set debug/optimization flags depending on the build type. IDE users
@@ -55,4 +55,6 @@ endif()
 add_subdirectory(src)
 
 # Look in the tst subdirectory
-add_subdirectory(tst)
+if(SPECIDE_BUILD_TESTS)
+    add_subdirectory(tst)
+endif()
