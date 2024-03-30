@@ -197,12 +197,10 @@ void Z80::clock() {
 
         case Z80State::ST_MEMRD_T1L_ADDRWR:
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_);
-            access = rd = true;
             state = Z80State::ST_MEMRD_T2H_WAITST;
             return;
 
         case Z80State::ST_MEMRD_T2H_WAITST:
-            access = rd = false;
             state = Z80State::ST_MEMRD_T2L_WAITST;
             return;
 
@@ -211,11 +209,13 @@ void Z80::clock() {
                 state = Z80State::ST_MEMRD_T2H_WAITST;
             } else {
                 state = Z80State::ST_MEMRD_T3H_DATARD;
+                access = rd = true;
             }
             return;
 
         case Z80State::ST_MEMRD_T3H_DATARD:
             state = Z80State::ST_MEMRD_T3L_DATARD;
+            access = rd = false;
             return;
 
         case Z80State::ST_MEMRD_T3L_DATARD:
