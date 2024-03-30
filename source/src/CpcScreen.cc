@@ -187,7 +187,6 @@ void CpcScreen::run() {
             pollEvents();
 
             cpc.run(!syncToVideo);
-            cpc.playSound(true);
 
             update();
 

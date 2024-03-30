@@ -30,7 +30,7 @@
 
 #include <SFML/Audio.hpp>
 
-constexpr size_t MAX_SAMPLES = 1024;
+constexpr size_t MAX_SAMPLES = 480;
 constexpr size_t MAX_BUFFERS = 16;
 
 class SoundChannel : public sf::SoundStream {
@@ -39,16 +39,20 @@ class SoundChannel : public sf::SoundStream {
         // The buffers
         std::vector<std::vector<sf::Int16>> buffers;
         std::queue<size_t> queuedBuffers;
-        size_t rdBuffer, wrBuffer;
+        size_t rdBuffer = 0;
+        size_t wrBuffer = 0;
         size_t wrSample = 0;
 
-        size_t millis;  // Not really used.
-        size_t sampleRate;
-        size_t channels;
+        uint32_t millis;  // Not really used.
+        uint32_t sampleRate;
+        uint32_t channels;
+
+        uint32_t waitBuffers = 1;
+
+        bool playing = false;
 
         SoundChannel() :
-            buffers(MAX_BUFFERS, (std::vector<sf::Int16>())),
-            rdBuffer(0), wrBuffer(1) {}
+            buffers(MAX_BUFFERS, (std::vector<sf::Int16>())) {}
 
         bool open(unsigned int chan, unsigned int rate) {
 
@@ -76,6 +80,9 @@ class SoundChannel : public sf::SoundStream {
             if (!queuedBuffers.empty()) {
                 rdBuffer = queuedBuffers.front();
                 queuedBuffers.pop();
+            } else {
+                playing = false;
+                ++waitBuffers;
             }
         }
 
@@ -86,8 +93,9 @@ class SoundChannel : public sf::SoundStream {
             } while (wrBuffer == rdBuffer);
         }
 
-        void push(int l, int r) {
+        bool push(int l, int r) {
 
+            bool complete = false;
             buffers[wrBuffer][2 * wrSample + 0] = static_cast<sf::Int16>(l);
             buffers[wrBuffer][2 * wrSample + 1] = static_cast<sf::Int16>(r);
 
@@ -95,7 +103,10 @@ class SoundChannel : public sf::SoundStream {
                 wrSample = 0;
                 queuedBuffers.push(wrBuffer);
                 getNextWriteBuffer();
+                complete = (queuedBuffers.size() >= waitBuffers);
             }
+
+            return complete;
         }
 
     private:
@@ -104,7 +115,7 @@ class SoundChannel : public sf::SoundStream {
             getNextReadBuffer();
             data.sampleCount = MAX_SAMPLES * channels;
             data.samples = &(buffers[rdBuffer])[0];
-            return true;
+            return playing;
         }
 
         virtual void onSeek(sf::Time offset) {

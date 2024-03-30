@@ -270,10 +270,6 @@ void SpeccyScreen::run() {
             pollEvents();
             spectrum.run();
 
-            // Delay starting playing sound (if disabled) until first frame
-            // is complete
-            spectrum.playSound(true);
-
             // Update the screen.
             // These conditions cannot happen at the same time:
             // - HSYNC and VSYNC only happen during the blanking interval.
