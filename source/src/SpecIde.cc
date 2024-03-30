@@ -237,7 +237,7 @@ void displayHelp() {
 void readOptions(map<string, string>& options) {
 
     // Set default values first
-    options["model"] = "default";
+    options["model"] = "issue3";
     options["joystick"] = "sinclair";
     options["pad"] = "no";
     options["tapesound"] = "yes";
