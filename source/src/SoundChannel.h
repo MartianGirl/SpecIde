@@ -30,7 +30,7 @@
 
 #include <SFML/Audio.hpp>
 
-constexpr size_t MAX_SAMPLES = 480;
+constexpr size_t MAX_SAMPLES = 512;
 constexpr size_t MAX_BUFFERS = 16;
 
 class SoundChannel : public sf::SoundStream {
@@ -47,7 +47,7 @@ class SoundChannel : public sf::SoundStream {
         uint32_t sampleRate;
         uint32_t channels;
 
-        uint32_t waitBuffers = 1;
+        uint32_t waitBuffers = 2;
 
         bool playing = false;
 
@@ -81,7 +81,7 @@ class SoundChannel : public sf::SoundStream {
             rdBuffer = 0;
             wrBuffer = 0;
             wrSample = 0;
-            waitBuffers = 1;
+            waitBuffers = 2;
 
         }
 
@@ -116,7 +116,7 @@ class SoundChannel : public sf::SoundStream {
                 wrSample = 0;
                 queuedBuffers.push(wrBuffer);
                 getNextWriteBuffer();
-                complete = (queuedBuffers.size() >= waitBuffers);
+                complete = (queuedBuffers.size() > waitBuffers);
             }
 
             return complete;
