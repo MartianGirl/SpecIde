@@ -74,6 +74,17 @@ class SoundChannel : public sf::SoundStream {
             return true;
         }
 
+        void clear() {
+            while (queuedBuffers.size()) {
+                queuedBuffers.pop();
+            }
+            rdBuffer = 0;
+            wrBuffer = 0;
+            wrSample = 0;
+            waitBuffers = 1;
+
+        }
+
         void getNextReadBuffer() {
 
             // If there is no queued buffers, complete current buffer
@@ -82,7 +93,9 @@ class SoundChannel : public sf::SoundStream {
                 queuedBuffers.pop();
             } else {
                 playing = false;
-                ++waitBuffers;
+                if (waitBuffers < MAX_BUFFERS / 2) {
+                    ++waitBuffers;
+                }
             }
         }
 

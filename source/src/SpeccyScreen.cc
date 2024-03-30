@@ -109,7 +109,7 @@ void SpeccyScreen::setup() {
     // Sound settings.
     tapeSound = (options["tapesound"] != "no");
     cout << "Play tape sound: " << options["tapesound"] << endl;
-    playSound = (options["sound"] != "no");
+    soundEnabled = (options["sound"] != "no");
     cout << "Play sound: " << options["sound"] << endl;
 
     // Non-standard number of PSGs.
@@ -216,8 +216,8 @@ void SpeccyScreen::setup() {
     reopenWindow(fullscreen);
     setFullScreen(fullscreen);
     spectrum.ula.tapeSound = tapeSound;
-    spectrum.ula.playSound = playSound;
-    spectrum.psgPlaySound(psgSound && playSound);
+    spectrum.ula.playSound = soundEnabled;
+    spectrum.psgPlaySound(psgSound && soundEnabled);
 }
 
 void SpeccyScreen::loadFiles() {
@@ -482,8 +482,8 @@ void SpeccyScreen::toggleTapeSound() {
 
 void SpeccyScreen::toggleSound() {
 
-    spectrum.ula.playSound = playSound = !playSound;
-    spectrum.psgPlaySound(psgSound & playSound);
+    spectrum.ula.playSound = soundEnabled = !soundEnabled;
+    spectrum.psgPlaySound(psgSound & soundEnabled);
 }
 
 void SpeccyScreen::togglePsgType() {
@@ -798,5 +798,9 @@ void SpeccyScreen::pressKeyJoystickButton(uint_fast32_t type, uint_fast32_t butt
 
 void SpeccyScreen::releaseKeyJoystickButton(uint_fast32_t type, uint_fast32_t button) {
     spectrum.ula.keys[spectrumKeyJoystick[type][button].row] |= spectrumKeyJoystick[type][button].key;
+}
+
+void SpeccyScreen::playSound(bool play) {
+    spectrum.playSound(play);
 }
 // vim: et:sw=4:ts=4

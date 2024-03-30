@@ -107,7 +107,7 @@ class Screen {
         bool wide = false;
 
         /** Sound flag. */
-        bool playSound = true;
+        bool soundEnabled = true;
         /** Tape sound flag. */
         bool tapeSound = true;
         /** PSG sound flag. */
@@ -342,5 +342,7 @@ class Screen {
          * @return Pixel clock, in kHz.
          */
         virtual float getPixelClock() = 0;
+
+        virtual void playSound(bool play) = 0;
 };
 // vim: et:sw=4:ts=4

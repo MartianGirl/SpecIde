@@ -273,6 +273,7 @@ void Screen::pollEvents() {
                         menu = true;
                         break;
                     case Keyboard::Scan::F2:    // Window/Fullscreen
+                        playSound(false);
                         fullscreen = !fullscreen;
                         reopenWindow(fullscreen);
                         setFullScreen(fullscreen);

@@ -83,7 +83,7 @@ void CpcScreen::setup() {
     // Sound settings.
     tapeSound = (options["tapesound"] != "no");
     cout << "Play tape sound: " << options["tapesound"] << endl;
-    playSound = (options["sound"] != "no");
+    soundEnabled = (options["sound"] != "no");
     cout << "Play sound: " << options["sound"] << endl;
 
     if (options["stereo"] == "acb") {
@@ -135,8 +135,8 @@ void CpcScreen::setup() {
     wide = true;
     reopenWindow(fullscreen);
     setFullScreen(fullscreen);
-    cpc.tapeSound = tapeSound && playSound;
-    cpc.psgPlaySound(playSound);
+    cpc.tapeSound = tapeSound && soundEnabled;
+    cpc.psgPlaySound(soundEnabled);
     cpc.setSoundRate(FRAME_TIME_CPC, syncToVideo);
     cpc.skipCycles = cpc.skip;
 }
@@ -386,8 +386,8 @@ void CpcScreen::toggleTapeSound() {
 
 void CpcScreen::toggleSound() {
 
-    cpc.tapeSound = playSound = !playSound;
-    cpc.psgPlaySound(playSound);
+    cpc.tapeSound = soundEnabled = !soundEnabled;
+    cpc.psgPlaySound(soundEnabled);
 }
 
 void CpcScreen::togglePsgType() {
@@ -469,5 +469,9 @@ void CpcScreen::pressKeyJoystickButton(uint_fast32_t id, uint_fast32_t button) {
 
 void CpcScreen::releaseKeyJoystickButton(uint_fast32_t id, uint_fast32_t button) {
     cpc.keys[cpcJoystick[id][button].row] |= cpcJoystick[id][button].key;
+}
+
+void CpcScreen::playSound(bool play) {
+    cpc.playSound(play);
 }
 // vim: et:sw=4:ts=4

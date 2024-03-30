@@ -243,6 +243,7 @@ void Spectrum::playSound(bool play) {
         channel.playing = true;
     } else if (channel.playing && !play) {
         channel.stop();
+        channel.clear();
         channel.playing = false;
     }
 }
