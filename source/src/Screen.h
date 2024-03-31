@@ -99,6 +99,11 @@ class Screen {
         /** Suggested drawable scans for better fit on double scan modes. */
         uint32_t suggestedScansDouble;
 
+        /** Number of sound buffers. */
+        uint32_t numBuffers = UINT32_MAX;
+        /** Number of samples per sound buffer. */
+        uint32_t bufferSize = UINT32_MAX;
+
         /** Full screen mode active. */
         bool fullscreen = false;
         /** Sync to video mode active. */
@@ -149,6 +154,11 @@ class Screen {
          * Convert the "scale" option into an integer.
          */
         uint32_t getScale();
+
+        /**
+         * Return the value of numeric options.
+         */
+        uint32_t getNumber(std::string const& key);
         
         /**
          * Select the native video mode and find its resolution.

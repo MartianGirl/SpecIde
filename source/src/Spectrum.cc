@@ -35,8 +35,6 @@ Spectrum::Spectrum() :
     setPage(2, 2, false, false);
     setPage(3, 0, false, false);
     setScreenPage(5);
-
-    channel.open(2, SAMPLE_RATE);
 }
 
 void Spectrum::loadRoms(RomVariant model) {
@@ -242,7 +240,7 @@ void Spectrum::playSound(bool play) {
         channel.play();
         channel.playing = true;
     } else if (channel.playing && !play) {
-        channel.stop();
+        channel.reset();
         channel.playing = false;
     }
 }

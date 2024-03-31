@@ -45,8 +45,12 @@ void SpeccyScreen::setup() {
     cout << "Initialising common settings..." << endl;
     Screen::setup();
     loadFont("ZXSpectrum.ttf");
+
     spectrum.sync = syncToVideo;
-    spectrum.channel.waitBuffers = syncToVideo ? 3 : 6;
+
+    spectrum.channel.bufferFill = numBuffers;
+    spectrum.channel.bufferSize = bufferSize;
+    spectrum.channel.open(2, SAMPLE_RATE);
 
     cout << "Initialising ZX Spectrum..." << endl;
     // Select ROMs and ULA variant.

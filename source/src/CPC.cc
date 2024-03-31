@@ -26,8 +26,6 @@ CPC::CPC() :
     setPage(1, 1);
     setPage(2, 2);
     setPage(3, 3);
-
-    channel.open(2, SAMPLE_RATE);
 }
 
 void CPC::loadRoms(RomVariant model) {
@@ -151,7 +149,7 @@ void CPC::playSound(bool play) {
         channel.play();
         channel.playing = true;
     } else if (channel.playing && !play) {
-        channel.stop();
+        channel.reset();
         channel.playing = false;
     }
 }

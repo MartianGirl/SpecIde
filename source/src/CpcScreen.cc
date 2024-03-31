@@ -46,7 +46,9 @@ void CpcScreen::setup() {
     Screen::setup();
     loadFont("AmstradCPC.ttf");
 
-    cpc.channel.waitBuffers = syncToVideo ? 3 : 6;
+    cpc.channel.bufferFill = numBuffers;
+    cpc.channel.bufferSize = bufferSize;
+    cpc.channel.open(2, SAMPLE_RATE);
 
     cout << "Initialising Amstrad CPC..." << endl;
     // Select model and ROMs.

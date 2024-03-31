@@ -30,8 +30,7 @@
 
 #include <SFML/Audio.hpp>
 
-constexpr size_t MAX_SAMPLES = 882;
-constexpr size_t MAX_BUFFERS = 16;
+constexpr size_t MAX_BUFFERS = 32;
 
 class SoundChannel : public sf::SoundStream {
 
@@ -47,7 +46,8 @@ class SoundChannel : public sf::SoundStream {
         uint32_t sampleRate;
         uint32_t channels;
 
-        uint32_t waitBuffers = 6;
+        uint32_t bufferFill = 6;
+        uint32_t bufferSize = 1024;
 
         bool playing = false;
 
@@ -64,7 +64,7 @@ class SoundChannel : public sf::SoundStream {
             // Reserve buffer space
             for (std::vector<std::vector<sf::Int16>>::iterator it = buffers.begin();
                     it != buffers.end(); ++it) {
-                it->assign(channels * MAX_SAMPLES, 0);
+                it->assign(channels * bufferSize, 0);
             }
 
             setAttenuation(0);
@@ -98,21 +98,31 @@ class SoundChannel : public sf::SoundStream {
             buffers[wrBuffer][2 * wrSample + 0] = static_cast<sf::Int16>(l);
             buffers[wrBuffer][2 * wrSample + 1] = static_cast<sf::Int16>(r);
 
-            if (++wrSample == MAX_SAMPLES) {
+            if (++wrSample == bufferSize) {
                 wrSample = 0;
                 queuedBuffers.push(wrBuffer);
                 getNextWriteBuffer();
-                complete = (queuedBuffers.size() >= waitBuffers);
+                complete = (queuedBuffers.size() >= bufferFill);
             }
 
             return complete;
+        }
+
+        void reset() {
+            stop();
+            wrSample = 0;
+            wrBuffer = 0;
+            rdBuffer = 0;
+            while (queuedBuffers.size()) {
+                queuedBuffers.pop();
+            }
         }
 
     private:
         virtual bool onGetData(Chunk& data) {
 
             getNextReadBuffer();
-            data.sampleCount = MAX_SAMPLES * channels;
+            data.sampleCount = bufferSize * channels;
             data.samples = &(buffers[rdBuffer])[0];
             return playing;
         }
