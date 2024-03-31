@@ -30,7 +30,7 @@
 
 #include <SFML/Audio.hpp>
 
-constexpr size_t MAX_SAMPLES = 512;
+constexpr size_t MAX_SAMPLES = 1024;
 constexpr size_t MAX_BUFFERS = 16;
 
 class SoundChannel : public sf::SoundStream {
