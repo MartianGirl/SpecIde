@@ -191,25 +191,6 @@ void Screen::setup() {
 
     syncToVideo = (options["sync"] == "yes");
     cout << "Sync to video: " << options["sync"] << endl;
-
-    if (syncToVideo) {
-        numBuffers = getNumber("buffers_vsync");
-        bufferSize = getNumber("bufsize_vsync");
-    } else {
-        numBuffers = getNumber("buffers_sleep");
-        bufferSize = getNumber("bufsize_sleep");
-    }
-
-    if (UINT32_MAX == numBuffers || UINT32_MAX == bufferSize) {
-#if (SPECIDE_ON_UNIX==1)
-        numBuffers = syncToVideo ? 3 : 5;
-        bufferSize = 882;
-#else
-        numBuffers = 3;
-        bufferSize = 882;
-#endif
-    }
-    cout << "Using " << numBuffers << " sound buffers of " << bufferSize << " samples." << endl;
 }
 
 uint32_t Screen::getNumber(string const& key) {

@@ -67,6 +67,10 @@ class CPC {
          * Constructor.
          */
         CPC();
+        /**
+         * Destructor.
+         */
+        ~CPC() { channel.close(); }
 
         /** Z80 CPU instance. */
         Z80 z80;

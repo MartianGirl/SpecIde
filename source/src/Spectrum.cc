@@ -236,12 +236,10 @@ void Spectrum::setPentagon(RomVariant variant) {
 
 void Spectrum::playSound(bool play) {
 
-    if (!channel.playing && play) {
+    if (play) {
         channel.play();
-        channel.playing = true;
-    } else if (channel.playing && !play) {
-        channel.reset();
-        channel.playing = false;
+    } else {
+        channel.pause();
     }
 }
 
@@ -880,9 +878,7 @@ void Spectrum::sample() {
             break;
     }
 
-    if (channel.push(l, r)) {
-        playSound(true);
-    }
+    channel.push(l, r);
 }
 
 int Spectrum::dac(size_t c) {

@@ -46,8 +46,6 @@ void CpcScreen::setup() {
     Screen::setup();
     loadFont("AmstradCPC.ttf");
 
-    cpc.channel.bufferFill = numBuffers;
-    cpc.channel.bufferSize = bufferSize;
     cpc.channel.open(2, SAMPLE_RATE);
 
     cout << "Initialising Amstrad CPC..." << endl;
@@ -191,6 +189,9 @@ void CpcScreen::run() {
             pollEvents();
 
             cpc.run(!syncToVideo);
+            if (cpc.channel.commit()) {
+                cpc.playSound(true);
+            }
 
             update();
 

@@ -48,8 +48,6 @@ void SpeccyScreen::setup() {
 
     spectrum.sync = syncToVideo;
 
-    spectrum.channel.bufferFill = numBuffers;
-    spectrum.channel.bufferSize = bufferSize;
     spectrum.channel.open(2, SAMPLE_RATE);
 
     cout << "Initialising ZX Spectrum..." << endl;
@@ -274,6 +272,10 @@ void SpeccyScreen::run() {
             // Run a complete frame.
             pollEvents();
             spectrum.run();
+            if (spectrum.channel.commit()) {
+                spectrum.playSound(true);
+            }
+
 
             // Update the screen.
             // These conditions cannot happen at the same time:

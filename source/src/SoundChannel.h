@@ -23,113 +23,131 @@
  *
  */
 
+#include <condition_variable>
 #include <cstddef>
 #include <cstdint>
-#include <queue>
+#include <list>
+#include <mutex>
 #include <vector>
 
 #include <SFML/Audio.hpp>
 
-constexpr size_t MAX_BUFFERS = 32;
+constexpr size_t MAX_BUFFERS = 16;
+constexpr size_t MAX_SAMPLES = 2048;
 
 class SoundChannel : public sf::SoundStream {
 
     public:
         // The buffers
         std::vector<std::vector<sf::Int16>> buffers;
-        std::queue<size_t> queuedBuffers;
+        std::vector<size_t> samples;
         size_t rdBuffer = 0;
         size_t wrBuffer = 0;
         size_t wrSample = 0;
 
-        uint32_t millis;  // Not really used.
-        uint32_t sampleRate;
+        std::list<size_t> bufList;
+        std::mutex m;
+        std::condition_variable cv;
+
         uint32_t channels;
 
-        uint32_t bufferFill = 6;
-        uint32_t bufferSize = 1024;
-
-        bool playing = false;
+        bool destroy = false;
 
         SoundChannel() :
-            buffers(MAX_BUFFERS, (std::vector<sf::Int16>())) {}
+            buffers(MAX_BUFFERS, (std::vector<sf::Int16>())),
+            samples(MAX_BUFFERS, 0) {}
 
         bool open(unsigned int chan, unsigned int rate) {
 
-            sampleRate = rate;
             channels = chan;
 
             initialize(chan, rate);
+            bufList.clear();
 
             // Reserve buffer space
             for (std::vector<std::vector<sf::Int16>>::iterator it = buffers.begin();
                     it != buffers.end(); ++it) {
-                it->assign(channels * bufferSize, 0);
+                it->assign(channels * MAX_SAMPLES, 0);
             }
 
             setAttenuation(0);
             setVolume(100);
             cout << "Initialized " << channels << " channels ";
-            cout << "at " << sampleRate << " Hz." << endl;
+            cout << "at " << rate << " Hz." << endl;
             return true;
         }
 
-        void getNextReadBuffer() {
+        void push(int l, int r) {
 
-            // If there is no queued buffers, complete current buffer
-            if (!queuedBuffers.empty()) {
-                rdBuffer = queuedBuffers.front();
-                queuedBuffers.pop();
-            } else {
-                playing = false;
-            }
-        }
-
-        void getNextWriteBuffer() {
-
-            do {
-                wrBuffer = (wrBuffer + 1) % MAX_BUFFERS;
-            } while (wrBuffer == rdBuffer);
-        }
-
-        bool push(int l, int r) {
-
-            bool complete = false;
             buffers[wrBuffer][2 * wrSample + 0] = static_cast<sf::Int16>(l);
             buffers[wrBuffer][2 * wrSample + 1] = static_cast<sf::Int16>(r);
-
-            if (++wrSample == bufferSize) {
-                wrSample = 0;
-                queuedBuffers.push(wrBuffer);
-                getNextWriteBuffer();
-                complete = (queuedBuffers.size() >= bufferFill);
-            }
-
-            return complete;
+            wrSample = (wrSample + 1) % MAX_SAMPLES;
         }
 
         void reset() {
-            stop();
+
+            std::lock_guard<std::mutex> lock(m);
+            samples.assign(MAX_BUFFERS, 0);
             wrSample = 0;
             wrBuffer = 0;
             rdBuffer = 0;
-            while (queuedBuffers.size()) {
-                queuedBuffers.pop();
+            bufList.clear();
+            cv.notify_one();
+        }
+
+        bool commit() {
+
+            std::lock_guard<std::mutex> lock(m);
+
+            samples[wrBuffer] = channels * wrSample;
+            wrSample = 0;
+
+            if (bufList.size() < MAX_BUFFERS) {
+                bufList.push_back(wrBuffer);
+                do {
+                    wrBuffer = (wrBuffer + 1) % MAX_BUFFERS;
+                } while ((wrBuffer == rdBuffer)
+                        || (find(bufList.begin(), bufList.end(), wrBuffer) != bufList.end()));
+            } else {
+                // This should only happen if the user is starting and stopping the playback
+                // repeatedly. In this case, it is not a problem to lose some audio.
+                reset();
             }
+
+            bool awake = (bufList.size() >= 3);
+            cv.notify_one();
+
+            return awake;
+        }
+
+        void close() {
+
+            destroy = true;
+            cv.notify_one();
         }
 
     private:
         virtual bool onGetData(Chunk& data) {
 
-            getNextReadBuffer();
-            data.sampleCount = bufferSize * channels;
+            std::unique_lock<std::mutex> lock(m);
+
+            while (!destroy && bufList.empty()) {
+                cv.wait(lock);
+            }
+
+            if (destroy) return false;
+
+            rdBuffer = bufList.front();
+            bufList.pop_front();
+
+            data.sampleCount = samples[rdBuffer];
             data.samples = &(buffers[rdBuffer])[0];
-            return playing;
+            return true;
         }
 
         virtual void onSeek(sf::Time offset) {
 
-            millis = offset.asMilliseconds();
+            (void) offset;
         }
 };
 

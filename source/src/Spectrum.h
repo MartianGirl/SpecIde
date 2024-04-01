@@ -78,6 +78,10 @@ class Spectrum {
          * Constructor.
          */
         Spectrum();
+        /**
+         * Destructor.
+         */
+        ~Spectrum() { channel.close(); }
 
         /** Z80 CPU instance. */
         Z80 z80;
