@@ -32,8 +32,16 @@
 
 #include <SFML/Audio.hpp>
 
+#include "config.h"
+
 constexpr size_t MAX_BUFFERS = 16;
 constexpr size_t MAX_SAMPLES = 2048;
+
+#if (SPECIDE_ON_UNIX==1)
+constexpr uint32_t PRELOAD_BUFFERS = 3;
+#else
+constexpr uint32_t PRELOAD_BUFFERS = 4;
+#endif
 
 class SoundChannel : public sf::SoundStream {
 
@@ -45,7 +53,7 @@ class SoundChannel : public sf::SoundStream {
         size_t wrBuffer = 0;
         size_t wrSample = 0;
 
-        std::list<size_t> bufList;
+        std::list<size_t> queuedBuffers;
         std::mutex m;
         std::condition_variable cv;
 
@@ -62,7 +70,7 @@ class SoundChannel : public sf::SoundStream {
             channels = chan;
 
             initialize(chan, rate);
-            bufList.clear();
+            queuedBuffers.clear();
 
             // Reserve buffer space
             for (std::vector<std::vector<sf::Int16>>::iterator it = buffers.begin();
@@ -84,40 +92,28 @@ class SoundChannel : public sf::SoundStream {
             wrSample = (wrSample + 1) % MAX_SAMPLES;
         }
 
-        void reset() {
-
-            std::lock_guard<std::mutex> lock(m);
-            samples.assign(MAX_BUFFERS, 0);
-            wrSample = 0;
-            wrBuffer = 0;
-            rdBuffer = 0;
-            bufList.clear();
-            cv.notify_one();
-        }
-
         bool commit() {
 
             std::lock_guard<std::mutex> lock(m);
-
-            samples[wrBuffer] = channels * wrSample;
-            wrSample = 0;
-
-            if (bufList.size() < MAX_BUFFERS) {
-                bufList.push_back(wrBuffer);
+            if (queuedBuffers.size() < MAX_BUFFERS) {
+                samples[wrBuffer] = channels * wrSample;
+                queuedBuffers.push_back(wrBuffer);
+                wrSample = 0;
                 do {
                     wrBuffer = (wrBuffer + 1) % MAX_BUFFERS;
                 } while ((wrBuffer == rdBuffer)
-                        || (find(bufList.begin(), bufList.end(), wrBuffer) != bufList.end()));
+                        || (find(queuedBuffers.begin(), queuedBuffers.end(), wrBuffer) != queuedBuffers.end()));
             } else {
                 // This should only happen if the user is starting and stopping the playback
                 // repeatedly. In this case, it is not a problem to lose some audio.
-                reset();
+                samples.assign(MAX_BUFFERS, 0);
+                wrSample = 0;
+                wrBuffer = 0;
+                rdBuffer = 0;
+                queuedBuffers.clear();
             }
-
-            bool awake = (bufList.size() >= 3);
             cv.notify_one();
-
-            return awake;
+            return (queuedBuffers.size() >= PRELOAD_BUFFERS);
         }
 
         void close() {
@@ -130,19 +126,19 @@ class SoundChannel : public sf::SoundStream {
         virtual bool onGetData(Chunk& data) {
 
             std::unique_lock<std::mutex> lock(m);
-
-            while (!destroy && bufList.empty()) {
+            while (!destroy && queuedBuffers.empty()) {
                 cv.wait(lock);
             }
 
-            if (destroy) return false;
-
-            rdBuffer = bufList.front();
-            bufList.pop_front();
-
-            data.sampleCount = samples[rdBuffer];
-            data.samples = &(buffers[rdBuffer])[0];
-            return true;
+            bool play = false;
+            if (!destroy) {
+                rdBuffer = queuedBuffers.front();
+                queuedBuffers.pop_front();
+                data.sampleCount = samples[rdBuffer];
+                data.samples = &(buffers[rdBuffer])[0];
+                play = true;
+            }
+            return play;
         }
 
         virtual void onSeek(sf::Time offset) {
