@@ -16,3 +16,6 @@
 
 // Enable BUSRQ/BUSAK support by default.
 #define SPECIDE_SUPPORT_BUSRQ_BUSAK
+
+// SLEEP time slice (1000 for GNU/Linux low latency, 2000 otherwise)
+#define SLEEP_STEP 2000

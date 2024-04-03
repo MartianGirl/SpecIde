@@ -290,10 +290,10 @@ void SpeccyScreen::run() {
                 // better adjustment
 #ifdef USE_BOOST_THREADS
                 frame = start + boost::chrono::microseconds(spectrum.frame);
-                wakeup = start + boost::chrono::microseconds(19000);
+                wakeup = start + boost::chrono::microseconds(20000 - SLEEP_STEP);
 #else
                 frame = start + std::chrono::microseconds(spectrum.frame);
-                wakeup = start + std::chrono::microseconds(19000);
+                wakeup = start + std::chrono::microseconds(20000 - SLEEP_STEP);
 #endif
 #ifndef DO_NOT_SLEEP
                 sleep_until(wakeup);

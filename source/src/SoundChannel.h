@@ -32,16 +32,9 @@
 
 #include <SFML/Audio.hpp>
 
-#include "config.h"
-
 constexpr size_t MAX_BUFFERS = 16;
 constexpr size_t MAX_SAMPLES = 2048;
-
-#if (SPECIDE_ON_UNIX==1)
 constexpr uint32_t PRELOAD_BUFFERS = 3;
-#else
-constexpr uint32_t PRELOAD_BUFFERS = 4;
-#endif
 
 class SoundChannel : public sf::SoundStream {
 
