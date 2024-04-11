@@ -31,6 +31,7 @@
 #include <vector>
 
 #include <SFML/Audio.hpp>
+#include <SFML/System/Time.hpp>
 
 constexpr size_t MAX_BUFFERS = 16;
 constexpr size_t MAX_SAMPLES = 2048;
@@ -76,6 +77,10 @@ class SoundChannel : public sf::SoundStream {
             cout << "Initialized " << channels << " channels ";
             cout << "at " << rate << " Hz." << endl;
             return true;
+        }
+
+        void setSleepInterval(uint32_t interval) {
+            setProcessingInterval(sf::milliseconds(interval));
         }
 
         void push(int l, int r) {

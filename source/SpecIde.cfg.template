@@ -163,3 +163,10 @@ flashtap=yes
 # Selects the CRTC type (only CPC)
 # Default is 0.
 # Values: 0, 1, 2, 3, 4.
+
+# Option: soundsleep
+# Time interval that SFML sleeps before fetching audio samples. If
+# you are experiencing clicking or stuttering sound, try lowering
+# this parameter.
+# Default is 10.
+# soundsleep=10

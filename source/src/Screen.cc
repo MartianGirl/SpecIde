@@ -193,14 +193,14 @@ void Screen::setup() {
     cout << "Sync to video: " << options["sync"] << endl;
 }
 
-uint32_t Screen::getNumber(string const& key) {
+uint32_t Screen::getNumber(string const& key, uint32_t value) {
 
-    uint32_t value = UINT32_MAX;
     if (options.find(key) != options.end()) {
         try {
             value = stoi(options[key]);
         } catch (invalid_argument &ia) {
             cout << "Invalid " << key << " value: '" << options[key] << "' - " << ia.what() << endl;
+            cout << "Using value " << value << " for option " << key << endl;
         }
     }
     return value;

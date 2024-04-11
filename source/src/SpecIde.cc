@@ -254,6 +254,7 @@ void readOptions(map<string, string>& options) {
     options["z80type"] = "nmos";
     options["crtc"] = "0";
     options["covox"] = "no";
+    options["soundsleep"] = "10";
 
     vector<string> cfgPaths;
     string cfgName("SpecIde.cfg");

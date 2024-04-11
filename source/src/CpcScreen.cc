@@ -47,6 +47,7 @@ void CpcScreen::setup() {
     loadFont("AmstradCPC.ttf");
 
     cpc.channel.open(2, SAMPLE_RATE);
+    cpc.channel.setSleepInterval(getNumber("soundsleep", 10));
 
     cout << "Initialising Amstrad CPC..." << endl;
     // Select model and ROMs.

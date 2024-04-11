@@ -157,8 +157,13 @@ class Screen {
 
         /**
          * Return the value of numeric options.
+         *
+         * @param key Option name to interpret as numeric.
+         * @param value Default value to use if the option is not found or incorrect.
+         *
+         * @return A numeric value.
          */
-        uint32_t getNumber(std::string const& key);
+        uint32_t getNumber(std::string const& key, uint32_t value);
         
         /**
          * Select the native video mode and find its resolution.

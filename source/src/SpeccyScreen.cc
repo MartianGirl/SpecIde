@@ -49,6 +49,7 @@ void SpeccyScreen::setup() {
     spectrum.sync = syncToVideo;
 
     spectrum.channel.open(2, SAMPLE_RATE);
+    spectrum.channel.setSleepInterval(getNumber("soundsleep", 10));
 
     cout << "Initialising ZX Spectrum..." << endl;
     // Select ROMs and ULA variant.
