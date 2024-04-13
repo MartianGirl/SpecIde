@@ -15,16 +15,10 @@
 
 #include "ULA.h"
 
+#include <cassert>
 #include <cmath>
 
 using namespace std;
-
-float ULA::voltages[4][4] = {
-    {0.391, 0.728, 3.653, 3.790}, // ULA 5C (Issue 2)
-    {0.342, 0.652, 3.591, 3.753}, // ULA 6C (Issue 3)
-    {0.342, 0.652, 3.591, 3.753}, // ULA 7C (128K)
-    {0.342, 0.652, 3.591, 3.753}  // GA40085 (+2A/+3)
-};
 
 bool ULA::delayTable[16] = {
     false, false, false, true, true, true, true, true,
@@ -105,42 +99,50 @@ uint32_t ULA::average(uint32_t *ptr) {
 
 void ULA::generateVideoControlSignals() {
 
-    if (pixel == videoStart) {
-        video = (scan < vBorderStart);
-    } else if (pixel == hBorderStart) {
-        border = true;
-    } else if (pixel == videoEnd) {
-        video = false;
-    } else if (pixel == hBlankStart) {
-        blanking = true;
-        ++scan;
-
-        if (scan == vSyncEnd) {
-            vSync = true;
-            frame = 1 - frame;
-            yPos = 0;
-        } else if (scan == vBlankEnd) { // As long as vSyncEnd != vBlankEnd
-            flash += 0x08;
-        } else if (scan == maxScan) {
-            scan = 0;
+    if (pixel == checkPointValues[ulaVersion][checkPoint]) {
+        // I've simplified the if-else if-else tree using this block because
+        // these stages always happen in the same order.
+        switch (checkPoint) {
+            case 0:     // On VideoStart
+                video = (scan < vBorderStart);
+                break;
+            case 1:     // On HBorderStart
+                border = true;
+                break;
+            case 2:     // On VideoEnd
+                video = false;
+                break;
+            case 3:     // On HBlankStart
+                blanking = true;
+                ++scan;
+                if (scan == vSyncEnd) {
+                    vSync = true;
+                    frame = 1 - frame;
+                    yPos = 0;
+                } else if (scan == vBlankEnd) {
+                    flash += 0x8;
+                } else if (scan == maxScan) {
+                    scan = 0;
+                }
+                break;
+            case 4:     // On HBlankEnd
+                xPos = 0;
+                blanking = (scan >= vBlankStart) && (scan <= vBlankEnd);
+                if (!blanking) {
+                    yPos += yInc;
+                }
+                break;
+            case 5:     // On MaxPixel
+                pixel = 0;
+                border = (scan >= vBorderStart);
+                ulaReset = false;
+                dataAddr = ((scan & 0x38) << 2) | ((scan & 0x07) << 8) | ((scan & 0xC0) << 5);  // ...76210 543xxxxx
+                attrAddr = ((scan & 0xF8) << 2) | 0x1800;                                       // ...HHL76 543xxxxx
+                break;
+            default: assert(false); break;  // Should not happen
         }
-    } else if (pixel == hSyncEnd) {
-        xPos = 0;
-    } else if (pixel == hBlankEnd) {
-        blanking = (scan >= vBlankStart) && (scan <= vBlankEnd);
-        if (blanking == false) {
-            yPos += yInc;
-        }
-    } else if (pixel == maxPixel) {
-        pixel = 0;
-        border = (scan >= vBorderStart);
-        ulaReset = false;
-        dataAddr = ((scan & 0x38) << 2)          // 00076210 54376540
-            | ((scan & 0x07) << 8)
-            | ((scan & 0xC0) << 5);
 
-        attrAddr = ((scan & 0xF8) << 2)          // 00000076 54376540
-            | 0x1800;
+        checkPoint = (checkPoint + 1) % NUM_CHECKPOINTS;
     }
 }
 
@@ -307,7 +309,7 @@ void ULA::tapeEarMic() {
 
     // These operations are too costly to do them every cycle.
     static uint_fast32_t count = 0;
-    if (ulaVersion < 3 && !(++count & 0x3F)) {
+    if (ulaVersion < ULA_PLUS2 && !(++count & 0x3F)) {
         vInc *= 0.954949;
         vCap = vEnd - vInc;
         ear = vCap;
@@ -336,10 +338,10 @@ void ULA::ioWrite(uint_fast8_t byte) {
 
     soundBits = (byte & 0x18) >> 3;
     borderAttr = byte & 0x07;
-    if (ulaVersion < 3) {
-        vEnd = voltage[soundBits];
+    if (ulaVersion < ULA_PLUS2) {
+        vEnd = voltages[ulaVersion][soundBits];
         vInc = vEnd - vCap;
-    } else if (ulaVersion == 5 && !video) {
+    } else if (ulaVersion == ULA_PENTAGON && !video) {
         colour[1] = colourTable[0x80 | borderAttr];
     }
 }
@@ -413,6 +415,7 @@ void ULA::start() {
     video = true;
     border = false;
     z80_c_2 = z80_c_1 = 0xFFFF;
+    checkPoint = 0;
 }
 
 void ULA::reset() {
@@ -426,13 +429,6 @@ void ULA::setUlaVersion(uint_fast8_t version) {
     paintPixel = 0x04;
     micMask = 0x03;
 
-    videoStart = 0x008;
-    videoEnd = 0x108;
-    hBlankStart = 0x140;
-    hBlankEnd = 0x19F;
-
-    hBorderStart = 0x100;
-
     vBorderStart = 0x0C0;
     vBlankStart = 0x0F8;
     vBlankEnd = 0x0FF;
@@ -442,41 +438,26 @@ void ULA::setUlaVersion(uint_fast8_t version) {
     generateVideoData = &ULA::generateVideoDataUla;
 
     switch (ulaVersion) {
-        case 0: // 48K, Issue 2
-            hSyncEnd = 0x170;
-            maxPixel = 0x1C0;
+        case ULA_48KISS2:   // Spectrum 48K (Ferranti 5C/6C)
+        case ULA_48KISS3:   // fall-through
             interruptStart = 0x000;
             interruptEnd = 0x040;
             maxScan = 0x138;
             break;
-        case 1: // 48K, Issue 3
-            hSyncEnd = 0x178;
-            maxPixel = 0x1C0;
-            interruptStart = 0x000;
-            interruptEnd = 0x040;
-            maxScan = 0x138;
-            break;
-        case 2: // 128K
-            hSyncEnd = 0x178;
-            maxPixel = 0x1C8;
+        case ULA_128K:      // Spectrum 128K (Ferranti 7K)
             interruptStart = 0x004;
             interruptEnd = 0x04A;
             maxScan = 0x137;
             micMask = 0x01;
             break;
-        case 3: // +2 (128K with late timings)
-            hSyncEnd = 0x178;
-            maxPixel = 0x1C8;
+        case ULA_PLUS2:     // Spectrum +2 (Amstrad 40056)
             interruptStart = 0x002;
             interruptEnd = 0x04A;
             maxScan = 0x137;
             micMask = 0x01;
             break;
-        case 4: // +2A, +3
+        case ULA_PLUS3:     // Spectrum +2A/+2B/+3 (Amstrad 40077)
             paintPixel = 0x06;
-            hBorderStart = 0x104;
-            hSyncEnd = 0x178;
-            maxPixel = 0x1C8;
             interruptStart = 0x000;
             interruptEnd = 0x040;
             maxScan = 0x137;
@@ -486,12 +467,8 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             idle = true;
             generateVideoData = &ULA::generateVideoDataGa;
             break;
-        case 5: // Pentagon
+        case ULA_PENTAGON:  // Pentagon video circuitry
             paintPixel = 0x02;
-            hSyncEnd = 0x158;
-            hBlankStart = 0x138;
-            hBlankEnd = 0x198;
-            maxPixel = 0x1C0;
             vBlankStart = 0x0F0;
             vBlankEnd = 0x100;
             vSyncStart = 0x0F0;
@@ -505,9 +482,6 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             generateVideoData = &ULA::generateVideoDataPentagon;
             break;
         default:
-            hBorderStart = 0x101;
-            hSyncEnd = 0x178;
-            maxPixel = 0x1C0;
             interruptStart = 0x000;
             interruptEnd = 0x040;
             maxScan = 0x138;
@@ -541,12 +515,12 @@ void ULA::setUlaVersion(uint_fast8_t version) {
     };
 
     for (uint_fast8_t ii = 0; ii < 16; ++ii) {
-        if (ulaVersion == 4) {
+        if (ulaVersion == ULA_PLUS3) {
             // +2A/+3 has no floating bus.
             // idleTable is not necessary for +2A/+3; idle = true always.
             delayTable[ii] = delayGa[ii];
             memTable[ii] = memGa[ii];
-        } else if (ulaVersion == 5) {
+        } else if (ulaVersion == ULA_PENTAGON) {
             // Pentagon has neither floating bus, nor contention.
             // idleTable is not necessary for Pentagon; idle = true always,
             // and delay is irrelevant.
@@ -556,10 +530,6 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             delayTable[ii] = delayUla[ii];
             memTable[ii] = memUla[ii];
         }
-    }
-
-    for (uint_fast32_t ii = 0; ii < 4; ++ii) {
-        voltage[ii] = voltages[ulaVersion][ii];
     }
 }
 // vim: et:sw=4:ts=4:

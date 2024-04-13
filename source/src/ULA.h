@@ -35,6 +35,16 @@ uint_fast32_t constexpr DUPL = 2;
 uint_fast32_t constexpr SNOW = 1;
 uint_fast32_t constexpr NONE = 0;
 
+uint_fast32_t constexpr ULA_48KISS2 = 0;
+uint_fast32_t constexpr ULA_48KISS3 = 1;
+uint_fast32_t constexpr ULA_128K = 2;
+uint_fast32_t constexpr ULA_PLUS2 = 3;
+uint_fast32_t constexpr ULA_PLUS3 = 4;
+uint_fast32_t constexpr ULA_PENTAGON = 5;
+uint_fast32_t constexpr NUM_MODELS = 6;
+
+uint_fast32_t constexpr NUM_CHECKPOINTS = 6;
+
 class ULA {
 
     public:
@@ -62,14 +72,6 @@ class ULA {
 
         uint32_t average(uint32_t *ptr);
 
-        uint_fast16_t videoStart = 0x008;
-        uint_fast16_t videoEnd = 0x108;
-        uint_fast16_t hBorderStart = 0x100;
-        uint_fast16_t hBlankStart = 0x140;
-        uint_fast16_t hBlankEnd = 0x19F;
-        uint_fast16_t hSyncEnd = 0x178;
-        uint_fast16_t maxPixel = 0x1C0;
-
         uint_fast16_t vBorderStart = 0x0C0;
         uint_fast16_t vBlankStart = 0x0F8;
         uint_fast16_t vBlankEnd = 0x0FF;
@@ -79,8 +81,15 @@ class ULA {
 
         uint_fast16_t paintPixel = 0x004;
 
-        float voltage[4];
-        static float voltages[4][4];
+        static float constexpr voltages[6][4] = {
+            {0.391, 0.728, 3.653, 3.790}, // ULA 5C (Issue 2)
+            {0.342, 0.652, 3.591, 3.753}, // ULA 6C (Issue 3)
+            {0.342, 0.652, 3.591, 3.753}, // ULA 7K (128K)
+            {0.342, 0.652, 3.591, 3.753}, // GA 40056 (Plus2)
+            {0.342, 0.652, 3.591, 3.753}, // GA 40077 (Plus2A/Plus2B/Plus3)
+            {0.342, 0.652, 3.591, 3.753}  // Pentagon
+        };
+
         float vEnd = 0.0;
         float vInc = 0.0;
         float vCap = 0.0;
@@ -103,8 +112,19 @@ class ULA {
         uint_fast32_t frame = 0;
 
         // These values depend on the model
-        uint_fast8_t ulaVersion = 1;
+        uint_fast8_t ulaVersion = 0;
         void (ULA::*generateVideoData)() = &ULA::generateVideoDataUla;
+
+        uint_fast16_t checkPoint = 0;
+        static uint_fast16_t constexpr checkPointValues[NUM_MODELS][6] {
+            // videoStart, hBorderStart, videoEnd, hBlankStart, hBlankEnd, maxPixel
+            { 0x008, 0x100, 0x108, 0x140, 0x19F, 0x1C0 }, // 48K Issue 2
+            { 0x008, 0x100, 0x108, 0x140, 0x19F, 0x1C0 }, // 48K Issue 3
+            { 0x008, 0x100, 0x108, 0x140, 0x19F, 0x1C8 }, // 128K Toastrack
+            { 0x008, 0x100, 0x108, 0x140, 0x19F, 0x1C8 }, // Plus2
+            { 0x008, 0x104, 0x108, 0x140, 0x19F, 0x1C8 }, // Plus2A/Plus3
+            { 0x008, 0x100, 0x108, 0x138, 0x198, 0x1C0 }  // Pentagon
+        };
 
         // ULA internals
         uint_fast16_t pixel = 0;

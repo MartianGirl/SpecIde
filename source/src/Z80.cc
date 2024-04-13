@@ -50,6 +50,9 @@ void Z80::clock() {
         iff &= ~IFF1;
     }
 
+    // INT is level-triggered.
+    // If INT is low at the beginning of the last T-state, an interrupt
+    // will be accepted.
     intAccept = !(c_d & SIGNAL_INT_);
 
     c_d = c;
