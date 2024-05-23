@@ -405,6 +405,8 @@ void CPC::clock() {
             } else if (z80.wr) {
                 mem[memArea][z80.a & 0x3FFF] = z80.d;
             }
+        } else {
+            z80.d = 0xFF;
         }
 
         z80.clock();
