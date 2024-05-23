@@ -17,55 +17,59 @@ Some of the supported features are:
 - Loading of tapes via .tap and .tzx tape images, and .csw files.
 - Loading of disks via .dsk disk images.
 - Flashloading of .tap files and .tzx that use the ROM routines.
-- Saving to .tap files.
+- Flashsaving to .tap files using the ROM routines.
 - Full screen video mode detection.
 - Double scan interlaced modes. (Gigascreen modes)
-- Kempston/Sinclair joystick emulation from the PC joystick/gamepad.
+- Kempston/Sinclair/Cursor/Fuller joystick emulation from the PC joystick/gamepad.
+- Fuller box audio.
 - Works in GNU/Linux, Windows, and MacOS.
 
 ## How to get it?
-From time to time, (when I remember to do it), I update these:
+You can check the Releases page for Windows binaries.
+
+Sometimes I keep here non-official releases:
 
 - [SpecIde for Windows 8/10 (32-bit)](https://drive.google.com/file/d/1C5zRcY8itrvP9hKJsIniFWSGP1Zs-3NC/view?usp=sharing)
 - [SpecIde for Windows 8/10 (64-bit)](https://drive.google.com/file/d/1X-eZrQ7BfX1SP4DVdLrDT94rwOLgmoQX/view?usp=sharing)
 - [SpecIde for older Windows (XP/Vista/7) (32-bit)](https://drive.google.com/file/d/1jta-_Wdl9C7p0AbkiEEBOUJsI95JPsbc/view?usp=sharing)
 - [SpecIde for older Windows (XP/Vista/7) (64-bit)](https://drive.google.com/file/d/1x0hd8CP3DUEAUI0stAzojeQLIJrlylPd/view?usp=sharing)
 
-For GNU/Linux and MacOS I'm not providing binaries, but SpecIde can be compiled quite easily.
+For GNU/Linux and MacOS I'm not providing binaries yet, but SpecIde can be compiled quite easily.
 
 ## How to compile it?
 ### Compiling for GNU/Linux:
 1. Install libboost. At least chrono, system, thread and unit_test_framework are required.
-1. Install libsfml. Audio, graphics, window and system components are required.
+1. Install libsfml 2.6.x. Audio, graphics, window and system components are required.
 1. Install cmake.
 1. Install zlib1g.
 1. Clone the repository: `git clone https://github.com/MartianGirl/SpecIde.git`
 1. Go into the 'source' directory.
-1. Run: `cmake -DCMAKE_BUILD_TYPE=Release .`
-1. Run: `make clean && make install`
-1. The binaries will be installed in 'source/bin'. The test binaries will be installed in 'source/bin/tst'
-1. Copy the roms from the spectrum-roms package (or find them online) to the $HOME/.SpecIde/roms directory.
-1. Download [this font](https://github.com/jfsebastian/zx-spectrum-unicode-font/blob/master/build/ZXSpectrum.ttf "ZX Spectrum font by JFSebastian") to the $HOME/.SpecIde/font directory.
-1. Run: bin/SpecIde [options] \<TZXFile.tzx|TAPFile.tap|DSKFile.dsk\>
+1. Run: `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=_prefix_ -Bbuild -S.` with _prefix_ being the path where SpecIde will be installed. For instance, to install SpecIde into $HOME/bin, the order would be: `cmake -CMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~ -Bbuild -S.`
+1. Run: `cmake --build build && cmake --install build`
+1. The binaries will be installed in '_prefix_/bin'.
+1. Copy the roms from the spectrum-roms package (or from the Windows binaries) to the $HOME/.SpecIde/roms directory.
+1. Copy the fonts from the Windows binaries zip to the $HOME/.SpecIde/font directory.
+1. Run: bin/SpecIde [options] \<TZXFile.tzx|TAPFile.tap|CSWFile.csw|DSKFile.dsk\>
 
 ### Compiling for MacOS
 1. Install brew: `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
 1. Install cmake: `brew install cmake`
 1. Install boost: `brew install boost`
-1. Install sfml: `brew install sfml`
+1. Install sfml: `brew install sfml` (SFML 2.6.x is required)
 1. Install zlib: `brew install zlib`
 1. Install pkgconfig: `brew install pkgconfig`
 1. Simlink FindSFML.cmake in cmake modules `ln -s $(brew --prefix sfml)/share/SFML/cmake/Modules/FindSFML.cmake $(brew --prefix cmake)/share/cmake/Modules/FindSFML.cmake`
 1. Clone the repository: `git clone https://github.com/MartianGirl/SpecIde.git`
 1. Go into the 'source' directory.
-1. Run: `cmake -DCMAKE_BUILD_TYPE=Release .`
-1. Build it!: `make clean && make install`
-1. Copy the roms from the spectrum-roms package (or find them online) to the $HOME/Library/Application Support/SpecIde/roms directory.
-1. Download [this font](https://github.com/jfsebastian/zx-spectrum-unicode-font/blob/master/build/ZXSpectrum.ttf "ZX Spectrum font by JFSebastian") to the $HOME/Library/Application Support/SpecIde/font directory.
-1. Run: bin/SpecIde [options] \<TZXFile.tzx|TAPFile.tap|DSKFile.dsk\>
+1. Run: `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=_prefix_ -Bbuild -S.` with _prefix_ being the path where SpecIde will be installed. For instance, to install SpecIde into $HOME/bin, the order would be: `cmake -CMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~ -Bbuild -S.`
+1. Run: `cmake --build build && cmake --install build`
+1. The binaries will be installed in '_prefix_/bin'.
+1. Copy the roms from the spectrum-roms package (or from the Windows binaries) to the $HOME/Library/Application Support/SpecIde/roms directory.
+1. Copy the fonts from the Windows binaries zip to the $HOME/Library/Application Support/SpecIde/font directory.
+1. Run: bin/SpecIde [options] \<TZXFile.tzx|TAPFile.tap|CSWFile.csw|DSKFile.dsk\>
 
 ### Compiling for Windows
-I've successfully compiled SpecIde with MinGW32 and Visual Studio 2015 & 2017.  
+I've successfully compiled SpecIde with MinGW and Visual Studio 2015 & 2017.
 I've included a script RunCMake.bat that helps in the build process.
 
 1. Install and compile boost. Add the binaries to the PATH.
@@ -74,7 +78,7 @@ I've included a script RunCMake.bat that helps in the build process.
 1. Install cmake.
 1. (Optional) Install ninja-builds. It really helps building SpecIde.
 1. Edit the RunCMake.bat script. You need to change the lines: `set BOOST_ROOT=\<Path_to_Boost_root_directory\>` and `set SFML_ROOT=\<Path_to_SFML_binaries\>`  
-1. Run: `RunCMake \[GNU|MS|NINJAGNU|NINJAMS\] RELEASE`
+1. Run: `RunCMake \[MS32|MS64\] RELEASE`
 1. Build it!: `ninja clean & ninja install` or `mingw32-make clean & mingw32-make install` (or use Visual Studio IDE)
 1. Copy the roms from the spectrum-roms package (or find them online) to the %APPDATA%/SpecIde/roms directory.
 1. Download [this font](https://github.com/jfsebastian/zx-spectrum-unicode-font/blob/master/build/ZXSpectrum.ttf "ZX Spectrum font by JFSebastian") to the %APPDATA%/SpecIde/font directory.
@@ -103,22 +107,29 @@ Model selection options:
 --plus3                Spectrum +3.
 --plus3sp              Spectrum +3. (Spanish ROM)
 --pentagon             Pentagon 128.
---cpc464               Amstrad CPC 464.
---cpc664               Amstrad CPC 664.
---cpc6128              Amstrad CPC 6128.
+--cpc464               Amstrad CPC 464. (BASIC v1)
+--cpc464sp             Amstrad CPC 464. (Spanish ROM, BASIC s1)
+--cpc464fr             Amstrad CPC 464. (French ROM, BASIC f1)
+--cpc664               Amstrad CPC 664. (BASIC v2)
+--cpc6128              Amstrad CPC 6128. (BASIC v3)
+--cpc6128sp            Amstrad CPC 6128. (BASIC s3)
+--cpc6128fr            Amstrad CPC 6128. (BASIC f3)
 
 Joystick options:
---kempston             Map joystick to Kempston interface.
---sinclair             Map joystick to Sinclair interface. (Default)
+--kempston             Map joystick 1 to Kempston (older behaviour). Map joystick 2 to Sinclair 1.
+--kempstonnew          Map joystick 1 to Kempston (newer behaviour). Map joystick 2 to Sinclair 1.
+--fuller               Map joystick 1 to Fuller and enable Fuller sound. Map joystick 2 to Sinclair 1.
+--cursor               Map joystick 1 to cursor keys. Map joystick 2 to Kempston.
+--sinclair             Map joystick 1 and 2 to Sinclair interface. (Default)
 --pad|--nopad          Map pad extra buttons to keys.
 
 PSG options:
 --psg|--nopsg          Emulate AY chip in 48K Spectrum.
 --abc|--acb|--mono     Select stereo mode.
---ay|--ym              Select PSG: AY-3-8912/YM-2149.
 --turbo                Select TurboSound with 2 PSGs. (mono)
 --turboacb|--turboabc  Select TurboSound with 2 PSGs. (stereo ACB/ABC)
 --turbonext            Select Next-style TurboSound with 4 PSGs.
+--ay|--ym              Select PSG: AY-3-8912/YM-2149.
 
 Covox options:
 --covox                LPT Covox on port 0xFB (Mono)
@@ -160,10 +171,10 @@ When the emulator is running, pressing F1 displays help about the function keys.
 | F4        | Select next disk image. |
 | Shift-F4  | Select previous disk image. |
 | F5        | Reset the Spectrum. |
-| F6        | Clear SAVE buffer. |
-| Shift-F6  | Add FlashTAP to SAVE buffer. |
-| F7        | Write SAVE buffer to disk. |
-| Shift-F7  | Use SAVE buffer as FlashTAP. |
+| F6        | Clear SAVE buffer. (Spectrum only) |
+| Shift-F6  | Add FlashTAP to SAVE buffer. (Spectrum only) |
+| F7        | Write SAVE buffer to disk. (Spectrum only) |
+| Shift-F7  | Use SAVE buffer as FlashTAP. (Spectrum only) |
 | F8        | Toggle PSG: AY-3-8912/YM-2149. |
 | F9        | Turn sound on/off. |
 | Shift-F9  | Turn tape sounds on/off. |
@@ -181,7 +192,7 @@ Finally, SpecIde looks for a configuration file (SpecIde.cfg) in the following p
 3. On MacOS: $HOME/Library/Application Support/SpecIde/SpecIde.cfg
 4. On Windows: %APPDATA%\SpecIde\SpecIde.cfg
 
-A template SpecIde.cfg.template is provided in the source code.
+A template SpecIde.cfg.template is provided in the source code, and a sample SpecIde.cfg is included in the binary distributions.
 
 System ROMs can be placed also in the config directory:
 - On GNU/Linux: $HOME/.SpecIde/roms
@@ -217,7 +228,7 @@ The following ROMs are included in the binary packages:
 | cpc664.rom | BASIC ROM for CPC 664 | 32K |
 | cpc6128.rom | BASIC ROM for CPC 6128 | 32K |
 
-Also, the font can be placed in here:
+Also, the fonts can be placed in here:
 - On GNU/Linux: $HOME/.SpecIde/font
 - On MacOS: $HOME/Library/Application Support/SpecIde/font
 - On Windows: %APPDATA%\SpecIde\font
@@ -233,9 +244,16 @@ After I had the ZX Spectrum working, I thought I could try to emulate the Amstra
 
 ## Credits and acknowledgements:  
 + David Garijo: For taking the time and helping with the MacOS build process.
-+ JFSebastian: For his wonderful ZXSpectrum.ttf font.
 + Ast_A_Moore: For all his help with the +2A timings and port 0x0FFD.
 + César Hernández Bañó: For his help with the initial values for IR register, his comments, and his own emulator ZesarUX.
 + Miguel Mesa: For pointing out that the FLASH attribute was running at half speed.
 + Weiv (for his tests), ICEknight (for his videos), and all the people who helped describing the ULA Snow Effect on 48K/128K/+2 machines.
 + People from the #emulation discord for their ongoing testing efforts to discover every detail on the ZX Spectrum machines.
+
++ ZXSpectrum.ttf font by [Jorge Ferrer García (JFSebastian)](https://github.com/jfsebastian/zx-spectrum-unicode-font) (Public Domain - [http://unlicense.org](http://unlicense.org))
++ AmstradCPC.ttf font by [Damián Vila Río](https://github.com/damianvila/font-cpc464) ([CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/))
++ Older AmstradCPC.ttf font by [Wesley Clarke](http://fontstruct.fontshop.com) ([CC-BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.en))
++ ZX Spectrum ROMs are (c) Amstrad PLC. Amstrad PLC has kindly given permission for the redistribution of the ZX Spectrum ROMs for their use with emulators, but retains the copyright for them.
++ Amstrad CPC ROMs are (c) Amstrad PLC. CPC BASIC is (c) LocoScript Software (Howard Fisher). Both parties have kindly given permission for the redistribution of their unmodified ROMs for their use with emulators, but retain the copyright for them.
++ [Cliff Lawson's statement](https://groups.google.com/g/comp.sys.amstrad.8bit/c/HtpBU2Bzv_U/m/HhNDSU3MksAJ)
++ [Howard Fisher's statement.](https://groups.google.com/g/comp.sys.amstrad.8bit/c/HtpBU2Bzv_U/m/ClxornAZTgcJ)
