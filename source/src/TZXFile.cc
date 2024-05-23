@@ -172,9 +172,7 @@ void TZXFile::parse(
                 }
 
                 indexData.insert(pulseData.size());
-                if (pause) {
-                    addPause(pause, pulseData);
-                }
+                addPause(pause, pulseData);
 
                 pointer += headLength + dataLength;
                 break;
@@ -193,7 +191,7 @@ void TZXFile::parse(
                     + fileData[pointer + 9];
                 pilotLength = fileData[pointer + 12] * 0x100
                     + fileData[pointer + 11];
-                pilotLength += pilotLength % 2;   // Pilot length should be even
+                pilotLength += pilotLength % 2;
                 bitsInLastByte = fileData[pointer + 13];
                 pause = fileData[pointer + 15] * 0x100
                     + fileData[pointer + 14];
@@ -231,9 +229,7 @@ void TZXFile::parse(
                 }
 
                 indexData.insert(pulseData.size());
-                if (pause) {
-                    addPause(pause, pulseData);
-                }
+                addPause(pause, pulseData);
 
                 pointer += headLength + dataLength;
                 break;
@@ -244,10 +240,7 @@ void TZXFile::parse(
                     + fileData[pointer + 1];
                 pilotLength = fileData[pointer + 4] * 0x100
                     + fileData[pointer + 3];
-
-                // If this is the first segment of lead tone in a custom loader,
-                // then it should contain an odd number of pulses.
-                pilotLength += pilotLength % 2;   // Pilot length should be even
+                pilotLength += pilotLength % 2;
 
                 // Pilot tone
                 pulseData.insert(pulseData.end(), pilotLength, pilotPulse);
@@ -428,15 +421,15 @@ void TZXFile::parse(
                 // Pause = 0 means Stop The Tape. However, we'll insert
                 // one second pause to properly end the block.
                 indexData.insert(pulseData.size());
-                if (pause == 0) {
+                if (pause) {
+                    addPause(pause, pulseData);
+                } else {
                     // This pause will consist of one or two pulses, ensuring
                     // that the level is low at the end. Stop Data will also
                     // force a low level, so it must happen at the last pulse
                     // so far.
                     addPause(1000, pulseData);
                     stopData.insert(pulseData.size() - 1);
-                } else {
-                    addPause(pause, pulseData);
                 }
 
                 pointer += headLength;
@@ -757,8 +750,12 @@ void TZXFile::pushSymbol(uint32_t rep, uint32_t sym,
 
 void TZXFile::addPause(uint32_t pause, vector<uint32_t>& data) {
 
-    data.push_back(3495 * pause);
-    data.push_back(5 * pause);  // Keep number of pulses even
+    if (pause) {
+        data.push_back(3500 * pause);
+        if (data.size() % 2) {
+            data.push_back(3500);
+        }
+    }
 }
 
 size_t TZXFile::getBlockHeaderLength() {
