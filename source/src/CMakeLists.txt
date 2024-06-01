@@ -33,7 +33,9 @@ endif()
 message("Media libraries found: " ${MEDIA_LIBRARIES})
 message("Media include dirs found: " ${MEDIA_INCLUDE_DIRS})
 
-find_package(Boost COMPONENTS chrono system thread unit_test_framework REQUIRED)
+if(USE_BOOST_THREADS)
+    find_package(Boost COMPONENTS chrono system thread REQUIRED)
+endif()
 find_package(ZLIB REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR} ${MEDIA_INCLUDE_DIRS})
