@@ -270,7 +270,7 @@ class GateArray {
         static uint_fast32_t constexpr modeTable[4][8] = {
             { KEEP, KEEP, LOAD, KEEP, KEEP, KEEP, MOVE, KEEP },
             { MOVE, KEEP, LOAD, KEEP, MOVE, KEEP, MOVE, KEEP },
-            { MOVE, MOVE, LOAD, MOVE, MOVE, MOVE, MOVE, MOVE },
+            { MOVE, LOAD, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE },
             { KEEP, KEEP, LOAD, KEEP, KEEP, KEEP, MOVE, KEEP }
         };
 
