@@ -476,6 +476,7 @@ void SpeccyScreen::startStopTape() {
 
     spectrum.tape.play();
     spectrum.ula.tapeSound = tapeSound;
+    spectrum.ula.setEarLevel(spectrum.tape.level, spectrum.tape.playing);
 }
 
 void SpeccyScreen::rewindTape(bool toCounter) {

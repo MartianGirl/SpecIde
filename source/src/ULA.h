@@ -57,6 +57,7 @@ class ULA {
         void generateVideoControlSignals();
         void generateInterrupt();
         void tapeEarMic();
+        void setEarLevel(bool level, bool playing);
         uint_fast8_t ioRead();
         void ioWrite(uint_fast8_t byte);
         void beeper();
@@ -179,7 +180,8 @@ class ULA {
         uint_fast8_t soundBits = 0x00;
         uint_fast8_t inMask = 0xBF;
         uint_fast8_t borderAttr = 0x00;
-        uint_fast8_t tapeIn = 0x00;
+        bool tapeLevel = true;
+        bool tapePlaying = false;
 
         // Keyboard polling
         uint_fast8_t keys[8];

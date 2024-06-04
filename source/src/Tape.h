@@ -84,7 +84,7 @@ class Tape {
         void rewind(size_t position = 0);
         void resetCounter();
 
-        uint_fast8_t advance();
+        void advance();
         void next();
         void prev();
 

@@ -347,11 +347,9 @@ void CPC::clock() {
             // 400000 @ 4MHz = 0.1s
 
             if (!tape.sample--) {
-                uint_fast8_t level = tape.advance();
-                tapeLevel = (tapeSpeed >= 343000) ? ((level & 0x40) << 1) : 0x00;
+                tape.advance();
+                tapeLevel = (tapeSpeed >= 343000) ? ((tape.level & 0x40) << 1) : 0x00;
             }
-        } else {
-            tapeLevel = 0x00;
         }
 
         // Tape sounds.

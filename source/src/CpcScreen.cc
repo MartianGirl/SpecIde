@@ -378,6 +378,7 @@ void CpcScreen::startStopTape() {
 
     cpc.tape.play();
     cpc.tapeSound = tapeSound;
+    cpc.tapeLevel = cpc.tape.level;
 }
 
 void CpcScreen::rewindTape(bool toCounter) {

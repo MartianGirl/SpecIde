@@ -256,10 +256,9 @@ void Spectrum::run() {
 
         if (tape.playing) {
             if (!tape.sample--) {
-                ula.tapeIn = tape.advance() | 0x80;
+                tape.advance();
+                ula.setEarLevel(tape.level & 0x40, tape.playing);
             }
-        } else {
-            ula.tapeIn &= 0x7F;
         }
 
         // Generate sound. This maybe can be done using the same counter?

@@ -94,7 +94,7 @@ void Tape::resetCounter() {
     cout << "Set counter at " << pointer << "..." << endl;
 }
 
-uint_fast8_t Tape::advance() {
+void Tape::advance() {
 
     if (pointer < pulseData.size()) {
         // If we reach an index, we mark it.
@@ -125,8 +125,6 @@ uint_fast8_t Tape::advance() {
         level = 0x7F;
         playing = false;
     }
-
-    return level;
 }
 
 void Tape::next() {

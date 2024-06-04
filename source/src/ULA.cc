@@ -309,21 +309,24 @@ void ULA::tapeEarMic() {
 
     // These operations are too costly to do them every cycle.
     static uint_fast32_t count = 0;
-    if (ulaVersion < ULA_PLUS2 && !(++count & 0x3F)) {
-        vInc *= 0.954949;
+    if (ulaVersion < ULA_PLUS2 && !tapePlaying && !(++count & 0x3F)) {
+        vInc *= 0.934375;
         vCap = vEnd - vInc;
         ear = vCap;
     }
+}
 
-    // Tape input forces values on EAR pin.
-    if ((tapeIn & 0xC0) == 0x80) ear = 0.250;
-    if ((tapeIn & 0xC0) == 0xC0) ear = 4.000;
+void ULA::setEarLevel(bool level, bool playing) {
+
+    ear = level ? 1.500 : 0.000;
+    tapeLevel = level;
+    tapePlaying = playing;
 }
 
 uint_fast8_t ULA::ioRead() {
 
     uint_fast8_t byte = inMask;
-    byte |= (ear < 0.700) ? 0x00 : 0x40;
+    byte |= (ear > 0.700) ? 0x40 : 0x00;
 
     for (uint_fast8_t ii = 0; ii < 8; ++ii) {
         if (!(z80_a & (0x8000 >> ii))) {
@@ -338,11 +341,14 @@ void ULA::ioWrite(uint_fast8_t byte) {
 
     soundBits = (byte & 0x18) >> 3;
     borderAttr = byte & 0x07;
+
     if (ulaVersion < ULA_PLUS2) {
         vEnd = voltages[ulaVersion][soundBits];
         vInc = vEnd - vCap;
-    } else if (ulaVersion == ULA_PENTAGON && !video) {
-        colour[1] = colourTable[0x80 | borderAttr];
+    } else if (ulaVersion == ULA_PENTAGON) {
+        if (!video) {
+            colour[1] = colourTable[0x80 | borderAttr];
+        }
     }
 }
 
@@ -356,7 +362,7 @@ void ULA::beeper() {
             // In Spectrum 128K, ULA.b3 causes sound on its own.
             filter[index] +=
                 + (((soundBits & micMask) == micMask) ? ULA_SAVE_VOLUME : 0)
-                + ((tapeIn & 0x40) ? ULA_LOAD_VOLUME : 0);
+                + (tapeLevel ? ULA_LOAD_VOLUME : 0);
         }
     } else {
         filter[index] = 0x00;
