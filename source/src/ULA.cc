@@ -311,14 +311,14 @@ void ULA::tapeEarMic() {
     static uint_fast32_t count = 0;
     if (ulaVersion < ULA_PLUS2 && !tapePlaying && !(++count & 0x3F)) {
         vInc *= 0.934375;
-        vCap = vEnd - vInc;
-        ear = vCap;
+        vEar = vEnd - vInc;
     }
 }
 
 void ULA::setEarLevel(bool level, bool playing) {
 
-    ear = level ? 1.500 : 0.000;
+    vEar = level ? 1.500 : 0.000;
+    vInc = vEnd - vEar;
     tapeLevel = level;
     tapePlaying = playing;
 }
@@ -326,7 +326,7 @@ void ULA::setEarLevel(bool level, bool playing) {
 uint_fast8_t ULA::ioRead() {
 
     uint_fast8_t byte = inMask;
-    byte |= (ear > 0.700) ? 0x40 : 0x00;
+    byte |= (vEar > 0.700) ? 0x40 : 0x00;
 
     for (uint_fast8_t ii = 0; ii < 8; ++ii) {
         if (!(z80_a & (0x8000 >> ii))) {
@@ -343,8 +343,10 @@ void ULA::ioWrite(uint_fast8_t byte) {
     borderAttr = byte & 0x07;
 
     if (ulaVersion < ULA_PLUS2) {
-        vEnd = voltages[ulaVersion][soundBits];
-        vInc = vEnd - vCap;
+        if (!tapePlaying) {
+            vEnd = voltages[ulaVersion][soundBits];
+            vInc = vEnd - vEar;
+        }
     } else if (ulaVersion == ULA_PENTAGON) {
         if (!video) {
             colour[1] = colourTable[0x80 | borderAttr];

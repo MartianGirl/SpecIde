@@ -39,8 +39,8 @@ void TAPFile::parse(
     static uint32_t constexpr SYNC_PULSE_2 = 735;
     static uint32_t constexpr DATA_PULSE_0 = 855;
     static uint32_t constexpr DATA_PULSE_1 = 1710;
-    static uint32_t constexpr PILOT_HEAD_LENGTH = 8064;
-    static uint32_t constexpr PILOT_DATA_LENGTH = 3224;
+    static uint32_t constexpr PILOT_HEAD_LENGTH = 8063;
+    static uint32_t constexpr PILOT_DATA_LENGTH = 3223;
     static uint32_t constexpr MILLISECOND_PAUSE = 3500;
 
     size_t dataLength;
@@ -93,8 +93,7 @@ void TAPFile::parse(
         }
 
         // Insert the pause. Annotate the pause.
-        pulseData.push_back(999 * MILLISECOND_PAUSE);
-        pulseData.push_back(MILLISECOND_PAUSE);
+        pulseData.push_back(MILLISECOND_PAUSE * 1000);
         indexData.insert(pulseData.size());
 
         pointer += dataLength + 2;

@@ -93,7 +93,7 @@ class ULA {
 
         float vEnd = 0.0;
         float vInc = 0.0;
-        float vCap = 0.0;
+        float vEar = 0.0;
 
         static bool delayTable[16];
         static bool idleTable[16];
@@ -144,8 +144,6 @@ class ULA {
         uint_fast8_t dataReg;
         uint_fast8_t attrReg;
         uint_fast8_t latch;
-
-        double ear = 0;
 
         // Audio and tape signals
         int filter[FILTER_BZZ_SIZE];

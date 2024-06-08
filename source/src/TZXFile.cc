@@ -105,13 +105,10 @@ void TZXFile::parse(
             stopData.insert(pulseData.size());
         }
 
-        if (fileData[fileData.size() - 3] != 0x20) {
-            // If there is no pause...
-            // We'll add a "Pause 1000ms" block, just in case.
-            fileData.push_back(0x20);
-            fileData.push_back(0xE8);
-            fileData.push_back(0x03);
-        }
+        // We'll add a "Pause 1ms" block, just in case.
+        fileData.push_back(0x20);
+        fileData.push_back(0x01);
+        fileData.push_back(0x00);
     } else {
         return;
     }
@@ -142,7 +139,7 @@ void TZXFile::parse(
                 dataLength = fileData[pointer + 4] * 0x100
                     + fileData[pointer + 3];
                 flagByte = fileData[pointer + headLength];
-                pilotLength = (flagByte & 0x80) ? 3224 : 8064;
+                pilotLength = (flagByte & 0x80) ? 3223 : 8063;
 
                 if (pointer + headLength + dataLength > fileData.size()) {
                     cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
@@ -191,7 +188,6 @@ void TZXFile::parse(
                     + fileData[pointer + 9];
                 pilotLength = fileData[pointer + 12] * 0x100
                     + fileData[pointer + 11];
-                pilotLength += pilotLength % 2;
                 bitsInLastByte = fileData[pointer + 13];
                 pause = fileData[pointer + 15] * 0x100
                     + fileData[pointer + 14];
@@ -240,7 +236,6 @@ void TZXFile::parse(
                     + fileData[pointer + 1];
                 pilotLength = fileData[pointer + 4] * 0x100
                     + fileData[pointer + 3];
-                pilotLength += pilotLength % 2;
 
                 // Pilot tone
                 pulseData.insert(pulseData.end(), pilotLength, pilotPulse);
@@ -418,16 +413,16 @@ void TZXFile::parse(
                 blockName = "Pause/Stop The Tape";
                 pause = fileData[pointer + 2] * 0x100 + fileData[pointer + 1];
 
-                // Pause = 0 means Stop The Tape. However, we'll insert
-                // one second pause to properly end the block.
+                // Pause blocks reset polarity.
+                if (!(pulseData.size() % 2)) {
+                    addPause(1, pulseData);
+                }
                 indexData.insert(pulseData.size());
+
                 if (pause) {
                     addPause(pause, pulseData);
                 } else {
-                    // This pause will consist of one or two pulses, ensuring
-                    // that the level is low at the end. Stop Data will also
-                    // force a low level, so it must happen at the last pulse
-                    // so far.
+                    // In the Stop the tape case, add a millisecond pause to reset polarity.
                     addPause(1000, pulseData);
                     stopData.insert(pulseData.size() - 1);
                 }
@@ -752,9 +747,6 @@ void TZXFile::addPause(uint32_t pause, vector<uint32_t>& data) {
 
     if (pause) {
         data.push_back(3500 * pause);
-        if (data.size() % 2) {
-            data.push_back(3500);
-        }
     }
 }
 
