@@ -143,6 +143,7 @@ void TZXFile::parse(
 
                 if (pointer + headLength + dataLength > fileData.size()) {
                     cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
+                    pointer = fileData.size();
                     break;
                 }
 
@@ -198,6 +199,7 @@ void TZXFile::parse(
 
                 if (pointer + headLength + dataLength > fileData.size()) {
                     cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
+                    pointer = fileData.size();
                     break;
                 }
 
@@ -245,6 +247,13 @@ void TZXFile::parse(
             case 0x13:
                 blockName = "Sequence Of Pulses";
                 dataLength = fileData[pointer + 1];
+
+                if (pointer + headLength + dataLength > fileData.size()) {
+                    cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
+                    pointer = fileData.size();
+                    break;
+                }
+
                 for (size_t ii = 0; ii < dataLength; ++ii) {
                     uint32_t pulse =
                         fileData[pointer + (2 * ii) + 3] * 0x100 +
@@ -270,6 +279,7 @@ void TZXFile::parse(
 
                 if (pointer + headLength + dataLength > fileData.size()) {
                     cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
+                    pointer = fileData.size();
                     break;
                 }
 
@@ -306,6 +316,12 @@ void TZXFile::parse(
                 dataLength = fileData[pointer + 8] * 0x10000
                     + fileData[pointer + 7] * 0x100
                     + fileData[pointer + 6];
+
+                if (pointer + headLength + dataLength > fileData.size()) {
+                    cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
+                    pointer = fileData.size();
+                    break;
+                }
 
                 // Serialize
                 {
@@ -372,6 +388,12 @@ void TZXFile::parse(
                     + fileData[pointer + 2] * 0x100
                     + fileData[pointer + 1];
                 pause = fileData[pointer + 6] * 0x100 + fileData[pointer + 5];
+
+                if (pointer + 5 + dataLength > fileData.size()) {
+                    cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
+                    pointer = fileData.size();
+                    break;
+                }
 
                 loadSymbolData(pointer + 7,
                         symbolsInPilot, maxPilotSymLen, pilotAlphabetSize);
@@ -521,6 +543,13 @@ void TZXFile::parse(
                     + fileData[pointer + 19] * 0x10000
                     + fileData[pointer + 18] * 0x100
                     + fileData[pointer + 17];
+
+                if (pointer + headLength + dataLength > fileData.size()) {
+                    cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
+                    pointer = fileData.size();
+                    break;
+                }
+
                 pointer += headLength + dataLength;
                 break;
 
@@ -549,6 +578,13 @@ size_t TZXFile::dumpArchiveInfo() {
     uint32_t len;
 
     size_t length = fileData[pointer + 2] * 0x100 + fileData[pointer + 1];
+
+    if (pointer + length + 2 > fileData.size()) {
+        cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
+        pointer = fileData.size();
+        return fileData.size() - pointer - 2;
+    }
+
     uint32_t numStrings = fileData[pointer + 3];
     uint32_t index = 4;
 
@@ -586,6 +622,12 @@ size_t TZXFile::dumpComment() {
     string text;
     size_t length = fileData[pointer + 1];
 
+    if (pointer + length + 1 > fileData.size()) {
+        cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
+        pointer = fileData.size();
+        return fileData.size() - pointer - 1;
+    }
+
     for (size_t ii = 0; ii < length; ++ii) {
         text.push_back(static_cast<char>(fileData[pointer + 2 + ii]));
         if (fileData[pointer + 3 + ii] == 0x0D) {
@@ -602,6 +644,12 @@ size_t TZXFile::dumpMessage() {
     string text;
     // size_t time = fileData[pointer + 1];
     size_t length = fileData[pointer + 2];
+
+    if (pointer + length + 2 > fileData.size()) {
+        cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
+        pointer = fileData.size();
+        return fileData.size() - pointer - 2;
+    }
 
     for (size_t ii = 0; ii < length; ++ii) {
         text.push_back(static_cast<char>(fileData[pointer + 3 + ii]));
