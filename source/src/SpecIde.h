@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2024.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,7 +77,5 @@ struct Option {
      */
     Option(std::string n = "", std::string v = "") : name(n), value(v) {}
 };
-
-void printBytes(std::string const& prefix, size_t len, uint8_t* buf);
 
 // vim: et:sw=4:ts=4

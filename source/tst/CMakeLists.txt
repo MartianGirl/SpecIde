@@ -6,22 +6,30 @@ if(WIN32)
 endif()
 
 find_package(Boost COMPONENTS thread unit_test_framework REQUIRED)
+find_package(ZLIB REQUIRED)
 
 # This is for all platforms
 include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${Boost_INCLUDE_DIR})
+include_directories(${Boost_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR})
 
 # Add the test executable
 add_executable(TZXFileTest
     TZXFileTest.cc
-    ${PROJECT_SOURCE_DIR}/src/TZXFile.cc)
+    ${PROJECT_SOURCE_DIR}/src/TZXFile.cc
+    ${PROJECT_SOURCE_DIR}/src/Utils.cc)
 target_link_libraries(TZXFileTest
-    ${Boost_LIBRARIES})
+    ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
 
 add_executable(DSKFileTest
     DSKFileTest.cc
     ${PROJECT_SOURCE_DIR}/src/DSKFile.cc)
 target_link_libraries(DSKFileTest
+    ${Boost_LIBRARIES})
+
+add_executable(Z80FileTest
+    Z80FileTest.cc
+    ${PROJECT_SOURCE_DIR}/src/Z80File.cc)
+target_link_libraries(Z80FileTest
     ${Boost_LIBRARIES})
 
 add_executable(Z80Test

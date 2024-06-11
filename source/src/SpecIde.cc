@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2024.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -357,19 +357,6 @@ vector<string> getRomDirs() {
 #endif
 
     return romDirs;
-}
-
-void printBytes(string const& prefix, size_t len, uint8_t* buf) {
-
-    cout << prefix << " ";
-    for (size_t ii = 0; ii < len; ++ii) {
-        cout << hex << setw(2) << setfill('0');
-        cout << static_cast<uint32_t>(buf[ii]) << " ";
-        if ((ii & 0xF) == 0xF) {
-        cout << endl << ".." << " ";
-        }
-    }
-    cout << endl;
 }
 
 // vim: et:sw=4:ts=4

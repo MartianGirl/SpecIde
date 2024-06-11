@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2024.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,6 @@
 #include <set>
 #include <vector>
 
-#include <zlib.h>
-
 class CSWFile {
     public:
         CSWFile() :
@@ -36,7 +34,7 @@ class CSWFile {
         uint8_t majorVersion = 0;
         uint8_t minorVersion = 0;
 
-        uint32_t rate;
+        double rate;
         uint8_t compression;
         uint8_t flags;
 
@@ -47,7 +45,6 @@ class CSWFile {
         void parse(std::vector<uint32_t> &pulseData,
                 std::set<size_t> &indexData,
                 std::set<size_t> &stopData);
-        bool inflateBuffer(std::vector<uint8_t>& in, std::vector<uint8_t>& out);
 };
 
 // vim: et:sw=4:ts=4

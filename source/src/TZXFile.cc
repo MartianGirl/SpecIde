@@ -1,4 +1,4 @@
-/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2021.
+/* This file is part of SpecIde, (c) Marta Sevillano Mancilla, 2016-2024.
  *
  * SpecIde is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 #include <iostream>
 
 #include "TZXFile.h"
+#include "Utils.h"
 
 using namespace std;
 
@@ -86,6 +87,12 @@ void TZXFile::parse(
     uint32_t dataAlphabetSize;
 
     uint32_t sampleStep;
+
+    double cswRate;
+    uint32_t cswCompression;
+    uint32_t cswExpectedPulses;
+    uint32_t cswPulses;
+    vector<uint8_t> cswBuffer;
 
     vector<uint32_t> pilotAlphabet;
     vector<uint32_t> dataAlphabet;
@@ -373,11 +380,59 @@ void TZXFile::parse(
                 break;
 
             case 0x18:
-                blockName = "CSW Recording (Not implemented yet)";
+                blockName = "CSW Recording";
                 dataLength = fileData[pointer + 4] * 0x1000000
                     + fileData[pointer + 3] * 0x10000
                     + fileData[pointer + 2] * 0x100
                     + fileData[pointer + 1];
+                pause = fileData[pointer + 6] * 0x100
+                    + fileData[pointer + 5];
+                cswRate = fileData[pointer + 9] * 0x10000
+                    + fileData[pointer + 8] * 0x100
+                    + fileData[pointer + 7];
+                cswCompression = fileData[pointer + 10];
+                cswExpectedPulses = fileData[pointer + 14] * 0x1000000
+                    + fileData[pointer + 13] * 0x10000
+                    + fileData[pointer + 12] * 0x100
+                    + fileData[pointer + 11];
+
+                if (pointer + headLength + dataLength > fileData.size()) {
+                    cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
+                    pointer = fileData.size();
+                    break;
+                }
+
+                cswBuffer.assign(&fileData[pointer + 15], &fileData[(pointer + 15) + (dataLength - 10)]);
+                if (cswCompression == 2) {
+                    vector<uint8_t> temp(5 * cswExpectedPulses, 0x00);
+                    if (inflateBuffer(cswBuffer, temp)) {
+                        cswBuffer.assign(temp.begin(), temp.end());
+                    }
+                }
+
+                cswPulses = 0;
+                for (size_t ii = 0; ii < cswBuffer.size(); ++ii) {
+                    double pulse = cswBuffer[ii];
+                    if (cswBuffer[ii] == 0x00) {
+                        pulse = cswBuffer[ii + 4] * 0x1000000
+                            + cswBuffer[ii + 3] * 0x10000
+                            + cswBuffer[ii + 2] * 0x100
+                            + cswBuffer[ii + 1];
+                        ii += 4;
+                    }
+                    ++cswPulses;
+                    pulse *= 3500000.0 / cswRate;
+                    pulseData.push_back(static_cast<uint32_t>(pulse));
+                }
+
+                if (cswExpectedPulses != cswPulses) {
+                    cout << "Error: Unexpected number of pulses in CSW data. " << endl;
+                    cout << "Wanted: " << cswExpectedPulses << "Got: " << cswPulses << endl;
+                    cout << "'" << name << "'  may be corrupt." << endl;
+                    pointer = fileData.size();
+                    break;
+                }
+
                 pointer += headLength + dataLength;
                 break;
 
