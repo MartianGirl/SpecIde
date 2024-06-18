@@ -178,6 +178,7 @@ void displayHelp() {
     cout << endl;
     cout << "Supported tape formats: TAP TZX CDT CSW." << endl;
     cout << "Supported disk formats: DSK." << endl;
+    cout << "Supported snap formats: Z80." << endl;
     cout << endl;
     cout << "Options:" << endl;
     cout << endl;

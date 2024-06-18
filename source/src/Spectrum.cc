@@ -1173,16 +1173,15 @@ void Spectrum::loadState(SaveState const& state) {
 
     ula.start();
 
-    if (state.tStates == UINT32_MAX) {
+    uint32_t tStatesHi = (state.tStates / 0x10000) % 4;
+    uint32_t tStatesLo = state.tStates % 0x10000;
+    uint32_t cyclesPerArea = (ula.maxScan * ula.checkPointValues[ula.ulaVersion][5]) / 8;
+    if (tStatesLo > cyclesPerArea) {
         ula.scan = 0;
         ula.pixel = 1;
         ula.z80Clock = true;
     } else {
-        uint32_t tStatesHi = (state.tStates / 0x10000) % 4;
-        uint32_t tStatesLo = state.tStates % 0x10000;
-        uint32_t cyclesPerArea = (ula.maxScan * ula.checkPointValues[ula.ulaVersion][5]) / 8;
         uint32_t cycles = cyclesPerArea * (3 - tStatesHi) + 2 * (cyclesPerArea - tStatesLo) - 1;
-
         ula.scan = ula.vSyncStart;
         ula.pixel = ula.interruptStart + 1;
         ula.z80Clock = (ula.pixel & 1);

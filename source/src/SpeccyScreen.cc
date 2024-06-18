@@ -258,7 +258,7 @@ void SpeccyScreen::loadFiles() {
                 {
                     Z80File snap;
                     snap.load(*it);
-                    cout << "Loading snapshot:" << *it << endl;
+                    cout << "Loading snapshot: " << *it << endl;
                     if (snap.parse()) {
                         spectrum.loadState(snap.state);
                     }
