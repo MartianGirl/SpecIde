@@ -82,7 +82,6 @@ bool Z80File::checkVersion() {
         version = 1;
         dataIndex = 30;
     }
-    cout << "data index" << dataIndex << endl;
     return true;
 }
 
@@ -227,7 +226,6 @@ bool Z80File::fillMemory() {
     if (version == 1) {
         decompressBlock(fileData.size() - dataIndex, dataIndex, state.memory[0]);
         if (state.memory[0].size() == 0xC000) {
-            cout << "Decompress 48K" << endl;
             state.memory[5].assign(&state.memory[0][0x0000], &state.memory[0][0x4000]);
             state.memory[2].assign(&state.memory[0][0x4000], &state.memory[0][0x8000]);
             state.memory[0].assign(&state.memory[0][0x8000], &state.memory[0][0xC000]);
@@ -240,7 +238,6 @@ bool Z80File::fillMemory() {
             uint8_t numPage = fileData[dataIndex + 2];
             size_t page = getPage(numPage);
             dataIndex += 3;
-            cout << static_cast<uint32_t>(numPage) << " " << page << " " << length << " " << dataIndex << endl;
 
             if (length == 0xFFFF) {
                 if (dataIndex + 0x4000 <= fileData.size()) {
@@ -249,12 +246,11 @@ bool Z80File::fillMemory() {
                     }
                     dataIndex += 0x4000;
                 } else {
-                    cout << "Wrong length!" << endl;
+                    cout << "Cannot load Z80 snapshot: Missing data." << endl;
                     return false;
                 }
             } else {
                 if (dataIndex + length <= fileData.size()) {
-                    cout << "Decompress page: " << page << " Length: " << length << endl;
                     if (page != UINT8_MAX) {
                         decompressBlock(length, dataIndex, state.memory[page]);
                         if (state.memory[page].size() != 0x4000) {
@@ -263,7 +259,7 @@ bool Z80File::fillMemory() {
                     }
                     dataIndex += length;
                 } else {
-                    cout << "Wrong length!" << endl;
+                    cout << "Cannot load Z80 snapshot: Missing data." << endl;
                     return false;
                 }
             }

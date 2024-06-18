@@ -1135,7 +1135,7 @@ void Spectrum::loadState(SaveState const& state) {
             updatePage();
             break;
         default:
-            cout << "No valid model " << endl;
+            cout << "Error: Snapshot requests an unsupported ZX Spectrum model." << endl;
             return;
     }
 
@@ -1186,7 +1186,7 @@ void Spectrum::loadState(SaveState const& state) {
         ula.scan = ula.vSyncStart;
         ula.pixel = ula.interruptStart + 1;
         ula.z80Clock = (ula.pixel & 1);
-        
+
         for (uint32_t ii = 0; ii < cycles; ++ii) {
             ula.clock();
         }
