@@ -265,6 +265,8 @@ FileTypes Screen::guessFileType(string const& fileName) {
         return FileTypes::FILETYPE_DSK;
     } else if (extension == ".csw") {
         return FileTypes::FILETYPE_CSW;
+    } else if (extension == ".z80") {
+        return FileTypes::FILETYPE_Z80;
     } else {
         return FileTypes::FILETYPE_ERR;
     }

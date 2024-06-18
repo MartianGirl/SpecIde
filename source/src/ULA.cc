@@ -149,11 +149,11 @@ void ULA::generateVideoControlSignals() {
 void ULA::generateInterrupt() {
 
     if (scan == vSyncStart) {
-        if (pixel == interruptStart && scan == vSyncStart) {
+        if (pixel == interruptStart) {
             // Keyboard is updated here to avoid split double keys.
             for (size_t ii = 0; ii < 8; ++ii) keyData[ii] = keys[ii];
             z80_c &= ~SIGNAL_INT_;
-        } else if (pixel == interruptEnd && scan == vSyncStart) {
+        } else if (pixel == interruptEnd) {
             z80_c |= SIGNAL_INT_;
         }
     }

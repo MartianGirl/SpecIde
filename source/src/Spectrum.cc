@@ -1093,4 +1093,119 @@ bool Spectrum::allowPageChange() {
             return false;
     }
 }
+
+void Spectrum::loadState(SaveState const& state) {
+
+    switch (state.model) {
+        case SnapshotModel::ZX_48K_ISSUE2:
+            setIssue2(RomVariant::ROM_48_EN);
+            if (state.emuAy8912) psgChips = 1;
+            if (state.emuFuller) joystick = JoystickType::FULLER;
+            if (state.emuFuller || state.emuAy8912) psgPlaySound(true);
+            break;
+        case SnapshotModel::ZX_48K_ISSUE3:
+            setIssue3(RomVariant::ROM_48_EN);
+            if (state.emuAy8912) psgChips = 1;
+            if (state.emuFuller) joystick = JoystickType::FULLER;
+            if (state.emuFuller || state.emuAy8912) psgPlaySound(true);
+            break;
+        case SnapshotModel::ZX_128K:
+            set128K(RomVariant::ROM_128_EN);
+            pageRegs = (pageRegs & 0xFF00) | state.port_0x7ffd;
+            updatePage();
+            break;
+        case SnapshotModel::ZX_PLUS2:
+            setPlus2(RomVariant::ROM_PLUS2_EN);
+            pageRegs = (pageRegs & 0xFF00) | state.port_0x7ffd;
+            updatePage();
+            break;
+        case SnapshotModel::ZX_PLUS2A:
+            setPlus2A(RomVariant::ROM_PLUS3_EN);
+            pageRegs = state.port_0x1ffd << 8 | state.port_0x7ffd;
+            updatePage();
+            break;
+        case SnapshotModel::ZX_PLUS3:
+            setPlus3(RomVariant::ROM_PLUS3_EN); break;
+            pageRegs = state.port_0x1ffd << 8 | state.port_0x7ffd;
+            updatePage();
+            break;
+        case SnapshotModel::PENTAGON:
+            setPentagon(RomVariant::ROM_PENTAGON);
+            pageRegs = (pageRegs & 0xFF00) | state.port_0x7ffd;
+            updatePage();
+            break;
+        default:
+            cout << "No valid model " << endl;
+            return;
+    }
+
+    z80.pc.w = state.pc;
+    z80.sp.w = state.sp;
+    z80.ix.w = state.ix;
+    z80.iy.w = state.iy;
+
+    z80.af.w = state.af;
+    z80.bc.w = state.bc;
+    z80.de.w = state.de;
+    z80.hl.w = state.hl;
+
+    z80.af_.w = state.af_;
+    z80.bc_.w = state.bc_;
+    z80.de_.w = state.de_;
+    z80.hl_.w = state.hl_;
+
+    z80.iff = state.iff;
+    z80.im = state.im;
+
+    if (state.emuRefresh) {
+        z80.ir.w = state.ir;
+    } else {
+        z80.ir.b.h = (state.ir >> 8);
+    }
+
+    z80.state = Z80State::ST_OCF_T1H_ADDRWR;
+
+    if (!state.emuFuller) {
+        joystick = state.joystick;
+    }
+
+    ula.borderAttr = state.border;
+
+    ula.start();
+
+    if (state.tStates == UINT32_MAX) {
+        ula.scan = 0;
+        ula.pixel = 1;
+        ula.z80Clock = true;
+    } else {
+        uint32_t tStatesHi = (state.tStates / 0x10000) % 4;
+        uint32_t tStatesLo = state.tStates % 0x10000;
+        uint32_t cyclesPerArea = (ula.maxScan * ula.checkPointValues[ula.ulaVersion][5]) / 8;
+        uint32_t cycles = cyclesPerArea * (3 - tStatesHi) + 2 * (cyclesPerArea - tStatesLo) - 1;
+
+        ula.scan = ula.vSyncStart;
+        ula.pixel = ula.interruptStart + 1;
+        ula.z80Clock = (ula.pixel & 1);
+        
+        for (uint32_t ii = 0; ii < cycles; ++ii) {
+            ula.clock();
+        }
+    }
+
+    if (state.emuAy8912 || state.emuFuller) {
+        for (size_t ii = 0; ii < 16; ++ii) {
+            if (state.emuFuller) {
+                psg[4].r[ii] = state.ayRegs[ii];
+            } else if (state.emuAy8912) {
+                psg[0].r[ii] = state.ayRegs[ii];
+            }
+        }
+    }
+
+    for (size_t ii = 0; ii < 8; ++ii) {
+        if (state.memory[ii].size()) {
+            copy(state.memory[ii].begin(), state.memory[ii].end(), &ram[0x4000 * ii]);
+        }
+    }
+}
 // vim: et:sw=4:ts=4

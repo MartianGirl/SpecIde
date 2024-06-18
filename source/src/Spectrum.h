@@ -24,6 +24,7 @@
 #include "Tape.h"
 
 #include "CommonDefs.h"
+#include "SaveState.h"
 #include "SoundDefs.h"
 #include "SoundChannel.h"
 
@@ -42,14 +43,6 @@ enum class Covox {
     SOUNDRIVE1,
     SOUNDRIVE2,
     NONE
-};
-
-enum class JoystickType {
-    KEMPSTON_OLD,
-    KEMPSTON_NEW,
-    FULLER,
-    CURSOR,
-    SINCLAIR
 };
 
 /**
@@ -435,5 +428,7 @@ class Spectrum {
          * Trap SA-FLAG routine and write block from memory to tape.
          */
         void trapSaBytes();
+
+        void loadState(SaveState const& state);
 };
 // vim: et:sw=4:ts=4

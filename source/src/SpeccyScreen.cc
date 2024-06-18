@@ -16,6 +16,7 @@
 #include "SpeccyScreen.h"
 #include "config.h"
 #include "KeyBinding.h"
+#include "Z80File.h"
 
 #ifdef USE_BOOST_THREADS
 #include <boost/chrono/include.hpp>
@@ -249,6 +250,17 @@ void SpeccyScreen::loadFiles() {
                         spectrum.fdc765.drive[0].images.push_back(dsk);
                         spectrum.fdc765.drive[0].imageNames.push_back(*it);
                         spectrum.fdc765.drive[0].disk = true;
+                    }
+                }
+                break;
+
+            case FileTypes::FILETYPE_Z80:
+                {
+                    Z80File snap;
+                    snap.load(*it);
+                    cout << "Loading snapshot:" << *it << endl;
+                    if (snap.parse()) {
+                        spectrum.loadState(snap.state);
                     }
                 }
                 break;

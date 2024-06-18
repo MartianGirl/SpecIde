@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(v1_header_test)
     BOOST_CHECK_EQUAL(file.checkVersion(), true);
     BOOST_CHECK_EQUAL(file.version, 1);
 
-    BOOST_CHECK_EQUAL(file.parseStatus(), true);
+    BOOST_CHECK_EQUAL(file.parseHeader(), true);
 }
 
 BOOST_AUTO_TEST_CASE(file_reporter)
@@ -78,16 +78,31 @@ BOOST_AUTO_TEST_CASE(file_reporter)
     file.load(boost::unit_test::framework::master_test_suite().argv[1]);
     file.checkVersion();
     cout << "File version: " << static_cast<uint32_t>(file.version) << endl;
-    file.parseStatus();
+    file.parseHeader();
     cout << hex;
-    cout << "AF: " << setfill('0') << setw(4) << file.status.af
-        << "   BC: " << setfill('0') << setw(4) << file.status.bc
-        << "   DE: " << setfill('0') << setw(4) << file.status.de
-        << "   HL: " << setfill('0') << setw(4) << file.status.hl << endl;
-    cout << "AF': " << setfill('0') << setw(4) << file.status.af_
-        << "  BC': " << setfill('0') << setw(4) << file.status.bc_
-        << "  DE': " << setfill('0') << setw(4) << file.status.de_
-        << "  HL': " << setfill('0') << setw(4) << file.status.hl_ << endl;
+    cout << "AF: " << setfill('0') << setw(4) << file.state.af
+        << "   BC: " << setfill('0') << setw(4) << file.state.bc
+        << "   DE: " << setfill('0') << setw(4) << file.state.de
+        << "   HL: " << setfill('0') << setw(4) << file.state.hl << endl;
+    cout << "AF': " << setfill('0') << setw(4) << file.state.af_
+        << "  BC': " << setfill('0') << setw(4) << file.state.bc_
+        << "  DE': " << setfill('0') << setw(4) << file.state.de_
+        << "  HL': " << setfill('0') << setw(4) << file.state.hl_ << endl;
+
+    cout << "IX: " << setfill('0') << setw(4) << file.state.ix << endl;
+    cout << "IY: " << setfill('0') << setw(4) << file.state.iy << endl;
+    cout << "SP: " << setfill('0') << setw(4) << file.state.sp << endl;
+    cout << "PC: " << setfill('0') << setw(4) << file.state.pc << endl;
+    cout << "IR: " << setfill('0') << setw(4) << file.state.ir << endl;
+
+    cout << "IFF: " << setfill('0') << setw(4) << file.state.iff << endl;
+    cout << "IM: " << setfill('0') << setw(4) << file.state.im << endl;
+    cout << "Border: " << setfill('0') << setw(4) << file.state.border << endl;
+
+    file.fillMemory();
+    for (size_t ii = 0; ii < 16; ++ii) {
+        cout << "Memory page " << ii << " size: " << file.state.memory[ii].size() << endl;
+    }
 }
 // EOF
 // vim: et:sw=4:ts=4
