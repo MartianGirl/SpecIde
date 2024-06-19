@@ -16,6 +16,7 @@
 #include "SpeccyScreen.h"
 #include "config.h"
 #include "KeyBinding.h"
+#include "SNAFile.h"
 #include "Z80File.h"
 
 #ifdef USE_BOOST_THREADS
@@ -258,7 +259,18 @@ void SpeccyScreen::loadFiles() {
                 {
                     Z80File snap;
                     snap.load(*it);
-                    cout << "Loading snapshot: " << *it << endl;
+                    cout << "Loading Z80 snapshot: " << *it << endl;
+                    if (snap.parse()) {
+                        spectrum.loadState(snap.state);
+                    }
+                }
+                break;
+
+            case FileTypes::FILETYPE_SNA:
+                {
+                    SNAFile snap;
+                    snap.load(*it);
+                    cout << "Loading SNA snapshot: " << *it << endl;
                     if (snap.parse()) {
                         spectrum.loadState(snap.state);
                     }

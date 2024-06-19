@@ -19,7 +19,18 @@ enum class SnapshotModel {
     UNSUPPORTED
 };
 
+enum class SnapType {
+    Z80_V1,
+    Z80_V2,
+    Z80_V3,
+    SNA_48,
+    SNA_128,
+    INVALID
+};
+
 struct SaveState {
+
+    SnapType type = SnapType::INVALID;
 
     uint16_t af = 0x0000;
     uint16_t bc = 0x0000;
@@ -45,6 +56,7 @@ struct SaveState {
     JoystickType joystick = JoystickType::SINCLAIR;
     bool issue2 = false;
     bool samrom = false;
+    bool trdos = false;
 
     SnapshotModel model = SnapshotModel::UNSUPPORTED;
 
@@ -55,7 +67,7 @@ struct SaveState {
 
     bool emuAy8912 = false;
     bool emuFuller = false;
-    bool emuRefresh = false;
+    bool emuRefresh = true;
 
     uint32_t tStates = UINT32_MAX;
 

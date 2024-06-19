@@ -20,22 +20,21 @@
 
 #include "SaveState.h"
 
-/** Z80File.h
+/** SNAFile.h
  *
- * Z80 file format implementation.
+ * SNA file format implementation.
  *
- * This class loads a Z80 snapshot, validates it and applies it to the emulator.
+ * This class loads a SNA snapshot, validates it and applies it to the emulator.
  */
 
 
-class Z80File {
+class SNAFile {
 
     public:
-        Z80File() {}
+        SNAFile() {}
 
         std::string name;
         uint32_t dataIndex = 0;
-        bool valid = false;
 
         std::vector<uint8_t> fileData;
         SaveState state;
@@ -46,10 +45,7 @@ class Z80File {
         void write();
 
         bool parseHeader();
-        bool checkVersion();
         bool fillMemory();
-        uint8_t getPage(uint8_t numPage);
-        void decompressBlock(size_t length, size_t start, std::vector<uint8_t>& buffer);
 };
 
 // vim: et:sw=4:ts=4:

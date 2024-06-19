@@ -67,11 +67,11 @@ bool Z80File::checkVersion() {
 
         switch (extLen) {
             case 23:
-                version = 2;
+                state.type = SnapType::Z80_V2;
                 break;
             case 54:    // fall-through
             case 55:
-                version = 3;
+                state.type = SnapType::Z80_V3;
                 break;
             default:
                 return false;
@@ -79,7 +79,7 @@ bool Z80File::checkVersion() {
 
         dataIndex = 32 + extLen;
     } else {
-        version = 1;
+        state.type = SnapType::Z80_V1;
         dataIndex = 30;
     }
     return true;
@@ -91,7 +91,7 @@ bool Z80File::parseHeader() {
     state.bc = fileData[2] + 0x100 * fileData[3];
     state.hl = fileData[4] + 0x100 * fileData[5];
 
-    if (version == 1) {
+    if (state.type == SnapType::Z80_V1) {
         state.pc = fileData[6] + 0x100 * fileData[7];
     } else {
         state.pc = fileData[32] + 0x100 * fileData[33];
@@ -129,7 +129,7 @@ bool Z80File::parseHeader() {
         default: state.joystick = JoystickType::SINCLAIR; break;
     }
 
-    if (version > 1) {
+    if (state.type == SnapType::Z80_V2 || state.type == SnapType::Z80_V3) {
         state.port_0x7ffd = fileData[35];
 
         state.emuRefresh = ((fileData[37] & 0x01) == 0x01);
@@ -147,7 +147,7 @@ bool Z80File::parseHeader() {
             state.ayRegs[ii] = fileData[39 + ii];
         }
 
-        if (version > 2) {
+        if (state.type == SnapType::Z80_V3) {
             // Model selection, Z80 V3
             switch (fileData[34]) {
                 case 0: // fall-through
@@ -183,7 +183,6 @@ bool Z80File::parseHeader() {
             if (dataIndex == 87) {
                 state.port_0x1ffd = fileData[86];
             }
-
 
         } else {
             // Model selection, Z80 V2
@@ -223,7 +222,7 @@ bool Z80File::parseHeader() {
 
 bool Z80File::fillMemory() {
 
-    if (version == 1) {
+    if (state.type == SnapType::Z80_V1) {
         decompressBlock(fileData.size() - dataIndex, dataIndex, state.memory[0]);
         if (state.memory[0].size() == 0xC000) {
             state.memory[5].assign(&state.memory[0][0x0000], &state.memory[0][0x4000]);
@@ -279,7 +278,7 @@ void Z80File::decompressBlock(size_t length, size_t start, vector<uint8_t>& buff
             buffer.insert(buffer.end(), fileData[index + 2], fileData[index + 3]);
             index += 4;
             length -= 4;
-        } else if (version == 1  && fileData[index] == 0x00 && fileData[index + 1] == 0xED
+        } else if (state.type == SnapType::Z80_V1 && fileData[index] == 0x00 && fileData[index + 1] == 0xED
                 && fileData[index + 2] == 0xED && fileData[index + 3] == 0x00) {
             finished = true;
         } else {

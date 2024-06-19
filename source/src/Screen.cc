@@ -267,6 +267,8 @@ FileTypes Screen::guessFileType(string const& fileName) {
         return FileTypes::FILETYPE_CSW;
     } else if (extension == ".z80") {
         return FileTypes::FILETYPE_Z80;
+    } else if (extension == ".sna") {
+        return FileTypes::FILETYPE_SNA;
     } else {
         return FileTypes::FILETYPE_ERR;
     }

@@ -1111,12 +1111,12 @@ void Spectrum::loadState(SaveState const& state) {
             break;
         case SnapshotModel::ZX_128K:
             set128K(RomVariant::ROM_128_EN);
-            pageRegs = (pageRegs & 0xFF00) | state.port_0x7ffd;
+            pageRegs = state.port_0x7ffd;
             updatePage();
             break;
         case SnapshotModel::ZX_PLUS2:
             setPlus2(RomVariant::ROM_PLUS2_EN);
-            pageRegs = (pageRegs & 0xFF00) | state.port_0x7ffd;
+            pageRegs = state.port_0x7ffd;
             updatePage();
             break;
         case SnapshotModel::ZX_PLUS2A:
@@ -1131,7 +1131,7 @@ void Spectrum::loadState(SaveState const& state) {
             break;
         case SnapshotModel::PENTAGON:
             setPentagon(RomVariant::ROM_PENTAGON);
-            pageRegs = (pageRegs & 0xFF00) | state.port_0x7ffd;
+            pageRegs = state.port_0x7ffd;
             updatePage();
             break;
         default:
@@ -1139,7 +1139,6 @@ void Spectrum::loadState(SaveState const& state) {
             return;
     }
 
-    z80.pc.w = state.pc;
     z80.sp.w = state.sp;
     z80.ix.w = state.ix;
     z80.iy.w = state.iy;
@@ -1163,48 +1162,65 @@ void Spectrum::loadState(SaveState const& state) {
         z80.ir.b.h = (state.ir >> 8);
     }
 
-    z80.state = Z80State::ST_OCF_T1H_ADDRWR;
-
-    if (!state.emuFuller) {
-        joystick = state.joystick;
-    }
-
     ula.borderAttr = state.border;
-
-    ula.start();
-
-    uint32_t tStatesHi = (state.tStates / 0x10000) % 4;
-    uint32_t tStatesLo = state.tStates % 0x10000;
-    uint32_t cyclesPerArea = (ula.maxScan * ula.checkPointValues[ula.ulaVersion][5]) / 8;
-    if (tStatesLo > cyclesPerArea) {
-        ula.scan = 0;
-        ula.pixel = 1;
-        ula.z80Clock = true;
-    } else {
-        uint32_t cycles = cyclesPerArea * (3 - tStatesHi) + 2 * (cyclesPerArea - tStatesLo) - 1;
-        ula.scan = ula.vSyncStart;
-        ula.pixel = ula.interruptStart + 1;
-        ula.z80Clock = (ula.pixel & 1);
-
-        for (uint32_t ii = 0; ii < cycles; ++ii) {
-            ula.clock();
-        }
-    }
-
-    if (state.emuAy8912 || state.emuFuller) {
-        for (size_t ii = 0; ii < 16; ++ii) {
-            if (state.emuFuller) {
-                psg[4].r[ii] = state.ayRegs[ii];
-            } else if (state.emuAy8912) {
-                psg[0].r[ii] = state.ayRegs[ii];
-            }
-        }
-    }
 
     for (size_t ii = 0; ii < 8; ++ii) {
         if (state.memory[ii].size()) {
             copy(state.memory[ii].begin(), state.memory[ii].end(), &ram[0x4000 * ii]);
         }
+    }
+
+    ula.start();
+
+    if (state.type == SnapType::SNA_48) {
+        z80.prefix = PREFIX_ED;
+        z80.decode(0x45);
+        z80.startInstruction();
+        z80.state = Z80State::ST_OCF_T4L_RFSH2;
+
+        ula.scan = 0;
+        ula.pixel = 1;
+        ula.z80Clock = true;
+    } else if (state.type == SnapType::SNA_128) {
+        ula.scan = 0;
+        ula.pixel = 1;
+        ula.z80Clock = true;
+
+        z80.pc.w = state.pc;
+        z80.state = Z80State::ST_OCF_T1H_ADDRWR;
+    } else {
+
+        uint32_t tStatesHi = (state.tStates / 0x10000) % 4;
+        uint32_t tStatesLo = state.tStates % 0x10000;
+        uint32_t cyclesPerArea = (ula.maxScan * ula.checkPointValues[ula.ulaVersion][5]) / 8;
+
+        ula.scan = ula.vSyncStart;
+        ula.pixel = ula.interruptStart | 1;
+        ula.z80Clock = true;
+
+        if (tStatesLo <= cyclesPerArea) {
+            uint32_t cycles = cyclesPerArea * (3 - tStatesHi) + 2 * (cyclesPerArea - tStatesLo) - 1;
+            for (uint32_t ii = 0; ii < cycles; ++ii) {
+                ula.clock();
+            }
+        }
+
+        if (state.emuFuller) {
+            for (size_t ii = 0; ii < 16; ++ii) {
+                psg[4].r[ii] = state.ayRegs[ii];
+            }
+        } else {
+            joystick = state.joystick;
+        }
+
+        if (state.emuAy8912) {
+            for (size_t ii = 0; ii < 16; ++ii) {
+                psg[0].r[ii] = state.ayRegs[ii];
+            }
+        }
+
+        z80.pc.w = state.pc;
+        z80.state = Z80State::ST_OCF_T1H_ADDRWR;
     }
 }
 // vim: et:sw=4:ts=4
