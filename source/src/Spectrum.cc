@@ -1178,28 +1178,30 @@ void Spectrum::loadState(SaveState const& state) {
         z80.startInstruction();
         z80.state = Z80State::ST_OCF_T4L_RFSH2;
 
-        ula.scan = 0;
-        ula.pixel = 1;
-        ula.z80Clock = true;
+        while (ula.scan != ula.vSyncStart || ula.pixel != ula.interruptEnd) {
+            ula.clock();
+        }
     } else if (state.type == SnapType::SNA_128) {
-        ula.scan = 0;
-        ula.pixel = 1;
-        ula.z80Clock = true;
+        while (ula.scan != ula.vSyncStart || ula.pixel != ula.interruptEnd) {
+            ula.clock();
+        }
 
         z80.pc.w = state.pc;
         z80.state = Z80State::ST_OCF_T1H_ADDRWR;
     } else {
-
         uint32_t tStatesHi = (state.tStates / 0x10000) % 4;
         uint32_t tStatesLo = state.tStates % 0x10000;
         uint32_t cyclesPerArea = (ula.maxScan * ula.checkPointValues[ula.ulaVersion][5]) / 8;
 
-        ula.scan = ula.vSyncStart;
-        ula.pixel = ula.interruptStart | 1;
-        ula.z80Clock = true;
+        // First, advance the ULA until "just after the ULA generates its once-in-every-20-ms interrupt".
+        while (ula.scan != ula.vSyncStart || ula.pixel != ula.interruptEnd) {
+            ula.clock();
+        }
 
+        // If tStatesLo has a valid value (not higher than the number to total T-states divided by 4)...
         if (tStatesLo <= cyclesPerArea) {
-            uint32_t cycles = cyclesPerArea * (3 - tStatesHi) + 2 * (cyclesPerArea - tStatesLo) - 1;
+            // We have to advance the ULA this number of cycles
+            uint32_t cycles = cyclesPerArea * ((tStatesHi + 1) % 4) + 2 * (cyclesPerArea - tStatesLo);
             for (uint32_t ii = 0; ii < cycles; ++ii) {
                 ula.clock();
             }

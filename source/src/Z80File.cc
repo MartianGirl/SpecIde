@@ -96,7 +96,7 @@ bool Z80File::parseHeader() {
     } else {
         state.pc = fileData[32] + 0x100 * fileData[33];
     }
-    
+
     state.sp = fileData[8] + 0x100 * fileData[9];
     state.ir = ((fileData[11] & 0x7F) | ((fileData[12] & 0x1) << 7)) + 0x100 * fileData[10];
 
@@ -153,7 +153,7 @@ bool Z80File::parseHeader() {
                 case 0: // fall-through
                 case 1: // fall-through
                 case 2: // fall-through
-                case 3: 
+                case 3:
                     state.model = state.issue2 ? SnapshotModel::ZX_48K_ISSUE2 : SnapshotModel::ZX_48K_ISSUE3;
                     break;
                 case 4: // fall-through
