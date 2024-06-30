@@ -14,20 +14,10 @@
  */
 
 #include "CpcScreen.h"
-#include "config.h"
 #include "KeyBinding.h"
+#include "config.h"
 
-#ifdef USE_BOOST_THREADS
-#include <boost/chrono/include.hpp>
-#include <boost/thread.hpp>
-using namespace boost::this_thread;
-using namespace boost::chrono;
-#else
-#include <chrono>
-#include <thread>
-using namespace std::this_thread;
-using namespace std::chrono;
-#endif
+#include <SFML/System.hpp>
 
 #include <cfenv>
 #include <cmath>
@@ -179,12 +169,14 @@ void CpcScreen::loadFiles() {
 void CpcScreen::run() {
 
     while (!done) {
-        high_resolution_clock::time_point start = high_resolution_clock::now();
-        high_resolution_clock::time_point frame;
-        high_resolution_clock::time_point wakeup;
+        Clock clock;
+        Time frameTime; // Emulated frame time
+        Time spentTime; // Time spent in emulation
+        Time delayTime; // Delay time to adjust emulation pace
+        Time sleepTime; // Time that will be relinquished to the system
 
         while (!done && !menu) {
-            start = high_resolution_clock::now();
+            clock.restart();
 
             // Run until either we get a new frame, or we get 20ms of emulation.
             pollEvents();
@@ -197,22 +189,17 @@ void CpcScreen::run() {
             update();
 
             if (!syncToVideo) {
-                uint_fast32_t delay = cpc.cycles / 16;
-                uint_fast32_t sleep = delay - (delay % SLEEP_STEP);
+                frameTime = microseconds(cpc.cycles / 16);
+                spentTime = clock.getElapsedTime();
+                delayTime = frameTime - spentTime;
+                sleepTime = delayTime - (delayTime % microseconds(SLEEP_STEP));
 
                 // By not sleeping until the next frame is due, we get some
                 // better adjustment
-#ifdef USE_BOOST_THREADS
-                frame = start + boost::chrono::microseconds(delay);
-                wakeup = start + boost::chrono::microseconds(sleep);
-#else
-                frame = start + std::chrono::microseconds(delay);
-                wakeup = start + std::chrono::microseconds(sleep);
-#endif
 #ifndef DO_NOT_SLEEP
-                sleep_until(wakeup);
+                sleep(sleepTime);
 #endif
-                while (high_resolution_clock::now() < frame);
+                while (clock.getElapsedTime() < frameTime);
             } else {
                 // If we are syncing with the PC's vertical refresh, we need
                 // to get at least 20ms of emulation. If this is the case, we
@@ -226,12 +213,7 @@ void CpcScreen::run() {
         while (!done && menu) {
             // Menu thingy
             updateMenu();
-
-#ifdef USE_BOOST_THREADS
-            sleep_for(boost::chrono::microseconds(20000));
-#else
-            sleep_for(std::chrono::microseconds(20000));
-#endif
+            sleep(microseconds(20000));
         }
     }
 }

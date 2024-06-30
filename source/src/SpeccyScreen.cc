@@ -19,17 +19,7 @@
 #include "SNAFile.h"
 #include "Z80File.h"
 
-#ifdef USE_BOOST_THREADS
-#include <boost/chrono/include.hpp>
-#include <boost/thread.hpp>
-using namespace boost::this_thread;
-using namespace boost::chrono;
-#else
-#include <chrono>
-#include <thread>
-using namespace std::this_thread;
-using namespace std::chrono;
-#endif
+#include <SFML/System.hpp>
 
 #include <cfenv>
 #include <cmath>
@@ -287,12 +277,14 @@ void SpeccyScreen::loadFiles() {
 void SpeccyScreen::run() {
 
     while (!done) {
-        high_resolution_clock::time_point start = high_resolution_clock::now();
-        high_resolution_clock::time_point frame;
-        high_resolution_clock::time_point wakeup;
+        Clock clock;
+        Time frameTime = microseconds(spectrum.frame);
+        Time spentTime; // Time elapsed in emulating a frame
+        Time delayTime; // Delay time to adjust emulation pace
+        Time sleepTime; // Time that will be relinquished to the system
 
         while (!done && !menu) {
-            start = high_resolution_clock::now();
+            clock.restart();
 
             // Run a complete frame.
             pollEvents();
@@ -300,7 +292,6 @@ void SpeccyScreen::run() {
             if (spectrum.channel.commit()) {
                 spectrum.playSound(true);
             }
-
 
             // Update the screen.
             // These conditions cannot happen at the same time:
@@ -313,17 +304,13 @@ void SpeccyScreen::run() {
             if (!syncToVideo) {
                 // By not sleeping until the next frame is due, we get some
                 // better adjustment
-#ifdef USE_BOOST_THREADS
-                frame = start + boost::chrono::microseconds(spectrum.frame);
-                wakeup = start + boost::chrono::microseconds(20000 - SLEEP_STEP);
-#else
-                frame = start + std::chrono::microseconds(spectrum.frame);
-                wakeup = start + std::chrono::microseconds(20000 - SLEEP_STEP);
-#endif
+                spentTime = clock.getElapsedTime();
+                delayTime = frameTime - spentTime;
+                sleepTime = delayTime - (delayTime % microseconds(SLEEP_STEP));
 #ifndef DO_NOT_SLEEP
-                sleep_until(wakeup);
+                sleep(sleepTime);
 #endif
-                while (high_resolution_clock::now() < frame);
+                while (clock.getElapsedTime() < frameTime);
             }
         }
 
@@ -335,11 +322,7 @@ void SpeccyScreen::run() {
             updateMenu();
 
             if (!syncToVideo) {
-#ifdef USE_BOOST_THREADS
-                sleep_for(boost::chrono::microseconds(20000));
-#else
-                sleep_for(std::chrono::microseconds(20000));
-#endif
+                sleep(microseconds(20000));
             }
         }
     }

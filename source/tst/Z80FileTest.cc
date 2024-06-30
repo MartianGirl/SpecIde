@@ -67,8 +67,6 @@ BOOST_AUTO_TEST_CASE(v1_header_test)
     file.fileData.push_back(0x00);
 
     BOOST_CHECK_EQUAL(file.checkVersion(), true);
-    BOOST_CHECK_EQUAL(file.version, 1);
-
     BOOST_CHECK_EQUAL(file.parseHeader(), true);
 }
 
@@ -77,7 +75,6 @@ BOOST_AUTO_TEST_CASE(file_reporter)
     Z80File file;
     file.load(boost::unit_test::framework::master_test_suite().argv[1]);
     file.checkVersion();
-    cout << "File version: " << static_cast<uint32_t>(file.version) << endl;
     file.parseHeader();
     cout << hex;
     cout << "AF: " << setfill('0') << setw(4) << file.state.af

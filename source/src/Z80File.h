@@ -35,7 +35,6 @@ class Z80File {
 
         std::string name;
         uint32_t dataIndex = 0;
-        bool valid = false;
 
         std::vector<uint8_t> fileData;
         SaveState state;

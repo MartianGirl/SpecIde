@@ -43,6 +43,11 @@ void FDC765::clock() {
                     setup();
                 } else if (cmdIndex > cmdBytes) {
                     reset();
+#ifdef DEBUGFDC765
+                } else {
+                    cout << "Command byte " << static_cast<uint32_t>(cmdIndex) << ": "
+                        << cmdBuffer[cmdIndex] << endl;
+#endif
                 }
             }
             break;
@@ -163,7 +168,7 @@ void FDC765::checkCommand() {
 
         case 0x06:  // Read sector(s)
 #ifdef DEBUGFDC765
-            cout << "Read sector." << endl;
+            cout << "Read sector" << endl;
 #endif
             cmdBytes = 9;   // 06+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
@@ -208,7 +213,7 @@ void FDC765::checkCommand() {
 
         case 0x0C:  // Read deleted sector(s)
 #ifdef DEBUGFDC765
-            cout << "Read deleted." << endl;
+            cout << "Read deleted" << endl;
 #endif
             cmdBytes = 9;   // 0C+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
@@ -244,7 +249,7 @@ void FDC765::checkCommand() {
 
         case 0x11:  // Scan equal
 #ifdef DEBUGFDC765
-            cout << "Scan equal." << endl;
+            cout << "Scan equal" << endl;
 #endif
             cmdBytes = 9;   // 11+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
@@ -253,7 +258,7 @@ void FDC765::checkCommand() {
 
         case 0x19:  // Scan low or equal
 #ifdef DEBUGFDC765
-            cout << "Scan low or equal." << endl;
+            cout << "Scan low or equal" << endl;
 #endif
             cmdBytes = 9;   // 19+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ
@@ -262,7 +267,7 @@ void FDC765::checkCommand() {
 
         case 0x1D:  // Scan high or equal
 #ifdef DEBUGFDC765
-            cout << "Scan high or equal." << endl;
+            cout << "Scan high or equal" << endl;
 #endif
             cmdBytes = 9;   // 1D+MT+MF+SK HU TR HD SC SZ LS GP SL
             resBytes = 7;   //             S0 S1 S2 TR HD LS SZ

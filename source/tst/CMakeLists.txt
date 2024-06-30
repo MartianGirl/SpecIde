@@ -5,7 +5,7 @@ if(WIN32)
     set(Boost_NO_BOOST_CMAKE TRUE)
 endif()
 
-find_package(Boost COMPONENTS thread unit_test_framework REQUIRED)
+find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 find_package(ZLIB REQUIRED)
 
 # This is for all platforms
