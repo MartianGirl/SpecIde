@@ -109,10 +109,8 @@ class CPC {
         /** Gate Array cycle counter. */
         uint_fast32_t cycles = 0;
 
-        /** Sample array for tape sound. */
-        int filter[FILTER_BZZ_SIZE];
-        /** Index variable for filter. */
-        size_t index = 0;
+        /** Moving Average filter for tape sound. */
+        Filter filter;
         /** Number of cycles before next sound sample. */
         uint_fast32_t skip;
         /** Tail of cycles before next sound sample. */

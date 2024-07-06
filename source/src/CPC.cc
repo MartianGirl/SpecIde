@@ -353,9 +353,9 @@ void CPC::clock() {
         }
 
         // Tape sounds.
-        filter[index] = (tapeLevel && tapeSound) ? CPC_LOAD_VOLUME : 0;
-        filter[index] += (ppi.portC & 0x20) ? CPC_SAVE_VOLUME : 0;
-        index = (index + 1) % FILTER_BZZ_SIZE;
+        if (tapeSound) {
+            filter.add((tapeLevel ? CPC_LOAD_VOLUME : 0) + ((ppi.portC & 0x20) ? CPC_SAVE_VOLUME : 0));
+        }
 
         if (!io_) {
             // Peripherals
@@ -442,15 +442,8 @@ void CPC::psgChip(bool aychip) {
 
 void CPC::sample() {
 
-    int sound = 0;
-    int l = 0;
-    int r = 0;
-
-    for (size_t ii = 0; ii < FILTER_BZZ_SIZE; ++ii) {
-        sound += filter[ii];
-    }
-    sound /= FILTER_BZZ_SIZE;
-    l = r = sound;
+    int l = filter.get();
+    int r = l;
 
     psg.sample();
 

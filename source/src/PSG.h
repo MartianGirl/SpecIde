@@ -106,14 +106,12 @@ class PSG
         /** Clock counter. */
         uint_fast32_t count = 0;
 
-        /** Filter array index. */
-        size_t index = 0;
         /** Filter array for channel A. */
-        int filterA[FILTER_PSG_SIZE];
+        Filter filterA;
         /** Filter array for channel B. */
-        int filterB[FILTER_PSG_SIZE];
+        Filter filterB;
         /** Filter array for channel C. */
-        int filterC[FILTER_PSG_SIZE];
+        Filter filterC;
 
         /** Channel A sample. */
         int channelA = 0;
@@ -209,27 +207,17 @@ class PSG
                 signalC *= out[envC ? envLevel : volumeC];
             }
 
-            filterA[index] = signalA;
-            filterB[index] = signalB;
-            filterC[index] = signalC;
-            index = (index + 1) % FILTER_PSG_SIZE;
+            filterA.add(signalA);
+            filterB.add(signalB);
+            filterC.add(signalC);
         }
 
         void sample() {
 
-            channelA = channelB = channelC = 0;
-
-            for (uint_fast16_t i = 0; i < FILTER_PSG_SIZE; ++i) {
-                channelA += filterA[i];
-                channelB += filterB[i];
-                channelC += filterC[i];
-            }
-
-            channelA /= FILTER_PSG_SIZE;
-            channelB /= FILTER_PSG_SIZE;
-            channelC /= FILTER_PSG_SIZE;
+            channelA = filterA.get();
+            channelB = filterB.get();
+            channelC = filterC.get();
         }
-
 
         uint_fast8_t read() {
 

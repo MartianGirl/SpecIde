@@ -15,11 +15,12 @@
 
 #pragma once
 
-size_t constexpr FILTER_BZZ_SIZE = 128;
-size_t constexpr FILTER_PSG_SIZE = 128;
-uint32_t constexpr BASE_CLOCK_48 = 7000000;
-uint32_t constexpr BASE_CLOCK_128 = 7093800;
-uint32_t constexpr BASE_CLOCK_CPC = 16000000;
+uint_fast32_t constexpr FILTER_BZZ_SIZE = 100;
+uint_fast32_t constexpr FILTER_PSG_SIZE = 100;
+uint_fast32_t constexpr FILTER_CPC_SIZE = 400;
+uint_fast32_t constexpr BASE_CLOCK_48 = 7000000;
+uint_fast32_t constexpr BASE_CLOCK_128 = 7093800;
+uint_fast32_t constexpr BASE_CLOCK_CPC = 16000000;
 int constexpr FRAME_TIME_48 = 19968;
 int constexpr FRAME_TIME_128 = 19992;
 int constexpr FRAME_TIME_PENTAGON = 20480;
@@ -55,5 +56,26 @@ enum class StereoMode {
     STEREO_TURBO_ABC,
     STEREO_TURBO_ACB,
     STEREO_NEXT
+};
+
+struct Filter {
+
+    uint_fast16_t sound;
+    uint_fast32_t ticks[3] {0, 0, 0};
+    uint_fast32_t adder[3] {0, 0, 0};
+    uint_fast32_t index {0};
+
+    void add(uint_fast16_t sample) {
+        adder[index] += sample;
+        ++ticks[index];
+    }
+
+    uint_fast16_t get() {
+        sound = (adder[0] + adder[1] + adder[2]) / (ticks[0] + ticks[1] + ticks[2]);
+        index = (index + 1) % 3;
+        adder[index] = 0;
+        ticks[index] = 0;
+        return sound;
+    }
 };
 // vim: et:sw=4:ts=4

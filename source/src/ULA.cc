@@ -357,30 +357,23 @@ void ULA::ioWrite(uint_fast8_t byte) {
 void ULA::beeper() {
 
     // Smooth the signal directly from the ULA.
+    uint_fast16_t level = 0;
     if (playSound) {
-        filter[index] = (soundBits & 0x02) ? ULA_BEEP_VOLUME : 0;
+        level += (soundBits & 0x02) ? ULA_BEEP_VOLUME : 0;
         if (tapeSound) {
             // In Spectrum 48K, ULA.b3 only causes sound if ULA.b4 is set.
             // In Spectrum 128K, ULA.b3 causes sound on its own.
-            filter[index] +=
-                + (((soundBits & micMask) == micMask) ? ULA_SAVE_VOLUME : 0)
+            level += (((soundBits & micMask) == micMask) ? ULA_SAVE_VOLUME : 0)
                 + (tapeLevel ? ULA_LOAD_VOLUME : 0);
         }
-    } else {
-        filter[index] = 0x00;
     }
 
-    index = (index + 1) % FILTER_BZZ_SIZE;
+    filter.add(level);
 }
 
 int ULA::sample() {
 
-    int sound = 0;
-    for (size_t i = 0; i < FILTER_BZZ_SIZE; ++i) {
-        sound += filter[i];
-    }
-    sound /= FILTER_BZZ_SIZE;
-    return sound;
+    return filter.get();
 }
 
 void ULA::clock() {
@@ -540,4 +533,5 @@ void ULA::setUlaVersion(uint_fast8_t version) {
         }
     }
 }
+
 // vim: et:sw=4:ts=4:

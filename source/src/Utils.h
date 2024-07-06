@@ -22,5 +22,4 @@
 void printBytes(std::string const& prefix, size_t len, uint8_t* buf);
 
 bool inflateBuffer(std::vector<uint8_t>& in, std::vector<uint8_t>& out);
-
 // vim: et:sw=4:ts=4

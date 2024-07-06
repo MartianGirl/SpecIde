@@ -363,10 +363,9 @@ void Spectrum::clock() {
         ula.beeper();
         psgClock();
 
-        for (int i = 0; i < 4; ++i) {
-            filter[i][index] = covox[i];
+        for (int c = 0; c < 4; ++c) {
+            filter[c].add(covox[c]);
         }
-        index = (index + 1) % FILTER_BZZ_SIZE;
 
         if (joystick == JoystickType::FULLER) {
             fullerCount += psgPeriod;
@@ -882,12 +881,7 @@ void Spectrum::sample() {
 
 int Spectrum::dac(size_t c) {
 
-    int sound = 0;
-    for (size_t i = 0; i < FILTER_BZZ_SIZE; ++i) {
-        sound += filter[c][i];
-    }
-    sound /= FILTER_BZZ_SIZE;
-    return sound;
+    return filter[c].get();
 }
 
 void Spectrum::setPage(uint_fast8_t page,

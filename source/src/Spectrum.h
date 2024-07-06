@@ -147,9 +147,7 @@ class Spectrum {
         /** Sound bytes in Covox port. */
         int covox[4];
         /** Array of samples sent to the Covox. */
-        int filter[4][FILTER_BZZ_SIZE];
-        /** Current index in filter array. */
-        size_t index = 0;
+        Filter filter[4];
         /** Sync frame rate to monitor's 50Hz frame rate. */
         bool sync = false;
 

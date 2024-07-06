@@ -146,8 +146,8 @@ class ULA {
         uint_fast8_t latch;
 
         // Audio and tape signals
-        int filter[FILTER_BZZ_SIZE];
-        size_t index = 0;
+        Filter filter;
+
         bool playSound = true;
         bool tapeSound = true;
         uint_fast8_t micMask = 0x03;
