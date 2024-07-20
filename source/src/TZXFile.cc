@@ -849,6 +849,8 @@ void TZXFile::pushSymbol(uint32_t rep, uint32_t sym,
 void TZXFile::addPause(uint32_t pause, vector<uint32_t>& data) {
 
     if (pause) {
+        data.push_back(945);
+        data.push_back(3500);
         data.push_back(3500 * pause);
     }
 }
