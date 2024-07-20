@@ -319,15 +319,19 @@ void Screen::pollEvents() {
                             clearSaveTape();
                         }
                         break;
-                    case Keyboard::Scan::F7:    // Write save data
+                    case Keyboard::Scan::F7:
                         if (event.key.shift) {
-                            selectSaveTape();
+                            selectSaveTape();   // Use save data to load
                         } else {
-                            writeSaveTape();
+                            writeSaveTape();    // Write save data
                         }
                         break;
-                    case Keyboard::Scan::F8:    // PSG chip type
-                        togglePsgType();
+                    case Keyboard::Scan::F8:
+                        if (event.key.shift) {
+                            togglePsgType();    // Toggle PSG chip type
+                        } else {
+                            toggleFlashTap();   // Toggle flashloading of tapes
+                        }
                         break;
                     case Keyboard::Scan::F9:    // Toggle sound ON/OFF
                         if (event.key.shift) {

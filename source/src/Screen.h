@@ -280,6 +280,11 @@ class Screen {
         virtual void togglePsgType() = 0;
 
         /**
+         * Toggle Flash loading of TAP.
+         */
+        virtual void toggleFlashTap() = 0;
+
+        /**
          * Move joystick horizontal axis.
          *
          * @param id Joystick that emits the event.

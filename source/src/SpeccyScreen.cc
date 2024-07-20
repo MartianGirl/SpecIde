@@ -381,7 +381,8 @@ void SpeccyScreen::updateMenu() {
     ss << "S-F6:  Add FlashTAP to SAVE buffer." << endl;
     ss << "F7:    Write SAVE buffer to disk." << endl;
     ss << "S-F7:  Use SAVE buffer as FlashTAP." << endl;
-    ss << "F8:    Toggle PSG: AY-3-8912/YM-2149." << endl;
+    ss << "F8:    Toggle FlashTAP on/off." << endl;
+    ss << "S-F8:  Toggle PSG: AY-3-8912/YM-2149." << endl;
     ss << "F9:    Sound on / off." << endl;
     ss << "S-F9:  Tape sound on / off." << endl;
     ss << "F10:   Exit emulator." << endl;
@@ -506,6 +507,13 @@ void SpeccyScreen::togglePsgType() {
 
     aychip = !aychip;
     spectrum.psgChip(aychip);
+}
+
+void SpeccyScreen::toggleFlashTap() {
+
+    spectrum.tape.rewind();
+    spectrum.flashTap = !spectrum.flashTap;
+    cout << "FlashTAP: " << (spectrum.flashTap ? "yes" : "no") << endl;
 }
 
 void SpeccyScreen::joystickHorizontalAxis(uint_fast32_t id, bool l, bool r) {

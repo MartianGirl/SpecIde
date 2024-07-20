@@ -172,6 +172,11 @@ class SpeccyScreen : public Screen {
         void togglePsgType();
 
         /**
+         * Toggle Flash loading of tapes.
+         */
+        void toggleFlashTap();
+
+        /**
          * Move joystick horizontal axis.
          *
          * @param id Joystick that emits the event.

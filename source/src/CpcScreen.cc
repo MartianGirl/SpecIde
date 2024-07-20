@@ -385,6 +385,11 @@ void CpcScreen::togglePsgType() {
     cpc.psgChip(aychip);
 }
 
+void CpcScreen::toggleFlashTap() {
+
+    // FlashTAP is not supported on CPC yet.
+}
+
 void CpcScreen::joystickHorizontalAxis(uint_fast32_t id, bool l, bool r) {
 
     if (id < 2) {
