@@ -567,8 +567,11 @@ void TZXFile::parse(
 
             case 0x2B:
                 blockName = "Set Signal Level";
-                if (!fileData[pointer + 5])
-                    pulseData.push_back(100);
+                if (fileData[pointer + 5]) {
+                    if (pulseData.size() % 2 == 0) pulseData.push_back(100);
+                } else {
+                    if (pulseData.size() % 2 != 0) pulseData.push_back(100);
+                }
                 pointer += headLength;
                 break;
 
@@ -831,7 +834,7 @@ void TZXFile::pushSymbol(uint32_t rep, uint32_t sym,
 
         case 0x02:  // Force low -- fallthrough
         case 0x03:  // Force high
-            concatenate = (data.size() % 2) != (type % 2);
+            concatenate = (data.size() % 2) == (type % 2);
             break;
         default:
             assert(false);
