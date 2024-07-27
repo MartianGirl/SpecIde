@@ -261,6 +261,8 @@ FileTypes Screen::guessFileType(string const& fileName) {
         return FileTypes::FILETYPE_CDT;
     } else if (extension == ".tap") {
         return FileTypes::FILETYPE_TAP;
+    } else if (extension == ".pzx") {
+        return FileTypes::FILETYPE_PZX;
     } else if (extension == ".dsk") {
         return FileTypes::FILETYPE_DSK;
     } else if (extension == ".csw") {

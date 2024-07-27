@@ -40,7 +40,7 @@ add_executable(SpecIde SpecIde.cc Utils.cc
     SpeccyScreen.cc Spectrum.cc ULA.cc
     CpcScreen.cc CPC.cc GateArray.cc CRTC.cc
     Z80.cc FDC765.cc
-    Tape.cc TAPFile.cc TZXFile.cc CSWFile.cc
+    Tape.cc CSWFile.cc PZXFile.cc TAPFile.cc TZXFile.cc
     DSKFile.cc
     SNAFile.cc Z80File.cc)
 target_link_libraries(SpecIde ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} ${MEDIA_LIBRARIES})

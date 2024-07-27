@@ -176,7 +176,7 @@ void displayHelp() {
 
     cout << "Usage: SpecIde [options] [tapefiles] [diskfiles]" << endl;
     cout << endl;
-    cout << "Supported tape formats: TAP TZX CDT CSW." << endl;
+    cout << "Supported tape formats: TAP TZX PZX CDT CSW." << endl;
     cout << "Supported disk formats: DSK." << endl;
     cout << "Supported snap formats: Z80." << endl;
     cout << endl;

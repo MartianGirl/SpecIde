@@ -54,4 +54,16 @@ bool inflateBuffer(vector<uint8_t>& in, vector<uint8_t>& out) {
     return (ret >= 0);
 }
 
+uint32_t getU32(vector<uint8_t> const& v, uint_fast32_t i) {
+    return (v[i + 3] << 24) | (v[i + 2] << 16) | (v[i + 1] << 8) | v[i];
+}
+
+uint32_t getU24(vector<uint8_t> const& v, uint_fast32_t i) {
+    return (v[i + 2] << 16) | (v[i + 1] << 8) | v[i];
+}
+
+uint16_t getU16(vector<uint8_t> const& v, uint_fast32_t i) {
+    return (v[i + 1] << 8) | v[i];
+}
+
 // vim: et:sw=4:ts=4

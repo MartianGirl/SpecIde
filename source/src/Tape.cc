@@ -39,6 +39,19 @@ void Tape::loadCdt(string const& fileName) {
     cdt.parse(pulseData, indexData, stopData, stopIf48K);
 }
 
+void Tape::loadPzx(string const& fileName) {
+
+    counter = pulseData.size();
+
+    // Create a .pzx object, load its contents in pulseData.
+    PZXFile pzx;
+    pzx.load(fileName);
+    pzx.parse(pulseData, indexData, stopData, stopIf48K);
+    loadData.insert(loadData.end(), pzx.romData.begin(), pzx.romData.end());
+
+    updateFlashTap();
+}
+
 void Tape::loadTap(string const& fileName) {
 
     counter = pulseData.size();

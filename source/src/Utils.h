@@ -22,4 +22,11 @@
 void printBytes(std::string const& prefix, size_t len, uint8_t* buf);
 
 bool inflateBuffer(std::vector<uint8_t>& in, std::vector<uint8_t>& out);
+
+uint32_t getU32(std::vector<uint8_t> const& v, uint_fast32_t i);
+
+uint32_t getU24(std::vector<uint8_t> const& v, uint_fast32_t i);
+
+uint16_t getU16(std::vector<uint8_t> const& v, uint_fast32_t i);
+
 // vim: et:sw=4:ts=4

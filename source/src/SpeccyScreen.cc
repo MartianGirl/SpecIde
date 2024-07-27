@@ -224,6 +224,10 @@ void SpeccyScreen::loadFiles() {
                 spectrum.tape.loadTzx(*it);
                 break;
 
+            case FileTypes::FILETYPE_PZX:
+                spectrum.tape.loadPzx(*it);
+                break;
+
             case FileTypes::FILETYPE_TAP:
                 spectrum.tape.loadTap(*it);
                 break;

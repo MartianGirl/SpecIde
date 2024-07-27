@@ -141,10 +141,8 @@ void TZXFile::parse(
                 syncPulse2 = 735;
                 dataPulse0 = 855;
                 dataPulse1 = 1710;
-                pause = fileData[pointer + 2] * 0x100
-                    + fileData[pointer + 1];
-                dataLength = fileData[pointer + 4] * 0x100
-                    + fileData[pointer + 3];
+                pause = getU16(fileData, pointer + 1);
+                dataLength = getU16(fileData, pointer + 3);
                 flagByte = fileData[pointer + headLength];
                 pilotLength = (flagByte & 0x80) ? 3223 : 8063;
 
@@ -184,24 +182,15 @@ void TZXFile::parse(
 
             case 0x11:
                 blockName = "Turbo Speed Data";
-                pilotPulse = fileData[pointer + 2] * 0x100
-                    + fileData[pointer + 1];
-                syncPulse1 = fileData[pointer + 4] * 0x100
-                    + fileData[pointer + 3];
-                syncPulse2 = fileData[pointer + 6] * 0x100
-                    + fileData[pointer + 5];
-                dataPulse0 = fileData[pointer + 8] * 0x100
-                    + fileData[pointer + 7];
-                dataPulse1 = fileData[pointer + 10] * 0x100
-                    + fileData[pointer + 9];
-                pilotLength = fileData[pointer + 12] * 0x100
-                    + fileData[pointer + 11];
+                pilotPulse = getU16(fileData, pointer + 1);
+                syncPulse1 = getU16(fileData, pointer + 3);
+                syncPulse2 = getU16(fileData, pointer + 5);
+                dataPulse0 = getU16(fileData, pointer + 7);
+                dataPulse1 = getU16(fileData, pointer + 9);
+                pilotLength = getU16(fileData, pointer + 11);
                 bitsInLastByte = fileData[pointer + 13];
-                pause = fileData[pointer + 15] * 0x100
-                    + fileData[pointer + 14];
-                dataLength = fileData[pointer + 18] * 0x10000
-                    + fileData[pointer + 17] * 0x100
-                    + fileData[pointer + 16];
+                pause = getU16(fileData, pointer + 14);
+                dataLength = getU24(fileData, pointer + 16);
                 flagByte = fileData[pointer + headLength];
 
                 if (pointer + headLength + dataLength > fileData.size()) {
@@ -241,10 +230,8 @@ void TZXFile::parse(
 
             case 0x12:
                 blockName = "Pure Tone";
-                pilotPulse = fileData[pointer + 2] * 0x100
-                    + fileData[pointer + 1];
-                pilotLength = fileData[pointer + 4] * 0x100
-                    + fileData[pointer + 3];
+                pilotPulse = getU16(fileData, pointer + 1);
+                pilotLength = getU16(fileData, pointer + 3);
 
                 // Pilot tone
                 pulseData.insert(pulseData.end(), pilotLength, pilotPulse);
@@ -262,9 +249,7 @@ void TZXFile::parse(
                 }
 
                 for (size_t ii = 0; ii < dataLength; ++ii) {
-                    uint32_t pulse =
-                        fileData[pointer + (2 * ii) + 3] * 0x100 +
-                        fileData[pointer + (2 * ii) + 2];
+                    uint32_t pulse = getU16(fileData, pointer + (2 * ii) + 2);
                     pulseData.push_back(pulse);
                 }
                 pointer += (dataLength * 2) + headLength;
@@ -272,16 +257,11 @@ void TZXFile::parse(
 
             case 0x14:
                 blockName = "Pure Data";
-                dataPulse0 = fileData[pointer + 2] * 0x100
-                    + fileData[pointer + 1];
-                dataPulse1 = fileData[pointer + 4] * 0x100
-                    + fileData[pointer + 3];
+                dataPulse0 = getU16(fileData, pointer + 1);
+                dataPulse1 = getU16(fileData, pointer + 3);
                 bitsInLastByte = fileData[pointer + 5];
-                pause = fileData[pointer + 7] * 0x100
-                    + fileData[pointer + 6];
-                dataLength = fileData[pointer + 10] * 0x10000
-                    + fileData[pointer + 9] * 0x100
-                    + fileData[pointer + 8];
+                pause = getU16(fileData, pointer + 6);
+                dataLength = getU24(fileData, pointer + 8);
                 flagByte = fileData[pointer + headLength];
 
                 if (pointer + headLength + dataLength > fileData.size()) {
@@ -315,14 +295,10 @@ void TZXFile::parse(
 
             case 0x15:
                 blockName = "Direct Recording";
-                sampleStep = fileData[pointer + 2] * 0x100
-                    + fileData[pointer + 1];
-                pause = fileData[pointer + 4] * 0x100
-                    + fileData[pointer + 3];
+                sampleStep = getU16(fileData, pointer + 1);
+                pause = getU16(fileData, pointer + 3);
                 bitsInLastByte = fileData[pointer + 5];
-                dataLength = fileData[pointer + 8] * 0x10000
-                    + fileData[pointer + 7] * 0x100
-                    + fileData[pointer + 6];
+                dataLength = getU24(fileData, pointer + 6);
 
                 if (pointer + headLength + dataLength > fileData.size()) {
                     cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
@@ -362,39 +338,24 @@ void TZXFile::parse(
 
             case 0x16:
                 blockName = "C64 ROM Type Data (Deprecated)";
-                dataLength = fileData[pointer + 4] * 0x1000000
-                    + fileData[pointer + 3] * 0x10000
-                    + fileData[pointer + 2] * 0x100
-                    + fileData[pointer + 1];
+                dataLength = getU32(fileData, pointer + 1);
                 pointer += headLength + dataLength;
                 break;
 
             case 0x17:
                 blockName = "C64 Turbo Tape Data (Deprecated)";
                 // Skipped for the moment.
-                dataLength = fileData[pointer + 4] * 0x1000000
-                    + fileData[pointer + 3] * 0x10000
-                    + fileData[pointer + 2] * 0x100
-                    + fileData[pointer + 1];
+                dataLength = getU32(fileData, pointer + 1);
                 pointer += headLength + dataLength;
                 break;
 
             case 0x18:
                 blockName = "CSW Recording";
-                dataLength = fileData[pointer + 4] * 0x1000000
-                    + fileData[pointer + 3] * 0x10000
-                    + fileData[pointer + 2] * 0x100
-                    + fileData[pointer + 1];
-                pause = fileData[pointer + 6] * 0x100
-                    + fileData[pointer + 5];
-                cswRate = fileData[pointer + 9] * 0x10000
-                    + fileData[pointer + 8] * 0x100
-                    + fileData[pointer + 7];
+                dataLength = getU32(fileData, pointer + 1);
+                pause = getU16(fileData, pointer + 5);
+                cswRate = getU24(fileData, pointer + 7);
                 cswCompression = fileData[pointer + 10];
-                cswExpectedPulses = fileData[pointer + 14] * 0x1000000
-                    + fileData[pointer + 13] * 0x10000
-                    + fileData[pointer + 12] * 0x100
-                    + fileData[pointer + 11];
+                cswExpectedPulses = getU32(fileData, pointer + 11);
 
                 if (pointer + headLength + dataLength > fileData.size()) {
                     cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
@@ -414,10 +375,7 @@ void TZXFile::parse(
                 for (size_t ii = 0; ii < cswBuffer.size(); ++ii) {
                     double pulse = cswBuffer[ii];
                     if (cswBuffer[ii] == 0x00) {
-                        pulse = cswBuffer[ii + 4] * 0x1000000
-                            + cswBuffer[ii + 3] * 0x10000
-                            + cswBuffer[ii + 2] * 0x100
-                            + cswBuffer[ii + 1];
+                        pulse = getU32(cswBuffer, ii + 1);
                         ii += 4;
                     }
                     ++cswPulses;
@@ -438,11 +396,8 @@ void TZXFile::parse(
 
             case 0x19:
                 blockName = "Generalized Data";
-                dataLength = fileData[pointer + 4] * 0x1000000
-                    + fileData[pointer + 3] * 0x10000
-                    + fileData[pointer + 2] * 0x100
-                    + fileData[pointer + 1];
-                pause = fileData[pointer + 6] * 0x100 + fileData[pointer + 5];
+                dataLength = getU32(fileData, pointer + 1);
+                pause = getU16(fileData, pointer + 5);
 
                 if (pointer + 5 + dataLength > fileData.size()) {
                     cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
@@ -488,10 +443,10 @@ void TZXFile::parse(
 
             case 0x20:
                 blockName = "Pause/Stop The Tape";
-                pause = fileData[pointer + 2] * 0x100 + fileData[pointer + 1];
+                pause = getU16(fileData, pointer + 1);
 
                 // Pause blocks reset polarity.
-                if (!(pulseData.size() % 2)) {
+                if ((pulseData.size() % 2) == 0) {
                     addPause(1, pulseData);
                 }
                 indexData.insert(pulseData.size());
@@ -499,7 +454,7 @@ void TZXFile::parse(
                 if (pause) {
                     addPause(pause, pulseData);
                 } else {
-                    // In the Stop the tape case, add a millisecond pause to reset polarity.
+                    // In the Stop the tape case, add a second pause to reset polarity.
                     addPause(1000, pulseData);
                     stopData.insert(pulseData.size() - 1);
                 }
@@ -526,8 +481,7 @@ void TZXFile::parse(
 
             case 0x24:
                 blockName = "Loop Start";
-                loopCounter = fileData[pointer + 2] * 0x100
-                    + fileData[pointer + 1];
+                loopCounter = getU16(fileData, pointer + 1);
                 pointer += headLength;
                 loopStart = pointer;
                 break;
@@ -544,8 +498,7 @@ void TZXFile::parse(
 
             case 0x26:
                 blockName = "Call Sequence (Not implemented yet)";
-                pointer += 2 * (fileData[pointer + 2] * 0x100
-                        + fileData[pointer + 1]) + 3;
+                pointer += 2 * (getU16(fileData, pointer + 1)) + 3;
                 break;
 
             case 0x27:
@@ -555,8 +508,7 @@ void TZXFile::parse(
 
             case 0x28:
                 blockName = "Select block";
-                pointer += fileData[pointer + 2] * 0x100
-                    + fileData[pointer + 1] + 3;
+                pointer += getU16(fileData, pointer + 1) + 3;
                 break;
 
             case 0x2A:
@@ -597,10 +549,7 @@ void TZXFile::parse(
 
             case 0x35:
                 blockName = "Custom Info";
-                dataLength = fileData[pointer + 20] * 0x1000000
-                    + fileData[pointer + 19] * 0x10000
-                    + fileData[pointer + 18] * 0x100
-                    + fileData[pointer + 17];
+                dataLength = getU32(fileData, pointer + 17);
 
                 if (pointer + headLength + dataLength > fileData.size()) {
                     cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
@@ -635,7 +584,7 @@ size_t TZXFile::dumpArchiveInfo() {
     string text;
     uint32_t len;
 
-    size_t length = fileData[pointer + 2] * 0x100 + fileData[pointer + 1];
+    size_t length = getU16(fileData, pointer + 1);
 
     if (pointer + length + 2 > fileData.size()) {
         cout << "Error: Missing data in TZX block. '" << name << "' may be corrupt." << endl;
@@ -722,10 +671,7 @@ size_t TZXFile::dumpMessage() {
 void TZXFile::loadSymbolData(size_t base,
         uint32_t& numSym, uint32_t& maxLen, uint32_t& alphaSize) {
 
-    numSym = fileData[base + 3] * 0x1000000
-        + fileData[base + 2] * 0x10000
-        + fileData[base + 1] * 0x100
-        + fileData[base];
+    numSym = getU32(fileData, base);
     maxLen = fileData[base + 4];
     alphaSize = fileData[base + 5];
     if (0 == alphaSize) {
@@ -746,8 +692,7 @@ size_t TZXFile::loadSymbolAlphabet(size_t base, uint32_t numSym, uint32_t maxLen
         ++index;
         ss << "Type: " << alphabet[i * size + 1] << "  Values:";
         for (size_t j = 0; j < maxLen; ++j) {
-            alphabet[i * size + j + 2] =
-                fileData[index + 2 * j + 1] * 0x100 + fileData[index + 2 * j];
+            alphabet[i * size + j + 2] = getU16(fileData, index + 2 * j);
             ss << " " << alphabet[i * size + j + 2];
         }
         index += 2 * maxLen;
@@ -767,7 +712,7 @@ size_t TZXFile::dumpPilotStream(size_t base, uint32_t numSym,
     ss << "Pilot:";
     for (size_t i = 0; i < numSym; ++i) {
         sym = fileData[index];
-        rep = fileData[index + 2] * 0x100 + fileData[index + 1];
+        rep = getU16(fileData, index + 1);
         index += 3;
         ss << " [" << sym << " * " << rep << "]";
 
@@ -891,4 +836,5 @@ size_t TZXFile::getBlockHeaderLength() {
         default: return fileData.size() + 1;
     }
 }
+
 // vim: et:sw=4:ts=4
