@@ -49,7 +49,7 @@ For GNU/Linux and MacOS I'm not providing binaries yet, but SpecIde can be compi
 1. The binaries will be installed in '_prefix_/bin'.
 1. Copy the roms from the spectrum-roms package (or from the Windows binaries) to the $HOME/.SpecIde/roms directory.
 1. Copy the fonts from the Windows binaries zip to the $HOME/.SpecIde/font directory.
-1. Run: bin/SpecIde [options] \<TZXFile.tzx|TAPFile.tap|CSWFile.csw|DSKFile.dsk\>
+1. Run: bin/SpecIde [options] \<TZXFile.tzx|TAPFile.tap|PZXFile.pzx|CSWFile.csw|DSKFile.dsk\>
 
 ### Compiling for MacOS
 1. Install brew: `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
@@ -66,7 +66,7 @@ For GNU/Linux and MacOS I'm not providing binaries yet, but SpecIde can be compi
 1. The binaries will be installed in '_prefix_/bin'.
 1. Copy the roms from the spectrum-roms package (or from the Windows binaries) to the $HOME/Library/Application Support/SpecIde/roms directory.
 1. Copy the fonts from the Windows binaries zip to the $HOME/Library/Application Support/SpecIde/font directory.
-1. Run: bin/SpecIde [options] \<TZXFile.tzx|TAPFile.tap|CSWFile.csw|DSKFile.dsk\>
+1. Run: bin/SpecIde [options] \<TZXFile.tzx|TAPFile.tap|PZXFile.pzx|CSWFile.csw|DSKFile.dsk\>
 
 ### Compiling for Windows
 I've successfully compiled SpecIde with MinGW and Visual Studio 2015 & 2017.
@@ -82,13 +82,15 @@ I've included a script RunCMake.bat that helps in the build process.
 1. Build it!: `ninja clean & ninja install` or `mingw32-make clean & mingw32-make install` (or use Visual Studio IDE)
 1. Copy the roms from the spectrum-roms package (or find them online) to the %APPDATA%/SpecIde/roms directory.
 1. Download [this font](https://github.com/jfsebastian/zx-spectrum-unicode-font/blob/master/build/ZXSpectrum.ttf "ZX Spectrum font by JFSebastian") to the %APPDATA%/SpecIde/font directory.
-1. Run it!: bin\SpecIde [options] \<TZXFile.tzx|TAPFile.tap|DSKFile.dsk\>
+1. Run: bin/SpecIde [options] \<TZXFile.tzx|TAPFile.tap|PZXFile.pzx|CSWFile.csw|DSKFile.dsk\>
 
 ## How to use it?
 SpecIde is invoked from the command line. To run SpecIde, type:
 `SpecIde [options] [tapefiles|diskfiles]`
 
-Supported formats are TAP, TZX and DSK.
+SpecIde supports the following file formats:
+- For the Spectrum models: CSW, PZX, TAP, TZX, DSK.
+- For the Amstrad CPC models: CSW, CDT, DSK.
 
 ### Command line options
 The following command line options are available:
@@ -175,7 +177,8 @@ When the emulator is running, pressing F1 displays help about the function keys.
 | Shift-F6  | Add FlashTAP to SAVE buffer. (Spectrum only) |
 | F7        | Write SAVE buffer to disk. (Spectrum only) |
 | Shift-F7  | Use SAVE buffer as FlashTAP. (Spectrum only) |
-| F8        | Toggle PSG: AY-3-8912/YM-2149. |
+| F8        | Toggle FlashTAP on/off. (Spectrum only) |
+| Shift-F8  | Toggle PSG: AY-3-8912/YM-2149. |
 | F9        | Turn sound on/off. |
 | Shift-F9  | Turn tape sounds on/off. |
 | F10       | Exit the emulator. |
@@ -188,9 +191,9 @@ When the emulator is running, pressing F1 displays help about the function keys.
 ### The config directories
 Finally, SpecIde looks for a configuration file (SpecIde.cfg) in the following places:
 1. Current directory: ./SpecIde.cfg
-2. On GNU/Linux: $HOME/.SpecIde/SpecIde.cfg
-3. On MacOS: $HOME/Library/Application Support/SpecIde/SpecIde.cfg
-4. On Windows: %APPDATA%\SpecIde\SpecIde.cfg
+1. On GNU/Linux: $HOME/.SpecIde/SpecIde.cfg
+1. On MacOS: $HOME/Library/Application Support/SpecIde/SpecIde.cfg
+1. On Windows: %APPDATA%\SpecIde\SpecIde.cfg
 
 A template SpecIde.cfg.template is provided in the source code, and a sample SpecIde.cfg is included in the binary distributions.
 
