@@ -251,6 +251,7 @@ After I had the ZX Spectrum working, I thought I could try to emulate the Amstra
 + César Hernández Bañó: For his help with the initial values for IR register, his comments, and his own emulator ZesarUX.
 + Miguel Mesa: For pointing out that the FLASH attribute was running at half speed.
 + Weiv (for his tests), ICEknight (for his videos), and all the people who helped describing the ULA Snow Effect on 48K/128K/+2 machines.
++ Patrik Rak for all his tests and for developing the PZX file format.
 + People from the #emulation discord for their ongoing testing efforts to discover every detail on the ZX Spectrum machines.
 
 + ZXSpectrum.ttf font by [Jorge Ferrer García (JFSebastian)](https://github.com/jfsebastian/zx-spectrum-unicode-font) (Public Domain - [http://unlicense.org](http://unlicense.org))
