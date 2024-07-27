@@ -194,6 +194,14 @@ void CPC::clock() {
     bool io_ = z80.c & SIGNAL_IORQ_;
     size_t memArea = z80.a >> 14;
 
+    // From the Gate Array perspective, the RAM goes first, unless the 74HC244
+    // allows the data from the Z80.
+    if (io_ || ga.blockIorq()) {
+        ga.d = ram[ga.crtc.byteAddress | ga.cClkOffset()];
+    } else {
+        ga.d = z80.d;
+    }
+
     if (!io_) {
         // PAL & Gate Array.
         // PAL is selected when address is 0xxxxxxx xxxxxxxx.
@@ -245,6 +253,7 @@ void CPC::clock() {
         // 8255 PPI.
         // &F4xx, &F5xx, &F6xx, &F7xx are 8255 ports.
         if (!(z80.a & 0x0800)) {
+
             switch (z80.a & 0x0300) {
                 case 0x0000:    // Port A: &F4xx
                     if (z80.rd) {
@@ -272,6 +281,7 @@ void CPC::clock() {
                         z80.d = ppi.readPortC();
                     } else if (z80.wr) {
                         ppi.writePortC(z80.d);
+
                     }
                     break;
                 case 0x0300:    // Control port: &F7xx
@@ -283,10 +293,12 @@ void CPC::clock() {
                     break;
             }
 
+            // Update the keyboard status if higher port C is outputting the row.
             if (!ppi.inputLoC) {
                 psg.setPortA(keys[ppi.portC & 0x0F]);
             }
 
+            // Update the tape motor and PSG command if lower port C is output.
             if (!ppi.inputHiC) {
                 relay = ppi.portC & 0x10;
 
@@ -308,12 +320,6 @@ void CPC::clock() {
         }
     }
 
-    if (io_ || ga.blockIorq()) {
-        ga.d = ram[ga.crtc.byteAddress | ga.cClkOffset()];
-    } else {
-        ga.d = z80.d;
-    }
-
     // First we clock the Gate Array. Further clocks will be generated here.
     ga.clock();
 
@@ -326,7 +332,6 @@ void CPC::clock() {
         fdc765.clock();
     }
 
-    // Z80 gets data from the ULA or memory, only when reading.
     // Z80 is clocked at 4MHz, but acts on both rising and falling edges.
     if (ga.cpuClock()) {
         z80.c = ga.z80_c;
@@ -355,6 +360,8 @@ void CPC::clock() {
         // Tape sounds.
         if (tapeSound) {
             filter.add((tapeLevel ? CPC_LOAD_VOLUME : 0) + ((ppi.portC & 0x20) ? CPC_SAVE_VOLUME : 0));
+        } else {
+            filter.add(0);
         }
 
         if (!io_) {
