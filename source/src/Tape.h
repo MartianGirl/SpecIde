@@ -60,7 +60,7 @@ class Tape {
         size_t counter = 0;         // Cassette counter :-)
 
         uint32_t sample = 0;        // Sample counter.
-        uint8_t level = 0x00;       // Tape output level.
+        uint8_t level = 0x7F;       // Tape output level.
 
         /**
          * TZX tapes assume a 3.5MHz clock. This value adjusts the

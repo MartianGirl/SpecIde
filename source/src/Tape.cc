@@ -92,7 +92,7 @@ void Tape::rewind(size_t position) {
 
     playing = false;
     sample = 0;
-    level = 0x00;
+    level = 0x7F;
     pointer = position;
 
     if (position == 0) {
@@ -135,7 +135,7 @@ void Tape::advance() {
         cout << "End of tape." << endl;
         pointer = 0;
         sample = 0;
-        level = 0x00;
+        level = 0x7F;
         playing = false;
     }
 }
