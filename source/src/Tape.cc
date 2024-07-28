@@ -91,9 +91,13 @@ void Tape::play() {
 void Tape::rewind(size_t position) {
 
     playing = false;
-    sample = 0;
-    level = 0x7F;
     pointer = position;
+
+    // Load next pulse at once.
+    sample = 0;
+
+    // This causes the first pulse to be low, since level is flipped when a pulse is loaded.
+    level = 0x7F;
 
     if (position == 0) {
         tapPointer = 0;
@@ -116,7 +120,6 @@ void Tape::advance() {
             index = pointer;
         }
 
-        // If we find a stop point, stop and reset level.
         if (stopData.find(pointer) != stopData.end()) {
             cout << "Stopped." << endl;
             playing = false;
@@ -133,10 +136,7 @@ void Tape::advance() {
     } else {
         // If we reach the end of the tape, stop, rewind and reset level.
         cout << "End of tape." << endl;
-        pointer = 0;
-        sample = 0;
-        level = 0x7F;
-        playing = false;
+        rewind(0);
     }
 }
 
