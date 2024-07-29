@@ -100,12 +100,12 @@ void PZXFile::parse(
                     while (ptr < nxt) {
                         // Read number of repetitions
                         rep = getU16(fileData, ptr); ptr += 2;
-                        if (rep & 0x8000) {
+                        if (rep > 0x8000) {
                             rep &= 0x7FFF;
-                            if (!rep) continue;
-                            cout << " [ " << rep << " * ";
+                            if (rep > 1) cout << "[" << rep << " * ";
                             val = getU16(fileData, ptr); ptr += 2;
                         } else {
+                            // No repetitions, just pulse length.
                             val = rep;
                             rep = 1;
                         }
@@ -116,7 +116,7 @@ void PZXFile::parse(
                             ptr += 2;
                         }
                         cout << val;
-                        if (rep > 1) cout << " ]";
+                        if (rep > 1) cout << "]";
                         cout << " ";
 
                         // Insert pulses
@@ -126,11 +126,14 @@ void PZXFile::parse(
                                 pulseData.back() += val;
                                 --rep;
                             }
-                            if (rep) {
+                            if (rep > 0) {
                                 pulseData.insert(pulseData.end(), rep, val);
                             }
-                        } else {
-                            if (rep % 2) {
+                        } else if (rep % 2) {   // And val == 0
+                            if (!pulseData.size()) {
+                                pulseData.push_back(3500);
+                                concatenate = false;
+                            } else {
                                 concatenate = !concatenate;
                             }
                         }
@@ -138,9 +141,9 @@ void PZXFile::parse(
                     break;
 
                 case pzxTagData:
-                    cout << "DATA ";
+                    cout << "DATA";
                     bits = getU32(fileData, ptr); ptr += 4;
-                    cout << "LEVEL " << ((bits >> 31) & 1);
+                    cout << " LEVEL " << ((bits >> 31) & 1);
                     cout << " BYTES " << ((bits & 0x7FFFFFFF) / 8);
                     tail = getU32(fileData, ptr); ptr += 2;
                     cout << " TAIL " << tail;
@@ -151,17 +154,18 @@ void PZXFile::parse(
 
                     if (ptr + 2 * lenPulses[0] + 2 * lenPulses[1] < fileData.size()) {
                         for (size_t pp = 0; pp < 2; ++pp) {
-                            cout << " BIT" << pp << " " << static_cast<uint32_t>(lenPulses[pp]) << " [ ";
+                            cout << " BIT" << pp << " " << static_cast<uint32_t>(lenPulses[pp]) << " [";
                             for (size_t bb = 0; bb < lenPulses[pp]; ++bb) {
+                                if (bb) cout << " ";
                                 seqPulses[pp].push_back(getU16(fileData, ptr)); ptr += 2;
-                                cout << seqPulses[pp].back() << " ";
+                                cout << seqPulses[pp].back();
                             }
                             cout << "]";
                         }
                     }
 
                     if (((bits >> 31) & 1) != (pulseData.size() % 2)) {
-                        cout << " Polarity mismatch! ";
+                        cout << " Polarity mismatch!";
                     }
 
                     bits &= 0x7FFFFFFF;
@@ -187,21 +191,21 @@ void PZXFile::parse(
                     break;
 
                 case pzxTagPaus:
-                    cout << "PAUS ";
+                    cout << "PAUS";
                     val = getU32(fileData, ptr); ptr += 4;
                     if (((val >> 31) & 1) == (pulseData.size() % 2)) {
                         pulseData.push_back(3500);
                     }
                     pulseData.push_back(val & 0x7FFFFFF);
-                    cout << "LEVEL " << ((val >> 31) & 1) << " LENGTH " << (val & 0x7FFFFFFF);
+                    cout << " LEVEL " << ((val >> 31) & 1) << " LENGTH " << (val & 0x7FFFFFFF);
                     break;
 
                 case pzxTagStop:
-                    cout << "STOP ";
+                    cout << "STOP";
                     val = getU16(fileData, ptr); ptr += 2;
                     if (pulseData.size()) {
                         if (val) {
-                            cout << "IF 48K";
+                            cout << " IF 48K";
                             stopIf48K.insert(pulseData.size());
                         } else {
                             stopData.insert(pulseData.size());
@@ -210,7 +214,7 @@ void PZXFile::parse(
                     break;
 
                 case pzxTagBrws:
-                    cout << "BRWS ";
+                    cout << "BRWS";
                     indexData.insert(pulseData.size());
                     break;
 
@@ -219,7 +223,6 @@ void PZXFile::parse(
                     cout << static_cast<uint8_t>((tag & 0x0000FF00) >> 8);
                     cout << static_cast<uint8_t>((tag & 0x00FF0000) >> 16);
                     cout << static_cast<uint8_t>((tag & 0xFF000000) >> 24);
-                    cout << " ";
                     break;
             }
         }
@@ -227,6 +230,13 @@ void PZXFile::parse(
         cout << endl;
         ptr = nxt;
     }
+
+    // Insert a couple of pulses to ensure there is an edge at the end of the tape.
+    if (pulseData.size() % 2 == 0) {
+        pulseData.push_back(3500);
+    }
+    pulseData.push_back(3500);
+    cout << "Got " << pulseData.size() << " pulses." << endl;
 }
 
 // vim: et:sw=4:ts=4

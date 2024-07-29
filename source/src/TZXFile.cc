@@ -111,11 +111,6 @@ void TZXFile::parse(
             indexData.insert(pulseData.size());
             stopData.insert(pulseData.size());
         }
-
-        // We'll add a "Pause 1ms" block, just in case.
-        fileData.push_back(0x20);
-        fileData.push_back(0x01);
-        fileData.push_back(0x00);
     } else {
         return;
     }
@@ -575,6 +570,11 @@ void TZXFile::parse(
         ss.clear();
     }
 
+    // Insert a couple of pulses to ensure there is an edge at the end of the tape.
+    if (pulseData.size() % 2 == 0) {
+        pulseData.push_back(3500);
+    }
+    pulseData.push_back(3500);
     cout << "Got " << pulseData.size() << " pulses." << endl;
 }
 
