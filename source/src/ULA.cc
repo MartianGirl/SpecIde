@@ -123,6 +123,8 @@ void ULA::generateVideoControlSignals() {
                     flash += 0x8;
                 } else if (scan == maxScan) {
                     scan = 0;
+                    // Avoid problems caused by changing key data during the interrupt.
+                    for (size_t ii = 0; ii < 8; ++ii) keyData[ii] = keys[ii];
                 }
                 break;
             case 4:     // On HBlankEnd
@@ -150,8 +152,6 @@ void ULA::generateInterrupt() {
 
     if (scan == vSyncStart) {
         if (pixel == interruptStart) {
-            // Keyboard is updated here to avoid split double keys.
-            for (size_t ii = 0; ii < 8; ++ii) keyData[ii] = keys[ii];
             z80_c &= ~SIGNAL_INT_;
         } else if (pixel == interruptEnd) {
             z80_c |= SIGNAL_INT_;
