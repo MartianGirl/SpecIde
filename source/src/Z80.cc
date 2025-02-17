@@ -34,7 +34,6 @@ uint8_t Z80::srlFlags[256];
 uint16_t Z80::daaTable[65536];
 bool Z80::flagsReady = false;
 
-
 void Z80::reset() {
 
     state = Z80State::ST_RESET;
@@ -45,7 +44,7 @@ void Z80::clock() {
     // NMI is edge-triggered.
     // If a falling edge in NMI is detected, accept the NMI and clear
     // the IFF1 flag.
-    if ((~c & c_d & SIGNAL_NMI_)) {
+    if (~c & c_d & SIGNAL_NMI_) {
         nmiAccept = true;
         iff &= ~IFF1;
     }
@@ -53,7 +52,7 @@ void Z80::clock() {
     // INT is level-triggered.
     // If INT is low at the beginning of the last T-state, an interrupt
     // will be accepted.
-    intAccept = !(c_d & SIGNAL_INT_);
+    intAccept = (~c_d & SIGNAL_INT_);
 
     c_d = c;
     iff_d = iff;
