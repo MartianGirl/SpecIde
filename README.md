@@ -44,7 +44,7 @@ For GNU/Linux and MacOS I'm not providing binaries yet, but SpecIde can be compi
 1. Install zlib1g.
 1. Clone the repository: `git clone https://github.com/MartianGirl/SpecIde.git`
 1. Go into the 'source' directory.
-1. Run: `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=_prefix_ -Bbuild -S.` with _prefix_ being the path where SpecIde will be installed. For instance, to install SpecIde into $HOME/bin, the order would be: `cmake -CMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~ -Bbuild -S.`
+1. Run: `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=_prefix_ -Bbuild -S.` with _prefix_ being the path where SpecIde will be installed. For instance, to install SpecIde into $HOME/bin, the order would be: `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~ -Bbuild -S.`
 1. Run: `cmake --build build && cmake --install build`
 1. The binaries will be installed in '_prefix_/bin'.
 1. Copy the roms from the spectrum-roms package (or from the Windows binaries) to the $HOME/.SpecIde/roms directory.
@@ -61,7 +61,7 @@ For GNU/Linux and MacOS I'm not providing binaries yet, but SpecIde can be compi
 1. Simlink FindSFML.cmake in cmake modules `ln -s $(brew --prefix sfml)/share/SFML/cmake/Modules/FindSFML.cmake $(brew --prefix cmake)/share/cmake/Modules/FindSFML.cmake`
 1. Clone the repository: `git clone https://github.com/MartianGirl/SpecIde.git`
 1. Go into the 'source' directory.
-1. Run: `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=_prefix_ -Bbuild -S.` with _prefix_ being the path where SpecIde will be installed. For instance, to install SpecIde into $HOME/bin, the order would be: `cmake -CMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~ -Bbuild -S.`
+1. Run: `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=_prefix_ -Bbuild -S.` with _prefix_ being the path where SpecIde will be installed. For instance, to install SpecIde into $HOME/bin, the order would be: `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~ -Bbuild -S.`
 1. Run: `cmake --build build && cmake --install build`
 1. The binaries will be installed in '_prefix_/bin'.
 1. Copy the roms from the spectrum-roms package (or from the Windows binaries) to the $HOME/Library/Application Support/SpecIde/roms directory.
@@ -98,7 +98,7 @@ The following command line options are available:
 ```
 Model selection options:
 --issue2               Spectrum 48K, issue 2.
---issue3 | --48        Spectrum 48K, issue 3. (Default)
+--issue3|--48          Spectrum 48K, issue 3. (Default)
 --48sp                 Spectrum + 48K. (Spanish ROM)
 --128                  Spectrum 128K.
 --128sp                Spectrum 128K. (Spanish ROM)
@@ -129,16 +129,16 @@ PSG options:
 --psg|--nopsg          Emulate AY chip in 48K Spectrum.
 --abc|--acb|--mono     Select stereo mode.
 --turbo                Select TurboSound with 2 PSGs. (mono)
---turboacb|--turboabc  Select TurboSound with 2 PSGs. (stereo ACB/ABC)
+--turboabc|--turboacb  Select TurboSound with 2 PSGs. (stereo ABC/ACB)
 --turbonext            Select Next-style TurboSound with 4 PSGs.
 --ay|--ym              Select PSG: AY-3-8912/YM-2149.
 
 Covox options:
---covox                LPT Covox on port 0xFB (Mono)
---covox2               Stereo Covox (ports 0xFB and 0x4F)
---covox3               Czech Covox (ports 0x1F, 0x3F, 0x5F)
---soundrive1           Soundrive on ports 0x0F, 0x1F, 0x4F, 0x5F.
---soundrive2           Soundrive on ports 0xF1, 0xF3, 0xF9, 0xFB.
+--covox                LPT Covox on port $FB. (Mono)
+--covox2               Stereo Covox. (ports $FB and $4F)
+--covox3               Czech Covox. (ports $1F, $3F, $5F)
+--soundrive1           Soundrive on ports $0F, $1F, $4F, $5F.
+--soundrive2           Soundrive on ports $F1, $F3, $F9, $FB.
 --nocovox              No Covox present.
 
 Misc hardware options:
@@ -151,7 +151,8 @@ Video options:
 --scanlines            Render PAL double scan mode.
 --average              Render PAL double scan mode, averaging scanlines.
 --nodoublescan         Single scan mode. (Default)
---sync                 Sync emulation to PC video refresh rate (only 50Hz)
+--sync                 Sync emulation to PC video refresh rate.
+                           (Use only with 50Hz video modes!)
 
 Sound options (add prefix 'no' to disable. Eg. --nosound):
 --sound                Enable buzzer/PSG sound. (Default)
