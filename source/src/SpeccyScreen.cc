@@ -190,6 +190,10 @@ void SpeccyScreen::setup() {
         doubleScanMode = false;
         spectrum.ula.scanlines = 2;
         spectrum.ula.yInc = 1;
+    } else if (options["scanmode"] == "crt") {
+        doubleScanMode = true;
+        spectrum.ula.scanlines = 3;
+        spectrum.ula.yInc = 2;
     } else {
         doubleScanMode = false;
         spectrum.ula.scanlines = 0;

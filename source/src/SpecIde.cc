@@ -84,6 +84,7 @@ map<string, Option> arguments = {
     // Screen options
     {"--average",       {"scanmode", "average"}},
     {"--scanlines",     {"scanmode", "scanlines"}},
+    {"--crt",           {"scanmode", "crt"}},
     {"--nodoublescan",  {"scanmode", "normal"}},
     {"--window",        {"fullscreen", "no"}},
     {"--fullscreen",    {"fullscreen", "yes"}},
@@ -236,6 +237,7 @@ void displayHelp() {
     cout << "--window               Start SpecIde in windowed mode." << endl;
     cout << "--scanlines            Render PAL double scan mode." << endl;
     cout << "--average              Render PAL double scan mode, averaging scanlines." << endl;
+    cout << "--crt                  Render only PAL odd frame. (Black scanlines)" << endl;
     cout << "--nodoublescan         Single scan mode. (Default)" << endl;
     cout << "--sync                 Sync emulation to PC video refresh rate." << endl;
     cout << "                           (Use only with 50Hz video modes!)" << endl;
