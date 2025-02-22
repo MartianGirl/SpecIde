@@ -300,6 +300,7 @@ void ULA::paint() {
 
             case 3:     // Only one frame
                 pixelsX2[(X_SIZE * yPos) + xPos] = col;
+                pixelsX2[(X_SIZE * (yPos + 1)) + xPos] = ((col & 0x00FEFEFE) >> 1 & 0x00FFFFFF) | (0xFF << 24);
                 break;
 
             default:    // No scanlines
