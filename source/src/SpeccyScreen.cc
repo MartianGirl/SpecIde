@@ -768,6 +768,7 @@ void SpeccyScreen::keyPress(Keyboard::Scancode key) {
         InputMatrixPosition pos = zxCapsKeys.at(key);
         spectrum.ula.keys[pos.row] &= ~pos.key;
         spectrum.ula.keys[7] &= 0xFE;   // Press Caps Shift
+        ++capsShiftPresses;
         return;
     } catch (out_of_range const& oor) {}
 
@@ -775,6 +776,7 @@ void SpeccyScreen::keyPress(Keyboard::Scancode key) {
         InputMatrixPosition pos = zxSymbolKeys.at(key);
         spectrum.ula.keys[pos.row] &= ~pos.key;
         spectrum.ula.keys[0] &= 0xFD;   // Press Symbol Shift
+        ++symbShiftPresses;
     } catch (out_of_range const& oor) {}
 }
 
@@ -789,14 +791,18 @@ void SpeccyScreen::keyRelease(Keyboard::Scancode key) {
     try {
         InputMatrixPosition pos = zxCapsKeys.at(key);
         spectrum.ula.keys[pos.row] |= pos.key;
-        spectrum.ula.keys[7] |= 0x01;   // Press Caps Shift
+        if (--capsShiftPresses == 0) {
+            spectrum.ula.keys[7] |= 0x01;   // Press Caps Shift
+        }
         return;
     } catch (out_of_range const& oor) {}
 
     try {
         InputMatrixPosition pos = zxSymbolKeys.at(key);
         spectrum.ula.keys[pos.row] |= pos.key;
-        spectrum.ula.keys[0] |= 0x02;   // Press Symbol Shift
+        if (--symbShiftPresses == 0) {
+            spectrum.ula.keys[0] |= 0x02;   // Press Symbol Shift
+        }
     } catch (out_of_range const& oor) {}
 }
 

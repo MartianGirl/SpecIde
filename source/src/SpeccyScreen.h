@@ -60,6 +60,11 @@ class SpeccyScreen : public Screen {
         /** Emulated ZX Spectrum. */
         Spectrum spectrum;
 
+        /** Number of double keys pressing Caps Shift */
+        uint32_t capsShiftPresses = 0;
+        /** Number of double keys pressing Symbol Shift */
+        uint32_t symbShiftPresses = 0;
+
         /**
          * Initialise the Screen object with the parameters received on construction.
          *
