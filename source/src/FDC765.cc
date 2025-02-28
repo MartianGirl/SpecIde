@@ -46,7 +46,7 @@ void FDC765::clock() {
 #ifdef DEBUGFDC765
                 } else {
                     cout << "Command byte " << static_cast<uint32_t>(cmdIndex) << ": "
-                        << cmdBuffer[cmdIndex] << endl;
+                        << static_cast<uint32_t>(cmdBuffer[cmdIndex]) << endl;
 #endif
                 }
             }

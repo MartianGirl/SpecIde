@@ -52,17 +52,17 @@ For GNU/Linux and MacOS I'm not providing binaries yet, but SpecIde can be compi
 1. Run: bin/SpecIde [options] \<TZXFile.tzx|TAPFile.tap|PZXFile.pzx|CSWFile.csw|DSKFile.dsk\>
 
 ### Compiling for MacOS
-1. Install brew: `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
+1. Install brew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 1. Install cmake: `brew install cmake`
-1. Install boost: `brew install boost`
-1. Install sfml: `brew install sfml` (SFML 2.6.x is required)
 1. Install zlib: `brew install zlib`
 1. Install pkgconfig: `brew install pkgconfig`
-1. Simlink FindSFML.cmake in cmake modules `ln -s $(brew --prefix sfml)/share/SFML/cmake/Modules/FindSFML.cmake $(brew --prefix cmake)/share/cmake/Modules/FindSFML.cmake`
+1. Since the homebrew version of SFML sfml@2 causes problems, compile and install SFML.
+1. Create a folder for building and select it: `mkdir Projects && cd Projects`
+1. Clone the SFML repository: `git clone --branch 2.6.2 https://github.com/SFML/SFML.git`
+1. Run: `pushd SFML && cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_RPATH=/usr/local/lib -DCMAKE_BUILD_TYPE=Release -Bbuild -S. && cmake --build build && sudo cmake --install build && popd`
+1. Move the Frameworks into its own folder: `pushd /usr/local && sudo mkdir Frameworks && mv lib/*.framework Frameworks && popd`
 1. Clone the repository: `git clone https://github.com/MartianGirl/SpecIde.git`
-1. Go into the 'source' directory.
-1. Run: `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=_prefix_ -Bbuild -S.` with _prefix_ being the path where SpecIde will be installed. For instance, to install SpecIde into $HOME/bin, the order would be: `cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~ -Bbuild -S.`
-1. Run: `cmake --build build && cmake --install build`
+1. Run: `pushd SpecIde/source && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=_prefix_ -Bbuild -S. && cmake --build build && sudo cmake --install build` with _prefix_ being the path where SpecIde will be installed. For instance, to install SpecIde into $HOME/bin, the order would be: `pushd SpecIde/source && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~ -Bbuild -S. && cmake --build build && sudo cmake --install build && popd`
 1. The binaries will be installed in '_prefix_/bin'.
 1. Copy the roms from the spectrum-roms package (or from the Windows binaries) to the $HOME/Library/Application Support/SpecIde/roms directory.
 1. Copy the fonts from the Windows binaries zip to the $HOME/Library/Application Support/SpecIde/font directory.
@@ -77,7 +77,7 @@ I've included a script RunCMake.bat that helps in the build process.
 1. Install and compile zlib. Add the binaries to the PATH.
 1. Install cmake.
 1. (Optional) Install ninja-builds. It really helps building SpecIde.
-1. Edit the RunCMake.bat script. You need to change the lines: `set BOOST_ROOT=\<Path_to_Boost_root_directory\>` and `set SFML_ROOT=\<Path_to_SFML_binaries\>`  
+1. Edit the RunCMake.bat script. You need to change the lines: `set BOOST_ROOT=\<Path_to_Boost_root_directory\>` and `set SFML_ROOT=\<Path_to_SFML_binaries\>`
 1. Run: `RunCMake \[MS32|MS64\] RELEASE`
 1. Build it!: `ninja clean & ninja install` or `mingw32-make clean & mingw32-make install` (or use Visual Studio IDE)
 1. Copy the roms from the spectrum-roms package (or find them online) to the %APPDATA%/SpecIde/roms directory.
@@ -246,13 +246,14 @@ This is an attempt at writing a ZX Spectrum emulator using SFML for video, audio
 I've been writing SpecIde mostly for learning and for trying to do a big project. So far, I am happy with the outcome!
 After I had the ZX Spectrum working, I thought I could try to emulate the Amstrad CPC series too, because many components are shared. So far, I've got the first three machines running, but there are still many details and problems to be fixed.
 
-## Credits and acknowledgements:  
+## Credits and acknowledgements:
 + David Garijo: For taking the time and helping with the MacOS build process.
 + Ast_A_Moore: For all his help with the +2A timings and port 0x0FFD.
 + César Hernández Bañó: For his help with the initial values for IR register, his comments, and his own emulator ZesarUX.
 + Miguel Mesa: For pointing out that the FLASH attribute was running at half speed.
 + Weiv (for his tests), ICEknight (for his videos), and all the people who helped describing the ULA Snow Effect on 48K/128K/+2 machines.
 + Patrik Rak for all his tests and for developing the PZX file format.
++ Manuel Sainz de Baranda Goñi (ZJoyKiller) for his repository of tests (https://github.com/redcode/ZXSpectrum/wiki/Tests), and for his help in keeping the MacOS version alive.
 + People from the #emulation discord for their ongoing testing efforts to discover every detail on the ZX Spectrum machines.
 
 + ZXSpectrum.ttf font by [Jorge Ferrer García (JFSebastian)](https://github.com/jfsebastian/zx-spectrum-unicode-font) (Public Domain - [http://unlicense.org](http://unlicense.org))
