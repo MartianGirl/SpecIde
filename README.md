@@ -59,10 +59,10 @@ For GNU/Linux and MacOS I'm not providing binaries yet, but SpecIde can be compi
 1. Since the homebrew version of SFML sfml@2 causes problems, compile and install SFML.
 1. Create a folder for building and select it: `mkdir Projects && cd Projects`
 1. Clone the SFML repository: `git clone --branch 2.6.2 https://github.com/SFML/SFML.git`
-1. Run: `pushd SFML && cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_RPATH=/usr/local/lib -DCMAKE_BUILD_TYPE=Release -Bbuild -S. && cmake --build build && sudo cmake --install build && popd`
-1. Move the Frameworks into its own folder: `pushd /usr/local && sudo mkdir Frameworks && mv lib/*.framework Frameworks && popd`
+1. Run: `pushd SFML && cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release -Bbuild -S. && cmake --build build && sudo cmake --install build && popd`
+1. Move the Frameworks into its own folder: `pushd /usr/local && sudo mkdir -p Frameworks && sudo mv lib/*.framework Frameworks && popd`
 1. Clone the repository: `git clone https://github.com/MartianGirl/SpecIde.git`
-1. Run: `pushd SpecIde/source && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=_prefix_ -Bbuild -S. && cmake --build build && sudo cmake --install build` with _prefix_ being the path where SpecIde will be installed. For instance, to install SpecIde into $HOME/bin, the order would be: `pushd SpecIde/source && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~ -Bbuild -S. && cmake --build build && sudo cmake --install build && popd`
+1. Run: `pushd SpecIde/source && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=_prefix_ -DCMAKE_INSTALL_RPATH=/usr/local/lib -Bbuild -S. && cmake --build build && sudo cmake --install build && popd` with _prefix_ being the path where SpecIde will be installed. For instance, to install SpecIde into /usr/local/bin, the order would be: `pushd SpecIde/source && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_RPATH=/usr/local/lib -Bbuild -S. && cmake --build build && sudo cmake --install build && popd`
 1. The binaries will be installed in '_prefix_/bin'.
 1. Copy the roms from the spectrum-roms package (or from the Windows binaries) to the $HOME/Library/Application Support/SpecIde/roms directory.
 1. Copy the fonts from the Windows binaries zip to the $HOME/Library/Application Support/SpecIde/font directory.
