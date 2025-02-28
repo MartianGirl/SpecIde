@@ -1,0 +1,55 @@
+name: Build
+
+on:
+  push:
+    paths:
+    - '.github/workflows/build.yml'
+    - 'source/**'
+  pull_request:
+    paths:
+    - '.github/workflows/build.yml'
+    - 'source/**'
+
+env:
+  CMAKE_BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies (macOS)
+      if: startsWith(matrix.os, 'macos')
+      run: |
+        brew update
+        brew install boost
+        brew install sfml@2
+        mkdir -p "${{ github.workspace }}/build"
+
+    - name: Install dependencies (Ubuntu)
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install libboost-all-dev
+        sudo apt-get -y install libsfml-dev
+        sudo apt-get -y install zlib1g-dev
+
+    - name: Configure environment variables (macOS)
+      if: startsWith(matrix.os, 'macos')
+      run: echo "SFML_DIR=$(brew --prefix sfml@2)" >> $GITHUB_ENV
+
+    - name: Configure CMake
+      run: >-
+        cmake
+        -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
+        -B "${{ github.workspace }}/build"
+        -S "${{ github.workspace }}/source"
+
+    - name: Build
+      run: cmake --build "${{ github.workspace }}/build" --config ${{ env.CMAKE_BUILD_TYPE }} --verbose
