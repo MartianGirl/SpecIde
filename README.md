@@ -1,5 +1,7 @@
 # SpecIde
 
+[![](https://github.com/MartianGirl/SpecIde/actions/workflows/build.yml/badge.svg)](https://github.com/MartianGirl/SpecIde/actions/workflows/build.yml)
+
 ## What is it?
 SpecIde is (yet another) ZX Spectrum (and, partially, Amstrad CPC) emulator.
 Currently, the ZX Spectrum emulation is quite accurate. The Amstrad CPC emulation
