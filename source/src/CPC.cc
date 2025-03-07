@@ -143,15 +143,6 @@ void CPC::set6128(RomVariant model) {
     reset();
 }
 
-void CPC::playSound(bool play) {
-
-    if (play) {
-        channel.play();
-    } else {
-        channel.pause();
-    }
-}
-
 void CPC::run(bool frame) {
 
     cycles = 0;
@@ -479,7 +470,7 @@ void CPC::sample() {
             break;
     }
 
-    channel.push(l, r);
+    SoundChannel::getChannel().push(l, r);
 }
 
 void CPC::selectRam(uint_fast8_t byte) {

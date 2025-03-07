@@ -40,9 +40,6 @@ void SpeccyScreen::setup() {
 
     spectrum.sync = syncToVideo;
 
-    spectrum.channel.open(2, SAMPLE_RATE);
-    spectrum.channel.setSleepInterval(getNumber("soundsleep", 10));
-
     cout << "Initialising ZX Spectrum..." << endl;
     // Select ROMs and ULA variant.
     if (options["model"] == "issue2") {
@@ -297,8 +294,8 @@ void SpeccyScreen::run() {
             // Run a complete frame.
             pollEvents();
             spectrum.run();
-            if (spectrum.channel.commit()) {
-                spectrum.playSound(true);
+            if (SoundChannel::getChannel().commit()) {
+                SoundChannel::getChannel().play();
             }
 
             // Update the screen.
@@ -321,9 +318,6 @@ void SpeccyScreen::run() {
                 while (clock.getElapsedTime() < frameTime);
             }
         }
-
-        // Disable sound for menus
-        spectrum.playSound(false);
 
         while (!done && menu) {
             // Menu thingy
@@ -433,7 +427,6 @@ void SpeccyScreen::updateMenu() {
 
 void SpeccyScreen::close() {
 
-    spectrum.playSound(false);
     done = true;
 }
 
@@ -836,9 +829,5 @@ void SpeccyScreen::pressKeyJoystickButton(uint_fast32_t type, uint_fast32_t butt
 
 void SpeccyScreen::releaseKeyJoystickButton(uint_fast32_t type, uint_fast32_t button) {
     spectrum.ula.keys[spectrumKeyJoystick[type][button].row] |= spectrumKeyJoystick[type][button].key;
-}
-
-void SpeccyScreen::playSound(bool play) {
-    spectrum.playSound(play);
 }
 // vim: et:sw=4:ts=4

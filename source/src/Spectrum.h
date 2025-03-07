@@ -71,10 +71,6 @@ class Spectrum {
          * Constructor.
          */
         Spectrum();
-        /**
-         * Destructor.
-         */
-        ~Spectrum() { channel.close(); }
 
         /** Z80 CPU instance. */
         Z80 z80;
@@ -88,9 +84,6 @@ class Spectrum {
         //FD1793 fd1793;
         /** Tape player. */
         Tape tape;
-
-        /** Sound channel object. */
-        SoundChannel channel;
 
         /** Byte in bus. Used in floating bus effects. */
         uint_fast8_t bus = 0xFF;
@@ -218,13 +211,6 @@ class Spectrum {
          * Reset the Spectrum.
          */
         void reset();
-
-        /**
-         * Start or stop the sound channel.
-         *
-         * @param play New status of the sound channel, on/off.
-         */
-        void playSound(bool play);
 
         /**
          * Load the correct ROMs for the selected model.

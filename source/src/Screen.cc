@@ -45,6 +45,7 @@ using namespace sf;
 
 Screen::~Screen() {
 
+    SoundChannel::getChannel().close();
     window.close();
 }
 
@@ -104,8 +105,6 @@ void Screen::reopenWindow(bool fs) {
     char str[64];
     snprintf(str, 64, "SpecIde [%s(%s)]",
             SPECIDE_BUILD_DATE, SPECIDE_BUILD_COMMIT);
-
-    window.close();
 
     if (fs) {
         window.create(bestMode, str, sf::Style::Fullscreen);
@@ -189,8 +188,15 @@ void Screen::setup() {
     fullscreen = (options["fullscreen"] == "yes");
     cout << "Full screen mode: " << options["fullscreen"] << endl;
 
+#if (SpecIde_ON_MACOS == 0)
     syncToVideo = (options["sync"] == "yes");
     cout << "Sync to video: " << options["sync"] << endl;
+#endif
+
+    SoundChannel::getChannel().open(2, SAMPLE_RATE);
+    SoundChannel::getChannel().setSleepInterval(getNumber("soundsleep", 10));
+    cout << "Initialized " << 2 << " channels ";
+    cout << "at " << SAMPLE_RATE << " Hz." << endl;
 }
 
 uint32_t Screen::getNumber(string const& key, uint32_t value) {
@@ -292,7 +298,6 @@ void Screen::pollEvents() {
                         menu = true;
                         break;
                     case Keyboard::Scan::F2:    // Window/Fullscreen
-                        playSound(false);
                         fullscreen = !fullscreen;
                         reopenWindow(fullscreen);
                         setFullScreen(fullscreen);

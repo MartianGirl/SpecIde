@@ -33,21 +33,36 @@
 #include <SFML/Audio.hpp>
 #include <SFML/System/Time.hpp>
 
+// Number of buffers.
 constexpr size_t MAX_BUFFERS = 16;
+// Number of samples per buffer.
+// Considering a single frame (0.02s) at 44100Hz total 882 samples.
 constexpr size_t MAX_SAMPLES = 2048;
+// Number of buffers to complete before we start playing.
 constexpr uint32_t PRELOAD_BUFFERS = 3;
 
 class SoundChannel : public sf::SoundStream {
 
+    // Private constructor. This is a Singleton now.
+    SoundChannel() :
+        buffers(MAX_BUFFERS, (std::vector<sf::Int16>())),
+        samples(MAX_BUFFERS, 0) {}
+
     public:
-        // The buffers
+        // The buffers.
         std::vector<std::vector<sf::Int16>> buffers;
+        // The number of samples stored in each buffer.
         std::vector<size_t> samples;
+        // The buffer currently being read.
         size_t rdBuffer = 0;
+        // The buffer currently being written to.
         size_t wrBuffer = 0;
+        // The number of samples written.
         size_t wrSample = 0;
 
+        // This list holds the completed buffers.
         std::list<size_t> queuedBuffers;
+
         std::mutex m;
         std::condition_variable cv;
 
@@ -55,9 +70,12 @@ class SoundChannel : public sf::SoundStream {
 
         bool destroy = false;
 
-        SoundChannel() :
-            buffers(MAX_BUFFERS, (std::vector<sf::Int16>())),
-            samples(MAX_BUFFERS, 0) {}
+        // Singleton getter.
+        static SoundChannel& getChannel() {
+
+            static SoundChannel theChannel;
+            return theChannel;
+        }
 
         bool open(unsigned int chan, unsigned int rate) {
 
@@ -74,8 +92,6 @@ class SoundChannel : public sf::SoundStream {
 
             setAttenuation(0);
             setVolume(100);
-            cout << "Initialized " << channels << " channels ";
-            cout << "at " << rate << " Hz." << endl;
             return true;
         }
 
@@ -87,16 +103,25 @@ class SoundChannel : public sf::SoundStream {
 
             buffers[wrBuffer][2 * wrSample + 0] = static_cast<sf::Int16>(l);
             buffers[wrBuffer][2 * wrSample + 1] = static_cast<sf::Int16>(r);
+            // If we exceed MAX_SAMPLES, we wrap the buffer around. However, this
+            // should not happen, because MAX_SAMPLES is well over the expected
+            // number of samples per frame.
             wrSample = (wrSample + 1) % MAX_SAMPLES;
         }
 
         bool commit() {
 
+            // Lock so we don't interfere with the playing thread.
             std::lock_guard<std::mutex> lock(m);
+            // If we've queued every buffer something wrong is happening.
             if (queuedBuffers.size() < MAX_BUFFERS) {
+                // Store the number of samples, queue the buffer and reset the index
+                // to start with a new buffer.
                 samples[wrBuffer] = channels * wrSample;
                 queuedBuffers.push_back(wrBuffer);
                 wrSample = 0;
+                // Select the next buffer to write to. Skip any of the buffers that are
+                // already queued.
                 do {
                     wrBuffer = (wrBuffer + 1) % MAX_BUFFERS;
                 } while ((wrBuffer == rdBuffer)

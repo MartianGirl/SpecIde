@@ -12,6 +12,7 @@
 #define SPECIDE_HOME_ENV "@SpecIde_HOME_ENV@"
 #define SPECIDE_CONF_DIR "@SpecIde_CONF_DIR@"
 #define SPECIDE_ON_UNIX @SpecIde_ON_UNIX@
+#define SPECIDE_ON_MACOS @SpecIde_ON_MACOS@
 #define SPECIDE_SDL2 @SpecIde_SDL2@
 
 // Enable BUSRQ/BUSAK support by default.

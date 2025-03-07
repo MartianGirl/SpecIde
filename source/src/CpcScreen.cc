@@ -36,9 +36,6 @@ void CpcScreen::setup() {
     Screen::setup();
     loadFont("AmstradCPC.ttf");
 
-    cpc.channel.open(2, SAMPLE_RATE);
-    cpc.channel.setSleepInterval(getNumber("soundsleep", 10));
-
     cout << "Initialising Amstrad CPC..." << endl;
     // Select model and ROMs.
     if (options["model"] == "cpc464") {
@@ -182,8 +179,8 @@ void CpcScreen::run() {
             pollEvents();
 
             cpc.run(!syncToVideo);
-            if (cpc.channel.commit()) {
-                cpc.playSound(true);
+            if (SoundChannel::getChannel().commit()) {
+                SoundChannel::getChannel().play();
             }
 
             update();
@@ -207,8 +204,6 @@ void CpcScreen::run() {
                 cpc.setSoundRate(FRAME_TIME_CPC, true);
             }
         }
-
-        cpc.playSound(false);
 
         while (!done && menu) {
             // Menu thingy
@@ -310,7 +305,6 @@ void CpcScreen::updateMenu() {
 
 void CpcScreen::close() {
 
-    cpc.psgPlaySound(false);
     done = true;
 }
 
@@ -463,9 +457,5 @@ void CpcScreen::pressKeyJoystickButton(uint_fast32_t id, uint_fast32_t button) {
 
 void CpcScreen::releaseKeyJoystickButton(uint_fast32_t id, uint_fast32_t button) {
     cpc.keys[cpcJoystick[id][button].row] |= cpcJoystick[id][button].key;
-}
-
-void CpcScreen::playSound(bool play) {
-    cpc.playSound(play);
 }
 // vim: et:sw=4:ts=4

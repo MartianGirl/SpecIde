@@ -29,6 +29,8 @@
  */
 
 #include "CommonDefs.h"
+#include "SoundChannel.h"
+#include "SoundDefs.h"
 
 #if (SPECIDE_SDL2==1)
 #else
@@ -362,7 +364,5 @@ class Screen {
          * @return Pixel clock, in kHz.
          */
         virtual float getPixelClock() = 0;
-
-        virtual void playSound(bool play) = 0;
 };
 // vim: et:sw=4:ts=4

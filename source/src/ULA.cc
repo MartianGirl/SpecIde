@@ -301,9 +301,11 @@ void ULA::paint() {
             case 3:     // Only one frame
                 pixelsX2[(X_SIZE * yPos) + xPos] = col;
 #if SPECIDE_BYTE_ORDER == 1
-                pixelsX2[(X_SIZE * (yPos + 1)) + xPos] = ((col & 0xFEFEFE00) >> 1) | 0x000000FF;
+                pixelsX2[(X_SIZE * (yPos + 1)) + xPos] =
+                    (((col & 0xFEFEFE00) >> 1) + ((col & 0xFCFCFC00) >> 2) + ((col & 0xF8F8F800) >> 3)) | 0x000000FF;
 #else
-                pixelsX2[(X_SIZE * (yPos + 1)) + xPos] = ((col & 0x00FEFEFE) >> 1) | 0xFF000000;
+                pixelsX2[(X_SIZE * (yPos + 1)) + xPos] =
+                    (((col & 0x00FEFEFE) >> 1) + ((col & 0x00FCFCFC) >> 2) + ((col & 0x00F8F8F8) >> 3)) | 0xFF000000;
 #endif
                 break;
 

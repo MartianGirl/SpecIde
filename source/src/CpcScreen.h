@@ -246,7 +246,5 @@ class CpcScreen : public Screen {
         void pressKeyJoystickButton(uint_fast32_t type, uint_fast32_t button);
 
         void releaseKeyJoystickButton(uint_fast32_t type, uint_fast32_t button);
-
-        void playSound(bool play);
 };
 // vim: et:sw=4:ts=4

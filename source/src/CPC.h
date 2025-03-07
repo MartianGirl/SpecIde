@@ -67,10 +67,6 @@ class CPC {
          * Constructor.
          */
         CPC();
-        /**
-         * Destructor.
-         */
-        ~CPC() { channel.close(); }
 
         /** Z80 CPU instance. */
         Z80 z80;
@@ -86,9 +82,6 @@ class CPC {
         Tape tape;
         /** Keyboard matrix. */
         uint_fast8_t keys[10];
-
-        /** Sound channel object. */
-        SoundChannel channel;
 
         uint_fast8_t bus = 0xFF;
 
@@ -243,13 +236,6 @@ class CPC {
         void sample();
 
         void setSoundRate(uint_fast32_t frame, bool syncToVideo);
-
-        /**
-         * Toggle sound playback.
-         *
-         * @param play Enable sound.
-         */
-        void playSound(bool play);
 };
 
 // vim: et:sw=4:ts=4

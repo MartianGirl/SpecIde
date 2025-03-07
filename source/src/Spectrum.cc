@@ -234,15 +234,6 @@ void Spectrum::setPentagon(RomVariant variant) {
     reset();
 }
 
-void Spectrum::playSound(bool play) {
-
-    if (play) {
-        channel.play();
-    } else {
-        channel.pause();
-    }
-}
-
 void Spectrum::run() {
 
     static uint_fast32_t remaining = 0;
@@ -876,7 +867,7 @@ void Spectrum::sample() {
             break;
     }
 
-    channel.push(l, r);
+    SoundChannel::getChannel().push(l, r);
 }
 
 int Spectrum::dac(size_t c) {

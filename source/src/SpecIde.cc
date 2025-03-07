@@ -88,8 +88,10 @@ map<string, Option> arguments = {
     {"--nodoublescan",  {"scanmode", "normal"}},
     {"--window",        {"fullscreen", "no"}},
     {"--fullscreen",    {"fullscreen", "yes"}},
+#if (SpecIde_ON_MACOS == 0)
     {"--sync",          {"sync", "yes"}},
     {"--nosync",        {"sync", "no"}},
+#endif
     {"--cmos",          {"z80type", "cmos"}},
     {"--nmos",          {"z80type", "nmos"}},
 
@@ -239,8 +241,10 @@ void displayHelp() {
     cout << "--average              Render PAL double scan mode, averaging scanlines." << endl;
     cout << "--crt                  Render only PAL odd frame. (Black scanlines)" << endl;
     cout << "--nodoublescan         Single scan mode. (Default)" << endl;
+#if (SpecIde_ON_MACOS == 0)
     cout << "--sync                 Sync emulation to PC video refresh rate." << endl;
     cout << "                           (Use only with 50Hz video modes!)" << endl;
+#endif
     cout << endl;
     cout << "Sound options (add prefix 'no' to disable. Eg. --nosound):" << endl;
     cout << "--sound                Enable beeper/PSG sound. (Default)" << endl;
