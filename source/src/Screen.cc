@@ -188,7 +188,7 @@ void Screen::setup() {
     fullscreen = (options["fullscreen"] == "yes");
     cout << "Full screen mode: " << options["fullscreen"] << endl;
 
-#if (SpecIde_ON_MACOS == 0)
+#if (SPECIDE_ON_MACOS == 0)
     syncToVideo = (options["sync"] == "yes");
     cout << "Sync to video: " << options["sync"] << endl;
 #endif
