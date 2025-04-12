@@ -173,10 +173,6 @@ class Z80
         bool nmiProcess = false;
         bool intAccept = false;
         bool intProcess = false;
-        bool access = false;
-        bool fetch = false;
-        bool rd = false;
-        bool wr = false;
 
         uint_fast16_t c_d = 0xFFFF;
         uint_fast8_t iff_d = 0x00;

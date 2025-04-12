@@ -115,8 +115,6 @@ class CPC {
 
         StereoMode stereo = StereoMode::STEREO_MONO;
 
-
-
         /** RAM array. RAM pages are defined as pointers in this array. */
         uint8_t ram[1 << 17];
         /** Internal ROM array. */

@@ -284,7 +284,7 @@ void Spectrum::clock() {
     bool as_ = z80.c & SIGNAL_MREQ_;
     bool io_ = z80.c & SIGNAL_IORQ_;
 
-    size_t memArea = z80.a >> 14;
+    uint_fast32_t memArea = z80.a >> 14;
 
     // First we clock the ULA. This generates video and contention signals.
     // We need to provide the ULA with the Z80 address and control buses.
@@ -380,241 +380,236 @@ void Spectrum::clock() {
 
     // We clock the Z80 if the ULA allows.
     if (ula.cpuClock) {
-        // Z80 gets data from the ULA or memory, only when reading.
-        if (z80.access) {
-            if (!io_) {
-                if (z80.rd) {
-                    if (!(z80.a & 0x0001)) {
-                        // ULA port read returns keypresses and EAR status.
-                        z80.d = ula.ioRead();
-                    } else {
-                        // Unattached port read. On 48K/128K/Plus2, floating bus.
-                        // Returns idle bus value by default, or video data,
-                        // if the ULA is reading.
-                        z80.d = ula.idle ? idle : bus & idle;
-                    }
-                }
-
-                // 128K only ports (pagination, disk)
-                if (spectrum128K) {
-                    if (!(z80.a & 0x8002)) {
-                        if (z80.wr || z80.rd) {
-                            selectPage(0);
-                        }
-                    }
-                } else if (spectrumPlus2A) {
-                    switch (z80.a & 0xF002) {
-                        case 0x0000:    // In +2A/+3 this is the floating bus port.
-                            if (z80.rd) {
-                                if (!(pageRegs & 0x0020)) {
-                                    z80.d = (gateArrayByte & idle) | 0x01;
-                                }
-                            }
-                            break;
-                        case 0x1000:    // 0x1FFD (+3 High Page Register)
-                            if (z80.wr) {
-                                selectPage(1);
-                            }
-                            break;
-                        case 0x2000:    // 0x2FFD (+3 FDC765 Main Status)
-                            if (plus3Disk) {
-                                if (z80.rd) {
-                                    z80.d = fdc765.status();
-                                }
-                            }
-                            break;
-                        case 0x3000:    // 0x3FFD (+3 FDC765 Data)
-                            if (plus3Disk) {
-                                if (z80.wr) {
-                                    fdc765.write(z80.d);
-                                } else if (z80.rd) {
-                                    z80.d = fdc765.read();
-                                }
-                            }
-                            break;
-                        case 0x4000: // fall-through
-                        case 0x5000: // fall-through
-                        case 0x6000: // fall-through
-                        case 0x7000: // 0x7FFD (128K Page Register / +3 Low Page Register)
-                            if (z80.wr) {
-                                selectPage(0);
-                            }
-                            break;
-
-                        default:
-                            break;
-                    }
-                }
-
-                // AY-3-8912 ports.
-                if (psgChips) {
-                    switch (z80.a & 0xC002) {
-                        case 0x8000:
-                            // 128K AY Data Port
-                            if (z80.wr) {
-                                psgWrite();
-                            } else if (z80.rd && spectrumPlus2A) {
-                                psgRead();
-                            }
-                            break;
-                        case 0xC000:
-                            // 128K AY Control Port
-                            if (z80.wr) {
-                                if ((z80.d & 0x98) == 0x98) {
-                                    psgSelect();
-                                } else {
-                                    psgAddr();
-                                }
-                            } else if (z80.rd) {
-                                psgRead();
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                // Common ports.
-                // Ports in the form XXXXXXXX 0XX11111 are blocked when TR-DOS
-                // is active. This affects kempston joystick, for instance.
-                if (betaDisk128 && (romBank == 0x0002)) {
-                    if ((z80.a & 0x0003) == 0x0003) {
-                        // uint_fast8_t fdAddr = (z80.a & 0xE0) >> 5;
-                        // if (z80.rd) {
-                            // z80.d = fd1793.read(fdAddr);
-                        // } else if (z80.wr) {
-                            // fd1793.write(fdAddr, z80.d);
-                        // }
-                    }
-                } else {
-                    switch (joystick) {
-                        case JoystickType::KEMPSTON_OLD:
-                        case JoystickType::CURSOR:  // fall-through
-                            // If the joystick type is CURSOR, the second
-                            // joystick is mapped to KEMPSTON.
-                            if ((z80.rd || z80.wr) && !(z80.a & 0x0020)) {
-                                z80.d = kempstonData;
-                            }
-                            break;
-                        case JoystickType::KEMPSTON_NEW:
-                            if (z80.rd && !(z80.a & 0x00E0)) {
-                                z80.d = kempstonData;
-                            }
-                            break;
-                        case JoystickType::FULLER:
-                            switch (z80.a & 0x00F0) {
-                                case 0x0030:
-                                    // Port 0x003F, Fuller AY control port
-                                    if (z80.wr) {
-                                        psg[4].addr(z80.d);
-                                    } else if (z80.rd) {
-                                        z80.d = psg[4].read();
-                                    }
-                                    break;
-                                case 0x0050:
-                                    // Port 0x005F, Fuller AY data port
-                                    if (z80.wr) {
-                                        psg[4].write(z80.d);
-                                    } else if (z80.rd) {
-                                        z80.d = psg[4].read();
-                                    }
-                                    break;
-                                case 0x0070:
-                                    // Port 0x007F, Fuller joystick port
-                                    if (z80.rd) {
-                                        z80.d = fullerData;
-                                    }
-                                    break;
-                                default:
-                                    break;
-                                }
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                switch (covoxMode) {
-                    case Covox::MONO:
-                        if (z80.wr && ((z80.a & 0x00FF) == 0x00FB)) {
-                            covox[0] = covox[1] = covox[2] = covox[3] = z80.d * COVOX_VOLUME;
-                        }
-                        break;
-                    case Covox::STEREO:
-                        if (z80.wr) {
-                           if ((z80.a & 0x00FF) == 0xFB) {
-                               covox[0] = covox[1] = z80.d * COVOX_VOLUME;
-                           }
-                           if ((z80.a & 0x00FF) == 0x4F) {
-                               covox[2] = covox[3] = z80.d * COVOX_VOLUME;
-                           }
-                        }
-                        break;
-                    case Covox::CZECH:
-                        if (z80.wr && ((z80.a & 0x009F) == 0x1F)) {
-                            switch (z80.a & 0x60) {
-                                case 0x00: covox[0] = z80.d * COVOX_VOLUME; break;
-                                case 0x20: covox[3] = z80.d * COVOX_VOLUME; break;
-                                case 0x40: covox[1] = covox[2] = z80.d * COVOX_VOLUME; break;
-                                default: break;
-                            }
-                        }
-                        break;
-                    case Covox::SOUNDRIVE1:
-                        if (z80.wr && ((z80.a & 0x00AF) == 0x000F)) {
-                            switch (z80.a & 0x0050) {
-                                case 0x00: covox[0] = z80.d * COVOX_VOLUME; break;
-                                case 0x10: covox[1] = z80.d * COVOX_VOLUME; break;
-                                case 0x40: covox[2] = z80.d * COVOX_VOLUME; break;
-                                case 0x50: covox[3] = z80.d * COVOX_VOLUME; break;
-                                default: break;
-                            }
-                        }
-                        break;
-                    case Covox::SOUNDRIVE2:
-                        if (z80.wr && ((z80.a & 0x00F1) == 0x00F1)) {
-                            switch (z80.a & 0x000A) {
-                                case 0x0: covox[0] = z80.d * COVOX_VOLUME; break;
-                                case 0x2: covox[1] = z80.d * COVOX_VOLUME; break;
-                                case 0x8: covox[2] = z80.d * COVOX_VOLUME; break;
-                                case 0xA: covox[3] = z80.d * COVOX_VOLUME; break;
-                                default: break;
-                            }
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
-
-                // Writes to ULA go last, to account for the case where a
-                // peripheral responds both to reads and writes, and uses
-                // an even address.
-                if (z80.wr && !(z80.a & 0x0001)) {
-                    ula.ioWrite(z80.d);
-                }
-            } else if (!as_) {
+        // Classifying the accesses based on z80.state saves one condition.
+        if (z80.state == Z80State::ST_OCF_T2L_DATARD) { // Opcode fetches
+            if (betaDisk128) {
                 // BetaDisk128 pages TR-DOS ROM when the PC is in the range
                 // 0x3D00-0x3DFF and the 48K BASIC ROM is paged in.
                 // Note that we're not considering romBank != (0, 1) because
                 // BetaDisk128 is not allowed in Plus2A/Plus3 models.
-                if (betaDisk128 && z80.fetch) {
-                    if ((romBank == 0x0001) && ((z80.a & 0xFF00) == 0x3D00)) {
-                        setPage(0, 2, true, false);
-                    } else if (memArea) {
-                        setPage(0, romBank, true, false);
-                    }
-                }
-
-                if (z80.rd) {
-                    z80.d = mem[memArea][z80.a & 0x3FFF];
-                } else if (!romPage[memArea] && z80.wr) {
-                    mem[memArea][z80.a & 0x3FFF] = z80.d;
+                if ((romBank == 0x0001) && ((z80.a & 0xFF00) == 0x3D00)) {
+                    setPage(0, 2, true, false);
+                } else if (memArea) {
+                    setPage(0, romBank, true, false);
                 }
             }
-        } else if (as_ && io_) {
+            z80.d = mem[memArea][z80.a & 0x3FFF];
+        } else if (z80.state == Z80State::ST_MEMRD_T3H_DATARD) { // Mem reads
+            z80.d = mem[memArea][z80.a & 0x3FFF];
+        } else if (z80.state == Z80State::ST_MEMWR_T3L_DATAWR) { // Mem writes
+            if (!romPage[memArea]) { mem[memArea][z80.a & 0x3FFF] = z80.d; }
+        } else if (z80.state == Z80State::ST_IORD_T3L_DATARD) { // I/O reads.
+            // Unattached port read by default (floating bus / idle bus).
+            z80.d = ula.idle ? idle : bus & idle;
+
+            // ULA port goes first because it's on a separate bus.
+            // Other peripherals on the Z80 bus will overwrite this value.
+            if (!(z80.a & 0x0001)) { z80.d = ula.ioRead(); }
+
+            // Spectrum 128K ports.
+            if (spectrum128K) {
+                if (!(z80.a & 0x8002)) { selectPage(0); }   // 0x7FFD (128K paging is changed also on reads)
+            } else if (spectrumPlus2A) {
+                switch (z80.a & 0xF002) {
+                    case 0x0000:    // 0x0FFD (Printer port - In +2A/+3 this is the floating bus port)
+                        if (!(pageRegs & 0x0020)) { z80.d = (gateArrayByte & idle) | 0x01; }
+                        break;
+                    case 0x2000:    // 0x2FFD (+3 FDC765 Main Status)
+                        if (plus3Disk) { z80.d = fdc765.status(); }
+                        break;
+                    case 0x3000:    // 0x3FFD (+3 FDC765 Data)
+                        if (plus3Disk) { z80.d = fdc765.read(); }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // AY-3-8912 ports.
+            if (psgChips) {
+                switch (z80.a & 0xC002) {
+                    case 0x8000: // 128K AY Data Port
+                        if (spectrumPlus2A) { psgRead(); }
+                        break;
+                    case 0xC000: // 128K AY Control Port
+                        psgRead();
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // Common ports.
+            // Ports in the form XXXXXXXX 0XX11111 are blocked when TR-DOS
+            // is active. This affects kempston joystick, for instance.
+            if (!betaDisk128 || (romBank != 0x0002)) {
+                switch (joystick) {
+                    case JoystickType::KEMPSTON_OLD:
+                    case JoystickType::CURSOR:  // fall-through
+                                                // If the joystick type is CURSOR, the second
+                                                // joystick is mapped to KEMPSTON.
+                        if (!(z80.a & 0x0020)) { z80.d = kempstonData; }
+                        break;
+                    case JoystickType::KEMPSTON_NEW:
+                        if (!(z80.a & 0x00E0)) { z80.d = kempstonData; }
+                        break;
+                    case JoystickType::FULLER:
+                        switch (z80.a & 0x00F0) {
+                            case 0x0030:
+                                // Port 0x003F, Fuller AY control port
+                                z80.d = psg[4].read(); break;
+                            case 0x0050:
+                                // Port 0x005F, Fuller AY data port
+                                z80.d = psg[4].read(); break;
+                            case 0x0070:
+                                // Port 0x007F, Fuller joystick port
+                                z80.d = fullerData; break;
+                            default:
+                                break;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            } else if ((z80.a & 0x0003) == 0x0003) {
+                // uint_fast8_t fdAddr = (z80.a & 0xE0) >> 5;
+                // if (z80.rd) {
+                // z80.d = fd1793.read(fdAddr);
+                // } else if (z80.wr) {
+                // fd1793.write(fdAddr, z80.d);
+                // }
+            }
+        } else if (z80.state == Z80State::ST_IOWR_T2L_IORQ) { // I/O writes.
+            // 128K only ports (pagination, disk)
+            if (spectrum128K) {
+                if (!(z80.a & 0x8002)) { selectPage(0); }
+            } else if (spectrumPlus2A) {
+                switch (z80.a & 0xF002) {
+                    case 0x1000:    // 0x1FFD (+3 High Page Register)
+                        selectPage(1);
+                        break;
+                    case 0x3000:    // 0x3FFD (+3 FDC765 Data)
+                        if (plus3Disk) { fdc765.write(z80.d); }
+                        break;
+                    case 0x4000: // fall-through
+                    case 0x5000: // fall-through
+                    case 0x6000: // fall-through
+                    case 0x7000: // 0x7FFD (128K Page Register / +3 Low Page Register)
+                        selectPage(0);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // AY-3-8912 ports.
+            if (psgChips) {
+                switch (z80.a & 0xC002) {
+                    case 0x8000:
+                        // 128K AY Data Port
+                        psgWrite();
+                        break;
+                    case 0xC000:
+                        // 128K AY Control Port
+                        if ((z80.d & 0x98) == 0x98) { psgSelect(); } else { psgAddr(); }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // Common ports.
+            if (!betaDisk128 || (romBank != 0x0002)) {
+                switch (joystick) {
+                    case JoystickType::KEMPSTON_OLD:
+                    case JoystickType::CURSOR:  // fall-through
+                                                // If the joystick type is CURSOR, the second
+                                                // joystick is mapped to KEMPSTON.
+                                                // Old Kempston joystick returns its value also on writes.
+                        if (!(z80.a & 0x0020)) { z80.d = kempstonData; }
+                        break;
+                    case JoystickType::FULLER:
+                        switch (z80.a & 0x00F0) {
+                            case 0x0030:
+                                // Port 0x003F, Fuller AY control port
+                                psg[4].addr(z80.d); break;
+                            case 0x0050:
+                                // Port 0x005F, Fuller AY data port
+                                psg[4].write(z80.d); break;
+                            default:
+                                break;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                // Ports in the form XXXXXXXX 0XX11111 are blocked when TR-DOS
+                // is active. This affects kempston joystick, for instance.
+                if ((z80.a & 0x0003) == 0x0003) {
+                    // uint_fast8_t fdAddr = (z80.a & 0xE0) >> 5;
+                    // if (z80.rd) {
+                    // z80.d = fd1793.read(fdAddr);
+                    // } else if (z80.wr) {
+                    // fd1793.write(fdAddr, z80.d);
+                    // }
+                }
+            }
+
+            switch (covoxMode) {
+                case Covox::MONO:
+                    if ((z80.a & 0x00FF) == 0x00FB) {
+                        covox[0] = covox[1] = covox[2] = covox[3] = z80.d * COVOX_VOLUME;
+                    }
+                    break;
+                case Covox::STEREO:
+                    if ((z80.a & 0x00FF) == 0xFB) { covox[0] = covox[1] = z80.d * COVOX_VOLUME; }
+                    if ((z80.a & 0x00FF) == 0x4F) { covox[2] = covox[3] = z80.d * COVOX_VOLUME; }
+                    break;
+                case Covox::CZECH:
+                    if ((z80.a & 0x009F) == 0x1F) {
+                        switch (z80.a & 0x60) {
+                            case 0x00: covox[0] = z80.d * COVOX_VOLUME; break;
+                            case 0x20: covox[3] = z80.d * COVOX_VOLUME; break;
+                            case 0x40: covox[1] = covox[2] = z80.d * COVOX_VOLUME; break;
+                            default: break;
+                        }
+                    }
+                    break;
+                case Covox::SOUNDRIVE1:
+                    if ((z80.a & 0x00AF) == 0x000F) {
+                        switch (z80.a & 0x0050) {
+                            case 0x00: covox[0] = z80.d * COVOX_VOLUME; break;
+                            case 0x10: covox[1] = z80.d * COVOX_VOLUME; break;
+                            case 0x40: covox[2] = z80.d * COVOX_VOLUME; break;
+                            case 0x50: covox[3] = z80.d * COVOX_VOLUME; break;
+                            default: break;
+                        }
+                    }
+                    break;
+                case Covox::SOUNDRIVE2:
+                    if ((z80.a & 0x00F1) == 0x00F1) {
+                        switch (z80.a & 0x000A) {
+                            case 0x0: covox[0] = z80.d * COVOX_VOLUME; break;
+                            case 0x2: covox[1] = z80.d * COVOX_VOLUME; break;
+                            case 0x8: covox[2] = z80.d * COVOX_VOLUME; break;
+                            case 0xA: covox[3] = z80.d * COVOX_VOLUME; break;
+                            default: break;
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            // Writes to ULA go last, to account for the case where a
+            // peripheral responds both to reads and writes, and uses
+            // an even address.
+            if (!(z80.a & 0x0001)) { ula.ioWrite(z80.d); }
+        } else if (as_ && io_) { // MREQ and IORQ are low on more than the states considered here.
             z80.d = 0xFF;
         }
+
         z80.clock();
     }
 }

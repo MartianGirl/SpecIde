@@ -23,25 +23,28 @@ uint32_t GateArray::pixelsX1[X_SIZE * Y_SIZE / 2];
 uint32_t GateArray::pixelsX2[X_SIZE * Y_SIZE];
 
 void GateArray::write(uint_fast8_t byte) {
+    ioHasByte = true;
+    ioByte = byte;
+}
+
+void GateArray::input(void) {
 
     // 11xx xxxx: RAM memory management (performed externally)
-    if (counter == 0x00) {  // Register updates only on S0 = 1, S7 = 1
-        switch (byte & 0xC0) {
-            case 0x00:  // 00xx xxxx : Select pen
-                selectPen(byte);
-                break;
+    switch (ioByte & 0xC0) {
+        case 0x00:  // 00xx xxxx : Select pen
+            selectPen(ioByte);
+            break;
 
-            case 0x40:  // 01xx xxxx : Select colour for selected pen
-                selectColour(byte);
-                break;
+        case 0x40:  // 01xx xxxx : Select colour for selected pen
+            selectColour(ioByte);
+            break;
 
-            case 0x80:  // 10xx xxxx : Select screen mode and ROM configuration
-                selectScreenAndRom(byte);
-                break;
+        case 0x80:  // 10xx xxxx : Select screen mode and ROM configuration
+            selectScreenAndRom(ioByte);
+            break;
 
-            default:
-                break;
-        }
+        default:
+            break;
     }
 }
 
@@ -235,6 +238,10 @@ void GateArray::clock() {
 
         case 0x1:   // READY falling edge. CPU clock rising edge.
             z80_c &= ~SIGNAL_WAIT_;
+            if (ioHasByte) {
+                input();
+            }
+            ioHasByte = false;
             break;
         case 0xc:   // READY rising edge. Right after CPU state change.
             intAcknowledge();

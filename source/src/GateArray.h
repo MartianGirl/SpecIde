@@ -56,6 +56,10 @@ class GateArray {
         uint_fast8_t colour = 0x00;
         /** Latched video data byte. */
         uint_fast8_t videoByte = 0x00;
+        /** Saved byte from previous I/O access. */
+        uint_fast8_t ioByte = 0xFF;
+        /** I/O port has a byte. */
+        bool ioHasByte = false;
         bool blanking = true;
 
         uint_fast32_t xPos = 0;
@@ -132,6 +136,8 @@ class GateArray {
          * @param byte The byte from data bus.
          */
         void write(uint_fast8_t byte);
+
+        void input();
 
         /**
          * Select a pen on which to operate.

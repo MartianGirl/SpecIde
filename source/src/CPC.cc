@@ -193,124 +193,6 @@ void CPC::clock() {
         ga.d = z80.d;
     }
 
-    if (!io_) {
-        // PAL & Gate Array.
-        // PAL is selected when address is 0xxxxxxx xxxxxxxx.
-        // Gate Array is selected when address is 01xxxxxx xxxxxxxx.
-        // Gate Array is accessible by both I/O reads and I/O writes.
-        if (!(z80.a & 0x8000)) {
-            if ((z80.d & 0xC0) == 0xC0) {
-                if (cpc128K && z80.wr) {
-                    selectRam(z80.d);
-                }
-            } else if (m1_ && (z80.a & 0x4000)) {
-                ga.write(z80.d);
-            }
-        }
-
-        // ROM expansion selection.
-        // &DFxx is ROM selection port.
-        if (z80.wr && !(z80.a & 0x2000)) {
-            romBank = z80.d;
-            if (romBank && extReady[romBank]) {
-                hiRom = &ext[romBank].data[0];
-            } else {
-                romBank = 0;
-                hiRom = &rom[0x4000];
-            }
-        }
-
-        // CRTC.
-        // &BCxx, &BDxx, &BExx, &BFxx are CRTC ports.
-        if ((z80.rd || z80.wr) && !(z80.a & 0x4000)) {
-            switch (z80.a & 0x0300) {
-                case 0x0000:    // CRTC Register Select (WO) at &BC00.
-                    ga.crtc.wrAddress(z80.d);
-                    break;
-                case 0x0100:    // CRTC Register Write (WO) at &BD00.
-                    ga.crtc.wrRegister(z80.d);
-                    break;
-                case 0x0200:    // CRTC Status Register Read (type 1) at &BE00.
-                    ga.crtc.rdStatus(ga.d);
-                    break;
-                case 0x0300:    // CRTC Register Read (RO) at &BF00.
-                    ga.crtc.rdRegister(ga.d);
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        // 8255 PPI.
-        // &F4xx, &F5xx, &F6xx, &F7xx are 8255 ports.
-        if (!(z80.a & 0x0800)) {
-
-            switch (z80.a & 0x0300) {
-                case 0x0000:    // Port A: &F4xx
-                    if (z80.rd) {
-                        z80.d = ppi.readPortA();
-                    } else if (z80.wr) {
-                        ppi.writePortA(z80.d);
-                    }
-                    break;
-                case 0x0100:    // Port B: &F5xx
-                    if (z80.rd) {
-                        uint_fast8_t brand = 0x07 << 1;
-                        ppi.portB = tapeLevel
-                            | 0x50 | brand
-                            | (expBit ? 0x20 : 0x00)
-                            | ((ga.crtc.vSync || ga.crtc.vSyncForced) ? 0x1 : 0x0);
-                        z80.d = ppi.readPortB();
-                    } else if (z80.wr) {
-                        ppi.writePortB(z80.d);
-                        ga.crtc.vSyncForced = ppi.portB & 0x1;
-                    }
-                    break;
-                case 0x0200:    // Port C: &F6xx
-                    if (z80.rd) {
-                        ppi.portC = 0x2F;
-                        z80.d = ppi.readPortC();
-                    } else if (z80.wr) {
-                        ppi.writePortC(z80.d);
-
-                    }
-                    break;
-                case 0x0300:    // Control port: &F7xx
-                    if (z80.wr) {
-                        ppi.writeControlPort(z80.d);
-                    }
-                    break;
-                default:
-                    break;
-            }
-
-            // Update the keyboard status if higher port C is outputting the row.
-            if (!ppi.inputLoC) {
-                psg.setPortA(keys[ppi.portC & 0x0F]);
-            }
-
-            // Update the tape motor and PSG command if lower port C is output.
-            if (!ppi.inputHiC) {
-                relay = ppi.portC & 0x10;
-
-                // Execute PSG command.
-                switch (ppi.portC & 0xC0) {
-                    case 0x40:
-                        ppi.portA = psg.read();
-                        break;
-                    case 0x80:
-                        psg.write(ppi.portA);
-                        break;
-                    case 0xC0:
-                        psg.addr(ppi.portA);
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-    }
-
     // First we clock the Gate Array. Further clocks will be generated here.
     ga.clock();
 
@@ -326,7 +208,6 @@ void CPC::clock() {
     // Z80 is clocked at 4MHz, but acts on both rising and falling edges.
     if (ga.cpuClock()) {
         z80.c = ga.z80_c;
-
         // Tape mechanism delays.
         if (relay) {
             if (tapeSpeed < 686000) {
@@ -341,7 +222,6 @@ void CPC::clock() {
         // Tape signal.
         if (tape.playing && tapeSpeed) {
             // 400000 @ 4MHz = 0.1s
-
             if (!tape.sample--) {
                 tape.advance();
                 tapeLevel = (tapeSpeed >= 343000) ? ((tape.level & 0x40) << 1) : 0x00;
@@ -355,53 +235,198 @@ void CPC::clock() {
             filter.add(0);
         }
 
-        if (!io_) {
-            // Peripherals
-            if ((z80.a & 0x0400) == 0x0000) {
+        // Classifying the accesses based on z80.state saves one condition.
+        if (    (z80.state == Z80State::ST_OCF_T2L_DATARD) ||   // Opcode fetches
+                (z80.state == Z80State::ST_MEMRD_T3H_DATARD)) { // Mem reads
+            switch (memArea) {
+                case 0:
+                    z80.d = ga.lowerRom ? loRom[z80.a & 0x3FFF] : mem[0][z80.a & 0x3FFF];
+                    break;
+                case 3:
+                    z80.d = ga.upperRom ? hiRom[z80.a & 0x3FFF] : mem[3][z80.a & 0x3FFF];
+                    break;
+                default:
+                    z80.d = mem[memArea][z80.a & 0x3FFF];
+                    break;
+            }
+        } else if (z80.state == Z80State::ST_MEMWR_T3L_DATAWR) { // Mem writes
+            mem[memArea][z80.a & 0x3FFF] = z80.d;
+        } else if (z80.state == Z80State::ST_IORD_T2H_IORQ) { // I/O reads.
+            // PAL & Gate Array.
+            // PAL is selected when address is 0xxxxxxx xxxxxxxx.
+            // Gate Array is selected when address is 01xxxxxx xxxxxxxx.
+            // Gate Array is accessible by both I/O reads and I/O writes.
+            if (m1_ && ((z80.a & 0xC000) == 0x4000)) {
+                ga.write(z80.d);
+            }
 
-                // FDC
-                if (cpcDisk && !(z80.a & 0x0480)) {
-                    switch (z80.a & 0x0101) {
-                        case 0x0100:    // FDC main status register (&FB7E)
-                            if (z80.rd) {
-                                z80.d = fdc765.status();
-                            }
+            // CRTC.
+            // &BCxx, &BDxx, &BExx, &BFxx are CRTC ports.
+            if (!(z80.a & 0x4000)) {
+                switch (z80.a & 0x0300) {
+                    case 0x0000:    // CRTC Register Select (WO) at &BC00.
+                        ga.crtc.wrAddress(z80.d);
+                        break;
+                    case 0x0100:    // CRTC Register Write (WO) at &BD00.
+                        ga.crtc.wrRegister(z80.d);
+                        break;
+                    case 0x0200:    // CRTC Status Register Read (type 1) at &BE00.
+                        ga.crtc.rdStatus(ga.d);
+                        break;
+                    case 0x0300:    // CRTC Register Read (RO) at &BF00.
+                        ga.crtc.rdRegister(ga.d);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // 8255 PPI.
+            // &F4xx, &F5xx, &F6xx, &F7xx are 8255 ports.
+            if (!(z80.a & 0x0800)) {
+                switch (z80.a & 0x0300) {
+                    case 0x0000:    // Port A: &F4xx
+                        z80.d = ppi.readPortA();
+                        break;
+                    case 0x0100:    // Port B: &F5xx
+                        ppi.portB = tapeLevel
+                            | 0x50
+                            | (0x07 << 1)   // Amstrad
+                            | (expBit ? 0x20 : 0x00)
+                            | ((ga.crtc.vSync || ga.crtc.vSyncForced) ? 0x1 : 0x0);
+                        z80.d = ppi.readPortB();
+                        break;
+                    case 0x0200:    // Port C: &F6xx
+                        ppi.portC = 0x2F;
+                        z80.d = ppi.readPortC();
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // FDC
+            if (cpcDisk && !(z80.a & 0x0480)) {
+                switch (z80.a & 0x0101) {
+                    case 0x0100:    // FDC main status register (&FB7E)
+                        z80.d = fdc765.status();
+                        break;
+                    case 0x0101:    // FDC data register (&FB7F)
+                        z80.d = fdc765.read();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        } else if (z80.state == Z80State::ST_IOWR_T2H_IORQ) { // I/O writes.
+            // PAL & Gate Array.
+            // PAL is selected when address is 0xxxxxxx xxxxxxxx.
+            // Gate Array is selected when address is 01xxxxxx xxxxxxxx.
+            // Gate Array is accessible by both I/O reads and I/O writes.
+            if (!(z80.a & 0x8000)) {
+                if ((z80.d & 0xC0) == 0xC0) {
+                    if (cpc128K) { selectRam(z80.d); }
+                } else if (m1_ && (z80.a & 0x4000)) {
+                    ga.write(z80.d);
+                }
+            }
+
+            // ROM expansion selection.
+            // &DFxx is ROM selection port.
+            if (!(z80.a & 0x2000)) {
+                romBank = z80.d;
+                if (romBank && extReady[romBank]) {
+                    hiRom = &ext[romBank].data[0];
+                } else {
+                    romBank = 0;
+                    hiRom = &rom[0x4000];
+                }
+            }
+
+            // CRTC.
+            // &BCxx, &BDxx, &BExx, &BFxx are CRTC ports.
+            if (!(z80.a & 0x4000)) {
+                switch (z80.a & 0x0300) {
+                    case 0x0000:    // CRTC Register Select (WO) at &BC00.
+                        ga.crtc.wrAddress(z80.d);
+                        break;
+                    case 0x0100:    // CRTC Register Write (WO) at &BD00.
+                        ga.crtc.wrRegister(z80.d);
+                        break;
+                    case 0x0200:    // CRTC Status Register Read (type 1) at &BE00.
+                        ga.crtc.rdStatus(ga.d);
+                        break;
+                    case 0x0300:    // CRTC Register Read (RO) at &BF00.
+                        ga.crtc.rdRegister(ga.d);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            // 8255 PPI.
+            // &F4xx, &F5xx, &F6xx, &F7xx are 8255 ports.
+            if (!(z80.a & 0x0800)) {
+
+                switch (z80.a & 0x0300) {
+                    case 0x0000:    // Port A: &F4xx
+                        ppi.writePortA(z80.d);
+                        break;
+                    case 0x0100:    // Port B: &F5xx
+                        ppi.writePortB(z80.d);
+                        ga.crtc.vSyncForced = ppi.portB & 0x1;
+                        break;
+                    case 0x0200:    // Port C: &F6xx
+                        ppi.writePortC(z80.d);
+                        break;
+                    case 0x0300:    // Control port: &F7xx
+                        ppi.writeControlPort(z80.d);
+                        break;
+                    default:
+                        break;
+                }
+
+                // Update the keyboard status if higher port C is outputting the row.
+                if (!ppi.inputLoC) {
+                    psg.setPortA(keys[ppi.portC & 0x0F]);
+                }
+
+                // Update the tape motor and PSG command if lower port C is output.
+                if (!ppi.inputHiC) {
+                    relay = ppi.portC & 0x10;
+
+                    // Execute PSG command.
+                    switch (ppi.portC & 0xC0) {
+                        case 0x40:
+                            ppi.portA = psg.read();
                             break;
-                        case 0x0101:    // FDC data register (&FB7F)
-                            if (z80.wr) {
-                                fdc765.write(z80.d);
-                            } else if (z80.rd) {
-                                z80.d = fdc765.read();
-                            }
+                        case 0x80:
+                            psg.write(ppi.portA);
                             break;
-                        case 0x0000:    // fall-through
-                        case 0x0001:    // FDC motor (&FA7E/&FA7F)
-                            if (z80.wr) {
-                                fdc765.motor((z80.d & 0x01) == 0x01);
-                            }
+                        case 0xC0:
+                            psg.addr(ppi.portA);
                             break;
                         default:
                             break;
                     }
                 }
             }
-        } else if (!as_) {
-            if (z80.rd) {
-                switch (memArea) {
-                    case 0:
-                        z80.d = ga.lowerRom ? loRom[z80.a & 0x3FFF] : mem[0][z80.a & 0x3FFF];
+
+            // FDC
+            if (cpcDisk && !(z80.a & 0x0480)) {
+                switch (z80.a & 0x0101) {
+                    case 0x0101:    // FDC data register (&FB7F)
+                        fdc765.write(z80.d);
                         break;
-                    case 3:
-                        z80.d = ga.upperRom ? hiRom[z80.a & 0x3FFF] : mem[3][z80.a & 0x3FFF];
+                    case 0x0000:    // fall-through
+                    case 0x0001:    // FDC motor (&FA7E/&FA7F)
+                        fdc765.motor((z80.d & 0x01) == 0x01);
                         break;
                     default:
-                        z80.d = mem[memArea][z80.a & 0x3FFF];
                         break;
                 }
-            } else if (z80.wr) {
-                mem[memArea][z80.a & 0x3FFF] = z80.d;
             }
-        } else {
+        } else if (as_ && io_) {
             z80.d = 0xFF;
         }
 

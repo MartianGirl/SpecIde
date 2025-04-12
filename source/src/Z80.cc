@@ -82,12 +82,10 @@ void Z80::clock() {
 
         case Z80State::ST_OCF_T1L_ADDRWR:
             c &= ~(SIGNAL_MREQ_ | SIGNAL_RD_);
-            access = rd = fetch = true;
             state = Z80State::ST_OCF_T2H_DATARD;
             return;
 
         case Z80State::ST_OCF_T2H_DATARD:
-            access = rd = fetch = false;
             state = Z80State::ST_OCF_T2L_DATARD;
             return;
 
@@ -211,13 +209,11 @@ void Z80::clock() {
                 state = Z80State::ST_MEMRD_T2H_WAITST;
             } else {
                 state = Z80State::ST_MEMRD_T3H_DATARD;
-                access = rd = true;
             }
             return;
 
         case Z80State::ST_MEMRD_T3H_DATARD:
             state = Z80State::ST_MEMRD_T3L_DATARD;
-            access = rd = false;
             return;
 
         case Z80State::ST_MEMRD_T3L_DATARD:
@@ -252,12 +248,10 @@ void Z80::clock() {
             return;
 
         case Z80State::ST_MEMWR_T3H_DATAWR:
-            access = wr = true;
             state = Z80State::ST_MEMWR_T3L_DATAWR;
             return;
 
         case Z80State::ST_MEMWR_T3L_DATAWR:
-            access = wr = false;
             c |= SIGNAL_MREQ_ | SIGNAL_WR_;
             break;
 
@@ -293,13 +287,11 @@ void Z80::clock() {
             return;
 
         case Z80State::ST_IORD_T3H_DATARD:
-            access = rd = true;
             state = Z80State::ST_IORD_T3L_DATARD;
             return;
 
         case Z80State::ST_IORD_T3L_DATARD:
             readIo(d);
-            access = rd = false;
             c |= SIGNAL_IORQ_ | SIGNAL_RD_;
             break;
 
@@ -310,19 +302,17 @@ void Z80::clock() {
             return;
 
         case Z80State::ST_IOWR_T1L_ADDRWR:
-            d = dout = writeIo();
+            d = dout = writeIo();   // Keep writing until IORQ is low.
             state = Z80State::ST_IOWR_T2H_IORQ;
             return;
 
         case Z80State::ST_IOWR_T2H_IORQ:
             d = dout;
             c &= ~(SIGNAL_IORQ_ | SIGNAL_WR_);
-            access = wr = true;
             state = Z80State::ST_IOWR_T2L_IORQ;
             return;
 
         case Z80State::ST_IOWR_T2L_IORQ:
-            access = wr = false;
             state = Z80State::ST_IOWR_TWH_WAITST;
             return;
 
