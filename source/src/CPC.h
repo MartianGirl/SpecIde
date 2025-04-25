@@ -104,12 +104,8 @@ class CPC {
 
         /** Moving Average filter for tape sound. */
         Filter filter;
-        /** Number of cycles before next sound sample. */
-        uint_fast32_t skip;
-        /** Tail of cycles before next sound sample. */
-        uint_fast32_t tail;
-        /** Counter of cycles before next sound sample. */
-        uint_fast32_t skipCycles = 0;
+        /* Normalized sound rate for counting samples. */
+        uint_fast32_t clockRate = 0;
 
         uint_fast8_t brand = BRAND_AMSTRAD;
 

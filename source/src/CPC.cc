@@ -164,16 +164,11 @@ void CPC::run(bool frame) {
 
 void CPC::generateSound() {
 
-    static uint_fast32_t remaining = 0;
+    static uint_fast32_t accumulator = 0;
 
-    // Generate sound. This maybe can be done using the same counter?
-    if (!(--skipCycles)) {
-        skipCycles = skip;
-        remaining += tail;
-        if (remaining >= 1000000) {
-            skipCycles++;
-            remaining -= 1000000;
-        }
+    accumulator += SAMPLE_RATE;
+    if (accumulator > clockRate) {
+        accumulator -= clockRate;
         sample();
     }
 }
@@ -557,14 +552,10 @@ void CPC::setBrand(uint_fast8_t brandNumber) {
 
 void CPC::setSoundRate(uint_fast32_t frame, bool syncToVideo) {
 
-    double value = static_cast<double>(BASE_CLOCK_CPC) / static_cast<double>(SAMPLE_RATE);
+    clockRate = BASE_CLOCK_CPC;
 
     if (syncToVideo) {
-        double factor = static_cast<double>(FRAME_TIME_50HZ) / static_cast<double>(frame);
-        value /= factor;
+        clockRate *= (static_cast<double>(frame) / static_cast<double>(FRAME_TIME_50HZ));
     }
-
-    skip = static_cast<uint_fast32_t>(value);
-    tail = static_cast<uint_fast32_t>((value - skip) * 1000000);
 }
 // vim: et:sw=4:ts=4

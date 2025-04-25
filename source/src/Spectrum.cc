@@ -236,7 +236,7 @@ void Spectrum::setPentagon(RomVariant variant) {
 
 void Spectrum::run() {
 
-    static uint_fast32_t remaining = 0;
+    static uint_fast32_t accumulator = 0;
 
     while (!ula.vSync) {
         if (flashTap) {
@@ -252,14 +252,9 @@ void Spectrum::run() {
             }
         }
 
-        // Generate sound. This maybe can be done using the same counter?
-        if (!(--skipCycles)) {
-            skipCycles = skip;
-            remaining += tail;
-            if (remaining >= 1000000) {
-                ++skipCycles;
-                remaining -= 1000000;
-            }
+        accumulator += SAMPLE_RATE;
+        if (accumulator > clockRate) {
+            accumulator -= clockRate;
             sample();
         }
     }
@@ -1030,33 +1025,27 @@ void Spectrum::trapSaBytes() {
 
 void Spectrum::setSoundRate(SoundRate rate, bool syncToVideo) {
 
-    double value = 0;
     switch (rate) {
         case SoundRate::SOUNDRATE_128K:
-            value = static_cast<double>(BASE_CLOCK_128) / static_cast<double>(SAMPLE_RATE);
+            clockRate = BASE_CLOCK_128;
             frame = FRAME_TIME_128;
             psgPeriod = static_cast<uint_fast32_t>(4e14 / static_cast<double>(BASE_CLOCK_128));
             break;
         case SoundRate::SOUNDRATE_PENTAGON:
-            value = static_cast<double>(BASE_CLOCK_48) / static_cast<double>(SAMPLE_RATE);
+            clockRate = BASE_CLOCK_48;
             frame = FRAME_TIME_PENTAGON;
             psgPeriod = static_cast<uint_fast32_t>(4e14 / static_cast<double>(BASE_CLOCK_48));
             break;
         default:
-            value = static_cast<double>(BASE_CLOCK_48) / static_cast<double>(SAMPLE_RATE);
+            clockRate = BASE_CLOCK_48;
             frame = FRAME_TIME_48;
             psgPeriod = static_cast<uint_fast32_t>(4e14 / static_cast<double>(BASE_CLOCK_48));
             break;
     }
 
     if (syncToVideo) {
-        double factor = static_cast<double>(FRAME_TIME_50HZ) / static_cast<double>(frame);
-        value /= factor;
+        clockRate *= (static_cast<double>(frame) / static_cast<double>(FRAME_TIME_50HZ));
     }
-
-    skip = static_cast<uint_fast32_t>(value);
-    tail = static_cast<uint_fast32_t>((value - skip) * 1000000);
-    skipCycles = skip;
 }
 
 bool Spectrum::allowPageChange() {

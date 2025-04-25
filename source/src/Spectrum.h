@@ -129,12 +129,8 @@ class Spectrum {
         /** Perform a page switch when possible. */
         bool switchPage = false;
 
-        /** Number of cycles before next sound sample. */
-        uint_fast32_t skip;
-        /** Tail of cycles before next sound sample. */
-        uint_fast32_t tail;
-        /** Counter of cycles before next sound sample. */
-        uint_fast32_t skipCycles = 0;
+        /** Normalized clock rate for sound sampling. */
+        uint_fast32_t clockRate = 0;
         /** Emulate Covox on port $FB. */
         Covox covoxMode = Covox::NONE;
         /** Sound bytes in Covox port. */

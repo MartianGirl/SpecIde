@@ -128,7 +128,6 @@ void CpcScreen::setup() {
     cpc.tapeSound = tapeSound && soundEnabled;
     cpc.psgPlaySound(soundEnabled);
     cpc.setSoundRate(FRAME_TIME_CPC, syncToVideo);
-    cpc.skipCycles = cpc.skip;
 }
 
 void CpcScreen::loadFiles() {
