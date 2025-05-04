@@ -94,6 +94,8 @@ map<string, Option> arguments = {
 #endif
     {"--cmos",          {"z80type", "cmos"}},
     {"--nmos",          {"z80type", "nmos"}},
+    {"--early",         {"z80timings", "early"}},
+    {"--late",          {"z80timings", "late"}},
 
     // Switches
     {"--flashtap",      {"flashtap", "yes"}},
@@ -233,6 +235,7 @@ void displayHelp() {
     cout << "Misc hardware options:" << endl;
     cout << "--sd1                  Emulate Dinamic SD1 hardware protection." << endl;
     cout << "--cmos|--nmos          Emulate CMOS/NMOS Z80. (Affects OUT(C),0 instruction)" << endl;
+    cout << "--early|--late         Emulate early/late Z80 timings." << endl;
     cout << endl;
     cout << "Video options:" << endl;
     cout << "--fullscreen           Start SpecIde in full screen mode." << endl;
@@ -276,6 +279,7 @@ void readOptions(map<string, string>& options) {
     options["crtc"] = "0";
     options["covox"] = "no";
     options["soundsleep"] = "10";
+    options["z80timings"] = "early";
 
     vector<string> cfgPaths;
     string cfgName("SpecIde.cfg");

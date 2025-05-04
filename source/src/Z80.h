@@ -174,6 +174,8 @@ class Z80
         bool intAccept = false;
         bool intProcess = false;
 
+        bool lateTimings = false;
+
         uint_fast16_t c_d = 0xFFFF;
         uint_fast8_t iff_d = 0x00;
         uint_fast8_t dout = 0xFF;

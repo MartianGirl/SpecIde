@@ -118,8 +118,11 @@ void Z80::clock() {
             return;
 
         case Z80State::ST_OCF_T4L_RFSH2:
-            // This line enables late timings in the ZX Spectrum 48K models.
-            // intAccept = (~c & SIGNAL_INT_);
+            // Allow accepting INT with short setup time.
+            // This enables late timings in the ZX Spectrum 48K models.
+            if (lateTimings) {
+                intAccept = (~c & SIGNAL_INT_);
+            }
             c |= SIGNAL_MREQ_;
             break;
 

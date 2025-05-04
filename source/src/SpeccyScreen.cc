@@ -41,6 +41,7 @@ void SpeccyScreen::setup() {
     spectrum.sync = syncToVideo;
 
     cout << "Initialising ZX Spectrum..." << endl;
+
     // Select ROMs and ULA variant.
     if (options["model"] == "issue2") {
         spectrum.setIssue2(RomVariant::ROM_48_EN);
@@ -70,7 +71,14 @@ void SpeccyScreen::setup() {
         options["model"] = "default";
         spectrum.setIssue3(RomVariant::ROM_48_EN);
     }
-    cout << "Model: " << options["model"] << endl;
+    cout << "Model: " << options["model"];
+    if (options["model"] == "issue2"
+            || options["model"] == "issue3"
+            || options["model"] == "48sp") {
+        spectrum.z80.lateTimings = (options["z80timings"] == "late");
+        cout << " (" << ((options["z80timings"] == "late") ? "Late" : "Early") << " timings)";
+    }
+    cout << endl;
 
     // Select joystick interface.
     cout << "Joystick interface: ";
