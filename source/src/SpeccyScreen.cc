@@ -291,14 +291,11 @@ void SpeccyScreen::run() {
 
     while (!done) {
         Clock clock;
-        Time frameTime = microseconds(spectrum.frame);
-        Time spentTime; // Time elapsed in emulating a frame
+        Time frameTime = clock.getElapsedTime(); // Next frame time
+        Time spentTime; // Actual time elapsed
         Time delayTime; // Delay time to adjust emulation pace
-        Time sleepTime; // Time that will be relinquished to the system
 
         while (!done && !menu) {
-            clock.restart();
-
             // Run a complete frame.
             pollEvents();
             spectrum.run();
@@ -315,15 +312,14 @@ void SpeccyScreen::run() {
             update();
 
             if (!syncToVideo) {
-                // By not sleeping until the next frame is due, we get some
-                // better adjustment
+                frameTime += microseconds(spectrum.frame);
                 spentTime = clock.getElapsedTime();
                 delayTime = frameTime - spentTime;
-                sleepTime = delayTime - (delayTime % microseconds(SLEEP_STEP));
 #ifndef DO_NOT_SLEEP
-                sleep(sleepTime);
+                sleep(delayTime);
+#else
+                while (clock.getElapsedTime() < frameTime); // Active wait
 #endif
-                while (clock.getElapsedTime() < frameTime);
             }
         }
 

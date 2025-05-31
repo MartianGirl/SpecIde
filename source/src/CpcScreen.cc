@@ -166,14 +166,11 @@ void CpcScreen::run() {
 
     while (!done) {
         Clock clock;
-        Time frameTime; // Emulated frame time
-        Time spentTime; // Time spent in emulation
+        Time frameTime = clock.getElapsedTime();    // Next frame time
+        Time spentTime; // Actual time spent in emulation
         Time delayTime; // Delay time to adjust emulation pace
-        Time sleepTime; // Time that will be relinquished to the system
 
         while (!done && !menu) {
-            clock.restart();
-
             // Run until either we get a new frame, or we get 20ms of emulation.
             pollEvents();
 
@@ -185,17 +182,14 @@ void CpcScreen::run() {
             update();
 
             if (!syncToVideo) {
-                frameTime = microseconds(cpc.cycles / 16);
+                frameTime += microseconds(cpc.cycles / 16);
                 spentTime = clock.getElapsedTime();
                 delayTime = frameTime - spentTime;
-                sleepTime = delayTime - (delayTime % microseconds(SLEEP_STEP));
-
-                // By not sleeping until the next frame is due, we get some
-                // better adjustment
 #ifndef DO_NOT_SLEEP
-                sleep(sleepTime);
+                sleep(delayTime);
+#else
+                while (clock.getElapsedTime() < frameTime); // Active wait
 #endif
-                while (clock.getElapsedTime() < frameTime);
             } else {
                 // If we are syncing with the PC's vertical refresh, we need
                 // to get at least 20ms of emulation. If this is the case, we
