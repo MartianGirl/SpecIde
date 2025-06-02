@@ -35,6 +35,10 @@
 #       cpc464:     Amstrad CPC 464/472
 #       cpc664:     Amstrad CPC 664
 #       cpc6128:    Amstrad CPC 6128
+#       cpc464sp:   Amstrad CPC 464 (Spanish ROM)
+#       cpc6128sp:  Amstrad CPC 6128 (Spanish ROM)
+#       cpc464fr:   Amstrad CPC 464 (French ROM)
+#       cpc6128fr:  Amstrad CPC 6128 (French ROM)
 #
 model=plus2a
 
@@ -57,12 +61,6 @@ joystick=sinclair
 # J2 maps to Space row (Space SS M N B)
 # Values: yes, no
 pad=yes
-
-# Option: sd1
-# Selects if SD1 hardware protection dongle is connected.
-# Useful only for early version of Camelot Warriors.
-# Values: yes, no
-# sd1=no
 
 # Option: forcepsg
 # Selects if an AY interface is connected in a ZX Spectrum 48K,
@@ -138,19 +136,22 @@ fullscreen=no
 #    redrawing 312 lines 50 times per second - this is the usual
 #    approach in emulators, but introduces a lot of flicker when
 #    doing gigascreen or colour swapping effects)
-#  * scanlines (first odd scanlines are drawn in one pass, then
-#    even scanlines are drawn in the next pass - this is how real
-#    Spectrums draw in the screen, but the scaled screen has a
-#    worse fit when using small resolutions)
+#  * scanlines (same as "normal" but darker scanlines are drawn - most
+#    8-bit computers only drew both odd and even PAL lines in the
+#    odd field, and the even field never got updated)
+#  * interlace (first odd scanlines are drawn in one pass, then
+#    even scanlines are drawn in the next pass - this is how
+#    modern TVs interpret the video signal)
 #  * average (odd and even scanlines are averaged - this looks
 #    better than scanlines, and the scaled screen fits as nicely
 #    as in normal mode)
-# Values: normal, scanlines, average
+# Values: normal, scanlines, interlace, average
 scanmode=normal
 
 # Option: sync
 # Synchronizes the emulator to the VGA vsync signal.
-# Useful only when using 50Hz VGA modes.
+# Useful only when using 50Hz VGA modes. If used with modes with
+# other framerates the emulation speed will vary.
 # Values: yes, no
 # sync=no
 
@@ -170,3 +171,21 @@ flashtap=yes
 # this parameter.
 # Default is 10.
 # soundsleep=10
+
+# Option: sd1
+# Selects if SD1 hardware protection dongle is connected.
+# Useful only for early version of Camelot Warriors.
+# Values: yes, no
+# sd1=no
+
+# Option: z80type
+# Selects the type of Z80.
+# Default is nmos.
+# Values: nmos, cmos.
+# z80type=nmos
+
+# Option: z80timings
+# In the ZX Spectrum 48K, this selects "early" or "late" timings.
+# Default is early.
+# Values: early, late
+# z80timings=early

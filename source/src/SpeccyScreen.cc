@@ -187,7 +187,7 @@ void SpeccyScreen::setup() {
     cout << "Z80 type: " << options["z80type"] << endl;
 
     // Screen settings.
-    if (options["scanmode"] == "scanlines") {
+    if (options["scanmode"] == "interlace") {
         doubleScanMode = true;
         spectrum.ula.scanlines = 1;
         spectrum.ula.yInc = 2;
@@ -195,7 +195,7 @@ void SpeccyScreen::setup() {
         doubleScanMode = false;
         spectrum.ula.scanlines = 2;
         spectrum.ula.yInc = 1;
-    } else if (options["scanmode"] == "crt") {
+    } else if (options["scanmode"] == "scanlines") {
         doubleScanMode = true;
         spectrum.ula.scanlines = 3;
         spectrum.ula.yInc = 2;

@@ -150,11 +150,12 @@ Misc hardware options:
 Video options:
 --fullscreen           Start SpecIde in full screen mode.
 --window               Start SpecIde in windowed mode.
---scanlines            Render PAL double scan mode.
---average              Render PAL double scan mode, averaging scanlines.
 --nodoublescan         Single scan mode. (Default)
+--scanlines            Render PAL odd field with darker scanlines.
+--interlace            Render PAL odd and even fields.
+--average              Render PAL odd and even fields, averaged.
 --sync                 Sync emulation to PC video refresh rate.
-                           (Use only with 50Hz video modes!)
+                           (Use only with 50Hz video modes. Not available on MacOS.)
 
 Sound options (add prefix 'no' to disable. Eg. --nosound):
 --sound                Enable buzzer/PSG sound. (Default)

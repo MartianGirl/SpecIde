@@ -82,10 +82,10 @@ map<string, Option> arguments = {
     {"--nocovox",       {"covox", "no"}},
 
     // Screen options
-    {"--average",       {"scanmode", "average"}},
-    {"--scanlines",     {"scanmode", "scanlines"}},
-    {"--crt",           {"scanmode", "crt"}},
     {"--nodoublescan",  {"scanmode", "normal"}},
+    {"--scanlines",     {"scanmode", "scanlines"}},
+    {"--interlace",     {"scanmode", "interlace"}},
+    {"--average",       {"scanmode", "average"}},
     {"--window",        {"fullscreen", "no"}},
     {"--fullscreen",    {"fullscreen", "yes"}},
 #if (SPECIDE_ON_MACOS == 0)
@@ -240,10 +240,10 @@ void displayHelp() {
     cout << "Video options:" << endl;
     cout << "--fullscreen           Start SpecIde in full screen mode." << endl;
     cout << "--window               Start SpecIde in windowed mode." << endl;
-    cout << "--scanlines            Render PAL double scan mode." << endl;
-    cout << "--average              Render PAL double scan mode, averaging scanlines." << endl;
-    cout << "--crt                  Render only PAL odd frame. (Black scanlines)" << endl;
     cout << "--nodoublescan         Single scan mode. (Default)" << endl;
+    cout << "--scanlines            Render PAL odd field with darker scanlines." << endl;
+    cout << "--interlace            Render PAL odd and even field." << endl;
+    cout << "--average              Render PAL odd and even field, averaged." << endl;
 #if (SPECIDE_ON_MACOS == 0)
     cout << "--sync                 Sync emulation to PC video refresh rate." << endl;
     cout << "                           (Use only with 50Hz video modes!)" << endl;
