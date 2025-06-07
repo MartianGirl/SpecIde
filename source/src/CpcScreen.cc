@@ -95,7 +95,7 @@ void CpcScreen::setup() {
     cout << "Z80 type: " << options["z80type"] << endl;
 
     // Screen settings.
-    if (options["scanmode"] == "scanlines") {
+    if (options["scanmode"] == "interlace") {
         doubleScanMode = true;
         cpc.ga.scanlines = 1;
         cpc.ga.yInc = 2;
@@ -103,6 +103,10 @@ void CpcScreen::setup() {
         doubleScanMode = false;
         cpc.ga.scanlines = 2;
         cpc.ga.yInc = 1;
+    } else if (options["scanmode"] == "scanlines") {
+        doubleScanMode = true;
+        cpc.ga.scanlines = 3;
+        cpc.ga.yInc = 2;
     } else {
         doubleScanMode = false;
         cpc.ga.scanlines = 0;
