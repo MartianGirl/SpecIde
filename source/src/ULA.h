@@ -43,6 +43,13 @@ uint_fast32_t constexpr ULA_PLUS3 = 4;
 uint_fast32_t constexpr ULA_PENTAGON = 5;
 uint_fast32_t constexpr NUM_MODELS = 6;
 
+uint_fast32_t constexpr ULA_PALETTE_COLOUR = 0;
+uint_fast32_t constexpr ULA_PALETTE_BW = 1;
+uint_fast32_t constexpr ULA_PALETTE_GREEN = 2;
+uint_fast32_t constexpr ULA_PALETTE_AMBER = 3;
+uint_fast32_t constexpr ULA_PALETTE_CUSTOM = 4;
+uint_fast32_t constexpr ULA_NUM_PALETTES = 5;
+
 uint_fast32_t constexpr NUM_CHECKPOINTS = 6;
 
 class ULA {
@@ -71,7 +78,7 @@ class ULA {
 
         void setUlaVersion(uint_fast8_t version);
 
-        uint32_t average(uint32_t *ptr);
+        void setPalette(uint32_t type);
 
         uint_fast16_t vBorderStart = 0x0C0;
         uint_fast16_t vBlankStart = 0x0F8;
@@ -100,9 +107,9 @@ class ULA {
         static bool memTable[16];
         static uint_fast32_t snowTable[16];
 
-        static uint32_t colourTable[0x100];
-        uint32_t colour[2];
-        static uint8_t averageTable[0x100][0x100];
+        static uint32_t palette[ULA_NUM_PALETTES][0x10];
+        static uint32_t colourTable[0x10];
+        static uint32_t colour[2];
         static uint_fast32_t constexpr X_SIZE = 360;
         static uint_fast32_t constexpr Y_SIZE = 625;
         static uint32_t pixelsX1[X_SIZE * Y_SIZE / 2];

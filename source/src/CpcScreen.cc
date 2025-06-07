@@ -114,6 +114,15 @@ void CpcScreen::setup() {
     }
     cout << "Scan mode: " << options["scanmode"] << endl;
 
+    if (options["display"] == "bw") {
+        cpc.ga.setPalette(CPC_PALETTE_BW);
+    } else if (options["display"] == "green") {
+        cpc.ga.setPalette(CPC_PALETTE_GREEN);
+    } else {
+        cpc.ga.setPalette(CPC_PALETTE_COLOUR);
+    }
+    cout << "Display type: " << options["display"] << endl;
+
     xSize = GateArray::X_SIZE;
     ySize = GateArray::Y_SIZE / (doubleScanMode ? 1 : 2);
     texture(xSize, ySize);

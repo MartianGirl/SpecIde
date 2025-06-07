@@ -88,6 +88,12 @@ map<string, Option> arguments = {
     {"--average",       {"scanmode", "average"}},
     {"--window",        {"fullscreen", "no"}},
     {"--fullscreen",    {"fullscreen", "yes"}},
+    {"--colour",        {"display", "colour"}},
+    {"--color",         {"display", "colour"}},
+    {"--bw",            {"display", "bw"}},
+    {"--green",         {"display", "green"}},
+    {"--amber",         {"display", "amber"}},
+
 #if (SPECIDE_ON_MACOS == 0)
     {"--sync",          {"sync", "yes"}},
     {"--nosync",        {"sync", "no"}},
@@ -244,6 +250,8 @@ void displayHelp() {
     cout << "--scanlines            Render PAL odd field with darker scanlines." << endl;
     cout << "--interlace            Render PAL odd and even field." << endl;
     cout << "--average              Render PAL odd and even field, averaged." << endl;
+    cout << "--colour|--color       Colour display. (Default)" << endl;
+    cout << "--bw|--green|--amber   Monochrome display. (B/W, green or amber)" << endl;
 #if (SPECIDE_ON_MACOS == 0)
     cout << "--sync                 Sync emulation to PC video refresh rate." << endl;
     cout << "                           (Use only with 50Hz video modes!)" << endl;
@@ -280,6 +288,7 @@ void readOptions(map<string, string>& options) {
     options["covox"] = "no";
     options["soundsleep"] = "10";
     options["z80timings"] = "early";
+    options["display"] = "colour";
 
     vector<string> cfgPaths;
     string cfgName("SpecIde.cfg");

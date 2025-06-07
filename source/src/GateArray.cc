@@ -14,13 +14,91 @@
  */
 
 #include "GateArray.h"
+#include "Utils.h"
 
 #include <iostream>
 
 using namespace std;
 
+#if SPECIDE_BYTE_ORDER == 1
+uint32_t GateArray::palette[CPC_NUM_PALETTES][32] = {
+    // Colour monitor
+    {
+        0x7F7F7FFF, 0x7F7F7FFF, 0x00FF7FFF, 0xFFFF7FFF, 0x00007FFF, 0xFF007FFF, 0x007F7FFF, 0xFF7F7FFF,
+        0xFF007FFF, 0xFFFF7FFF, 0xFFFF00FF, 0xFFFFFFFF, 0xFF0000FF, 0xFF00FFFF, 0xFF7F00FF, 0xFF7FFFFF,
+        0x00007FFF, 0x00FF7FFF, 0x00FF00FF, 0x00FFFFFF, 0x000000FF, 0x0000FFFF, 0x007F00FF, 0x007FFFFF,
+        0x7F007FFF, 0x7FFF7FFF, 0x7FFF00FF, 0x7FFFFFFF, 0x7F0000FF, 0x7F00FFFF, 0x7F7F00FF, 0x7F7FFFFF
+    },
+    // Black and white monitor
+    {
+        0x7F7F7FFF, 0x7F7F7FFF, 0x00FF7FFF, 0xFFFF7FFF, 0x00007FFF, 0xFF007FFF, 0x007F7FFF, 0xFF7F7FFF,
+        0xFF007FFF, 0xFFFF7FFF, 0xFFFF00FF, 0xFFFFFFFF, 0xFF0000FF, 0xFF00FFFF, 0xFF7F00FF, 0xFF7FFFFF,
+        0x00007FFF, 0x00FF7FFF, 0x00FF00FF, 0x00FFFFFF, 0x000000FF, 0x0000FFFF, 0x007F00FF, 0x007FFFFF,
+        0x7F007FFF, 0x7FFF7FFF, 0x7FFF00FF, 0x7FFFFFFF, 0x7F0000FF, 0x7F00FFFF, 0x7F7F00FF, 0x7F7FFFFF
+    },
+    // Green phosphor monitor
+    {
+        0x7F7F7FFF, 0x7F7F7FFF, 0x00FF7FFF, 0xFFFF7FFF, 0x00007FFF, 0xFF007FFF, 0x007F7FFF, 0xFF7F7FFF,
+        0xFF007FFF, 0xFFFF7FFF, 0xFFFF00FF, 0xFFFFFFFF, 0xFF0000FF, 0xFF00FFFF, 0xFF7F00FF, 0xFF7FFFFF,
+        0x00007FFF, 0x00FF7FFF, 0x00FF00FF, 0x00FFFFFF, 0x000000FF, 0x0000FFFF, 0x007F00FF, 0x007FFFFF,
+        0x7F007FFF, 0x7FFF7FFF, 0x7FFF00FF, 0x7FFFFFFF, 0x7F0000FF, 0x7F00FFFF, 0x7F7F00FF, 0x7F7FFFFF
+    },
+    // Custom palette
+    {
+        0x7F7F7FFF, 0x7F7F7FFF, 0x00FF7FFF, 0xFFFF7FFF, 0x00007FFF, 0xFF007FFF, 0x007F7FFF, 0xFF7F7FFF,
+        0xFF007FFF, 0xFFFF7FFF, 0xFFFF00FF, 0xFFFFFFFF, 0xFF0000FF, 0xFF00FFFF, 0xFF7F00FF, 0xFF7FFFFF,
+        0x00007FFF, 0x00FF7FFF, 0x00FF00FF, 0x00FFFFFF, 0x000000FF, 0x0000FFFF, 0x007F00FF, 0x007FFFFF,
+        0x7F007FFF, 0x7FFF7FFF, 0x7FFF00FF, 0x7FFFFFFF, 0x7F0000FF, 0x7F00FFFF, 0x7F7F00FF, 0x7F7FFFFF
+    }
+};
+#else
+uint32_t GateArray::palette[CPC_NUM_PALETTES][32] = {
+    // Colour monitor
+    {
+        0xFF7F7F7F, 0xFF7F7F7F, 0xFF7FFF00, 0xFF7FFFFF, 0xFF7F0000, 0xFF7F00FF, 0xFF7F7F00, 0xFF7F7FFF,
+        0xFF7F00FF, 0xFF7FFFFF, 0xFF00FFFF, 0xFFFFFFFF, 0xFF0000FF, 0xFFFF00FF, 0xFF007FFF, 0xFFFF7FFF,
+        0xFF7F0000, 0xFF7FFF00, 0xFF00FF00, 0xFFFFFF00, 0xFF000000, 0xFFFF0000, 0xFF007F00, 0xFFFF7F00,
+        0xFF7F007F, 0xFF7FFF7F, 0xFF00FF7F, 0xFFFFFF7F, 0xFF00007F, 0xFFFF007F, 0xFF007F7F, 0xFFFF7F7F
+    },
+    // Black and white monitor
+    {
+        0xFF7F7F7F, 0xFF7F7F7F, 0xFFBCBCBC, 0xFFD9D9D9, 0xFF262626, 0xFF434343, 0xFF717171, 0xFF8E8E8E,
+        0xFF434343, 0xFFD9D9D9, 0xFFB3B3B3, 0xFFFFFFFF, 0xFF1D1D1D, 0xFF696969, 0xFF686868, 0xFFB4B4B4,
+        0xFF262626, 0xFFBCBCBC, 0xFF969696, 0xFFE2E2E2, 0xFF000000, 0xFF4C4C4C, 0xFF4B4B4B, 0xFF979797,
+        0xFF343434, 0xFFCACACA, 0xFFA4A4A4, 0xFFF0F0F0, 0xFF0E0E0E, 0xFF5B5B5B, 0xFF595959, 0xFFA5FAFA
+    },
+    // Green phosphor monitor
+    {
+        0xFF007F00, 0xFF007F00, 0xFF00BC00, 0xFF00D900, 0xFF002600, 0xFF004300, 0xFF007100, 0xFF008E00,
+        0xFF004300, 0xFF00D900, 0xFF00B300, 0xFF00FF00, 0xFF001D00, 0xFF006900, 0xFF006800, 0xFF00B400,
+        0xFF002600, 0xFF00BC00, 0xFF009600, 0xFF00E200, 0xFF000000, 0xFF004C00, 0xFF004B00, 0xFF009700,
+        0xFF003400, 0xFF00CA00, 0xFF00A400, 0xFF00F000, 0xFF000E00, 0xFF005B00, 0xFF005900, 0xFF00A500
+    },
+    // Custom palette
+    {
+        0xFF7F7F7F, 0xFF7F7F7F, 0xFF7FFF00, 0xFF7FFFFF, 0xFF7F0000, 0xFF7F00FF, 0xFF7F7F00, 0xFF7F7FFF,
+        0xFF7F00FF, 0xFF7FFFFF, 0xFF00FFFF, 0xFFFFFFFF, 0xFF0000FF, 0xFFFF00FF, 0xFF007FFF, 0xFFFF7FFF,
+        0xFF7F0000, 0xFF7FFF00, 0xFF00FF00, 0xFFFFFF00, 0xFF000000, 0xFFFF0000, 0xFF007F00, 0xFFFF7F00,
+        0xFF7F007F, 0xFF7FFF7F, 0xFF00FF7F, 0xFFFFFF7F, 0xFF00007F, 0xFFFF007F, 0xFF007F7F, 0xFFFF7F7F
+    }
+};
+#endif
+
+uint32_t GateArray::colours[32];
+
 uint32_t GateArray::pixelsX1[X_SIZE * Y_SIZE / 2];
 uint32_t GateArray::pixelsX2[X_SIZE * Y_SIZE];
+
+void GateArray::setPalette(uint32_t type) {
+
+    if (type < CPC_NUM_PALETTES) {
+        for (size_t ii = 0; ii < 0x20; ++ii) {
+            colours[ii] = palette[type][ii];
+        }
+    }
+
+    fillAverageTable();
+}
 
 void GateArray::write(uint_fast8_t byte) {
     ioHasByte = true;
@@ -378,24 +456,34 @@ void GateArray::updateBeam() {
         // Retrace happens if the screen reaches the end, or if an VSync is
         // accepted (occurs within VFreq range). In this case, we position
         // the beam at the top of the screen and signal that we have a new frame.
-        if (yPos >= Y_SIZE / 2 || vSyncAccepted || vSyncByOverflow) {
+        if (yPos >= (yInc * Y_SIZE / 2) || vSyncAccepted || vSyncByOverflow) {
 #ifdef DEBUGCRTC
             cout << endl << "New frame at yPos=" << yPos << endl << endl;
 #endif
             sync = (yPos > 0x7);
             if (!vSyncByOverflow) {
-                for (size_t jj = yPos; jj < Y_SIZE / 2; ++jj) {
+                for (size_t jj = yPos; jj < (yInc * Y_SIZE / 2); jj += yInc) {
                     for (size_t ii = 0; ii < X_SIZE; ++ii) {
-#if SPECIDE_BYTE_ORDER == 1
-                        pixelsX1[(jj * X_SIZE) + ii] = 0x000000FF;
-#else
-                        pixelsX1[(jj * X_SIZE) + ii] = 0xFF000000;
-#endif
+                        switch (scanlines) {
+                            case 1:
+                                pixelsX2[((jj + frame) * X_SIZE) + ii] = colours[20];
+                                break;
+                            case 2:
+                                pixelsX1[(jj * X_SIZE) + ii] = colours[20];
+                                break;
+                            case 3:
+                                pixelsX2[(jj * X_SIZE) + ii] = colours[20];
+                                pixelsX2[((jj + 1) * X_SIZE) + ii] = colours[20];
+                                break;
+                            default:
+                                pixelsX1[(jj * X_SIZE) + ii] = colours[20];
+                                break;
+                        }
                     }
                 }
             }
-            yPos = 0;           // Move beam to the top...
-            yInc = 1;           // ...and keep it there!
+            yPos = 0;           // Move beam to the top and keep it there
+            frame = 1 - frame;
             vSyncAccepted = false;
         }
     }
@@ -431,8 +519,37 @@ void GateArray::generateInterrupts() {
 void GateArray::paint() {
 
     if (!blanking) {
-        pixelsX1[(yPos * X_SIZE) + xPos]
-            = colours[inksel ? pens[pixelTable[actMode][colour]] : border];
+
+        uint32_t col = colours[inksel ? pens[pixelTable[actMode][colour]] : border];
+
+        switch (scanlines) {
+            case 1:     // Interlaced odd and even fields
+                pixelsX2[(X_SIZE * (yPos + frame)) + xPos] = col;
+                break;
+
+            case 2:     // Averaged odd and even fields
+                {
+                    uint32_t *ptr = pixelsX2 + (2 * (yPos * X_SIZE + xPos));
+                    ptr[frame] = col;
+                    pixelsX1[yPos * X_SIZE + xPos] = average(ptr);
+                }
+                break;
+            case 3:     // Only odd field, with scanlines
+                pixelsX2[(X_SIZE * yPos) + xPos] = col;
+#if SPECIDE_BYTE_ORDER == 1
+                pixelsX2[(X_SIZE * (yPos + 1)) + xPos] =
+                    (((col & 0xFEFEFE00) >> 1) + ((col & 0xFCFCFC00) >> 2) + ((col & 0xF8F8F800) >> 3)) | 0x000000FF;
+#else
+                pixelsX2[(X_SIZE * (yPos + 1)) + xPos] =
+                    (((col & 0x00FEFEFE) >> 1) + ((col & 0x00FCFCFC) >> 2) + ((col & 0x00F8F8F8) >> 3)) | 0xFF000000;
+#endif
+                break;
+
+            default:    // Odd field only, no scanlines
+                pixelsX1[yPos * X_SIZE + xPos] = col;
+                break;
+        }
+
         switch (modeTable[actMode][counter & 0x7]) {
             case MOVE:
                 colour = (colour << 1) & 0xFF; break;
@@ -441,11 +558,21 @@ void GateArray::paint() {
             default: break;
         }
     } else {
-#if SPECIDE_BYTE_ORDER == 1
-        pixelsX1[(yPos * X_SIZE) + xPos] = 0x000000FF;
-#else
-        pixelsX1[(yPos * X_SIZE) + xPos] = 0xFF000000;
-#endif
+        switch (scanlines) {
+            case 1:
+                pixelsX2[((yPos + frame) * X_SIZE) + xPos] = colours[20];
+                break;
+            case 2:
+                pixelsX1[(yPos * X_SIZE) + xPos] = colours[20];
+                break;
+            case 3:
+                pixelsX2[(yPos * X_SIZE) + xPos] = colours[20];
+                pixelsX2[((yPos + 1) * X_SIZE) + xPos] = colours[20];
+                break;
+            default:
+                pixelsX1[(yPos * X_SIZE) + xPos] = colours[20];
+                break;
+        }
     }
     xPos += xInc;
 }

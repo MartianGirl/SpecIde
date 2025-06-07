@@ -277,6 +277,8 @@ FileTypes Screen::guessFileType(string const& fileName) {
         return FileTypes::FILETYPE_Z80;
     } else if (extension == ".sna") {
         return FileTypes::FILETYPE_SNA;
+    } else if (extension == ".pal") {
+        return FileTypes::FILETYPE_PAL;
     } else {
         return FileTypes::FILETYPE_ERR;
     }

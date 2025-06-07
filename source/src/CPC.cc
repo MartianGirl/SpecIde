@@ -185,7 +185,7 @@ void CPC::clock() {
     if (io_ || ga.blockIorq()) {
         ga.d = ram[ga.crtc.byteAddress | ga.cClkOffset()];
     } else {
-        ga.d = z80.d;
+        ga.d = bus;
     }
 
     // First we clock the Gate Array. Further clocks will be generated here.
@@ -252,7 +252,7 @@ void CPC::clock() {
             // Gate Array is selected when address is 01xxxxxx xxxxxxxx.
             // Gate Array is accessible by both I/O reads and I/O writes.
             if (m1_ && ((z80.a & 0xC000) == 0x4000)) {
-                ga.write(z80.d);
+                ga.write(bus);
             }
 
             // CRTC.
@@ -266,10 +266,10 @@ void CPC::clock() {
                         ga.crtc.wrRegister(z80.d);
                         break;
                     case 0x0200:    // CRTC Status Register Read (type 1) at &BE00.
-                        ga.crtc.rdStatus(ga.d);
+                        ga.crtc.rdStatus(bus);
                         break;
                     case 0x0300:    // CRTC Register Read (RO) at &BF00.
-                        ga.crtc.rdRegister(ga.d);
+                        ga.crtc.rdRegister(bus);
                         break;
                     default:
                         break;
@@ -281,7 +281,7 @@ void CPC::clock() {
             if (!(z80.a & 0x0800)) {
                 switch (z80.a & 0x0300) {
                     case 0x0000:    // Port A: &F4xx
-                        z80.d = ppi.readPortA();
+                        bus = z80.d = ppi.readPortA();
                         break;
                     case 0x0100:    // Port B: &F5xx
                         ppi.portB = tapeLevel
@@ -289,11 +289,11 @@ void CPC::clock() {
                             | (0x07 << 1)   // Amstrad
                             | (expBit ? 0x20 : 0x00)
                             | ((ga.crtc.vSync || ga.crtc.vSyncForced) ? 0x1 : 0x0);
-                        z80.d = ppi.readPortB();
+                        bus = z80.d = ppi.readPortB();
                         break;
                     case 0x0200:    // Port C: &F6xx
                         ppi.portC = 0x2F;
-                        z80.d = ppi.readPortC();
+                        bus = z80.d = ppi.readPortC();
                         break;
                     default:
                         break;
@@ -322,7 +322,8 @@ void CPC::clock() {
                 if ((z80.d & 0xC0) == 0xC0) {
                     if (cpc128K) { selectRam(z80.d); }
                 } else if (m1_ && (z80.a & 0x4000)) {
-                    ga.write(z80.d);
+                    bus = z80.d;
+                    ga.write(bus);
                 }
             }
 
@@ -422,7 +423,7 @@ void CPC::clock() {
                 }
             }
         } else if (as_ && io_) {
-            z80.d = 0xFF;
+            z80.d = bus;
         }
 
         z80.clock();

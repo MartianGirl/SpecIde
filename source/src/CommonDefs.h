@@ -12,6 +12,7 @@ enum class FileTypes {
     FILETYPE_Z80,
     FILETYPE_SNA,
     FILETYPE_CSW,
+    FILETYPE_PAL,
     FILETYPE_ERR
 };
 

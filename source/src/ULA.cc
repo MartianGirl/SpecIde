@@ -13,10 +13,10 @@
  * along with SpecIde.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "ULA.h"
-
 #include <cassert>
-#include <cmath>
+
+#include "ULA.h"
+#include "Utils.h"
 
 using namespace std;
 
@@ -40,61 +40,83 @@ uint_fast32_t ULA::snowTable[16] = {
     DUPL, NONE, NONE, NONE, ENDS, NONE, NONE, ENDD
 };
 
-uint32_t ULA::colourTable[0x100];
-uint8_t ULA::averageTable[0x100][0x100];
+#if SPECIDE_BYTE_ORDER == 1
+uint32_t ULA::palette[ULA_NUM_PALETTES][0x10] = {
+    // Colour TV set
+    {
+        0x000000FF, 0x0000C0FF, 0xC00000FF, 0xC000C0FF, 0x00C000FF, 0x00C0C0FF, 0xC0C000FF, 0xC0C0C0FF,
+        0x000000FF, 0x0000FFFF, 0xFF0000FF, 0xFF00FFFF, 0x00FF00FF, 0x00FFFFFF, 0xFFFF00FF, 0xFFFFFFFF
+    },
+    // Black & White TV set
+    {
+        0xFF000000, 0xFF0000D8, 0xFF00D800, 0xFF00D8D8, 0xFFD80000, 0xFFD800D8, 0xFFD8D800, 0xFFD8D8D8,
+        0xFF000000, 0xFF0000FF, 0xFF00FF00, 0xFF00FFFF, 0xFFFF0000, 0xFFFF00FF, 0xFFFFFF00, 0xFFFFFFFF
+    },
+    // Green phosphor monitor
+    {
+        0xFF000000, 0xFF0000D8, 0xFF00D800, 0xFF00D8D8, 0xFFD80000, 0xFFD800D8, 0xFFD8D800, 0xFFD8D8D8,
+        0xFF000000, 0xFF0000FF, 0xFF00FF00, 0xFF00FFFF, 0xFFFF0000, 0xFFFF00FF, 0xFFFFFF00, 0xFFFFFFFF
+    },
+    // Amber phosphor monitor
+    {
+        0xFF000000, 0xFF0000D8, 0xFF00D800, 0xFF00D8D8, 0xFFD80000, 0xFFD800D8, 0xFFD8D800, 0xFFD8D8D8,
+        0xFF000000, 0xFF0000FF, 0xFF00FF00, 0xFF00FFFF, 0xFFFF0000, 0xFFFF00FF, 0xFFFFFF00, 0xFFFFFFFF
+    },
+    // User defined palette
+    {
+        0xFF000000, 0xFF0000D8, 0xFF00D800, 0xFF00D8D8, 0xFFD80000, 0xFFD800D8, 0xFFD8D800, 0xFFD8D8D8,
+        0xFF000000, 0xFF0000FF, 0xFF00FF00, 0xFF00FFFF, 0xFFFF0000, 0xFFFF00FF, 0xFFFFFF00, 0xFFFFFFFF
+    }
+};
+#else
+uint32_t ULA::palette[ULA_NUM_PALETTES][0x10] = {
+    // Colour TV set
+    {
+        0xFF000000, 0xFFC00000, 0xFF0000C0, 0xFFC000C0, 0xFF00C000, 0xFFC0C000, 0xFF00C0C0, 0xFFC0C0C0,
+        0xFF000000, 0xFFFF0000, 0xFF0000FF, 0xFFFF00FF, 0xFF00FF00, 0xFFFFFF00, 0xFF00FFFF, 0xFFFFFFFF
+    },
+    // Black & White TV set
+    {
+        0xFF000000, 0xFF161616, 0xFF393939, 0xFF4F4F4F, 0xFF717171, 0xFF878787, 0xFFAAAAAA, 0xFFC0C0C0,
+        0xFF000000, 0xFF1D1D1D, 0xFF4C4C4C, 0xFF696969, 0xFF969696, 0xFFB3B3B3, 0xFFE2E2E2, 0xFFFFFFFF
+    },
+    // Green phosphor monitor
+    {
+        0xFF000000, 0xFF001600, 0xFF003900, 0xFF004F00, 0xFF007100, 0xFF008700, 0xFF00AA00, 0xFF00C000,
+        0xFF000000, 0xFF001D00, 0xFF004C00, 0xFF006900, 0xFF009600, 0xFF00B300, 0xFF00E200, 0xFF00FF00
+    },
+    // Amber phosphor monitor
+    {
+        0xFF000000, 0xFF001016, 0xFF002B39, 0xFF003B4F, 0xFF005571, 0xFF006587, 0xFF0080AA, 0xFF0090C0,
+        0xFF000000, 0xFF00161D, 0xFF00394C, 0xFF004F69, 0xFF007096, 0xFF0087B3, 0xFF00AAE2, 0xFF00C0FF
+    },
+    // User defined palette
+    {
+        0xFF000000, 0xFFD80000, 0xFF0000D8, 0xFFD800D8, 0xFF00D800, 0xFFD8D800, 0xFF00D8D8, 0xFFD8D8D8,
+        0xFF000000, 0xFFFF0000, 0xFF0000FF, 0xFFFF00FF, 0xFF00FF00, 0xFFFFFF00, 0xFF00FFFF, 0xFFFFFFFF
+    }
+};
+#endif
+
+uint32_t ULA::colourTable[0x10];
+uint32_t ULA::colour[2];
 uint32_t ULA::pixelsX1[X_SIZE * Y_SIZE / 2];
 uint32_t ULA::pixelsX2[X_SIZE * Y_SIZE];
 
 ULA::ULA() :
     keys{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
     keyData{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
-    c(0xFFFF) {
+    c(0xFFFF) {}
 
-        for (uint_fast32_t i = 0; i < 0x100; ++i) {
-            // Generate colour table.
-            // dhpppiii
-#if SPECIDE_BYTE_ORDER == 1
-            uint32_t colour = (i & 0x80) ?
-                ((i & 0x02) << 23) | ((i & 0x04) << 14) | ((i & 0x01) << 8) :
-                ((i & 0x10) << 20) | ((i & 0x20) << 11) | ((i & 0x08) << 5);
-#else
-            uint32_t colour = (i & 0x80) ?
-                ((i & 0x02) >> 1) | ((i & 0x04) << 6) | ((i & 0x01) << 16) :
-                ((i & 0x10) >> 4) | ((i & 0x20) << 3) | ((i & 0x08) << 13);
-#endif
-            colour *= (i & 0x40) ? 0xFF : 0xC0;
-#if SPECIDE_BYTE_ORDER == 1
-            colour |= 0xFF;
-#else
-            colour |= (0xFF << 24);
-#endif
-            colourTable[i] = colour;
-        }
+void ULA::setPalette(uint32_t type) {
 
-        for (size_t i = 0x00; i < 0x100; ++i) {
-            for (size_t j = 0x00; j < 0x100; ++j) {
-                averageTable[i][j] = static_cast<uint8_t>(sqrt(((i * i) + (j * j)) / 2));
-            }
+    if (type < ULA_NUM_PALETTES) {
+        for (size_t ii = 0; ii < 0x10; ++ii) {
+            colourTable[ii] = palette[type][ii];
         }
     }
 
-/**
- * Average two colours in consecutive positions.
- */
-uint32_t ULA::average(uint32_t *ptr) {
-
-    uint8_t *pSrc = reinterpret_cast<uint8_t*>(ptr);
-#if SPECIDE_BYTE_ORDER == 1
-    return (0xFF
-            | averageTable[pSrc[1]][pSrc[5]] << 8
-            | averageTable[pSrc[2]][pSrc[6]] << 16
-            | averageTable[pSrc[3]][pSrc[7]] << 24);
-#else
-    return (0xFF << 24
-            | averageTable[pSrc[2]][pSrc[6]] << 16
-            | averageTable[pSrc[1]][pSrc[5]] << 8
-            | averageTable[pSrc[0]][pSrc[4]]);
-#endif
+    fillAverageTable();
 }
 
 void ULA::generateVideoControlSignals() {
@@ -272,8 +294,11 @@ void ULA::updateAttributes() {
     if ((pixel & 0x07) == paintPixel) {
         data = video ? dataReg : 0xFF;
         attr = video ? attrReg : borderAttr;
-        colour[0] = colourTable[(0x00 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
-        colour[1] = colourTable[(0x80 ^ (attr & flash & 0x80)) | (attr & 0x7F)];
+
+        size_t indexBackground = (attr & flash & 0x80) >> 7;
+        size_t indexForeground = 1 - indexBackground;
+        colour[indexBackground] = colourTable[((attr & 0x78) >> 3)];
+        colour[indexForeground] = colourTable[((attr & 0x40) >> 3) | (attr & 0x07)];
     }
 }
 
@@ -286,11 +311,11 @@ void ULA::paint() {
         data <<= 1;
 
         switch (scanlines) {
-            case 1:     // Scanlines
+            case 1:     // Interlaced odd and even fields
                 pixelsX2[(X_SIZE * (yPos + frame)) + xPos] = col;
                 break;
 
-            case 2:     // Averaged scanlines
+            case 2:     // Averaged odd and even fields
                 {
                     uint32_t *ptr = pixelsX2 + (2 * (yPos * X_SIZE + xPos));
                     ptr[frame] = col;
@@ -298,7 +323,7 @@ void ULA::paint() {
                 }
                 break;
 
-            case 3:     // Only one frame
+            case 3:     // Only odd field, with scanlines
                 pixelsX2[(X_SIZE * yPos) + xPos] = col;
 #if SPECIDE_BYTE_ORDER == 1
                 pixelsX2[(X_SIZE * (yPos + 1)) + xPos] =
@@ -309,7 +334,7 @@ void ULA::paint() {
 #endif
                 break;
 
-            default:    // No scanlines
+            default:    // Odd field only, no scanlines
                 pixelsX1[yPos * X_SIZE + xPos] = col;
                 break;
         }
@@ -360,7 +385,7 @@ void ULA::ioWrite(uint_fast8_t byte) {
         }
     } else if (ulaVersion == ULA_PENTAGON) {
         if (!video) {
-            colour[1] = colourTable[0x80 | borderAttr];
+            colour[1] = colourTable[borderAttr & 0x7];
         }
     }
 }

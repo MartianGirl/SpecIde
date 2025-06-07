@@ -22,6 +22,12 @@ uint_fast32_t constexpr KEEP = 2;
 uint_fast32_t constexpr MOVE = 1;
 uint_fast32_t constexpr LOAD = 0;
 
+uint_fast32_t constexpr CPC_PALETTE_COLOUR = 0;
+uint_fast32_t constexpr CPC_PALETTE_BW = 1;
+uint_fast32_t constexpr CPC_PALETTE_GREEN = 2;
+uint_fast32_t constexpr CPC_PALETTE_CUSTOM = 3;
+uint_fast32_t constexpr CPC_NUM_PALETTES = 4;
+
 class GateArray {
 
     public:
@@ -66,6 +72,7 @@ class GateArray {
         uint_fast32_t yPos = 0;
         uint_fast32_t xInc = 0;
         uint_fast32_t yInc = 0;
+        uint_fast32_t frame = 0;
          
         bool hSync_d = false;
         bool vSync_d = false;
@@ -98,6 +105,8 @@ class GateArray {
          * Paint pixels into bitmap.
          */
         void paint();
+
+        void setPalette(uint32_t type);
 
         /**
          * Update the position of the electron beam.
@@ -166,30 +175,11 @@ class GateArray {
         static uint32_t pixelsX1[X_SIZE * Y_SIZE / 2];
         static uint32_t pixelsX2[X_SIZE * Y_SIZE];
 
-        /** Averaged colours between two scans. */
-        uint32_t averagedColours[1024];
         /** Colour definitions. */
-#if SPECIDE_BYTE_ORDER == 1
-        static uint32_t constexpr colours[32] = {
-            0x7F7F7FFF, 0x7F7F7FFF, 0x00FF7FFF, 0xFFFF7FFF,
-            0x00007FFF, 0xFF007FFF, 0x007F7FFF, 0xFF7F7FFF,
-            0xFF007FFF, 0xFFFF7FFF, 0xFFFF00FF, 0xFFFFFFFF,
-            0xFF0000FF, 0xFF00FFFF, 0xFF7F00FF, 0xFF7FFFFF,
-            0x00007FFF, 0x00FF7FFF, 0x00FF00FF, 0x00FFFFFF,
-            0x000000FF, 0x0000FFFF, 0x007F00FF, 0x007FFFFF,
-            0x7F007FFF, 0x7FFF7FFF, 0x7FFF00FF, 0x7FFFFFFF,
-            0x7F0000FF, 0x7F00FFFF, 0x7F7F00FF, 0x7F7FFFFF};
-#else
-        static uint32_t constexpr colours[32] = {
-            0xFF7F7F7F, 0xFF7F7F7F, 0xFF7FFF00, 0xFF7FFFFF,
-            0xFF7F0000, 0xFF7F00FF, 0xFF7F7F00, 0xFF7F7FFF,
-            0xFF7F00FF, 0xFF7FFFFF, 0xFF00FFFF, 0xFFFFFFFF,
-            0xFF0000FF, 0xFFFF00FF, 0xFF007FFF, 0xFFFF7FFF,
-            0xFF7F0000, 0xFF7FFF00, 0xFF00FF00, 0xFFFFFF00,
-            0xFF000000, 0xFFFF0000, 0xFF007F00, 0xFFFF7F00,
-            0xFF7F007F, 0xFF7FFF7F, 0xFF00FF7F, 0xFFFFFF7F,
-            0xFF00007F, 0xFFFF007F, 0xFF007F7F, 0xFFFF7F7F};
-#endif
+        static uint32_t palette[CPC_NUM_PALETTES][32];
+
+        /** Selected palette. */
+        static uint32_t colours[32];
 
         /**
          * Gate array sequence.

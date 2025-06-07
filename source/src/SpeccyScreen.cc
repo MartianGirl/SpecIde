@@ -18,6 +18,7 @@
 #include "KeyBinding.h"
 #include "SNAFile.h"
 #include "Z80File.h"
+#include "Utils.h"
 
 #include <SFML/System.hpp>
 
@@ -206,6 +207,17 @@ void SpeccyScreen::setup() {
     }
     cout << "Scan mode: " << options["scanmode"] << endl;
 
+    if (options["display"] == "bw") {
+        spectrum.ula.setPalette(ULA_PALETTE_BW);
+    } else if (options["display"] == "green") {
+        spectrum.ula.setPalette(ULA_PALETTE_GREEN);
+    } else if (options["display"] == "amber") {
+        spectrum.ula.setPalette(ULA_PALETTE_AMBER);
+    } else {
+        spectrum.ula.setPalette(ULA_PALETTE_COLOUR);
+    }
+    cout << "Display type: " << options["display"] << endl;
+
     lBorder = 12;
     rBorder = 4;
     tBorder = 0;
@@ -276,6 +288,20 @@ void SpeccyScreen::loadFiles() {
                     cout << "Loading SNA snapshot: " << *it << endl;
                     if (snap.parse()) {
                         spectrum.loadState(snap.state);
+                    }
+                }
+                break;
+
+            case FileTypes::FILETYPE_PAL:
+                {
+                    vector<uint32_t> palette;
+                    loadPalette(*it, palette);
+                    if (palette.size() == 16) {
+                        for (size_t ii = 0; ii < 16; ++ii) {
+                            spectrum.ula.palette[ULA_PALETTE_CUSTOM][ii] = palette[ii];
+                        }
+
+                        spectrum.ula.setPalette(ULA_PALETTE_CUSTOM);
                     }
                 }
                 break;

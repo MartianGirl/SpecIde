@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 
+extern uint8_t averageTable[0x100][0x100];
+
 void printBytes(std::string const& prefix, size_t len, uint8_t* buf);
 
 bool inflateBuffer(std::vector<uint8_t>& in, std::vector<uint8_t>& out);
@@ -28,5 +30,11 @@ uint32_t getU32(std::vector<uint8_t> const& v, uint_fast32_t i);
 uint32_t getU24(std::vector<uint8_t> const& v, uint_fast32_t i);
 
 uint16_t getU16(std::vector<uint8_t> const& v, uint_fast32_t i);
+
+void fillAverageTable();
+
+uint32_t average(uint32_t *ptr);
+
+void loadPalette(std::string const& fileName, std::vector<uint32_t>& paletteData);
 
 // vim: et:sw=4:ts=4
