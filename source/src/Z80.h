@@ -129,7 +129,7 @@ class Z80
         Z80Register bc, bc_;
         Z80Register de, de_;
         Z80Register hl, hl_;
-        Z80Register wz, wz_;
+        Z80Register wz;
 
         uint8_t* reg8[8];
         uint8_t* regx8[8];
