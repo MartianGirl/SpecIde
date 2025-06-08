@@ -41,7 +41,7 @@ uint_fast32_t ULA::snowTable[16] = {
 };
 
 #if SPECIDE_BYTE_ORDER == 1
-uint32_t ULA::palette[ULA_NUM_PALETTES][0x10] = {
+uint32_t ULA::palette[ULA_NUM_PALETTES][ULA_PALETTE_SIZE] = {
     // Colour TV set
     {
         0x000000FF, 0x0000C0FF, 0xC00000FF, 0xC000C0FF, 0x00C000FF, 0x00C0C0FF, 0xC0C000FF, 0xC0C0C0FF,
@@ -69,7 +69,7 @@ uint32_t ULA::palette[ULA_NUM_PALETTES][0x10] = {
     }
 };
 #else
-uint32_t ULA::palette[ULA_NUM_PALETTES][0x10] = {
+uint32_t ULA::palette[ULA_NUM_PALETTES][ULA_PALETTE_SIZE] = {
     // Colour TV set
     {
         0xFF000000, 0xFFC00000, 0xFF0000C0, 0xFFC000C0, 0xFF00C000, 0xFFC0C000, 0xFF00C0C0, 0xFFC0C0C0,
@@ -98,7 +98,7 @@ uint32_t ULA::palette[ULA_NUM_PALETTES][0x10] = {
 };
 #endif
 
-uint32_t ULA::colourTable[0x10];
+uint32_t ULA::colourTable[ULA_PALETTE_SIZE];
 uint32_t ULA::colour[2];
 uint32_t ULA::pixelsX1[X_SIZE * Y_SIZE / 2];
 uint32_t ULA::pixelsX2[X_SIZE * Y_SIZE];
@@ -111,7 +111,7 @@ ULA::ULA() :
 void ULA::setPalette(uint32_t type) {
 
     if (type < ULA_NUM_PALETTES) {
-        for (size_t ii = 0; ii < 0x10; ++ii) {
+        for (size_t ii = 0; ii < ULA_PALETTE_SIZE; ++ii) {
             colourTable[ii] = palette[type][ii];
         }
     }

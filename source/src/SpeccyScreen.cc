@@ -296,8 +296,8 @@ void SpeccyScreen::loadFiles() {
                 {
                     vector<uint32_t> palette;
                     loadPalette(*it, palette);
-                    if (palette.size() == 16) {
-                        for (size_t ii = 0; ii < 16; ++ii) {
+                    if (palette.size() == ULA_PALETTE_SIZE) {
+                        for (size_t ii = 0; ii < ULA_PALETTE_SIZE; ++ii) {
                             spectrum.ula.palette[ULA_PALETTE_CUSTOM][ii] = palette[ii];
                         }
 

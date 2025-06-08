@@ -49,6 +49,7 @@ uint_fast32_t constexpr ULA_PALETTE_GREEN = 2;
 uint_fast32_t constexpr ULA_PALETTE_AMBER = 3;
 uint_fast32_t constexpr ULA_PALETTE_CUSTOM = 4;
 uint_fast32_t constexpr ULA_NUM_PALETTES = 5;
+uint_fast32_t constexpr ULA_PALETTE_SIZE = 16;
 
 uint_fast32_t constexpr NUM_CHECKPOINTS = 6;
 
@@ -107,8 +108,8 @@ class ULA {
         static bool memTable[16];
         static uint_fast32_t snowTable[16];
 
-        static uint32_t palette[ULA_NUM_PALETTES][0x10];
-        static uint32_t colourTable[0x10];
+        static uint32_t palette[ULA_NUM_PALETTES][ULA_PALETTE_SIZE];
+        static uint32_t colourTable[ULA_PALETTE_SIZE];
         static uint32_t colour[2];
         static uint_fast32_t constexpr X_SIZE = 360;
         static uint_fast32_t constexpr Y_SIZE = 625;

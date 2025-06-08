@@ -15,6 +15,8 @@
 
 #include "CpcScreen.h"
 #include "KeyBinding.h"
+#include "Utils.h"
+
 #include "config.h"
 
 #include <SFML/System.hpp>
@@ -118,6 +120,8 @@ void CpcScreen::setup() {
         cpc.ga.setPalette(CPC_PALETTE_BW);
     } else if (options["display"] == "green") {
         cpc.ga.setPalette(CPC_PALETTE_GREEN);
+    } else if (options["display"] == "amber") {
+        cpc.ga.setPalette(CPC_PALETTE_AMBER);
     } else {
         cpc.ga.setPalette(CPC_PALETTE_COLOUR);
     }
@@ -164,6 +168,20 @@ void CpcScreen::loadFiles() {
                         cpc.fdc765.drive[0].images.push_back(dsk);
                         cpc.fdc765.drive[0].imageNames.push_back(*it);
                         cpc.fdc765.drive[0].disk = true;
+                    }
+                }
+                break;
+
+            case FileTypes::FILETYPE_PAL:
+                {
+                    vector<uint32_t> palette;
+                    loadPalette(*it, palette);
+                    if (palette.size() == CPC_PALETTE_SIZE) {
+                        for (size_t ii = 0; ii < CPC_PALETTE_SIZE; ++ii) {
+                            cpc.ga.palette[CPC_PALETTE_CUSTOM][ii] = palette[ii];
+                        }
+
+                        cpc.ga.setPalette(CPC_PALETTE_CUSTOM);
                     }
                 }
                 break;

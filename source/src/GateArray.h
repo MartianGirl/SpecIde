@@ -25,8 +25,10 @@ uint_fast32_t constexpr LOAD = 0;
 uint_fast32_t constexpr CPC_PALETTE_COLOUR = 0;
 uint_fast32_t constexpr CPC_PALETTE_BW = 1;
 uint_fast32_t constexpr CPC_PALETTE_GREEN = 2;
-uint_fast32_t constexpr CPC_PALETTE_CUSTOM = 3;
-uint_fast32_t constexpr CPC_NUM_PALETTES = 4;
+uint_fast32_t constexpr CPC_PALETTE_AMBER = 3;
+uint_fast32_t constexpr CPC_PALETTE_CUSTOM = 4;
+uint_fast32_t constexpr CPC_NUM_PALETTES = 5;
+uint_fast32_t constexpr CPC_PALETTE_SIZE = 32;
 
 class GateArray {
 
@@ -176,10 +178,10 @@ class GateArray {
         static uint32_t pixelsX2[X_SIZE * Y_SIZE];
 
         /** Colour definitions. */
-        static uint32_t palette[CPC_NUM_PALETTES][32];
+        static uint32_t palette[CPC_NUM_PALETTES][CPC_PALETTE_SIZE];
 
         /** Selected palette. */
-        static uint32_t colours[32];
+        static uint32_t colours[CPC_PALETTE_SIZE];
 
         /**
          * Gate array sequence.
