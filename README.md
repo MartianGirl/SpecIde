@@ -88,11 +88,14 @@ I've included a script RunCMake.bat that helps in the build process.
 
 ## How to use it?
 SpecIde is invoked from the command line. To run SpecIde, type:
-`SpecIde [options] [tapefiles|diskfiles]`
+`SpecIde [options] [tapefiles|diskfiles|palettes]`
 
 SpecIde supports the following file formats:
 - For the Spectrum models: CSW, PZX, TAP, TZX, DSK.
 - For the Amstrad CPC models: CSW, CDT, DSK.
+- Custom palette files: PAL.
+  - ZX Spectrum palette format: 16 colours encoded as RGBA8888. (64 bytes)
+  - Amstrad CPC palette format: 32 colours encoded as RGBA8888. (128 bytes)
 
 ### Command line options
 The following command line options are available:
@@ -146,6 +149,7 @@ Covox options:
 Misc hardware options:
 --sd1                  Emulate Dinamic SD1 hardware protection.
 --cmos|--nmos          Emulate CMOS/NMOS Z80. (Affects OUT(C),0 instruction)
+--early|--late         Emulate early/late Z80 timings.
 
 Video options:
 --fullscreen           Start SpecIde in full screen mode.
@@ -154,6 +158,8 @@ Video options:
 --scanlines            Render PAL odd field with darker scanlines.
 --interlace            Render PAL odd and even fields.
 --average              Render PAL odd and even fields, averaged.
+--colour|--color       Colour display. (Default)
+--bw|--green|--amber   Monochrome display. (B/W, green or amber)
 --sync                 Sync emulation to PC video refresh rate.
                            (Use only with 50Hz video modes. Not available on MacOS.)
 
