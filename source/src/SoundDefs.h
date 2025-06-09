@@ -15,9 +15,8 @@
 
 #pragma once
 
-uint_fast32_t constexpr FILTER_BZZ_SIZE = 100;
-uint_fast32_t constexpr FILTER_PSG_SIZE = 100;
-uint_fast32_t constexpr FILTER_CPC_SIZE = 400;
+#define FILTER_SIZE 4
+
 uint_fast32_t constexpr BASE_CLOCK_48 = 7000000;
 uint_fast32_t constexpr BASE_CLOCK_128 = 7093800;
 uint_fast32_t constexpr BASE_CLOCK_CPC = 16000000;
@@ -60,9 +59,8 @@ enum class StereoMode {
 
 struct Filter {
 
-    uint_fast16_t sound;
-    uint_fast32_t ticks[3] {0, 0, 0};
-    uint_fast32_t adder[3] {0, 0, 0};
+    uint_fast32_t ticks[FILTER_SIZE] {0};
+    uint_fast32_t adder[FILTER_SIZE] {0};
     uint_fast32_t index {0};
 
     void add(uint_fast16_t sample) {
@@ -71,11 +69,18 @@ struct Filter {
     }
 
     uint_fast16_t get() {
-        sound = (adder[0] + adder[1] + adder[2]) / (ticks[0] + ticks[1] + ticks[2]);
-        index = (index + 1) % 3;
+
+        uint_fast32_t count = 0;
+        uint_fast32_t sound = 0;
+        for (size_t ii = 0; ii < FILTER_SIZE; ++ii) {
+            sound += adder[ii];
+            count += ticks[ii];
+        }
+
+        index = (index + 1) % FILTER_SIZE;
         adder[index] = 0;
         ticks[index] = 0;
-        return sound;
+        return static_cast<uint_fast16_t>(sound / count);
     }
 };
 // vim: et:sw=4:ts=4
