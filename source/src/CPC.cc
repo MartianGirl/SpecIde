@@ -247,6 +247,9 @@ void CPC::clock() {
         } else if (z80.state == Z80State::ST_MEMWR_T3L_DATAWR) { // Mem writes
             mem[memArea][z80.a & 0x3FFF] = z80.d;
         } else if (z80.state == Z80State::ST_IORD_T2H_IORQ) { // I/O reads.
+
+            z80.d = bus;
+
             // PAL & Gate Array.
             // PAL is selected when address is 0xxxxxxx xxxxxxxx.
             // Gate Array is selected when address is 01xxxxxx xxxxxxxx.
@@ -266,10 +269,10 @@ void CPC::clock() {
                         ga.crtc.wrRegister(z80.d);
                         break;
                     case 0x0200:    // CRTC Status Register Read (type 1) at &BE00.
-                        ga.crtc.rdStatus(bus);
+                        ga.crtc.rdStatus(z80.d);
                         break;
                     case 0x0300:    // CRTC Register Read (RO) at &BF00.
-                        ga.crtc.rdRegister(bus);
+                        ga.crtc.rdRegister(z80.d);
                         break;
                     default:
                         break;
@@ -281,7 +284,7 @@ void CPC::clock() {
             if (!(z80.a & 0x0800)) {
                 switch (z80.a & 0x0300) {
                     case 0x0000:    // Port A: &F4xx
-                        bus = z80.d = ppi.readPortA();
+                        z80.d = ppi.readPortA();
                         break;
                     case 0x0100:    // Port B: &F5xx
                         ppi.portB = tapeLevel
@@ -289,15 +292,16 @@ void CPC::clock() {
                             | (0x07 << 1)   // Amstrad
                             | (expBit ? 0x20 : 0x00)
                             | ((ga.crtc.vSync || ga.crtc.vSyncForced) ? 0x1 : 0x0);
-                        bus = z80.d = ppi.readPortB();
+                        z80.d = ppi.readPortB();
                         break;
                     case 0x0200:    // Port C: &F6xx
                         ppi.portC = 0x2F;
-                        bus = z80.d = ppi.readPortC();
+                        z80.d = ppi.readPortC();
                         break;
                     default:
                         break;
                 }
+                bus = z80.d;
             }
 
             // FDC
@@ -322,8 +326,7 @@ void CPC::clock() {
                 if ((z80.d & 0xC0) == 0xC0) {
                     if (cpc128K) { selectRam(z80.d); }
                 } else if (m1_ && (z80.a & 0x4000)) {
-                    bus = z80.d;
-                    ga.write(bus);
+                    ga.write(z80.d);
                 }
             }
 
@@ -350,10 +353,10 @@ void CPC::clock() {
                         ga.crtc.wrRegister(z80.d);
                         break;
                     case 0x0200:    // CRTC Status Register Read (type 1) at &BE00.
-                        ga.crtc.rdStatus(ga.d);
+                        ga.crtc.rdStatus(z80.d);
                         break;
                     case 0x0300:    // CRTC Register Read (RO) at &BF00.
-                        ga.crtc.rdRegister(ga.d);
+                        ga.crtc.rdRegister(z80.d);
                         break;
                     default:
                         break;
@@ -406,6 +409,8 @@ void CPC::clock() {
                             break;
                     }
                 }
+
+                bus = z80.d;
             }
 
             // FDC

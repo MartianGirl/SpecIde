@@ -34,8 +34,6 @@ class PPI {
     uint_fast8_t portC = 0;
     /** Control port. */
     uint_fast8_t control = 0x9B;
-    /** Byte in data bus. */
-    uint_fast8_t bus = 0xFF;
 
     /** Port A register. */
     uint_fast8_t regA = 0;
@@ -81,7 +79,6 @@ class PPI {
             // Mode 0: Read value from port A.
             value = inputA ? portA : regA;
         }
-        bus = value;
         return value;
     };
 
@@ -98,7 +95,6 @@ class PPI {
             // Mode 0: Read value from port B.
             value = inputB ? portB : regB;
         }
-        bus = value;
         return value;
     }
 
@@ -125,8 +121,6 @@ class PPI {
         } else {
             value |= regC & 0xF0;
         }
-
-        bus = value;
 
         return value;
     }
