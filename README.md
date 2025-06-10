@@ -262,6 +262,8 @@ After I had the ZX Spectrum working, I thought I could try to emulate the Amstra
 + Miguel Mesa: For pointing out that the FLASH attribute was running at half speed.
 + Weiv (for his tests), ICEknight (for his videos), and all the people who helped describing the ULA Snow Effect on 48K/128K/+2 machines.
 + Patrik Rak for all his tests and for developing the PZX file format.
++ Mark Woodmass (Woodster) for his magnificent emulator Specemu and for his efforts writing all those tests.
++ Peter Helcmanovsky (Ped7g) for his tests and his findings on the internal flags of the Z80 block instructions.
 + Manuel Sainz de Baranda Goñi (ZJoyKiller) for his repository of tests (https://github.com/redcode/ZXSpectrum/wiki/Tests), and for his help in keeping the MacOS version alive.
 + People from the #emulation discord for their ongoing testing efforts to discover every detail on the ZX Spectrum machines.
 
