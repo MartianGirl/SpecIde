@@ -121,63 +121,56 @@ void ULA::setPalette(uint32_t type) {
 
 void ULA::generateVideoControlSignals() {
 
-    if (pixel == checkPointValues[ulaVersion][checkPoint]) {
-        // I've simplified the if-else if-else tree using this block because
-        // these stages always happen in the same order.
-        switch (checkPoint) {
-            case 0:     // On VideoStart
-                video = (scan < vBorderStart);
-                break;
-            case 1:     // On HBorderStart
-                border = true;
-                break;
-            case 2:     // On VideoEnd
-                video = false;
-                break;
-            case 3:     // On HBlankStart
-                blanking = true;
-                ++scan;
-                if (scan == vSyncEnd) {
-                    vSync = true;
-                    frame = 1 - frame;
-                    yPos = 0;
-                } else if (scan == vBlankEnd) {
-                    flash += 0x8;
-                } else if (scan == maxScan) {
-                    scan = 0;
-                    // Avoid problems caused by changing key data during the interrupt.
-                    for (size_t ii = 0; ii < 8; ++ii) keyData[ii] = keys[ii];
-                }
-                break;
-            case 4:     // On HBlankEnd
-                xPos = 0;
-                blanking = (scan >= vBlankStart) && (scan <= vBlankEnd);
-                if (!blanking) {
-                    yPos += yInc;
-                }
-                break;
-            case 5:     // On MaxPixel
-                pixel = 0;
-                border = (scan >= vBorderStart);
-                ulaReset = false;
-                dataAddr = ((scan & 0x38) << 2) | ((scan & 0x07) << 8) | ((scan & 0xC0) << 5);  // ...76210 543xxxxx
-                attrAddr = ((scan & 0xF8) << 2) | 0x1800;                                       // ...HHL76 543xxxxx
-                break;
-            default: assert(false); break;  // Should not happen
-        }
-
-        checkPoint = (checkPoint + 1) % NUM_CHECKPOINTS;
+    // I've simplified the if-else if-else tree using this block because
+    // these stages always happen in the same order.
+    switch (checkPoint) {
+        case 0:     // On VideoStart
+            video = (scan < vBorderStart);
+            break;
+        case 1:     // On HBorderStart
+            border = true;
+            break;
+        case 2:     // On VideoEnd
+            video = false;
+            break;
+        case 3:     // On HBlankStart
+            blanking = true;
+            ++scan;
+            if (scan == vBlankEnd) {
+                flash += 0x8;
+                vSync = true;
+                frame = 1 - frame;
+                yPos = 0;
+            } else if (scan == maxScan) {
+                scan = 0;
+                // Avoid problems caused by changing key data during the interrupt.
+                for (size_t ii = 0; ii < 8; ++ii) keyData[ii] = keys[ii];
+            }
+            break;
+        case 4:     // On HBlankEnd
+            xPos = 0;
+            blanking = (scan >= vBlankStart) && (scan <= vBlankEnd);
+            if (!blanking) {
+                yPos += yInc;
+            }
+            break;
+        case 5:     // On MaxPixel
+            pixel = 0;
+            border = (scan >= vBorderStart);
+            ulaReset = false;
+            dataAddr = ((scan & 0x38) << 2) | ((scan & 0x07) << 8) | ((scan & 0xC0) << 5);  // ...76210 543xxxxx
+            attrAddr = ((scan & 0xF8) << 2) | 0x1800;                                       // ...HHL76 543xxxxx
+            break;
+        default: assert(false); break;  // Should not happen
     }
 }
 
 void ULA::generateInterrupt() {
 
-    if (scan == vSyncStart) {
-        if (pixel == interruptStart) {
-            z80_c &= ~SIGNAL_INT_;
-        } else if (pixel == interruptEnd) {
-            z80_c |= SIGNAL_INT_;
-        }
+    if (pixel == interruptStart) {
+        z80_c &= ~SIGNAL_INT_;
+    } else if (pixel == interruptEnd) {
+        z80_c |= SIGNAL_INT_;
     }
 }
 
@@ -291,64 +284,54 @@ void ULA::generateVideoDataPentagon() {
 
 void ULA::updateAttributes() {
 
-    if ((pixel & 0x07) == paintPixel) {
-        data = video ? dataReg : 0xFF;
-        attr = video ? attrReg : borderAttr;
+    data = video ? dataReg : 0xFF;
+    attr = video ? attrReg : borderAttr;
 
-        size_t indexBackground = (attr & flash & 0x80) >> 7;
-        size_t indexForeground = 1 - indexBackground;
-        colour[indexBackground] = colourTable[((attr & 0x78) >> 3)];
-        colour[indexForeground] = colourTable[((attr & 0x40) >> 3) | (attr & 0x07)];
-    }
+    size_t indexBackground = (attr & flash & 0x80) >> 7;
+    size_t indexForeground = 1 - indexBackground;
+    colour[indexBackground] = colourTable[((attr & 0x78) >> 3)];
+    colour[indexForeground] = colourTable[((attr & 0x40) >> 3) | (attr & 0x07)];
 }
 
 void ULA::paint() {
 
-    if (!blanking) {
-        ++xPos;
+    ++xPos;
 
-        uint32_t col = colour[(data >> 7)];
-        data <<= 1;
+    uint32_t col = colour[(data >> 7)];
+    data <<= 1;
 
-        switch (scanlines) {
-            case 1:     // Interlaced odd and even fields
-                pixelsX2[(X_SIZE * (yPos + frame)) + xPos] = col;
-                break;
-
-            case 2:     // Averaged odd and even fields
-                {
-                    uint32_t *ptr = pixelsX2 + (2 * (yPos * X_SIZE + xPos));
-                    ptr[frame] = col;
-                    pixelsX1[yPos * X_SIZE + xPos] = average(ptr);
-                }
-                break;
-
-            case 3:     // Only odd field, with scanlines
-                pixelsX2[(X_SIZE * yPos) + xPos] = col;
+    switch (scanlines) {
+        case 1:     // Interlaced odd and even fields
+            pixelsX2[(X_SIZE * (yPos + frame)) + xPos] = col;
+            break;
+        case 2:     // Averaged odd and even fields
+            {
+                uint32_t *ptr = pixelsX2 + (2 * (yPos * X_SIZE + xPos));
+                ptr[frame] = col;
+                pixelsX1[yPos * X_SIZE + xPos] = average(ptr);
+            }
+            break;
+        case 3:     // Only odd field, with scanlines
+            pixelsX2[(X_SIZE * yPos) + xPos] = col;
 #if SPECIDE_BYTE_ORDER == 1
-                pixelsX2[(X_SIZE * (yPos + 1)) + xPos] =
-                    (((col & 0xFEFEFE00) >> 1) + ((col & 0xFCFCFC00) >> 2) + ((col & 0xF8F8F800) >> 3)) | 0x000000FF;
+            pixelsX2[(X_SIZE * (yPos + 1)) + xPos] =
+                (((col & 0xFEFEFE00) >> 1) + ((col & 0xFCFCFC00) >> 2) + ((col & 0xF8F8F800) >> 3)) | 0x000000FF;
 #else
-                pixelsX2[(X_SIZE * (yPos + 1)) + xPos] =
-                    (((col & 0x00FEFEFE) >> 1) + ((col & 0x00FCFCFC) >> 2) + ((col & 0x00F8F8F8) >> 3)) | 0xFF000000;
+            pixelsX2[(X_SIZE * (yPos + 1)) + xPos] =
+                (((col & 0x00FEFEFE) >> 1) + ((col & 0x00FCFCFC) >> 2) + ((col & 0x00F8F8F8) >> 3)) | 0xFF000000;
 #endif
-                break;
-
-            default:    // Odd field only, no scanlines
-                pixelsX1[yPos * X_SIZE + xPos] = col;
-                break;
-        }
+            break;
+        default:    // Odd field only, no scanlines
+            pixelsX1[yPos * X_SIZE + xPos] = col;
+            break;
     }
 }
 
 void ULA::tapeEarMic() {
 
     // These operations are too costly to do them every cycle.
-    static uint_fast32_t count = 0;
-    if (ulaVersion < ULA_PLUS2 && !tapePlaying && !(++count & 0x3F)) {
-        vInc *= 0.934375;
-        vEar = vEnd - vInc;
-    }
+    vInc *= 0.934375;
+    vEar = vEnd - vInc;
 }
 
 void ULA::setEarLevel(bool level, bool playing) {
@@ -414,14 +397,24 @@ int ULA::sample() {
 
 void ULA::clock() {
 
-    generateVideoControlSignals();
-    generateInterrupt();
+    static uint_fast32_t count = 0;
+
+    if (pixel == checkPointValues[ulaVersion][checkPoint]) {
+        generateVideoControlSignals();
+        checkPoint = (checkPoint + 1) % NUM_CHECKPOINTS;
+    }
+
+    if (scan == vSyncStart) {
+        generateInterrupt();
+    }
 
     if (!border) {
         (this->*generateVideoData)();
     }
 
-    tapeEarMic();
+    if (!(++count & 0x3F) && ulaVersion < ULA_PLUS2 && !tapePlaying) {
+        tapeEarMic();
+    }
 
     // Contention affects to Z80 phase change and to when the I/O operation
     // actually happens.
@@ -431,8 +424,8 @@ void ULA::clock() {
         z80Clock = !z80Clock;
     }
 
-    updateAttributes();
-    paint();
+    if ((pixel & 0x07) == paintPixel) { updateAttributes(); }
+    if (!blanking) { paint(); }
     ++pixel;
 
     if (ulaReset) {
@@ -470,7 +463,6 @@ void ULA::setUlaVersion(uint_fast8_t version) {
     vBlankStart = 0x0F8;
     vBlankEnd = 0x0FF;
     vSyncStart = 0x0F8;
-    vSyncEnd = 0x0FC;
 
     generateVideoData = &ULA::generateVideoDataUla;
 

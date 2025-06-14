@@ -85,7 +85,6 @@ class ULA {
         uint_fast16_t vBlankStart = 0x0F8;
         uint_fast16_t vBlankEnd = 0x0FF;
         uint_fast16_t vSyncStart = 0x0F8;
-        uint_fast16_t vSyncEnd = 0x0FC;
         uint_fast16_t maxScan = 0x138;
 
         uint_fast16_t paintPixel = 0x004;
