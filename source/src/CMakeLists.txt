@@ -43,7 +43,10 @@ add_executable(SpecIde SpecIde.cc Utils.cc
     Tape.cc CSWFile.cc PZXFile.cc TAPFile.cc TZXFile.cc
     DSKFile.cc
     SNAFile.cc Z80File.cc)
-target_link_libraries(SpecIde ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} ${MEDIA_LIBRARIES})
+if(WIN32)
+    set(ADDITIONAL_LIBRARIES "winmm.lib")   # timeGetDevCaps
+endif()
+target_link_libraries(SpecIde ${Boost_LIBRARIES} ${ZLIB_LIBRARIES} ${MEDIA_LIBRARIES} ${ADDITIONAL_LIBRARIES})
 
 # Set build date information in config.h.
 string(TIMESTAMP SpecIde_BUILD_DATE "%Y%m%d" UTC)
@@ -90,3 +93,5 @@ configure_file(
 install(TARGETS SpecIde
     RUNTIME
     DESTINATION ${PROJECT_INSTALL_DIR})
+
+# vim: et:sw=4:ts=4

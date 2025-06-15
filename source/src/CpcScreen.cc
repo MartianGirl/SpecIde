@@ -200,6 +200,7 @@ void CpcScreen::run() {
         Time frameTime = clock.getElapsedTime();    // Next frame time
         Time spentTime; // Actual time spent in emulation
         Time delayTime; // Delay time to adjust emulation pace
+        Time sleepStep = milliseconds(getSleepStepAsMilliseconds());
 
         while (!done && !menu) {
             // Run until either we get a new frame, or we get 20ms of emulation.
@@ -217,10 +218,10 @@ void CpcScreen::run() {
                 spentTime = clock.getElapsedTime();
                 delayTime = frameTime - spentTime;
 #ifndef DO_NOT_SLEEP
+                delayTime -= delayTime % sleepStep; // Request a multiple of the timer step.
                 sleep(delayTime);
-#else
-                while (clock.getElapsedTime() < frameTime); // Active wait
 #endif
+                while (clock.getElapsedTime() < frameTime); // Active wait for the remainder.
             } else {
                 // If we are syncing with the PC's vertical refresh, we need
                 // to get at least 20ms of emulation. If this is the case, we

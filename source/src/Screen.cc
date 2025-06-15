@@ -16,18 +16,6 @@
 #include "Screen.h"
 #include "config.h"
 
-#ifdef USE_BOOST_THREADS
-#include <boost/chrono/include.hpp>
-#include <boost/thread.hpp>
-using namespace boost::this_thread;
-using namespace boost::chrono;
-#else
-#include <chrono>
-#include <thread>
-using namespace std::this_thread;
-using namespace std::chrono;
-#endif
-
 #include <cfenv>
 #include <cmath>
 #include <iomanip>

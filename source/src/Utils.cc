@@ -20,6 +20,11 @@
 
 #include <zlib.h>
 
+#include "config.h"
+#if (SPECIDE_ON_UNIX==0)
+#include <windows.h>
+#endif
+
 #include "Utils.h"
 
 using namespace std;
@@ -129,6 +134,25 @@ void loadPalette(string const& fileName, vector<uint32_t>& paletteData) {
             paletteData.push_back(colour);
         }
     }
+}
+
+uint32_t getSleepStepAsMilliseconds() {
+#if (SPECIDE_ON_UNIX==1)
+    // SFML sf::sleep() implementation on UNIX is based on nanosleep.
+#if defined(SLEEP_STEP) && (SLEEP_STEP != 0)
+    // User-defined value in config.h
+    return SLEEP_STEP;
+#else
+    // Typical resolution is 1000Hz.
+    return 1;
+#endif
+#else
+    // SFML sf::sleep() implementation on Windows will set the timer resolution to TIMECAPS.wPeriodMin,
+    // and then will request to sleep for a number of milliseconds.
+    TIMECAPS tc;
+    timeGetDevCaps(&tc, sizeof(TIMECAPS));
+    return 2 * tc.wPeriodMin; // Be on the very safe side.
+#endif
 }
 
 // vim: et:sw=4:ts=4

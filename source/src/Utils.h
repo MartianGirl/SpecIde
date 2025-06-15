@@ -37,4 +37,11 @@ uint32_t average(uint32_t *ptr);
 
 void loadPalette(std::string const& fileName, std::vector<uint32_t>& paletteData);
 
+/**
+ * Return the timer step.
+ *
+ * This can be used to adjust the sleep delay to a multiple of the quantum, to avoid overshooting.
+ */
+uint32_t getSleepStepAsMilliseconds();
+
 // vim: et:sw=4:ts=4
