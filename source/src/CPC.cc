@@ -269,10 +269,10 @@ void CPC::clock() {
                         ga.crtc.wrRegister(z80.d);
                         break;
                     case 0x0200:    // CRTC Status Register Read (type 1) at &BE00.
-                        ga.crtc.rdStatus(z80.d);
+                        ga.crtc.rdStatus(ga.d);
                         break;
                     case 0x0300:    // CRTC Register Read (RO) at &BF00.
-                        ga.crtc.rdRegister(z80.d);
+                        ga.crtc.rdRegister(ga.d);
                         break;
                     default:
                         break;
@@ -353,10 +353,10 @@ void CPC::clock() {
                         ga.crtc.wrRegister(z80.d);
                         break;
                     case 0x0200:    // CRTC Status Register Read (type 1) at &BE00.
-                        ga.crtc.rdStatus(z80.d);
+                        ga.crtc.rdStatus(ga.d);
                         break;
                     case 0x0300:    // CRTC Register Read (RO) at &BF00.
-                        ga.crtc.rdRegister(z80.d);
+                        ga.crtc.rdRegister(ga.d);
                         break;
                     default:
                         break;
