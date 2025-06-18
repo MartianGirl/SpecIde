@@ -91,7 +91,7 @@ SpecIde is invoked from the command line. To run SpecIde, type:
 `SpecIde [options] [tapefiles|diskfiles|palettes]`
 
 SpecIde supports the following file formats:
-- For the Spectrum models: CSW, PZX, TAP, TZX, DSK.
+- For the Spectrum models: CSW, PZX, TAP, TZX, DSK, Z80, SNA.
 - For the Amstrad CPC models: CSW, CDT, DSK.
 - Custom palette files: PAL.
   - ZX Spectrum palette format: 16 colours encoded as RGBA8888. (64 bytes)
@@ -168,7 +168,7 @@ Sound options (add prefix 'no' to disable. Eg. --nosound):
 --tapesound            Enable tape sound.
 
 Emulation options (add prefix 'no' to disable. Eg. --noflashtap):
---flashtap         Enable ROM traps for LOAD and SAVE.
+--flashtap         Enable ROM traps for LOAD and SAVE. (Only ZX Spectrum)
 ```
 
 ### Function keys
