@@ -17,7 +17,3 @@
 
 // Enable BUSRQ/BUSAK support by default.
 // #define SPECIDE_SUPPORT_BUSRQ_BUSAK
-
-// SLEEP granularity for Linux/Unix, expressed in milliseconds.
-// On Windows, this value is queried from the system.
-#define SLEEP_STEP 1

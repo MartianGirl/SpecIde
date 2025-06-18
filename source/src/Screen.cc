@@ -167,7 +167,16 @@ void Screen::texture(uint_fast32_t x, uint_fast32_t y) {
 
 void Screen::setup() {
 
-    scale = getScale();
+#if (SPECIDE_ON_UNIX == 1)
+    timerStep = getNumber("timerstep", 1, 0, 10);
+#else
+    timerStep = queryTimerStep();
+#endif
+    if (timerStep) {
+        cout << "Using timer step: " << timerStep << endl;
+    }
+    scale = getNumber("scale", 1, 1, 4);
+    cout << "Using window scale: " << scale << endl;
     w *= scale;
     h *= scale;
 
@@ -182,40 +191,30 @@ void Screen::setup() {
 #endif
 
     SoundChannel::getChannel().open(2, SAMPLE_RATE);
-    SoundChannel::getChannel().setSleepInterval(getNumber("soundsleep", 10));
-    cout << "Initialized " << 2 << " channels ";
-    cout << "at " << SAMPLE_RATE << " Hz." << endl;
+    SoundChannel::getChannel().setSleepInterval(getNumber("soundsleep", 10, 1, 19));
+    cout << "Sound sample rate is: " << SAMPLE_RATE << " Hz." << endl;
 }
 
-uint32_t Screen::getNumber(string const& key, uint32_t value) {
+uint32_t Screen::getNumber(string const& key, uint32_t value, uint32_t minval, uint32_t maxval) {
 
     if (options.find(key) != options.end()) {
         try {
             value = stoi(options[key]);
         } catch (invalid_argument &ia) {
             cout << "Invalid " << key << " value: '" << options[key] << "' - " << ia.what() << endl;
-            cout << "Using value " << value << " for option " << key << endl;
+            cout << "Using default value " << value << " for option " << key << endl;
         }
     }
+
+    if (value < minval) {
+        value = minval;
+        cout << "Using minimum " << key << " value: " << minval << endl;
+    } else if (value > maxval) {
+        value = maxval;
+        cout << "Using maximum " << key << " value: " << maxval << endl;
+    }
+
     return value;
-}
-
-uint32_t Screen::getScale() {
-
-    uint32_t s = 1;
-    try {
-        s = stoi(options["scale"]);
-    } catch (invalid_argument &ia) {
-        cout << "Invalid scale value: '" << options["scale"] << "' - " << ia.what() << endl;
-    }
-
-    if (s < 1) {
-        s = 1;
-    } else if (s > 10) {
-        s = 10;
-    }
-    cout << "Selected scale factor: " << s << endl;
-    return s;
 }
 
 void Screen::adjustViewPort() {

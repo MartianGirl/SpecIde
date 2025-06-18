@@ -90,6 +90,8 @@ class Screen {
         uint32_t h = 540;
         /** Window scale factor. */
         uint32_t scale;
+        /** Timer resolution, expressed in milliseconds. */
+        uint32_t timerStep = 0;
 
         uint_fast32_t lBorder = 0;
         uint_fast32_t rBorder = 0;
@@ -153,19 +155,16 @@ class Screen {
         virtual void setup();
 
         /**
-         * Convert the "scale" option into an integer.
-         */
-        uint32_t getScale();
-
-        /**
          * Return the value of numeric options.
          *
          * @param key Option name to interpret as numeric.
          * @param value Default value to use if the option is not found or incorrect.
+         * @param minval Minimum acceptable value.
+         * @param maxval Maximum acceptable value.
          *
          * @return A numeric value.
          */
-        uint32_t getNumber(std::string const& key, uint32_t value);
+        uint32_t getNumber(std::string const& key, uint32_t value, uint32_t minval, uint32_t maxval);
         
         /**
          * Select the native video mode and find its resolution.

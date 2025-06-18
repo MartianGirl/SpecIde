@@ -320,30 +320,26 @@ void SpeccyScreen::run() {
         Time frameTime = clock.getElapsedTime(); // Next frame time
         Time spentTime; // Actual time elapsed
         Time delayTime; // Delay time to adjust emulation pace
-        Time sleepStep = milliseconds(getSleepStepAsMilliseconds());
 
         while (!done && !menu) {
             // Run a complete frame.
             pollEvents();
+
             spectrum.run();
             if (SoundChannel::getChannel().commit()) {
                 SoundChannel::getChannel().play();
             }
 
-            // Update the screen.
-            // These conditions cannot happen at the same time:
-            // - HSYNC and VSYNC only happen during the blanking interval.
-            // - VSYNC happens at the end of blanking interval. (0x140)
-            // - HSYNC happens at the beginning of HSYNC interval. (0x170-0x178)
-            // If not blanking, draw.
             update();
 
             if (!syncToVideo) {
                 frameTime += microseconds(spectrum.frame);
+#ifndef DO_NOT_SLEEP
                 spentTime = clock.getElapsedTime();
                 delayTime = frameTime - spentTime;
-#ifndef DO_NOT_SLEEP
-                delayTime -= delayTime % sleepStep; // Request a multiple of the timer step.
+                if (timerStep) {
+                    delayTime -= delayTime % milliseconds(timerStep); // Adjust to timer step.
+                }
                 sleep(delayTime);
 #endif
                 while (clock.getElapsedTime() < frameTime); // Active wait for the remainder.

@@ -37,11 +37,13 @@ uint32_t average(uint32_t *ptr);
 
 void loadPalette(std::string const& fileName, std::vector<uint32_t>& paletteData);
 
+#if (SPECIDE_ON_UNIX == 0)
 /**
- * Return the timer step.
+ * Query Windows timer capabilities and return the minimum timer step.
  *
  * This can be used to adjust the sleep delay to a multiple of the quantum, to avoid overshooting.
  */
-uint32_t getSleepStepAsMilliseconds();
+uint32_t queryTimerStep();
+#endif
 
 // vim: et:sw=4:ts=4

@@ -185,11 +185,16 @@ void displayLicense() {
 
 void displayHelp() {
 
-    cout << "Usage: SpecIde [options] [tapefiles] [diskfiles]" << endl;
+    cout << "Usage: SpecIde [options] [tapefiles] [diskfiles] [palette]" << endl;
     cout << endl;
-    cout << "Supported tape formats: TAP TZX PZX CDT CSW." << endl;
-    cout << "Supported disk formats: DSK." << endl;
-    cout << "Supported snap formats: Z80." << endl;
+    cout << "ZX Spectrum tape formats: TAP TZX PZX CSW." << endl;
+    cout << "ZX Spectrum disk formats: DSK." << endl;
+    cout << "ZX Spectrum snap formats: Z80 SNA." << endl;
+    cout << "Amstrad CPC tape formats: CDT CSW." << endl;
+    cout << "Amstrad CPC disk formats: DSK." << endl;
+    cout << endl;
+    cout << "ZX Spectrum palette: PAL (16 colours encoded as RGBA8888 - 64 bytes)" << endl;
+    cout << "Amstrad CPC palette: PAL (32 colours encoded as RGBA8888 - 128 bytes)" << endl;
     cout << endl;
     cout << "Options:" << endl;
     cout << endl;
@@ -262,7 +267,7 @@ void displayHelp() {
     cout << "--tapesound            Enable tape sound." << endl;
     cout << endl;
     cout << "Emulation options (add prefix 'no' to disable. Eg. --noflashtap):" << endl;
-    cout << "--flashtap         Enable ROM traps for LOAD and SAVE." << endl;
+    cout << "--flashtap         Enable ROM traps for LOAD and SAVE. (Only ZX Spectrum)" << endl;
     cout << endl;
 }
 
@@ -286,9 +291,10 @@ void readOptions(map<string, string>& options) {
     options["z80type"] = "nmos";
     options["crtc"] = "0";
     options["covox"] = "no";
-    options["soundsleep"] = "10";
     options["z80timings"] = "early";
     options["display"] = "colour";
+    options["soundsleep"] = "10";
+    options["timerstep"] = "1";
 
     vector<string> cfgPaths;
     string cfgName("SpecIde.cfg");

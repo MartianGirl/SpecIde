@@ -169,6 +169,7 @@ flashtap=yes
 # Time interval that SFML sleeps before fetching audio samples. If
 # you are experiencing clicking or stuttering sound, try lowering
 # this parameter.
+# This parameter is expressed in milliseconds.
 # Default is 10.
 # soundsleep=10
 
@@ -189,3 +190,27 @@ flashtap=yes
 # Default is early.
 # Values: early, late
 # z80timings=early
+
+# Option: timerstep
+# The frame synchronization is done by calling SFML sleep() function.
+# This function uses POSIX nanosleep() on Unix-like systems, and
+# Win32 Sleep() on Windows systems.
+# On Windows, the Sleep() resolution is adjusted by SFML to the smallest
+# available step, but it can be as big as 15ms.
+# On Unix-like systems, the actual nanosleep() resolution will usually be
+# around 1ms.
+# This parameter establishes the step of which the frame sleep time will
+# be a multiple. SpecIde will try to adjust the delay it requests from the
+# system to this timer resolution. The exceeding delay time will achieved
+# by an active wait loop.
+# Increasing this parameter will reduce the time spent on the active wait,
+# which can lead to better CPU performance, but it can cause sound clicks
+# and drops and cause the emulation to be less smooth.
+# Setting this parameter to 0 will entirely skip the active wait loop, and
+# rely entirely on the accuracy of the system.
+# This parameter only is used on Linux systems. On Windows systems, this
+# value is obtained by querying the timer capabilities.
+# This value is expressed in milliseconds.
+# Default is 1ms.
+# Values: 0..10.
+# timerstep=1
