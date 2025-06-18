@@ -14,6 +14,7 @@
  */
 
 #include "Screen.h"
+#include "Utils.h"
 #include "config.h"
 
 #include <cfenv>
