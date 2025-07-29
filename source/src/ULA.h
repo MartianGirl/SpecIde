@@ -89,18 +89,18 @@ class ULA {
 
         uint_fast16_t paintPixel = 0x004;
 
-        static float constexpr voltages[6][4] = {
-            {0.391, 0.728, 3.653, 3.790}, // ULA 5C (Issue 2)
-            {0.342, 0.652, 3.591, 3.753}, // ULA 6C (Issue 3)
-            {0.342, 0.652, 3.591, 3.753}, // ULA 7K (128K)
-            {0.342, 0.652, 3.591, 3.753}, // GA 40056 (Plus2)
-            {0.342, 0.652, 3.591, 3.753}, // GA 40077 (Plus2A/Plus2B/Plus3)
-            {0.342, 0.652, 3.591, 3.753}  // Pentagon
+        static int32_t constexpr voltages[6][4] = {
+            {391, 728, 3653, 3790}, // ULA 5C (Issue 2)
+            {342, 652, 3591, 3753}, // ULA 6C (Issue 3)
+            {342, 652, 3591, 3753}, // ULA 7K (128K)
+            {342, 652, 3591, 3753}, // GA 40056 (Plus2)
+            {342, 652, 3591, 3753}, // GA 40077 (Plus2A/Plus2B/Plus3)
+            {342, 652, 3591, 3753}  // Pentagon
         };
 
-        float vEnd = 0.0;
-        float vInc = 0.0;
-        float vEar = 0.0;
+        int32_t vEnd = 0;
+        int32_t vInc = 0;
+        int32_t vEar = 0;
 
         static bool delayTable[16];
         static bool idleTable[16];

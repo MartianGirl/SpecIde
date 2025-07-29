@@ -329,23 +329,23 @@ void ULA::paint() {
 
 void ULA::tapeEarMic() {
 
-    // These operations are too costly to do them every cycle.
-    vInc *= 0.934375;
+    vInc = vInc * 93437 / 100000;
     vEar = vEnd - vInc;
 }
 
 void ULA::setEarLevel(bool level, bool playing) {
 
-    vEar = level ? 1.500 : 0.000;
-    vInc = vEnd - vEar;
     tapeLevel = level;
     tapePlaying = playing;
+
+    vEar = (playing && level) ? 1500 : 0;
+    vInc = vEnd - vEar;
 }
 
 uint_fast8_t ULA::ioRead() {
 
     uint_fast8_t byte = inMask;
-    byte |= (vEar > 0.700) ? 0x40 : 0x00;
+    byte |= (vEar > 700) ? 0x40 : 0x00;
 
     for (uint_fast8_t ii = 0; ii < 8; ++ii) {
         if (!(z80_a & (0x8000 >> ii))) {
@@ -361,15 +361,26 @@ void ULA::ioWrite(uint_fast8_t byte) {
     soundBits = (byte & 0x18) >> 3;
     borderAttr = byte & 0x07;
 
-    if (ulaVersion < ULA_PLUS2) {
-        if (!tapePlaying) {
-            vEnd = voltages[ulaVersion][soundBits];
-            vInc = vEnd - vEar;
-        }
-    } else if (ulaVersion == ULA_PENTAGON) {
-        if (!video) {
-            colour[1] = colourTable[borderAttr & 0x7];
-        }
+    switch (ulaVersion) {
+        case ULA_48KISS2:   // Sinclair 48K/128K have EAR/MIC feedback.
+        case ULA_48KISS3:   // fall-through
+        case ULA_128K:      // fall-through
+            if (!tapePlaying) {
+                vEnd = voltages[ulaVersion][soundBits];
+                vInc = vEnd - vEar;
+            }
+            break;
+
+        case ULA_PENTAGON:  // Pentagon border changes on each T-state.
+            if (!video) {
+                colour[1] = colourTable[borderAttr & 0x7];
+            }
+            break;
+
+        case ULA_PLUS2:     // +2/+2A/+3 do not have EAR/MIC feedback.
+        case ULA_PLUS3:     // fall-through
+        default:            // fall-through
+            break;
     }
 }
 
@@ -467,24 +478,21 @@ void ULA::setUlaVersion(uint_fast8_t version) {
     generateVideoData = &ULA::generateVideoDataUla;
 
     switch (ulaVersion) {
-        case ULA_48KISS2:   // Spectrum 48K (Ferranti 5C/6C)
-        case ULA_48KISS3:   // fall-through
-            interruptStart = 0x000;
-            interruptEnd = 0x040;
-            maxScan = 0x138;
-            break;
+
         case ULA_128K:      // Spectrum 128K (Ferranti 7K)
             interruptStart = 0x004;
             interruptEnd = 0x04A;
             maxScan = 0x137;
             micMask = 0x01;
             break;
+
         case ULA_PLUS2:     // Spectrum +2 (Amstrad 40056)
             interruptStart = 0x002;
             interruptEnd = 0x04A;
             maxScan = 0x137;
             micMask = 0x01;
             break;
+
         case ULA_PLUS3:     // Spectrum +2A/+2B/+3 (Amstrad 40077)
             paintPixel = 0x06;
             interruptStart = 0x000;
@@ -496,6 +504,7 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             idle = true;
             generateVideoData = &ULA::generateVideoDataGa;
             break;
+
         case ULA_PENTAGON:  // Pentagon video circuitry
             paintPixel = 0x02;
             vBlankStart = 0x0F0;
@@ -510,7 +519,10 @@ void ULA::setUlaVersion(uint_fast8_t version) {
             mem = false;
             generateVideoData = &ULA::generateVideoDataPentagon;
             break;
-        default:
+
+        case ULA_48KISS2:   // Spectrum 48K (Ferranti 5C/6C)
+        case ULA_48KISS3:   // fall-through
+        default:            // fall-through
             interruptStart = 0x000;
             interruptEnd = 0x040;
             maxScan = 0x138;
