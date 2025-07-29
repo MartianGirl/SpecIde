@@ -196,7 +196,7 @@ void PZXFile::parse(
                     if (((val >> 31) & 1) == (pulseData.size() % 2)) {
                         pulseData.push_back(3500);
                     }
-                    pulseData.push_back(val & 0x7FFFFFF);
+                    pulseData.push_back(val & 0x7FFFFFFF);
                     cout << " LEVEL " << ((val >> 31) & 1) << " LENGTH " << (val & 0x7FFFFFFF);
                     break;
 
