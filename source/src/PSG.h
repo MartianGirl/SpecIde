@@ -169,14 +169,14 @@ class PSG
                             envStep = 0x00;
 
                             // Continue = 1: Cycle pattern controlled by Hold.
-                            if (r[13] & 0x08) {
+                            if (r[0xD] & 0x08) {
                                 // Hold & Alternate
-                                if (r[13] & 0x01) {
+                                if (r[0xD] & 0x01) {
                                     envHold = true;
                                 }
 
                                 // If Alternate != Hold, change slope. :)
-                                if (((r[13] & 0x02) >> 1) != (r[13] & 0x01)) {
+                                if (((r[0xD] & 0x02) >> 1) != (r[0xD] & 0x01)) {
                                     envSlope = -envSlope;
                                 }
                             } else {
@@ -196,12 +196,12 @@ class PSG
             int signalC = 1;
 
             if (playSound) {
-                signalA = (r[7] & 0x01) ? 1 : waveA;
-                signalB = (r[7] & 0x02) ? 1 : waveB;
-                signalC = (r[7] & 0x04) ? 1 : waveC;
-                if (!(r[7] & 0x08)) signalA &= noise;
-                if (!(r[7] & 0x10)) signalB &= noise;
-                if (!(r[7] & 0x20)) signalC &= noise;
+                signalA = (r[0x7] & 0x01) ? 1 : waveA;
+                signalB = (r[0x7] & 0x02) ? 1 : waveB;
+                signalC = (r[0x7] & 0x04) ? 1 : waveC;
+                if (!(r[0x7] & 0x08)) signalA &= noise;
+                if (!(r[0x7] & 0x10)) signalB &= noise;
+                if (!(r[0x7] & 0x20)) signalC &= noise;
                 signalA *= out[envA ? envLevel : volumeA];
                 signalB *= out[envB ? envLevel : volumeB];
                 signalC *= out[envC ? envLevel : volumeC];
@@ -230,75 +230,75 @@ class PSG
                 r[a] = byte & (psgIsAY ? m[a] : 0xFF);
 
                 switch (a) {
-                    case 000:
-                    case 001:
+                    case 0x0:
+                    case 0x1:
                         // Update tone period for channel A.
-                        periodA = (r[1] & 0x0F) * 0x100 + r[0];
+                        periodA = (r[0x1] & 0x0F) * 0x100 + r[0x0];
                         break;
 
-                    case 002:
-                    case 003:
+                    case 0x2:
+                    case 0x3:
                         // Update tone period for channel B.
-                        periodB = (r[3] & 0x0F) * 0x100 + r[2];
+                        periodB = (r[0x3] & 0x0F) * 0x100 + r[0x2];
                         break;
 
-                    case 004:
-                    case 005:
+                    case 0x4:
+                    case 0x5:
                         // Update tone period for channel C.
-                        periodC = (r[5] & 0x0F) * 0x100 + r[4];
+                        periodC = (r[0x5] & 0x0F) * 0x100 + r[0x4];
                         break;
 
-                    case 006:
+                    case 0x6:
                         // Update noise period.
-                        periodN = r[6] & 0x1F;
+                        periodN = r[0x6] & 0x1F;
                         break;
 
-                    case 010:
+                    case 0x8:
                         // Update volume for channel A.
-                        volumeA = 2 * (r[8] & 0x0F) + 1;
-                        envA = ((r[8] & 0x10) == 0x10);
+                        volumeA = 2 * (r[0x8] & 0x0F) + 1;
+                        envA = ((r[0x8] & 0x10) == 0x10);
                         break;
 
-                    case 011:
+                    case 0x9:
                         // Update volume for channel B.
-                        volumeB = 2 * (r[9] & 0x0F) + 1;
-                        envB = ((r[9] & 0x10) == 0x10);
+                        volumeB = 2 * (r[0x9] & 0x0F) + 1;
+                        envB = ((r[0x9] & 0x10) == 0x10);
                         break;
 
-                    case 012:
+                    case 0xA:
                         // Update volume for channel C.
-                        volumeC = 2 * (r[10] & 0x0F) + 1;
-                        envC = ((r[10] & 0x10) == 0x10);
+                        volumeC = 2 * (r[0xA] & 0x0F) + 1;
+                        envC = ((r[0xA] & 0x10) == 0x10);
                         break;
 
-                    case 013:
-                    case 014:
+                    case 0xB:
+                    case 0xC:
                         // Update period for Envelope generator.
-                        periodE = r[12] * 0x100 + r[11];
+                        periodE = r[0xC] * 0x100 + r[0xB];
                         break;
 
-                    case 015:
+                    case 0xD:
                         // Start values depend on the attack bit.
                         // Attack = 0: Start at 1111, count down.
                         // Attack = 1: Start at 0000, count up.
-                        if (r[13] != 0xFF) {
-                            envSlope = ((r[13] & 0x04) == 0x00) ? -1 : 1;
-                            envLevel = ((r[13] & 0x04) == 0x00) ? 0x1F : 0x00;
+                        if (r[0xD] != 0xFF) {
+                            envSlope = ((r[0xD] & 0x04) == 0x00) ? -1 : 1;
+                            envLevel = ((r[0xD] & 0x04) == 0x00) ? 0x1F : 0x00;
                             restartEnvelope();
                         }
                         break;
 
-                    case 016:
+                    case 0xE:
                         // I/O port A (as output).
-                        if ((r[7] & 0x40) == 0x40) {
-                            ioA = r[14];
+                        if ((r[0x7] & 0x40) == 0x40) {
+                            ioA = r[0xE];
                         }
                         break;
 
-                    case 017:
+                    case 0xF:
                         // I/O port B (as output).
-                        if ((r[7] & 0x80) == 0x80) {
-                            ioB = r[15];
+                        if ((r[0x7] & 0x80) == 0x80) {
+                            ioB = r[0xF];
                         }
                         break;
 
@@ -370,17 +370,16 @@ class PSG
         void setPortA(uint_fast8_t byte) {
 
             // Copy value in port A to R14 if it is set as Input
-            if ((r[7] & 0x40) == 0x00) {
-                r[14] = ioA = byte;
+            if ((r[0x7] & 0x40) == 0x00) {
+                r[0xE] = ioA = byte;
             }
-
         }
 
         void setPortB(uint_fast8_t byte) {
 
             // Copy value in port B to R15 if it is set as Input
-            if ((r[7] & 0x80) == 0x00) {
-                r[15] = ioB = byte;
+            if ((r[0x7] & 0x80) == 0x00) {
+                r[0xF] = ioB = byte;
             }
         }
 };
