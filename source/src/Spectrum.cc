@@ -898,11 +898,6 @@ void Spectrum::checkTapeTraps() {
                 // Otherwise, the emulator will hang if the searched block
                 // is not found.
                 if (tape.tapData.size()) {
-                    // Release the SPACE key. We're not supposed to press SPACE
-                    // while loading anyway!
-                    InputMatrixPosition pos = zxSingleKeys.at(Keyboard::Scan::Space);
-                    ula.keys[pos.row] |= pos.key;
-                    ula.keyData[pos.row] |= pos.key;
                     trapLdStart();
                 }
                 break;
@@ -977,6 +972,11 @@ void Spectrum::trapLdStart() {
 
         if (!bytes && block && !z80.hl.b.h) {
             z80.af.b.l |= FLAG_C;
+            // Release the SPACE key if the block was loaded correctly.
+            // We're not supposed to press SPACE while loading anyway!
+            InputMatrixPosition pos = zxSingleKeys.at(Keyboard::Scan::Space);
+            ula.keys[pos.row] |= pos.key;
+            ula.keyData[pos.row] |= pos.key;
         } else {
             z80.af.b.l &= ~FLAG_C;
             if (!block) z80.af.b.l |= FLAG_Z;
