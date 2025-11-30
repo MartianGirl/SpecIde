@@ -2,6 +2,9 @@
 
 [![](https://github.com/MartianGirl/SpecIde/actions/workflows/build.yml/badge.svg)](https://github.com/MartianGirl/SpecIde/actions/workflows/build.yml)
 
+## Important!
+The current repository for this project has been moved to this [SpecIde repository in Codeberg](https://codeberg.org/MartianGirl/SpecIde). This repository will not receive any further updates.
+
 ## What is it?
 SpecIde is (yet another) ZX Spectrum (and, partially, Amstrad CPC) emulator.
 Currently, the ZX Spectrum emulation is quite accurate. The Amstrad CPC emulation
